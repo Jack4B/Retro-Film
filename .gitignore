@@ -17,3 +17,5 @@
 keystore.properties
 google-services.json
 .kotlin/
+__pycache__/
+*.pyc
