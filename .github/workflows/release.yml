@@ -41,6 +41,7 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
+          export RELEASE_VERSION_NAME="${GITHUB_REF_NAME#v}"
           ./gradlew :app:assembleRelease
           ./gradlew -q :app:printVersionCode | grep '^versionCode=' > version.txt
       - name: Print signing certificate fingerprint
@@ -72,4 +73,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" app/build/outputs/apk/release/*.apk --notes "$(cat version.txt)"
+        run: |
+          PRE=""
+          case "$GITHUB_REF_NAME" in *-*) PRE="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" app/build/outputs/apk/release/*.apk $PRE --notes "$(cat version.txt)"
