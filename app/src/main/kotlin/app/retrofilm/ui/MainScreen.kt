@@ -40,6 +40,9 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     ) { uris ->
         if (uris.isNotEmpty()) scope.launch { show(state.loadAll(context, uris)) }
     }
+    val filesPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) scope.launch { show(state.loadAll(context, uris)) }
+    }
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportPipeline.MIME)
     ) { uri ->
@@ -48,6 +51,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
         }
     }
     val onPick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    val onPickFiles = { filesPicker.launch(arrayOf("image/*")) }
     val onSave: () -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val toMediaStore: suspend (ByteArray) -> Unit = {
@@ -67,6 +71,14 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
         state.refreshPreview()
     }
     val editing = state.photo != null
+    // Galeria otwiera się sama przy pierwszym wejściu na Start; po anulowaniu zostaje ekran z przyciskami.
+    var autoOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!autoOpened && !editing) {
+            autoOpened = true
+            onPick()
+        }
+    }
     var showLibrary by rememberSaveable { mutableStateOf(false) }
     if (editing) BackHandler(onBack = state::closePhoto)
     if (editing && showLibrary) BackHandler { showLibrary = false }
@@ -82,6 +94,12 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
             snackbar = { SnackbarHost(snackbar) }
         )
     } else {
-        StartScreen(state, onPick = onPick, onSettings = onSettings, snackbar = { SnackbarHost(snackbar) })
+        StartScreen(
+            state,
+            onPick = onPick,
+            onPickFiles = onPickFiles,
+            onSettings = onSettings,
+            snackbar = { SnackbarHost(snackbar) }
+        )
     }
 }

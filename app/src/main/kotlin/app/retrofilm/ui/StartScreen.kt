@@ -15,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -33,10 +34,16 @@ private val CtaHeight = 56.dp
 private val ScreenPad = 24.dp
 private val BlockGap = 16.dp
 
-/** Start: jedno zdanie obietnicy i jedno wezwanie do działania (Photo Picker). */
+/** Start: obietnica i dwa wejścia: galeria (Photo Picker, otwiera się sama) oraz pliki z dowolnego folderu. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartScreen(state: MainState, onPick: () -> Unit, onSettings: () -> Unit, snackbar: @Composable () -> Unit) {
+fun StartScreen(
+    state: MainState,
+    onPick: () -> Unit,
+    onPickFiles: () -> Unit,
+    onSettings: () -> Unit,
+    snackbar: @Composable () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,6 +75,16 @@ fun StartScreen(state: MainState, onPick: () -> Unit, onSettings: () -> Unit, sn
             Button(onClick = onPick, enabled = !state.busy, modifier = Modifier.fillMaxWidth().height(CtaHeight)) {
                 Text(stringResource(R.string.start_pick), fontWeight = FontWeight.SemiBold)
             }
+            OutlinedButton(
+                onClick = onPickFiles,
+                enabled = !state.busy,
+                modifier = Modifier.fillMaxWidth().height(CtaHeight)
+            ) { Text(stringResource(R.string.start_pick_files)) }
+            Text(
+                stringResource(R.string.start_multi_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             if (state.busy) {
                 CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             }

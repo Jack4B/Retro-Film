@@ -6,6 +6,8 @@
     <!-- Start -->
     <string name="start_headline">Zdjęcia jak z kliszy.</string>
     <string name="start_promise">Działa offline, bez konta. Lokalizacja jest usuwana z każdego zapisanego pliku.</string>
+    <string name="start_pick_files">Z plików (inny folder)</string>
+    <string name="start_multi_hint">Zaznacz kilka zdjęć, a ten sam film i ramkę nałożysz na wszystkie naraz.</string>
     <string name="start_pick">Wybierz zdjęcia</string>
     <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
 
