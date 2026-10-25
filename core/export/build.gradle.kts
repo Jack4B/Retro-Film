@@ -14,6 +14,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:frame"))
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
 }

@@ -3,9 +3,12 @@ package app.retrofilm.core.export
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import app.retrofilm.core.frame.SignatureFitStatus
+import java.io.ByteArrayOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,5 +34,20 @@ class JpegExporterTest {
         assertNotNull(decoded)
         assertEquals(32, decoded.width)
         assertEquals(24, decoded.height)
+    }
+
+    @Test(expected = SignatureTooLongException::class)
+    fun exportIsBlockedWhenSignatureTooLong() {
+        val bmp = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
+        JpegExporter.encode(bmp, 90, SignatureFitStatus.TooLong)
+    }
+
+    @Test
+    fun blockedExportWritesNothing() {
+        val bmp = Bitmap.createBitmap(8, 8, Bitmap.Config.ARGB_8888)
+        val out = ByteArrayOutputStream()
+        runCatching { JpegExporter.export(bmp, out, 90, SignatureFitStatus.TooLong) }
+        assertEquals(0, out.size())
+        assertTrue(JpegExporter.encode(bmp, 90, SignatureFitStatus.Fits).isNotEmpty())
     }
 }

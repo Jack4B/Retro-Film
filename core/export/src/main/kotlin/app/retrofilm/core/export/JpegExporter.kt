@@ -1,6 +1,7 @@
 package app.retrofilm.core.export
 
 import android.graphics.Bitmap
+import app.retrofilm.core.frame.SignatureFitStatus
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
@@ -13,7 +14,16 @@ object JpegExporter {
     const val DEFAULT_QUALITY = 92
     private const val MAX_QUALITY = 100
 
-    fun encode(bitmap: Bitmap, quality: Int = DEFAULT_QUALITY): ByteArray {
+    /**
+     * Koduje JPEG. [signatureFit] to wynik `SignatureFitCheck` dla bieżącej ramki/podpisu;
+     * przy [SignatureFitStatus.TooLong] eksport jest blokowany ([SignatureTooLongException]).
+     */
+    fun encode(
+        bitmap: Bitmap,
+        quality: Int = DEFAULT_QUALITY,
+        signatureFit: SignatureFitStatus = SignatureFitStatus.None
+    ): ByteArray {
+        if (signatureFit == SignatureFitStatus.TooLong) throw SignatureTooLongException()
         val buffer = ByteArrayOutputStream()
         check(bitmap.compress(Bitmap.CompressFormat.JPEG, quality.coerceIn(1, MAX_QUALITY), buffer)) {
             "Kodowanie JPEG nie powiodło się"
@@ -21,7 +31,15 @@ object JpegExporter {
         return JpegMetadata.strip(buffer.toByteArray())
     }
 
-    fun export(bitmap: Bitmap, out: OutputStream, quality: Int = DEFAULT_QUALITY) {
-        out.write(encode(bitmap, quality))
+    fun export(
+        bitmap: Bitmap,
+        out: OutputStream,
+        quality: Int = DEFAULT_QUALITY,
+        signatureFit: SignatureFitStatus = SignatureFitStatus.None
+    ) {
+        out.write(encode(bitmap, quality, signatureFit))
     }
 }
+
+/** Eksport zablokowany: podpis nie mieści się w ramce nawet przy progu czytelności. */
+class SignatureTooLongException : IllegalStateException("Podpis za długi dla tej ramki – eksport zablokowany")
