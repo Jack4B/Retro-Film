@@ -23,9 +23,17 @@ object ExportPipeline {
      * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada LUT (null = oryginał) i ramkę.
      * Wynik jest zawsze w sRGB, więc `Bitmap.compress` zapisze profil zgodny z pikselami.
      */
-    suspend fun render(photo: Bitmap, lut: Lut?, engine: LutEngine, frame: FrameOptions, typeface: Typeface): Bitmap {
+    @Suppress("LongParameterList") // intensywność dochodzi do istniejących parametrów; grupowanie później
+    suspend fun render(
+        photo: Bitmap,
+        lut: Lut?,
+        engine: LutEngine,
+        frame: FrameOptions,
+        typeface: Typeface,
+        intensity: Float = 1f
+    ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
-        val filmed = if (lut == null) srgb else engine.apply(srgb, lut, 1f)
+        val filmed = if (lut == null) srgb else engine.apply(srgb, lut, intensity)
         return FrameRenderer.render(filmed, frame, typeface, colorSpaceSource = srgb)
     }
 
