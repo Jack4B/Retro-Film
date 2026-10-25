@@ -1,4 +1,4 @@
-# Binarny format LUT (`.lut33`) – silnik
+# Binarny format LUT (`.rgb8`) – silnik
 
 Narzędzia w `tools/` (lutcheck.py) produkują `.cube`; nie było specyfikacji formatu binarnego, więc silnik
 definiuje własny (do potwierdzenia z Python Programista Master przy konwersji `.cube` → bin):

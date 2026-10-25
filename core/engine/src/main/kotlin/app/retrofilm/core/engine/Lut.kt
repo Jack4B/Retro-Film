@@ -3,7 +3,7 @@ package app.retrofilm.core.engine
 /**
  * LUT 3D w formacie binarnym RGB8.
  *
- * Format pliku `.lut33` (zdefiniowany w docs/LUT-BIN.md): surowe `size^3 * 3` bajtów bez nagłówka,
+ * Format pliku `.rgb8` (zdefiniowany w docs/LUT-BIN.md): surowe `size^3 * 3` bajtów bez nagłówka,
  * kolejność wpisów: indeks `r` zmienia się najszybciej, potem `g`, na końcu `b`
  * (offset = `((b * size + g) * size + r) * 3`), każdy wpis to bajty R, G, B (0..255).
  */
