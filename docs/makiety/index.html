@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro-Film – makiety v2</title>
+<style>
+:root{--bg:#0E0E10;--s1:#1A1A1E;--s2:#26262C;--s3:#303038;--tx:#F2F2F2;--tx2:#A0A0A8;--ac:#F5A33B;--onac:#1A1206;--sel:#3A2A12;--ol:#3A3A42;--err:#FF8A80}
+*{box-sizing:border-box;margin:0}
+body{background:#050506;color:var(--tx);font:15px/1.4 Roboto,system-ui,sans-serif;padding:24px 16px 64px}
+h1{font-size:26px;margin-bottom:6px}
+.lead{color:var(--tx2);max-width:760px;margin-bottom:28px}
+.row{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;margin-bottom:44px}
+.fig{width:360px}
+.fig h2{font-size:16px;margin:12px 0 4px}
+.fig p,.fig li{color:var(--tx2);font-size:13px}
+.fig ul{padding-left:18px}
+.phone{width:360px;height:740px;background:var(--bg);border:1px solid var(--ol);border-radius:28px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.bar{height:56px;display:flex;align-items:center;gap:8px;padding:0 8px 0 16px;flex:none}
+.bar b{font-size:20px;font-weight:500;flex:1}
+.ico{width:48px;height:48px;border-radius:24px;display:grid;place-items:center;color:var(--tx);font-size:20px}
+.btn{background:var(--ac);color:var(--onac);border-radius:24px;min-height:48px;padding:0 22px;display:inline-flex;align-items:center;justify-content:center;font-weight:600;gap:8px}
+.btn.o{background:none;color:var(--ac);border:1px solid var(--ol)}
+.btn.sm{min-height:40px;padding:0 16px}
+.photo{position:relative;flex:1;overflow:hidden;background:linear-gradient(#ffb865,#e08b55 55%,#8a5a55)}
+.photo.cool{background:linear-gradient(#9fb7c9,#7d98ab 55%,#4d6070)}
+.photo.bw{background:linear-gradient(#c9c9c9,#8d8d8d 55%,#4a4a4a)}
+.sun{position:absolute;width:64px;height:64px;border-radius:50%;background:#ffe19a;left:62%;top:48%}
+.m1,.m2{position:absolute;left:-10%;right:-10%;bottom:0;clip-path:polygon(0 100%,0 45%,28% 18%,52% 40%,75% 8%,100% 35%,100% 100%)}
+.m1{height:48%;background:#4d3548}.m2{height:30%;background:#2d2234;clip-path:polygon(0 100%,0 40%,20% 10%,45% 45%,70% 15%,100% 50%,100% 100%)}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:12px;border:1px solid var(--ol);font-size:13px;white-space:nowrap}
+.chip.on{background:var(--sel);color:var(--ac);border-color:var(--ac)}
+.panel{background:var(--s1);flex:none;padding:10px 0 0}
+.scroll{display:flex;gap:8px;overflow:hidden;padding:0 16px}
+.tile{width:64px;flex:none;text-align:center;font-size:11px;color:var(--tx2)}
+.tile i{display:block;width:64px;height:64px;border-radius:10px;margin-bottom:4px;position:relative}
+.tile.on{color:var(--ac);font-weight:700}.tile.on i{outline:2px solid var(--ac)}
+.cloud{position:absolute;right:3px;top:3px;font-size:11px;background:#000a;border-radius:8px;padding:0 4px;font-style:normal}
+.tabs{display:flex;border-top:1px solid var(--ol);background:var(--s1);flex:none}
+.tabs div{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;color:var(--tx2);gap:2px}
+.tabs div.on{color:var(--ac)}.tabs span{font-size:20px}
+.slider{height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:13px}
+.slider u{flex:1;height:6px;border-radius:3px;background:var(--sel);position:relative;text-decoration:none}
+.slider u:after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--v,50%);background:var(--ac);border-radius:3px}
+.slider u:before{content:"";position:absolute;left:var(--v,50%);top:-9px;width:4px;height:24px;background:var(--ac);border-radius:2px}
+.card{background:var(--s1);border-radius:16px;padding:14px 16px;margin:0 16px 10px}
+.hint{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:#000b;border-radius:16px;padding:6px 14px;font-size:12px}
+.badge{position:absolute;top:10px;left:10px;background:#000b;border-radius:10px;padding:4px 10px;font-size:12px}
+.strip{display:flex;gap:6px;padding:8px 16px;overflow:hidden}
+.strip i{width:44px;height:44px;border-radius:8px;flex:none;background:linear-gradient(#ffb865,#8a5a55)}
+.strip i.on{outline:2px solid var(--ac)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--s2);border-radius:28px 28px 0 0;padding:12px 16px 20px}
+.sheet:before{content:"";display:block;width:32px;height:4px;background:var(--ol);border-radius:2px;margin:0 auto 12px}
+.scrim{position:absolute;inset:0;background:#000a}
+.seg{display:flex;border:1px solid var(--ol);border-radius:20px;overflow:hidden}
+.seg div{flex:1;min-height:40px;display:grid;place-items:center;font-size:13px}
+.seg .on{background:var(--sel);color:var(--ac)}
+.frame{background:#fff;position:absolute;inset:18px 18px 18px;display:flex;flex-direction:column;padding:5% 5% 0}
+.frame .p{flex:1;position:relative;overflow:hidden;background:linear-gradient(#ffb865,#e08b55 55%,#8a5a55)}
+.frame .sig{height:20%;display:grid;place-items:center;font:italic 26px "Caveat","Segoe Script",cursive;color:#1a2540}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 4px}
+.grid3 i{aspect-ratio:1;border-radius:6px;background:linear-gradient(#ffb865,#8a5a55);position:relative}
+.grid3 i.s{outline:3px solid var(--ac);border-radius:14px}
+.note{max-width:1100px;color:var(--tx2);font-size:13px;margin-bottom:28px}
+h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
+.pill{position:absolute;right:6px;top:6px;background:var(--ac);color:var(--onac);border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<h1>Retro-Film – makiety v2</h1>
+<p class="lead">Propozycja redesignu UI/UX (Lumen v2). Statyczne makiety 360×740 dp w palecie z <code>core/ui/Theme.kt</code> (tło #0E0E10, akcent #F5A33B). Zdjęcia i filmy są umowne; nazwy filmów opisowe, bez znaków towarowych (zob. <code>docs/OCENA-I-REDESIGN.md</code>, pkt T1). Pełne uzasadnienie i lista otwartych pytań w opisie PR.</p>
+
+<h3>A. Przepływ główny: Start → Edytor (jedno miejsce pracy) → Eksport (arkusz)</h3>
+<div class="row">
+
+<!-- 1 START -->
+<div class="fig"><div class="phone">
+  <div class="bar"><b>Retro-Film</b><div class="ico" aria-label="Ustawienia">⚙</div></div>
+  <div style="padding:8px 16px 0;flex:none">
+    <div style="font-size:28px;font-weight:500;line-height:1.15;margin:12px 0 6px">Zdjęcia jak<br>z kliszy.</div>
+    <div style="color:var(--tx2);margin-bottom:18px">Offline. Bez konta. Lokalizacja usuwana z każdego pliku.</div>
+    <div class="btn" style="width:100%;min-height:56px;font-size:16px">Wybierz zdjęcia</div>
+    <div style="color:var(--tx2);font-size:12px;text-align:center;margin:8px 0 22px">Jedno lub wiele – seria dostaje wspólny film i ramkę</div>
+  </div>
+  <div style="padding:0 16px;font-weight:500;margin-bottom:8px">Ostatnio użyte filmy</div>
+  <div class="scroll" style="flex:none">
+    <div class="tile"><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>Kolor ciepły</div>
+    <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"></i>Chłodny 200</div>
+    <div class="tile"><i style="background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Czarno-biały</div>
+    <div class="tile"><i style="background:linear-gradient(#e9c48a,#7a5a3a)"></i>Wyblakły</div>
+    <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Błyskawiczny</div>
+  </div>
+  <div style="padding:22px 16px 8px;font-weight:500">Twoje ostatnie zapisy</div>
+  <div class="grid3" style="padding:0 16px"><i></i><i style="filter:hue-rotate(160deg)"></i><i style="filter:grayscale(1)"></i></div>
+</div>
+<h2>1 · Start</h2><ul>
+<li>Jedno CTA zamiast dwóch przycisków – Photo Picker i tak pozwala wybrać 1…N.</li>
+<li>Zamiast „ostatnich projektów” (URI z pickera nie da się otworzyć ponownie) – ostatnie filmy i ostatnie własne eksporty.</li>
+<li>Jedno zdanie obietnicy prywatności zamiast dwóch ekranów tekstu.</li></ul></div>
+
+<!-- 2 EDYTOR FILM -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b style="font-size:16px">3 z 12</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
+  <div class="photo"><div class="sun"></div><div class="m1"></div><div class="m2"></div>
+    <div class="badge">Kolor ciepły · 100%</div>
+    <div class="hint">Przytrzymaj zdjęcie: przed / po</div></div>
+  <div class="strip"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+  <div class="panel">
+    <div class="scroll" style="padding-bottom:8px"><span class="chip">★ Ulubione</span><span class="chip on">Kolor</span><span class="chip">Czarno-białe</span><span class="chip">Slajd</span><span class="chip">Błyskawiczne</span></div>
+    <div class="scroll" style="padding-bottom:4px">
+      <div class="tile"><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>Bez filtra</div>
+      <div class="tile on"><i style="background:linear-gradient(#ffa24a,#7a4a4a)"></i>Ciepły</div>
+      <div class="tile"><i style="background:linear-gradient(#e08b55,#6a4a55)"><em class="cloud">☁</em></i>Wyblakły</div>
+      <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁</em></i>Chłodny</div>
+      <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Różowy</div>
+      <div class="tile"><i style="background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Ziarnisty</div>
+    </div>
+    <div class="slider">Moc <u style="--v:50%"></u><b style="color:var(--ac);width:44px;text-align:right">100%</b></div>
+    <div class="slider" style="height:40px;padding-bottom:4px"><span class="chip on">Dla: całej serii</span><span class="chip">Tylko to zdjęcie</span></div>
+  </div>
+  <div class="tabs"><div class="on"><span>🎞</span>Film</div><div><span>☀</span>Korekty</div><div><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
+</div>
+<h2>2 · Edytor – zakładka Film</h2><ul>
+<li>Zdjęcie ma pierwszeństwo; panel ≈ 40% wysokości.</li>
+<li>Kategorie (7 w pakiecie) + ★ ulubione zamiast jednej listy 260 kafelków; miniatury renderowane na <b>zdjęciu użytkownika</b>.</li>
+<li>☁ = film do pobrania; dotknięcie pobiera i od razu stosuje (podgląd z niskiej jakości zastępczej).</li>
+<li>Przed/po: przytrzymanie zdjęcia (obietnica z EKRANY.md, której dziś brak).</li>
+<li>Pasek serii zawsze widoczny; przełącznik zakresu „cała seria / to zdjęcie” zamiast ukrytego trybu.</li>
+<li>Nazwa „Zapisz” zamiast „Eksportuj”: jedno dotknięcie = zapis z ustawieniami domyślnymi.</li></ul></div>
+
+<!-- 3 EDYTOR RAMKA -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b style="font-size:16px">3 z 12</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
+  <div class="photo" style="background:#17171a"><div class="frame"><div class="p"><div class="sun" style="width:40px;height:40px"></div><div class="m1"></div><div class="m2"></div></div><div class="sig">Tatry, sierpień</div></div></div>
+  <div class="panel" style="padding-bottom:2px">
+    <div class="scroll" style="padding-bottom:8px;align-items:center"><span class="chip on">Ramka włączona</span><span class="chip on">1:1</span><span class="chip">4:5</span><span class="chip">3:2</span><span class="chip">Oryginał</span></div>
+    <div class="scroll" style="padding-bottom:6px;align-items:center">
+      <span style="width:36px;height:36px;border-radius:50%;background:#fff;outline:2px solid var(--ac);outline-offset:2px;flex:none"></span>
+      <span style="width:36px;height:36px;border-radius:50%;background:#f3ead8;flex:none"></span>
+      <span style="width:36px;height:36px;border-radius:50%;background:#111;border:1px solid var(--ol);flex:none"></span>
+      <span class="chip" style="margin-left:8px">Podpis ✎</span><span class="chip">Szerokość 5%</span></div>
+    <div style="margin:0 16px 8px;border:1px solid var(--ol);border-radius:12px;min-height:48px;display:flex;align-items:center;padding:0 14px;justify-content:space-between"><span>Tatry, sierpień</span><span style="color:var(--tx2);font-size:12px">15/40</span></div>
+  </div>
+  <div class="tabs"><div><span>🎞</span>Film</div><div><span>☀</span>Korekty</div><div class="on"><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
+</div>
+<h2>3 · Edytor – zakładka Ramka</h2><ul>
+<li>Ramka żyje <b>w edytorze</b> z podglądem na żywo na tym samym płótnie – dziś to osobny ekran i tylko mały chip „Ramka: wył.”.</li>
+<li>Domyślnie wył. (RAMKA-SPEC); stany: bez ramki / bez podpisu / z podpisem – trzy pozycje jednego przełącznika zamiast dwóch.</li>
+<li>Kolory jako próbki 48 dp z opisem dla TalkBack („Biały, wybrany”).</li>
+<li>Błąd „Podpis za długi” pod polem, nie pod podglądem.</li></ul></div>
+
+<!-- 4 EKSPORT SHEET -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b style="font-size:16px">3 z 12</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
+  <div class="photo"><div class="sun"></div><div class="m1"></div><div class="m2"></div></div>
+  <div class="tabs"><div class="on"><span>🎞</span>Film</div><div><span>☀</span>Korekty</div><div><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div style="font-size:18px;font-weight:500;margin-bottom:2px">Zapisz 12 zdjęć</div>
+    <div style="color:var(--tx2);font-size:13px;margin-bottom:12px">Kolor ciepły · ramka 1:1 · podpis „Tatry”</div>
+    <div class="seg" style="margin-bottom:10px"><div class="on">JPEG</div><div>PNG</div></div>
+    <div class="seg" style="margin-bottom:10px"><div>Standard</div><div class="on">Wysoka</div><div>Maksymalna</div></div>
+    <div class="seg" style="margin-bottom:14px"><div class="on">Oryginał</div><div>2048 px</div><div>1080 px</div></div>
+    <div style="color:var(--tx2);font-size:12px;margin-bottom:14px">🔒 Lokalizacja i dane aparatu są usuwane. Zapis do Pictures/RetroFilm.</div>
+    <div class="btn" style="width:100%;min-height:56px">Zapisz serię</div>
+  </div>
+</div>
+<h2>4 · Eksport jako arkusz</h2><ul>
+<li>Zamiast osobnego ekranu: arkusz dolny z trzema decyzjami, jedną zbędną mniej (suwak 1–100% → trzy poziomy jakości; wartość liczbową zostawić w „Więcej”).</li>
+<li>PNG jest w EKRANY.md, nie ma go w kodzie (dziś tylko JPEG) – na makiecie jako opcja do decyzji.</li>
+<li>Seria: postęp w powiadomieniu (WorkManager) <b>i</b> w arkuszu; anulowanie i „Ponów nieudane” w tym samym miejscu.</li></ul></div>
+</div>
+
+<h3>B. Pozostałe ekrany</h3>
+<div class="row">
+
+<!-- 5 PRZED/PO + KOREKTY -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b style="font-size:16px">Korekty</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
+  <div class="photo"><div class="sun"></div><div class="m1"></div><div class="m2"></div>
+    <div style="position:absolute;top:0;bottom:0;left:0;width:48%;background:linear-gradient(#cfc2b2,#9a8a85 55%,#4a4048);overflow:hidden"></div>
+    <div style="position:absolute;top:0;bottom:0;left:48%;width:2px;background:#fff"></div>
+    <div class="badge">Oryginał</div><div class="badge" style="left:auto;right:10px">Kolor ciepły</div></div>
+  <div class="panel">
+    <div class="slider">Moc filmu <u style="--v:50%"></u><b style="color:var(--ac);width:44px;text-align:right">100%</b></div>
+    <div class="slider">Ekspozycja <u style="--v:55%"></u><b style="width:44px;text-align:right">+0,2</b></div>
+    <div class="slider">Kontrast <u style="--v:48%"></u><b style="width:44px;text-align:right">−5</b></div>
+    <div class="slider">Ziarno <u style="--v:30%"></u><b style="width:44px;text-align:right">30</b></div>
+    <div class="slider" style="height:40px"><span class="chip">Cienie / światła</span><span class="chip">Temperatura</span><span class="chip">Wyzeruj</span></div>
+  </div>
+  <div class="tabs"><div><span>🎞</span>Film</div><div class="on"><span>☀</span>Korekty</div><div><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
+</div>
+<h2>5 · Korekty i przed/po</h2><ul>
+<li>Silnik ma już ekspozycję, kontrast, cienie/światła, nasycenie, temperaturę, ziarno (ARCHITEKTURA.md), a UI nie wystawia żadnej – to najtańszy zysk funkcjonalny.</li>
+<li>Przed/po jako suwak podziału (alternatywa dla przytrzymania).</li>
+<li>Jedna zakładka, suwaki 48 dp z wartością liczbową i stateDescription.</li></ul></div>
+
+<!-- 6 BIBLIOTEKA -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b>Filmy</b><div class="ico">⌕</div></div>
+  <div class="scroll" style="flex:none;padding-bottom:10px"><span class="chip on">Wszystkie</span><span class="chip">★ Ulubione</span><span class="chip">Pobrane</span><span class="chip">Kolor</span><span class="chip">Czarno-białe</span></div>
+  <div class="card" style="display:flex;gap:12px;align-items:center"><div style="flex:1"><b>Pobierz więcej filmów</b><div style="color:var(--tx2);font-size:12px">252 filmy · tylko Wi-Fi · ok. 360 MB</div></div><div class="btn sm o">Pobierz</div></div>
+  <div class="grid3" style="padding:0 16px;gap:10px">
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#ffa24a,#7a4a4a)"><span class="pill">★</span></i>Ciepły</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e08b55,#6a4a55)"></i>Wyblakły</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁ 9 MB</em></i>Chłodny</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Różowy</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Ziarnisty</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e9c48a,#7a5a3a)"><em class="cloud">☁ 9 MB</em></i>Piaskowy</div>
+  </div>
+  <div style="color:var(--tx2);font-size:12px;padding:14px 16px">Źródło i licencja: dotknij i przytrzymaj film → „Informacje”.</div>
+</div>
+<h2>6 · Biblioteka filmów</h2><ul>
+<li>Połączenie dzisiejszego „Filtry (LUT)” (zarządzanie pobraniami) z wyborem filmu. Jeden ekran zamiast dwóch światów.</li>
+<li>Nazwa „Filmy”, nie „LUT” – żargon zostaje tylko w „Dodaj własny LUT”.</li>
+<li>Wiersze 4 MB-statystyk → jedna karta; cache i usuwanie przeniesione do Ustawień → Pamięć.</li>
+<li>Licencja przy każdym filmie (wymóg EKRANY.md) w menu „Informacje”.</li></ul></div>
+
+<!-- 7 USTAWIENIA -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b>Ustawienia</b></div>
+  <div style="padding:4px 16px;color:var(--tx2);font-size:12px;letter-spacing:.08em">DOMYŚLNE</div>
+  <div class="card"><b>Ramka i podpis</b><div style="color:var(--tx2);font-size:13px">Wył. · biała · 1:1</div></div>
+  <div class="card"><b>Zapis</b><div style="color:var(--tx2);font-size:13px">JPEG · wysoka · oryginalny rozmiar</div></div>
+  <div style="padding:10px 16px 4px;color:var(--tx2);font-size:12px;letter-spacing:.08em">WYGLĄD</div>
+  <div class="card" style="display:flex;align-items:center"><div style="flex:1"><b>Kolory z tapety</b><div style="color:var(--tx2);font-size:13px">Material You, Android 12+</div></div><div style="width:52px;height:32px;border-radius:16px;border:2px solid var(--ol)"></div></div>
+  <div style="padding:10px 16px 4px;color:var(--tx2);font-size:12px;letter-spacing:.08em">PAMIĘĆ I SIEĆ</div>
+  <div class="card"><b>Pobrane filmy: 820 KB · cache 0 MB</b><div style="color:var(--tx2);font-size:13px">Wyczyść · tylko Wi-Fi: wł.</div></div>
+  <div style="padding:10px 16px 4px;color:var(--tx2);font-size:12px;letter-spacing:.08em">O APLIKACJI</div>
+  <div class="card"><b>Licencje i autorzy</b><div style="color:var(--tx2);font-size:13px">Internet służy tylko do pobierania filmów.</div></div>
+</div>
+<h2>7 · Ustawienia</h2><ul>
+<li>Sekcje zamiast płaskiej listy; domyślna ramka/podpis/jakość (wymóg EKRANY.md, dziś brak).</li>
+<li>Prywatność jako jedno zdanie w „O aplikacji” – dziś powtórzona na trzech ekranach.</li></ul></div>
+
+<!-- 8 STAN BŁĘDU / SERIA -->
+<div class="fig"><div class="phone">
+  <div class="bar"><div class="ico">←</div><b>Zapisywanie…</b></div>
+  <div style="padding:8px 16px">
+    <div class="card" style="margin:0 0 10px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><b>7 z 12</b><span style="color:var(--tx2)">≈ 40 s</span></div>
+      <div style="height:6px;border-radius:3px;background:var(--sel)"><div style="width:58%;height:100%;background:var(--ac);border-radius:3px"></div></div>
+      <div style="color:var(--tx2);font-size:12px;margin-top:8px">Możesz zamknąć ekran – zapis trwa w tle.</div></div>
+  </div>
+  <div class="grid3" style="padding:0 16px;gap:6px">
+    <i style="background:linear-gradient(#ffb865,#8a5a55)"></i><i style="background:linear-gradient(#ffb865,#8a5a55)"></i><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>
+    <i style="background:linear-gradient(#ffb865,#8a5a55)"></i><i style="background:linear-gradient(#ffb865,#8a5a55)"></i><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>
+    <i style="background:linear-gradient(#ffb865,#8a5a55)"></i><i style="background:#26262c;display:grid;place-items:center;color:var(--err);font-size:22px">!</i><i style="background:#26262c"></i>
+  </div>
+  <div style="padding:14px 16px;color:var(--err);font-size:13px">1 zdjęcie nie zapisane: za mało miejsca.</div>
+  <div style="padding:0 16px;display:flex;gap:8px"><div class="btn o" style="flex:1">Anuluj</div><div class="btn" style="flex:1">Ponów nieudane</div></div>
+</div>
+<h2>8 · Postęp serii i błędy</h2><ul>
+<li>Miniatury ze statusem (✓ / ! / oczekuje), czas, „Ponów nieudane”, anulowanie.</li>
+<li>Błąd zawsze z przyczyną i akcją; reszta wyników zachowana (EKRANY.md §6).</li></ul></div>
+</div>
+
+<p class="note">Nawigacja: Start → Edytor (zakładki Film / Korekty / Ramka / Więcej) → arkusz Zapisz. Ustawienia i Filmy z ikon na Starcie i w „Więcej”. Wszystkie cele ≥ 48 dp, kontrast AA, każdy element z opisem dla TalkBack; panele przewijalne przy powiększonej czcionce (200%).</p>
+</body>
+</html>

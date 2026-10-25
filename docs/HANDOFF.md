@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-25 – Lumen (przegląd koncepcji)
+- Faza: poza fazami (ocena + redesign UI/UX)
+- Zrobione: `docs/OCENA-I-REDESIGN.md` (ocena koncepcji, uwagi T1–T12, pytania do Jack4B) i `docs/makiety/index.html` (8 makiet v2).
+- PR / gałąź: `ccr-0dd79b3e-ffwulp`.
+- Otwarte / P2 odłożone: T1 nazwy producentów w katalogu (P0, ESKALACJA); rozjazd README/PLAN/EKRANY z kodem – poprawić po decyzjach Jack4B.
+- Następny krok: decyzje Jack4B (pytania 1–5 w ocenie), potem review Gauge → Critic.
+
 ## 2026-10-25 – Forge
 - Faza: F3 (spięcie aplikacji)
 - Zrobione: `MainActivity` – ścieżka testowa: Photo Picker → film (identity + katalog `assets/luts`) → ramka + podpis (`SignatureFitCheck`) → eksport JPEG (`JpegExporter`) do MediaStore `Pictures/RetroFilm` (API 26–28: SAF). Orientacja EXIF na pikselach (`ExifOrientation`, testy JVM), ICC zachowany (P3 → ramka → JPEG), trasa `settings` (placeholder).
