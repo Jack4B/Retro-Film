@@ -5,6 +5,8 @@ import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.LutAffineFit
 import app.retrofilm.core.engine.LutCatalog
 import app.retrofilm.core.engine.LutEngine
+import app.retrofilm.core.engine.LutEntry
+import app.retrofilm.core.engine.LutMemoryCache
 import app.retrofilm.core.ui.engine.FilmEngine
 import app.retrofilm.core.ui.engine.FilmLut
 import java.util.concurrent.ConcurrentHashMap
@@ -13,9 +15,14 @@ import java.util.concurrent.ConcurrentHashMap
  * Adapter `core:ui` [FilmEngine] nad `core:engine`: lista klisz z [LutCatalog], podgląd jako
  * macierz koloru dopasowana MNK do LUT-u ([LutAffineFit]); pełny render przez [renderer] ([LutEngine]).
  */
-class EngineFilmEngine(private val catalog: LutCatalog, val renderer: LutEngine) : FilmEngine {
+class EngineFilmEngine(
+    private val catalog: LutCatalog,
+    val renderer: LutEngine,
+    private val open: (LutCatalog, LutEntry) -> Lut = { c, e -> c.open(e) },
+    /** Ograniczony LRU zdekodowanych LUT-ów (domyślnie 3 × 144³); wcześniej mapa bez limitu. */
+    internal val luts: LutMemoryCache = LutMemoryCache()
+) : FilmEngine {
     private val fits = ConcurrentHashMap<String, Array<FloatArray>>()
-    private val luts = ConcurrentHashMap<String, Lut>()
 
     override fun availableLuts(): List<FilmLut> = catalog.entries.map { FilmLut(it.id, it.name) }
 
@@ -27,8 +34,9 @@ class EngineFilmEngine(private val catalog: LutCatalog, val renderer: LutEngine)
     }
 
     /** Pełny LUT do renderu (eksport / pełna jakość); null gdy brak w katalogu. */
-    fun load(id: String): Lut? = luts[id] ?: catalog.entries.firstOrNull { it.id == id }
-        ?.let { entry -> catalog.open(entry).also { luts[id] = it } }
+    fun load(id: String): Lut? = luts.getOrPut(id) {
+        catalog.entries.firstOrNull { it.id == id }?.let { entry -> open(catalog, entry) }
+    }
 
     companion object {
         private const val MAX_BYTE = 255f
