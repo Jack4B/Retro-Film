@@ -24,9 +24,16 @@ data class Adjustments(
     /** Ziarno filmowe 0..1. */
     val grain: Float = 0f,
     /** Winieta 0..1: przyciemnione rogi. */
-    val vignette: Float = 0f
+    val vignette: Float = 0f,
+    /** Ostrość 0..1: maska unsharp na jasności (zob. [DetailFilter]). */
+    val sharpness: Float = 0f,
+    /** Wyrazistość −1..1: lokalny kontrast w półtonach; minus zmiękcza. */
+    val clarity: Float = 0f
 ) {
     val isNeutral: Boolean get() = this == None
+
+    /** Czy potrzebny jest przebieg po sąsiedztwie pikseli ([DetailFilter]). */
+    val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f
 
     companion object {
         val None = Adjustments()
@@ -256,6 +263,12 @@ object AdjustmentsApplier {
             processor.process(buf, w * rows, w, y, h)
             out.setPixels(buf, 0, w, 0, y, w, rows)
             y += rows
+        }
+        if (adj.hasDetail) {
+            val all = IntArray(w * h)
+            out.getPixels(all, 0, w, 0, 0, w, h)
+            DetailFilter.apply(all, w, h, adj.sharpness, adj.clarity)
+            out.setPixels(all, 0, w, 0, 0, w, h)
         }
         return out
     }

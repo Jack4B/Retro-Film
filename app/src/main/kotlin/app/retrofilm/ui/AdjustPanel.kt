@@ -43,7 +43,8 @@ private const val RANGE = 1f
 private enum class AdjustGroup(val label: Int) {
     Light(R.string.adjust_group_light),
     Color(R.string.adjust_group_color),
-    Film(R.string.adjust_group_film)
+    Film(R.string.adjust_group_film),
+    Detail(R.string.adjust_group_detail)
 }
 
 /** Zakładka Korekty: trzy grupy (Światło, Kolor, Klisza); zmiana zatwierdzana po puszczeniu suwaka. */
@@ -67,6 +68,7 @@ fun AdjustPanel(state: MainState) {
             AdjustGroup.Light -> LightSliders(state)
             AdjustGroup.Color -> ColorSliders(state)
             AdjustGroup.Film -> FilmSliders(state)
+            AdjustGroup.Detail -> DetailSliders(state)
         }
         OutlinedButton(
             onClick = { state.adjustments = Adjustments.None },
@@ -103,6 +105,17 @@ private fun ColorSliders(state: MainState) {
     }
     AdjustSlider(stringResource(R.string.adjust_temperature), a.temperature, { percentText(it) }) {
         state.adjustments = a.copy(temperature = it)
+    }
+}
+
+@Composable
+private fun DetailSliders(state: MainState) {
+    val a = state.adjustments
+    AdjustSlider(stringResource(R.string.adjust_sharpness), a.sharpness, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(sharpness = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_clarity), a.clarity, { percentText(it) }) {
+        state.adjustments = a.copy(clarity = it)
     }
 }
 
