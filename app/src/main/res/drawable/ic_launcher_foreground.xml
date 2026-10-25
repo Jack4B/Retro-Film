@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ikona: zdjęcie błyskawiczne (ramka z podpisem) ze słońcem i górami. Strefa bezpieczna adaptive icon: koło 66 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Papier: bursztynowa ramka z oknem na zdjęcie (otwór przez even-odd). -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="1.12"
+        android:scaleY="1.12">
+        <path
+            android:fillColor="#F5A33B"
+            android:fillType="evenOdd"
+            android:pathData="M37,29 H71 A4,4 0 0 1 75,33 V75 A4,4 0 0 1 71,79 H37 A4,4 0 0 1 33,75 V33 A4,4 0 0 1 37,29 Z M38,34 H70 V66 H38 Z" />
+        <!-- Zdjęcie: nocne niebo, góry, słońce. -->
+        <path
+            android:fillColor="#1E1822"
+            android:pathData="M38,34 H70 V66 H38 Z" />
+        <path
+            android:fillColor="#FFE19A"
+            android:pathData="M53,45 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
+        <path
+            android:fillColor="#4D3548"
+            android:pathData="M38,66 V56 L47,48 L54,56 L60,46 L70,56 V66 Z" />
+        <!-- Podpis odręczny na dolnym pasie ramki. -->
+        <path
+            android:pathData="M42,73 C46,69 48,76 52,72 S60,70 66,73"
+            android:strokeColor="#0E0E10"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="1.6" />
+    </group>
+</vector>
