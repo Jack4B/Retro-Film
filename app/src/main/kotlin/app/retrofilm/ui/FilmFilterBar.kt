@@ -27,6 +27,7 @@ private fun brandLabel(brand: String): Int = when (brand) {
 }
 
 /** Dwa rzędy chipów: Ulubione + marki, a pod nimi rodzaje filmów wybranej marki. */
+@Suppress("LongParameterList") // stan i zdarzenia filtra przekazywane jawnie; grupowanie w obiekt później
 @Composable
 fun FilmFilterBar(
     films: List<FilmOption>,
