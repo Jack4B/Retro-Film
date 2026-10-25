@@ -56,6 +56,31 @@ class PackDownloaderTest {
     }
 
     @Test
+    fun wrongContentRangeRestartsFromZero() {
+        dest().parentFile!!.mkdirs()
+        val part = File(dest().path + ".part")
+        part.writeBytes(body.copyOfRange(0, 4000))
+        server.enqueue(
+            MockResponse().setResponseCode(206)
+                .setHeader("Content-Range", "bytes 0-9999/10000")
+                .setBody(Buffer().write(body))
+        )
+        server.enqueue(MockResponse().setBody(Buffer().write(body)))
+        val r = downloader.download(server.url("/a.png").toString(), dest(), sha, body.size.toLong())
+        assertTrue(r is DownloadResult.Ok)
+        assertEquals("bytes=4000-", server.takeRequest().getHeader("Range"))
+        assertNull(server.takeRequest().getHeader("Range"))
+        assertTrue(dest().readBytes().contentEquals(body))
+    }
+
+    @Test
+    fun contentRangeParsing() {
+        assertEquals(4000L, PackDownloader.contentRangeStart("bytes 4000-9999/10000"))
+        assertNull(PackDownloader.contentRangeStart(null))
+        assertNull(PackDownloader.contentRangeStart("bytes */10000"))
+    }
+
+    @Test
     fun plainUserAgentAndNoRangeOnFreshDownload() {
         server.enqueue(MockResponse().setBody(Buffer().write(body)))
         downloader.download(server.url("/a.png").toString(), dest(), sha, body.size.toLong())
@@ -93,10 +118,14 @@ class PackDownloaderTest {
         assertFalse(p.isAllowed(URL("http://raw.githubusercontent.com/x")))
         assertFalse(p.isAllowed(URL("https://github.com/x")))
         val e = PackCatalog.parse(
-            """{"packs":[{"id":"a","displayName":"A","category":"bw","sha256":"","bytes":1}]}"""
+            """{"grid":144,"luts":[{"id":"bw/a","displayName":"A","file":"luts/bw/a.png","sha256":"",""" +
+                """"bytes":1,"unpackedLength":8957952}]}"""
         ).single()
-        assertEquals("https://raw.githubusercontent.com/Jack4B/Retro-Film-LUTs/luts-v1/bw/a.png", PackCatalog.urlFor(e))
+        assertEquals(
+            "https://raw.githubusercontent.com/Jack4B/Retro-Film-LUTs/luts-v1/luts/bw/a.png",
+            PackCatalog.urlFor(e)
+        )
         assertFalse(e.downloadable)
-        assertEquals(144L * 144 * 144 * 3, e.unpackedBytes)
+        assertEquals("bw~a", e.localName)
     }
 }

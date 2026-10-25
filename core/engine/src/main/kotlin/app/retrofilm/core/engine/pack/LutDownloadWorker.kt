@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 class LutDownloadWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     @Suppress("ReturnCount")
     override suspend fun doWork(): Result {
+        if (!LutDownloadFeature.ENABLED) return Result.failure()
         val id = inputData.getString(KEY_ID) ?: return Result.failure()
         val entry = LutPackFiles.catalog(applicationContext).firstOrNull { it.id == id && it.downloadable }
             ?: return failure(DownloadFailure.CHECKSUM)
@@ -93,5 +94,5 @@ object LutPackFiles {
 
     fun cacheDir(context: Context): File = File(context.noBackupFilesDir, "luts/raw")
 
-    fun pngFile(context: Context, entry: PackEntry): File = File(pngDir(context), "${entry.id}.png")
+    fun pngFile(context: Context, entry: PackEntry): File = File(pngDir(context), "${entry.localName}.png")
 }

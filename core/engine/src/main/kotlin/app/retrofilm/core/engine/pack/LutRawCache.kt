@@ -14,8 +14,9 @@ class LutRawCache(
 ) {
     /** Zwraca LUT z cache albo rozpakowuje go przez [unpack] i zapisuje. */
     @Synchronized
-    fun get(id: String, size: Int, unpack: () -> Lut): Lut {
+    fun get(id: String, size: Int, unpackedLength: Long = Lut.expectedBytes(size, 1).toLong(), unpack: () -> Lut): Lut {
         val expected = Lut.expectedBytes(size, 1)
+        require(unpackedLength == expected.toLong()) { "unpackedLength $unpackedLength ≠ $size³·3" }
         val file = fileFor(id)
         if (file.length() == expected.toLong()) {
             file.setLastModified(nextStamp())
@@ -78,10 +79,10 @@ class LutRawCache(
     }
 
     companion object {
-        /** ~20 filmów po 144^3*3 ≈ 8,96 MB. */
+        /** ~20 filmów po 144³·3 ≈ 8,96 MB (film 256³ zajmuje ~48 MB – liczone z rzeczywistej długości). */
         const val DEFAULT_MAX_BYTES = 180L * 1024 * 1024
         private const val SUFFIX = ".raw"
         private const val STAMP_STEP_MS = 1000L
-        private val SAFE_ID = Regex("[a-z0-9_-]+")
+        private val SAFE_ID = Regex("[a-z0-9_.~-]+")
     }
 }

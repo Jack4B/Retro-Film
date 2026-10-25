@@ -36,6 +36,15 @@ class HaldClutDecoderTest {
         }
     }
 
+    @Test
+    fun identityLevel16DecodesTo256Grid() {
+        val lut = HaldClutDecoder.decode(identityHald(level = 16).inputStream(), expectedSize = 256)
+        assertEquals(256, lut.size)
+        assertEquals(50_331_648, lut.data.size)
+        assertEquals(255, lut.node(255, 0, 7, 0))
+        assertEquals(7, lut.node(255, 0, 7, 2))
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun wrongExpectedSizeRejected() {
         HaldClutDecoder.decode(identityHald(level = 4).inputStream(), expectedSize = 144)

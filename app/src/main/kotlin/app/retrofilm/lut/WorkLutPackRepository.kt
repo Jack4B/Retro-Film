@@ -6,6 +6,7 @@ import androidx.work.WorkManager
 import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.pack.DownloadFailure
 import app.retrofilm.core.engine.pack.HaldClutDecoder
+import app.retrofilm.core.engine.pack.LutDownloadFeature
 import app.retrofilm.core.engine.pack.LutDownloadWorker
 import app.retrofilm.core.engine.pack.LutPackFiles
 import app.retrofilm.core.engine.pack.LutRawCache
@@ -30,7 +31,9 @@ class WorkLutPackRepository(context: Context, private val settings: LutDownloadS
     LutCacheInfo {
     private val app = context.applicationContext
     private val workManager = WorkManager.getInstance(app)
-    private val entries: List<PackEntry> = LutPackFiles.catalog(app)
+
+    // Flaga wyłączona ⇒ brak wpisów do pobrania (UI nic nie pokazuje, download() nic nie robi).
+    private val entries: List<PackEntry> = if (LutDownloadFeature.ENABLED) LutPackFiles.catalog(app) else emptyList()
     private val workStates = MutableStateFlow<Map<String, PackState>>(emptyMap())
 
     private val packsState = MutableStateFlow(buildPacks())
@@ -68,8 +71,8 @@ class WorkLutPackRepository(context: Context, private val settings: LutDownloadS
         if (entry.bundled) return
         cancel(id)
         LutPackFiles.pngFile(app, entry).delete()
-        java.io.File(LutPackFiles.pngDir(app), "${entry.id}.png${PackDownloader.PART_SUFFIX}").delete()
-        cache.remove(id)
+        java.io.File(LutPackFiles.pngDir(app), "${entry.localName}.png${PackDownloader.PART_SUFFIX}").delete()
+        cache.remove(entry.localName)
         refresh()
     }
 
@@ -84,7 +87,9 @@ class WorkLutPackRepository(context: Context, private val settings: LutDownloadS
         val entry = entries.firstOrNull { it.id == id && !it.bundled } ?: return null
         val png = LutPackFiles.pngFile(app, entry)
         if (!png.exists()) return null
-        return cache.get(id, entry.size) { png.inputStream().use { HaldClutDecoder.decode(it, entry.size) } }
+        return cache.get(entry.localName, entry.grid, entry.unpackedLength) {
+            png.inputStream().use { HaldClutDecoder.decode(it, entry.grid) }
+        }
     }
 
     private fun refresh() {

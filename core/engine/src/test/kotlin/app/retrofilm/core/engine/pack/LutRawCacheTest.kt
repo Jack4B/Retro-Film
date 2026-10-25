@@ -22,10 +22,10 @@ class LutRawCacheTest {
             unpacks++
             Lut.identity(8)
         }
-        cache.get("a", 8, unpack)
-        cache.get("b", 8, unpack)
-        cache.get("a", 8, unpack) // a świeższe niż b
-        cache.get("c", 8, unpack)
+        cache.get("a", 8, unpack = unpack)
+        cache.get("b", 8, unpack = unpack)
+        cache.get("a", 8, unpack = unpack) // a świeższe niż b
+        cache.get("c", 8, unpack = unpack)
         assertEquals(3, unpacks)
         assertTrue(cache.contains("a"))
         assertFalse(cache.contains("b"))

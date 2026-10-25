@@ -95,7 +95,18 @@ class PackDownloader(
                         return@repeat
                     }
 
-                    code == HttpURLConnection.HTTP_PARTIAL && offset > 0 -> Unit
+                    code == HttpURLConnection.HTTP_PARTIAL && offset > 0 -> {
+                        if (contentRangeStart(conn.getHeaderField("Content-Range")) != offset) {
+                            // Serwer zwrócił inny fragment niż prosiliśmy – zaczynamy od zera.
+                            part.delete()
+                            return@repeat
+                        }
+                    }
+
+                    code == HttpURLConnection.HTTP_PARTIAL -> {
+                        part.delete()
+                        return DownloadFailure.NETWORK
+                    }
 
                     code == HttpURLConnection.HTTP_OK -> if (offset > 0) part.delete()
 
@@ -152,6 +163,10 @@ class PackDownloader(
         private const val SPACE_MARGIN = 16L * 1024 * 1024
         private const val HTTP_RANGE_NOT_SATISFIABLE = 416
         private val REDIRECT_CODES = setOf(301, 302, 303, 307, 308)
+
+        /** Początek zakresu z nagłówka `Content-Range: bytes X-Y/Z`; `null` gdy brak/niepoprawny. */
+        fun contentRangeStart(header: String?): Long? =
+            header?.trim()?.removePrefix("bytes ")?.substringBefore('-')?.trim()?.toLongOrNull()
 
         fun sha256(file: File): String {
             val md = MessageDigest.getInstance("SHA-256")
