@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.outlined.CropFree
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -69,7 +70,9 @@ data class EditorUiState(
     val intensity: Float = 1f,
     val frameEnabled: Boolean = false,
     val canUndo: Boolean = false,
-    val canRedo: Boolean = false
+    val canRedo: Boolean = false,
+    /** Klisze z pakietu `luts-v1`, których nie ma jeszcze na urządzeniu (D8). */
+    val notDownloadedLutIds: Set<String> = emptySet()
 ) {
     val selectedLut get() = luts.firstOrNull { it.id == selectedLutId }
 }
@@ -87,9 +90,11 @@ fun EditorScreen(
     onSelectLut: (String?) -> Unit,
     onIntensityChange: (Float) -> Unit,
     onOpenFrame: () -> Unit,
+    onDownloadLut: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val lut = state.selectedLut
+    val lutMissing = lut != null && lut.id in state.notDownloadedLutIds
     val pct = (state.intensity * 100).roundToInt()
     Scaffold(
         modifier = modifier,
@@ -146,6 +151,22 @@ fun EditorScreen(
                             contentDescription = "Ramka $frameState, otwórz ustawienia ramki"
                         }
                 )
+                if (lutMissing && lut != null) {
+                    AssistChip(
+                        onClick = { onDownloadLut(lut.id) },
+                        label = { Text("Nie pobrano · Pobierz") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = Color.Black.copy(alpha = 0.72f),
+                            labelColor = MaterialTheme.colorScheme.primary,
+                            leadingIconContentColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.align(Alignment.TopStart).padding(12.dp)
+                            .semantics { contentDescription = "Klisza ${lut.name} nie jest pobrana. Pobierz" }
+                    )
+                }
             }
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {

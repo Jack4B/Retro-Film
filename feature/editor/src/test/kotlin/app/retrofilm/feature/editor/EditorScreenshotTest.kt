@@ -46,6 +46,13 @@ class EditorScreenshotTest {
         EditorScreen(sampleEditorState(), PreviewFilmEngine, {}, {}, {}, {}, {}, {}, {})
     }
 
+    @Test fun editor_lut_not_downloaded() = shot("edytor-lut-niepobrany") {
+        EditorScreen(
+            sampleEditorState().copy(notDownloadedLutIds = setOf("portra400")),
+            PreviewFilmEngine, {}, {}, {}, {}, {}, {}, {}
+        )
+    }
+
     @Test fun frame_off_default() {
         val s = FrameUiState(photos = single)
         assertEquals(false, s.settings.enabled)
