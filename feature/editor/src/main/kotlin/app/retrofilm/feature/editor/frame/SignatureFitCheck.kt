@@ -1,5 +1,6 @@
 package app.retrofilm.feature.editor.frame
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -8,14 +9,15 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.rememberTextMeasurer
 import app.retrofilm.core.frame.SignatureFitCheck
 import app.retrofilm.core.frame.SignatureFitStatus
+import app.retrofilm.feature.editor.R
 
 /** Komunikat pokazywany, gdy podpis nie mieści się nawet przy progu czytelności. */
-const val SIGNATURE_TOO_LONG_MESSAGE = "Podpis za długi dla tej ramki – skróć go lub zmniejsz grubość ramki"
+@StringRes
+val SIGNATURE_TOO_LONG_MESSAGE = R.string.frame_signature_too_long
 
 /** Opis dla TalkBack (bez myślnika, czytany płynnie). */
-const val SIGNATURE_TOO_LONG_A11Y =
-    "Błąd: podpis jest za długi dla tej ramki. Skróć podpis lub zmniejsz grubość ramki. " +
-        "Podpis nie zostanie wyeksportowany."
+@StringRes
+val SIGNATURE_TOO_LONG_A11Y = R.string.frame_signature_too_long_a11y
 
 /**
  * Sprawdza, czy [signature] zmieści się w ramce [settings] dla zdjęcia o proporcjach [photoAspect].

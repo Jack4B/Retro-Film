@@ -33,14 +33,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -72,13 +75,25 @@ fun GalleryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (state.selectedCount == 0) "Galeria" else "Wybrano: ${state.selectedCount}",
-                        maxLines = 1
+                        if (state.selectedCount == 0) {
+                            stringResource(R.string.gallery_title)
+                        } else {
+                            stringResource(R.string.gallery_selected_title, state.selectedCount)
+                        },
+                        maxLines = 1,
+                        modifier = Modifier.semantics { heading() }
                     )
                 },
                 actions = {
                     if (state.selectedCount > 0) {
-                        TextButton(onClick = onClearSelection) { Text("Wyczyść") }
+                        val clearCd = stringResource(R.string.gallery_clear_cd)
+                        TextButton(
+                            onClick = onClearSelection,
+                            modifier = Modifier.minimumInteractiveComponentSize().semantics {
+                                contentDescription =
+                                    clearCd
+                            }
+                        ) { Text(stringResource(R.string.gallery_clear)) }
                     }
                 }
             )
@@ -93,9 +108,9 @@ fun GalleryScreen(
                     ) {
                         Text(
                             when (state.selectedCount) {
-                                0 -> "Wybierz zdjęcia"
-                                1 -> "Edytuj zdjęcie"
-                                else -> "Edytuj serię (${state.selectedCount})"
+                                0 -> stringResource(R.string.gallery_pick_photos)
+                                1 -> stringResource(R.string.gallery_edit_photo)
+                                else -> stringResource(R.string.gallery_edit_series, state.selectedCount)
                             },
                             fontWeight = FontWeight.SemiBold
                         )
@@ -103,7 +118,7 @@ fun GalleryScreen(
                     OutlinedButton(onClick = onOpenSystemPicker, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                         Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
                         Spacer(Modifier.size(8.dp))
-                        Text("Otwórz systemowy wybór zdjęć")
+                        Text(stringResource(R.string.gallery_open_system_picker))
                     }
                 }
             }
@@ -111,7 +126,7 @@ fun GalleryScreen(
     ) { padding ->
         if (state.photos.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Brak zdjęć. Otwórz systemowy wybór zdjęć.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.gallery_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             return@Scaffold
         }
@@ -129,7 +144,13 @@ fun GalleryScreen(
         ) {
             items(state.photos, key = { it.id }) { photo ->
                 val selected = photo.id in state.selectedIds
-                val order = if (selected) state.selectedIds.indexOf(photo.id) + 1 else null
+                val order = if (selected) state.selectedIds.indexOf(photo.id) + 1 else 0
+                val photoCd = stringResource(R.string.gallery_photo_cd, photo.label)
+                val photoState = if (selected) {
+                    stringResource(R.string.gallery_photo_selected, order)
+                } else {
+                    stringResource(R.string.gallery_photo_not_selected)
+                }
                 Box(
                     Modifier
                         .aspectRatio(1f)
@@ -146,11 +167,11 @@ fun GalleryScreen(
                         )
                         .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle(photo.id) })
                         .semantics {
-                            contentDescription = "Zdjęcie ${photo.label}"
-                            stateDescription = if (selected) "Zaznaczone, pozycja $order" else "Niezaznaczone"
+                            contentDescription = photoCd
+                            stateDescription = photoState
                         }
                 ) {
-                    Photo(contentDescription = "", key = photo.seed, modifier = Modifier.fillMaxSize())
+                    Photo(contentDescription = null, key = photo.seed, modifier = Modifier.fillMaxSize())
                     Box(Modifier.align(Alignment.TopEnd).padding(6.dp).size(28.dp).clip(CircleShape)) {
                         if (selected) {
                             Icon(

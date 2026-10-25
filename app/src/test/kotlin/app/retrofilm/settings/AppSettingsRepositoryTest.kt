@@ -6,7 +6,7 @@ import java.nio.file.Files
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
@@ -18,13 +18,15 @@ class AppSettingsRepositoryTest {
     private val dir: File = Files.createTempDirectory("settings").toFile()
     private val file = File(dir, "app_settings.preferences_pb")
 
-    private fun <T> withRepo(block: suspend (AppSettingsRepository) -> T): T {
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    /** Jedna instancja DataStore na blok; zamknięcie czeka na zakończenie zapisu (bez Thread.sleep). */
+    private fun <T> withRepo(block: suspend (AppSettingsRepository) -> T): T = runBlocking {
+        val job = SupervisorJob()
+        val scope = CoroutineScope(Dispatchers.IO + job)
         try {
             val store = PreferenceDataStoreFactory.create(scope = scope, produceFile = { file })
-            return runBlocking { block(AppSettingsRepository(store)) }
+            block(AppSettingsRepository(store))
         } finally {
-            scope.cancel()
+            job.cancelAndJoin()
         }
     }
 
@@ -36,14 +38,8 @@ class AppSettingsRepositoryTest {
     @Test
     fun valueIsPersistedAcrossInstances() {
         withRepo { it.setDynamicColor(true) }
-        Thread.sleep(SETTLE_MS)
         assertTrue(withRepo { it.dynamicColor.first() })
         withRepo { it.setDynamicColor(false) }
-        Thread.sleep(SETTLE_MS)
         assertFalse(withRepo { it.dynamicColor.first() })
-    }
-
-    private companion object {
-        const val SETTLE_MS = 100L
     }
 }

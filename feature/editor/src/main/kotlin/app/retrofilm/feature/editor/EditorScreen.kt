@@ -40,14 +40,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -103,24 +106,41 @@ fun EditorScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.editor_back)
+                        )
                     }
                 },
                 title = {
+                    val series = state.seriesSize > 1
+                    val titleCd = if (series) {
+                        stringResource(R.string.editor_series_title_cd, state.seriesIndex + 1, state.seriesSize)
+                    } else {
+                        stringResource(R.string.editor_title)
+                    }
                     Text(
-                        if (state.seriesSize > 1) "${state.seriesIndex + 1} / ${state.seriesSize}" else "Edytor",
-                        maxLines = 1
+                        if (series) {
+                            stringResource(R.string.editor_series_title, state.seriesIndex + 1, state.seriesSize)
+                        } else {
+                            stringResource(R.string.editor_title)
+                        },
+                        maxLines = 1,
+                        modifier = Modifier.semantics {
+                            heading()
+                            contentDescription = titleCd
+                        }
                     )
                 },
                 actions = {
                     IconButton(onClick = onUndo, enabled = state.canUndo) {
-                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Cofnij")
+                        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.editor_undo))
                     }
                     IconButton(onClick = onRedo, enabled = state.canRedo) {
-                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = "Ponów")
+                        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = stringResource(R.string.editor_redo))
                     }
                     Button(onClick = onExport, modifier = Modifier.padding(end = 8.dp)) {
-                        Text("Eksportuj", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.editor_export), fontWeight = FontWeight.SemiBold)
                     }
                 }
             )
@@ -129,14 +149,24 @@ fun EditorScreen(
         Column(Modifier.fillMaxSize().padding(padding)) {
             Box(Modifier.fillMaxWidth().weight(1f)) {
                 Photo(
-                    contentDescription = "Podgląd zdjęcia" + (lut?.let { " z kliszą ${it.name}" } ?: " bez kliszy"),
+                    contentDescription = lut?.let { stringResource(R.string.editor_preview_with_lut, it.name) }
+                        ?: stringResource(R.string.editor_preview_no_lut),
                     key = state.photoSeed,
                     matrix = engine.previewMatrix(lut, state.intensity),
                     modifier = Modifier.fillMaxSize()
                 )
+                val frameChipCd = stringResource(
+                    if (state.frameEnabled) R.string.editor_frame_chip_on_cd else R.string.editor_frame_chip_off_cd
+                )
                 AssistChip(
                     onClick = onOpenFrame,
-                    label = { Text(if (state.frameEnabled) "Ramka: wł." else "Ramka: wył.") },
+                    label = {
+                        Text(
+                            stringResource(
+                                if (state.frameEnabled) R.string.editor_frame_on else R.string.editor_frame_off
+                            )
+                        )
+                    },
                     leadingIcon = {
                         Icon(Icons.Outlined.CropFree, contentDescription = null, modifier = Modifier.size(18.dp))
                     },
@@ -146,15 +176,14 @@ fun EditorScreen(
                         leadingIconContentColor = Color.White
                     ),
                     modifier = Modifier.align(Alignment.BottomStart).padding(12.dp)
-                        .semantics {
-                            val frameState = if (state.frameEnabled) "włączona" else "wyłączona"
-                            contentDescription = "Ramka $frameState, otwórz ustawienia ramki"
-                        }
+                        .minimumInteractiveComponentSize()
+                        .semantics { contentDescription = frameChipCd }
                 )
                 if (lutMissing && lut != null) {
+                    val missingCd = stringResource(R.string.editor_lut_missing_cd, lut.name)
                     AssistChip(
                         onClick = { onDownloadLut(lut.id) },
-                        label = { Text("Nie pobrano · Pobierz") },
+                        label = { Text(stringResource(R.string.editor_lut_missing)) },
                         leadingIcon = {
                             Icon(Icons.Outlined.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                         },
@@ -164,22 +193,29 @@ fun EditorScreen(
                             leadingIconContentColor = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier.align(Alignment.TopStart).padding(12.dp)
-                            .semantics { contentDescription = "Klisza ${lut.name} nie jest pobrana. Pobierz" }
+                            .minimumInteractiveComponentSize()
+                            .semantics { contentDescription = missingCd }
                     )
                 }
             }
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+                val intensityCd = stringResource(R.string.editor_intensity_cd)
+                val intensityState = stringResource(R.string.editor_percent_state, pct)
                 Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Intensywność",
+                            stringResource(R.string.editor_intensity),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.weight(1f)
                         )
-                        Text("$pct%", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.editor_percent, pct),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Slider(
                         value = state.intensity,
@@ -188,8 +224,8 @@ fun EditorScreen(
                         enabled = lut != null,
                         modifier = Modifier.padding(horizontal = 16.dp).height(48.dp)
                             .semantics {
-                                contentDescription = "Intensywność kliszy"
-                                stateDescription = "$pct procent"
+                                contentDescription = intensityCd
+                                stateDescription = intensityState
                             }
                     )
                     Spacer(Modifier.height(4.dp))
@@ -198,8 +234,12 @@ fun EditorScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item(key = "none") {
-                            LutTile(name = "Oryginał", selected = lut == null, onClick = { onSelectLut(null) }) {
-                                Photo("", key = state.photoSeed, modifier = Modifier.fillMaxSize())
+                            LutTile(
+                                name = stringResource(R.string.editor_original),
+                                selected = lut == null,
+                                onClick = { onSelectLut(null) }
+                            ) {
+                                Photo(null, key = state.photoSeed, modifier = Modifier.fillMaxSize())
                             }
                         }
                         items(state.luts, key = { it.id }) { item ->
@@ -207,7 +247,7 @@ fun EditorScreen(
                                 onSelectLut(item.id)
                             }) {
                                 Photo(
-                                    "",
+                                    null,
                                     key = state.photoSeed,
                                     matrix = engine.previewMatrix(item, 1f),
                                     modifier = Modifier.fillMaxSize()
@@ -224,10 +264,15 @@ fun EditorScreen(
 @Composable
 private fun LutTile(name: String, selected: Boolean, onClick: () -> Unit, thumb: @Composable () -> Unit) {
     val primary = MaterialTheme.colorScheme.primary
+    val tileCd = stringResource(R.string.editor_lut_cd, name)
+    val tileState = stringResource(if (selected) R.string.editor_selected else R.string.editor_not_selected)
     Column(
         Modifier.width(72.dp)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
-            .semantics { contentDescription = "Klisza $name" },
+            .semantics(mergeDescendants = true) {
+                contentDescription = tileCd
+                stateDescription = tileState
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(

@@ -1,5 +1,6 @@
 package app.retrofilm.feature.editor.frame
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,10 +53,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -65,21 +69,22 @@ import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.FrameGeometry
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.core.ui.photo.Photo
+import app.retrofilm.feature.editor.R
 import kotlin.math.roundToInt
 
 @Suppress("MagicNumber") // kolory ARGB
-enum class FrameBackground(val label: String, val color: Color) {
-    White("Biały", Color(0xFFFFFFFF)),
-    Cream("Kremowy", Color(0xFFF3EBDD)),
-    Black("Czarny", Color(0xFF111111))
+enum class FrameBackground(@StringRes val label: Int, val color: Color) {
+    White(R.string.frame_bg_white, Color(0xFFFFFFFF)),
+    Cream(R.string.frame_bg_cream, Color(0xFFF3EBDD)),
+    Black(R.string.frame_bg_black, Color(0xFF111111))
 }
 
 @Suppress("MagicNumber") // kolory ARGB
-enum class SignatureColor(val label: String, val color: Color) {
-    Navy("Granatowy", Color(0xFF1F2A55)),
-    Black("Czarny", Color(0xFF111111)),
-    Sepia("Sepia", Color(0xFF704214)),
-    White("Biały", Color(0xFFFFFFFF))
+enum class SignatureColor(@StringRes val label: Int, val color: Color) {
+    Navy(R.string.sig_color_navy, Color(0xFF1F2A55)),
+    Black(R.string.sig_color_black, Color(0xFF111111)),
+    Sepia(R.string.sig_color_sepia, Color(0xFF704214)),
+    White(R.string.sig_color_white, Color(0xFFFFFFFF))
 }
 
 /** Ustawienia wspólne dla całej serii. Ramka domyślnie WYŁĄCZONA. */
@@ -136,10 +141,19 @@ fun FrameScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.editor_back)
+                        )
                     }
                 },
-                title = { Text("Ramka i podpis", maxLines = 1) }
+                title = {
+                    Text(
+                        stringResource(R.string.frame_title),
+                        maxLines = 1,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
             )
         },
         floatingActionButton = {
@@ -147,7 +161,7 @@ fun FrameScreen(
                 ExtendedFloatingActionButton(
                     onClick = onApplyToSeries,
                     icon = { Icon(Icons.Filled.DoneAll, contentDescription = null) },
-                    text = { Text("Zastosuj do serii (${state.photos.size})") }
+                    text = { Text(stringResource(R.string.frame_apply_series, state.photos.size)) }
                 )
             }
         }
@@ -169,30 +183,44 @@ fun FrameScreen(
             if (fitStatus == SignatureFitStatus.TooLong) SignatureTooLongBanner()
             if (series) SeriesStrip(state, onSelectPhoto)
 
-            ToggleRow("Ramka", if (s.enabled) "Włączona" else "Wyłączona (domyślnie)", s.enabled) {
+            ToggleRow(
+                stringResource(R.string.frame_toggle),
+                stringResource(if (s.enabled) R.string.frame_on else R.string.frame_off_default),
+                s.enabled
+            ) {
                 onSettingsChange(s.copy(enabled = it))
             }
             val frameAlpha = if (s.enabled) 1f else 0.38f
             Column(Modifier.alpha(frameAlpha), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Proporcje", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.frame_aspect), style = MaterialTheme.typography.titleSmall)
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     FrameAspect.entries.forEachIndexed { i, a ->
+                        val aspectCd = stringResource(R.string.frame_aspect_cd, a.label)
                         SegmentedButton(
                             selected = s.aspect == a,
                             onClick = { onSettingsChange(s.copy(aspect = a)) },
                             enabled = s.enabled,
                             shape = SegmentedButtonDefaults.itemShape(i, FrameAspect.entries.size),
                             modifier = Modifier.heightIn(min = 48.dp).semantics {
-                                contentDescription =
-                                    "Proporcje ${a.label}"
+                                contentDescription = aspectCd
                             }
                         ) { Text(a.label, maxLines = 1) }
                     }
                 }
                 val pct = (s.margin * 100).roundToInt()
+                val thicknessCd = stringResource(R.string.frame_thickness_cd)
+                val thicknessState = stringResource(R.string.editor_percent_state, pct)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Grubość ramki", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                    Text("$pct%", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.frame_thickness),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        stringResource(R.string.editor_percent, pct),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Slider(
                     value = s.margin * 100,
@@ -201,19 +229,21 @@ fun FrameScreen(
                     steps = 14,
                     enabled = s.enabled,
                     modifier = Modifier.height(48.dp).semantics {
-                        contentDescription = "Grubość ramki, procent krótszego boku"
-                        stateDescription = "$pct procent"
+                        contentDescription = thicknessCd
+                        stateDescription = thicknessState
                     }
                 )
-                Text("Kolor ramki", style = MaterialTheme.typography.titleSmall)
-                SwatchRow(FrameBackground.entries, s.background, { it.color }, { it.label }, s.enabled) {
+                Text(stringResource(R.string.frame_color), style = MaterialTheme.typography.titleSmall)
+                SwatchRow(FrameBackground.entries, s.background, {
+                    it.color
+                }, { stringResource(it.label) }, s.enabled) {
                     onSettingsChange(s.copy(background = it))
                 }
             }
 
             ToggleRow(
-                "Podpis",
-                if (s.signatureEnabled) "Pas podpisu: dolne 20%" else "Wyłączony — równy margines",
+                stringResource(R.string.frame_signature_toggle),
+                stringResource(if (s.signatureEnabled) R.string.frame_signature_band else R.string.frame_signature_off),
                 s.signatureEnabled,
                 enabled = s.enabled
             ) {
@@ -235,11 +265,13 @@ fun FrameScreen(
                     ) {
                         Checkbox(checked = state.isOverride, onCheckedChange = null, enabled = sigActive)
                         Spacer(Modifier.size(12.dp))
-                        Text("Podpis tylko dla tego zdjęcia")
+                        Text(stringResource(R.string.frame_signature_override))
                     }
                 }
-                Text("Kolor podpisu", style = MaterialTheme.typography.titleSmall)
-                SwatchRow(SignatureColor.entries, s.signatureColor, { it.color }, { it.label }, sigActive) {
+                Text(stringResource(R.string.frame_signature_color), style = MaterialTheme.typography.titleSmall)
+                SwatchRow(SignatureColor.entries, s.signatureColor, {
+                    it.color
+                }, { stringResource(it.label) }, sigActive) {
                     onSettingsChange(s.copy(signatureColor = it))
                 }
             }
@@ -249,14 +281,16 @@ fun FrameScreen(
 
 @Composable
 private fun SignatureTooLongBanner() {
+    val a11y = stringResource(SIGNATURE_TOO_LONG_A11Y)
+    val message = stringResource(SIGNATURE_TOO_LONG_MESSAGE)
     Row(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.errorContainer)
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = SIGNATURE_TOO_LONG_A11Y
+                contentDescription = a11y
                 liveRegion = LiveRegionMode.Polite
-                error(SIGNATURE_TOO_LONG_MESSAGE)
+                error(message)
             },
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -267,7 +301,7 @@ private fun SignatureTooLongBanner() {
         )
         Spacer(Modifier.size(12.dp))
         Text(
-            SIGNATURE_TOO_LONG_MESSAGE,
+            message,
             color = MaterialTheme.colorScheme.onErrorContainer,
             style = MaterialTheme.typography.bodyMedium
         )
@@ -277,34 +311,41 @@ private fun SignatureTooLongBanner() {
 @Composable
 private fun SignatureField(value: String, enabled: Boolean, onChange: (String) -> Unit) {
     val atLimit = value.length >= SIGNATURE_LIMIT
+    val counterCd = pluralStringResource(
+        R.plurals.frame_signature_counter_cd,
+        SIGNATURE_LIMIT,
+        value.length,
+        SIGNATURE_LIMIT
+    )
+    val fieldCd = stringResource(R.string.frame_signature_field_cd)
+    val limitError = stringResource(R.string.frame_signature_limit_error, SIGNATURE_LIMIT)
     OutlinedTextField(
         value = value,
         onValueChange = { onChange(it.replace("\n", " ").take(SIGNATURE_LIMIT)) },
         enabled = enabled,
         singleLine = true,
         isError = atLimit,
-        label = { Text("Podpis") },
-        placeholder = { Text("Np. Tatry, Jezioro Bachotek") },
+        label = { Text(stringResource(R.string.frame_signature_label)) },
+        placeholder = { Text(stringResource(R.string.frame_signature_placeholder)) },
         trailingIcon = {
             Text(
-                "${value.length}/$SIGNATURE_LIMIT",
+                stringResource(R.string.frame_signature_counter, value.length, SIGNATURE_LIMIT),
                 color = if (atLimit) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(end = 12.dp).semantics {
-                    contentDescription =
-                        "${value.length} z $SIGNATURE_LIMIT znaków"
+                    contentDescription = counterCd
                 }
             )
         },
         supportingText = {
             if (atLimit) {
-                Text("Maksymalnie $SIGNATURE_LIMIT znaków — dalsze znaki nie zostaną dodane")
+                Text(stringResource(R.string.frame_signature_limit, SIGNATURE_LIMIT))
             } else {
-                Text("Czcionka Caveat; długi podpis zmniejszy się lub zawinie do 2 linii")
+                Text(stringResource(R.string.frame_signature_hint))
             }
         },
         modifier = Modifier.fillMaxWidth().semantics {
-            contentDescription = "Pole podpisu"
-            if (atLimit) error("Osiągnięto limit $SIGNATURE_LIMIT znaków")
+            contentDescription = fieldCd
+            if (atLimit) error(limitError)
         }
     )
 }
@@ -342,17 +383,18 @@ private fun <T> SwatchRow(
     items: List<T>,
     selected: T,
     color: (T) -> Color,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     enabled: Boolean,
     onSelect: (T) -> Unit
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items.forEach { item ->
             val isSel = item == selected
+            val itemLabel = label(item)
             Box(
                 Modifier.size(48.dp)
                     .selectable(isSel, enabled = enabled, role = Role.RadioButton, onClick = { onSelect(item) })
-                    .semantics { contentDescription = label(item) },
+                    .semantics { contentDescription = itemLabel },
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -397,6 +439,11 @@ private fun SeriesStrip(state: FrameUiState, onSelect: (Int) -> Unit) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
         itemsIndexed(state.photos, key = { _, p -> p.id }) { i, p ->
             val sel = i == state.currentIndex
+            val photoCd = if (p.signatureOverride != null) {
+                stringResource(R.string.frame_series_photo_override_cd, i + 1, state.photos.size)
+            } else {
+                stringResource(R.string.frame_series_photo_cd, i + 1, state.photos.size)
+            }
             Box(
                 Modifier.size(56.dp).clip(RoundedCornerShape(10.dp))
                     .then(
@@ -411,12 +458,10 @@ private fun SeriesStrip(state: FrameUiState, onSelect: (Int) -> Unit) {
                     )
                     .selectable(sel, role = Role.Tab, onClick = { onSelect(i) })
                     .semantics {
-                        contentDescription =
-                            "Zdjęcie ${i + 1} z ${state.photos.size}" +
-                            if (p.signatureOverride != null) ", własny podpis" else ""
+                        contentDescription = photoCd
                     }
             ) {
-                Photo("", key = p.seed, modifier = Modifier.fillMaxSize())
+                Photo(null, key = p.seed, modifier = Modifier.fillMaxSize())
                 if (p.signatureOverride != null) {
                     Box(
                         Modifier.align(

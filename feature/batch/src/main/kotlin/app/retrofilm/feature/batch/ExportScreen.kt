@@ -1,5 +1,6 @@
 package app.retrofilm.feature.batch
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,14 +41,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-enum class ExportSize(val label: String) { Original("Oryginał"), Large("2048 px"), Social("1080 px") }
+enum class ExportSize(@StringRes val label: Int) {
+    Original(R.string.export_size_original),
+    Large(R.string.export_size_large),
+    Social(R.string.export_size_social)
+}
 
 @Immutable
 data class ExportUiState(
@@ -81,10 +89,23 @@ fun ExportScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.export_back)
+                        )
                     }
                 },
-                title = { Text(if (series) "Eksport serii (${state.photoCount})" else "Eksport", maxLines = 1) }
+                title = {
+                    Text(
+                        if (series) {
+                            stringResource(R.string.export_title_series, state.photoCount)
+                        } else {
+                            stringResource(R.string.export_title)
+                        },
+                        maxLines = 1,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
             )
         },
         bottomBar = {
@@ -92,18 +113,21 @@ fun ExportScreen(
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val p = state.progress
                     if (p != null) {
-                        Text("Eksport $p/${state.photoCount}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        val progressCd = stringResource(R.string.export_progress_cd, p, state.photoCount)
+                        Text(
+                            stringResource(R.string.export_progress, p, state.photoCount),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         LinearProgressIndicator(
                             progress = { p / state.photoCount.toFloat() },
                             modifier = Modifier.fillMaxWidth().semantics {
-                                contentDescription =
-                                    "Postęp eksportu $p z ${state.photoCount}"
+                                contentDescription = progressCd
                             }
                         )
                     }
                     Button(onClick = onSave, enabled = p == null, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                         Text(
-                            if (series) "Zapisz serię do galerii" else "Zapisz do galerii",
+                            stringResource(if (series) R.string.export_save_series else R.string.export_save),
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -115,33 +139,43 @@ fun ExportScreen(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            val frameSummary = if (state.frameEnabled) {
+                state.frameSummary
+            } else {
+                stringResource(
+                    R.string.export_frame_none
+                )
+            }
+            val frameCd = stringResource(
+                R.string.export_frame_cd,
+                if (state.frameEnabled) state.frameSummary else stringResource(R.string.export_frame_none_cd)
+            )
+            val frameClick = stringResource(R.string.export_frame_click_label)
             GroupCard {
                 ListItem(
-                    headlineContent = { Text("Ramka i podpis") },
+                    headlineContent = { Text(stringResource(R.string.export_frame_title)) },
                     supportingContent = {
-                        Text(
-                            if (state.frameEnabled) state.frameSummary else "Bez ramki (domyślnie) · dotknij, aby dodać"
-                        )
+                        Text(frameSummary)
                     },
                     leadingContent = { Icon(Icons.Outlined.CropFree, contentDescription = null) },
                     trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
                     modifier = Modifier.heightIn(
                         min = 56.dp
-                    ).clickable(onClickLabel = "Otwórz ustawienia ramki", onClick = onOpenFrame)
+                    ).clickable(onClickLabel = frameClick, role = Role.Button, onClick = onOpenFrame)
                         .semantics {
-                            contentDescription =
-                                "Ramka i podpis: " +
-                                if (state.frameEnabled) state.frameSummary else "bez ramki, dotknij, aby dodać"
+                            contentDescription = frameCd
                         }
                 )
             }
             GroupCard {
+                val qualityLabel = stringResource(R.string.export_quality)
+                val qualityState = stringResource(R.string.export_percent_state, state.quality)
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Jakość JPEG", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                        Text(qualityLabel, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                         Text(
-                            "${state.quality}%",
+                            stringResource(R.string.export_percent, state.quality),
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
@@ -151,36 +185,32 @@ fun ExportScreen(
                         onValueChange = { onQualityChange(it.roundToInt()) },
                         valueRange = 60f..100f,
                         modifier = Modifier.height(48.dp).semantics {
-                            contentDescription = "Jakość JPEG"
-                            stateDescription =
-                                "${state.quality} procent"
+                            contentDescription = qualityLabel
+                            stateDescription = qualityState
                         }
                     )
-                    Text("Rozmiar", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.export_size), style = MaterialTheme.typography.titleSmall)
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         ExportSize.entries.forEachIndexed { i, sz ->
+                            val szLabel = stringResource(sz.label)
+                            val szCd = stringResource(R.string.export_size_cd, szLabel)
                             SegmentedButton(
                                 selected = state.size == sz,
                                 onClick = { onSizeChange(sz) },
                                 shape = SegmentedButtonDefaults.itemShape(i, ExportSize.entries.size),
                                 modifier = Modifier.heightIn(min = 48.dp).semantics {
-                                    contentDescription =
-                                        "Rozmiar ${sz.label}"
+                                    contentDescription = szCd
                                 }
-                            ) { Text(sz.label, maxLines = 1) }
+                            ) { Text(szLabel, maxLines = 1) }
                         }
                     }
                 }
             }
             GroupCard {
                 ListItem(
-                    headlineContent = { Text("Prywatność") },
+                    headlineContent = { Text(stringResource(R.string.export_privacy_title)) },
                     supportingContent = {
-                        Text(
-                            "Zapisywany jest tylko obraz: metadane aparatu i lokalizacja są usuwane. " +
-                                "Zdjęcia przetwarzane lokalnie. Internet służy tylko do pobierania filtrów. " +
-                                "Zdjęcia nie opuszczają telefonu."
-                        )
+                        Text(stringResource(R.string.export_privacy_body))
                     },
                     leadingContent = { Icon(Icons.Outlined.Lock, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)

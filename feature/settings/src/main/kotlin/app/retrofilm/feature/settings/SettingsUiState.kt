@@ -1,24 +1,30 @@
 package app.retrofilm.feature.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import app.retrofilm.core.ui.supportsDynamicColor
 
 /** Komponenty wymagające atrybucji, z tekstem licencji w assets core:ui. */
-enum class ThirdPartyLicense(val title: String, val author: String, val license: String, val assetPath: String) {
+enum class ThirdPartyLicense(
+    @StringRes val title: Int,
+    val author: String,
+    val license: String,
+    val assetPath: String
+) {
     FILM_SIMULATOR(
-        title = "Film-Simulator",
+        title = R.string.license_film_simulator_title,
         author = "YahiaAngelo/Film-Simulator",
         license = "MIT",
         assetPath = "licenses/MIT-Film-Simulator.txt"
     ),
     HALDCLUT(
-        title = "Filtry filmowe (HaldCLUT)",
+        title = R.string.license_haldclut_title,
         author = "RawTherapee · Pat David, Pavlov Dmitry, Michael Ezra",
         license = "CC BY-SA 4.0",
         assetPath = "licenses/CC-BY-SA-4.0.txt"
     ),
     CAVEAT(
-        title = "Font Caveat",
+        title = R.string.license_caveat_title,
         author = "The Caveat Project Authors",
         license = "SIL OFL 1.1",
         assetPath = "licenses/OFL-Caveat.txt"
@@ -44,7 +50,3 @@ object SettingsRoutes {
     /** Ekran pobierania filtrów (LutDownloadScreen). */
     const val FILTERS = "ustawienia/filtry"
 }
-
-/** Treść ekranu Prywatność (bez parametrów EXIF w UI). */
-const val PRIVACY_NOTE =
-    "Internet służy tylko do pobierania filtrów. Zdjęcia nie opuszczają telefonu. Eksport usuwa EXIF i GPS."

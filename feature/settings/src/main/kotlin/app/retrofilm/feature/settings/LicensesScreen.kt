@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -29,10 +30,11 @@ internal fun reflowLicense(text: String): String = text
 @Composable
 fun rememberLicenseText(license: ThirdPartyLicense): String {
     val context = LocalContext.current
-    return remember(license) {
+    val fallback = stringResource(R.string.licenses_load_failed)
+    return remember(license, fallback) {
         runCatching {
             reflowLicense(context.assets.open(license.assetPath).bufferedReader().use { it.readText() })
-        }.getOrDefault("Nie udało się wczytać tekstu licencji.")
+        }.getOrDefault(fallback)
     }
 }
 
@@ -50,7 +52,7 @@ fun LicensesScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { SettingsTopBar("Licencje i autorzy", onBack) }
+        topBar = { SettingsTopBar(stringResource(R.string.licenses_title), onBack) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -61,11 +63,13 @@ fun LicensesScreen(
         ) {
             items(ThirdPartyLicense.entries, key = { it.name }) { lic ->
                 NavRow(
-                    title = lic.title,
+                    title = stringResource(lic.title),
                     subtitle = "${lic.author} · ${lic.license}",
                     icon = { Icon(Icons.Outlined.Description, contentDescription = null) },
                     onClick = { onSelect(lic) },
-                    clickLabel = if (lic == selected) "zwiń tekst licencji" else "pokaż tekst licencji"
+                    clickLabel = stringResource(
+                        if (lic == selected) R.string.settings_hide_license else R.string.settings_show_license
+                    )
                 )
                 if (lic == selected) {
                     Surface(

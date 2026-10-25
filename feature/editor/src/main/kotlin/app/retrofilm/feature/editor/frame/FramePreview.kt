@@ -8,6 +8,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
@@ -19,6 +20,7 @@ import app.retrofilm.core.frame.SizeF
 import app.retrofilm.core.ui.CaveatFamily
 import app.retrofilm.core.ui.photo.LocalPhotoRenderer
 import app.retrofilm.core.ui.photo.drawPhoto
+import app.retrofilm.feature.editor.R
 
 /** Podgląd ramki na żywo; ten sam układ co eksport (FrameGeometry). */
 @Composable
@@ -34,10 +36,10 @@ fun FramePreview(
     val renderer = LocalPhotoRenderer.current
     val canvasRatio = if (!settings.enabled) photoAspect else settings.aspect.ratio ?: photoAspect
     val desc = when {
-        !settings.enabled -> "Podgląd zdjęcia bez ramki"
-        !settings.signatureEnabled -> "Podgląd: ramka ${settings.aspect.label}, bez podpisu"
-        signature.isBlank() -> "Podgląd: ramka ${settings.aspect.label}, pusty pas podpisu"
-        else -> "Podgląd: ramka ${settings.aspect.label}, podpis $signature"
+        !settings.enabled -> stringResource(R.string.frame_preview_none)
+        !settings.signatureEnabled -> stringResource(R.string.frame_preview_no_signature, settings.aspect.label)
+        signature.isBlank() -> stringResource(R.string.frame_preview_empty_signature, settings.aspect.label)
+        else -> stringResource(R.string.frame_preview_signature, settings.aspect.label, signature)
     }
     Canvas(modifier.aspectRatio(canvasRatio).semantics { contentDescription = desc }) {
         if (!settings.enabled) {

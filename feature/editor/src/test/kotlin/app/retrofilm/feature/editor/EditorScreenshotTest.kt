@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -98,8 +99,9 @@ class EditorScreenshotTest {
         val text = "W".repeat(FrameGeometry.SIGNATURE_MAX_CHARS * 3)
         val state = FrameUiState(on.copy(margin = 0.15f), seriesSignature = text, photos = single)
         frame("podpis-za-dlugi", state)
-        compose.onNodeWithText(SIGNATURE_TOO_LONG_MESSAGE).assertIsDisplayed()
-        compose.onNode(hasContentDescription(SIGNATURE_TOO_LONG_A11Y)).assertExists()
+        val res = RuntimeEnvironment.getApplication()
+        compose.onNodeWithText(res.getString(SIGNATURE_TOO_LONG_MESSAGE)).assertIsDisplayed()
+        compose.onNode(hasContentDescription(res.getString(SIGNATURE_TOO_LONG_A11Y))).assertExists()
     }
 
     @Test fun frame_series_per_photo_signature() = frame(
