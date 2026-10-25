@@ -77,6 +77,16 @@ class MainState(
     var adjustments by mutableStateOf(Adjustments.None)
     var frame by mutableStateOf(FrameOptions())
 
+    /** Podgląd w wyższej rozdzielczości, gdy zdjęcie jest przybliżone (zmiana odświeża podgląd i oryginał). */
+    var previewDetail by mutableStateOf(false)
+        private set
+
+    fun updateDetail(detailed: Boolean) {
+        if (detailed == previewDetail) return
+        previewDetail = detailed
+        before = null
+    }
+
     /** Miniatury filmów na bieżącym zdjęciu (zob. [FilmThumbnails]). */
     val thumbnails = FilmThumbnails(graph, typeface)
 
@@ -165,7 +175,7 @@ class MainState(
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
         val (orig, shown) = withContext(Dispatchers.Default) {
-            val small = scaleDown(p, PREVIEW_SIDE)
+            val small = scaleDown(p, if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
             orig to
@@ -229,6 +239,7 @@ class MainState(
 
     companion object {
         const val PREVIEW_SIDE = 1280
+        const val PREVIEW_SIDE_DETAIL = 2560
 
         fun scaleDown(src: Bitmap, maxSide: Int): Bitmap {
             val long = maxOf(src.width, src.height)
