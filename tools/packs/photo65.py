@@ -1,13 +1,18 @@
-import sys,json
-sys.path.insert(0,'/workspace/Retro-Film/tools')
+import sys,json,argparse
+import os
 from pathlib import Path
+# Sciezki: argumenty CLI lub zmienne srodowiskowe (HALD_DIR = rozpakowany HaldCLUT.zip, OUT_DIR = wyniki).
+R = Path(os.environ.get("RF_ROOT", Path(__file__).resolve().parents[2]))
+sys.path.insert(0,str(R/'tools'))
 import numpy as np
 from PIL import Image
 from hald2lut import load_hald, trilinear, grid, quant, lab, de2000
 from photocompare import FILMS, PHOTOS, regions, u8
-R=Path('/workspace/Retro-Film'); A=R/'core/engine/src/main/assets/luts'; H=Path('/workspace/hald/HaldCLUT'); O=Path('/workspace/photo65'); O.mkdir(exist_ok=True)
-cat={c['id']:c for c in json.load((A/'catalog.json').open())['luts']}
-imgs={p:np.asarray(Image.open(R/f'tools/golden/photos/{p}.jpg').convert('RGB'),float)/255 for p in PHOTOS}
+ap=argparse.ArgumentParser(description='33^3 vs 65^3 na zdjeciach'); ap.add_argument('--hald',default=os.environ.get('HALD_DIR')); ap.add_argument('--out',default=os.environ.get('OUT_DIR','photo65')); ap.add_argument('--photos',default=os.environ.get('PHOTOS_DIR',str(R/'tools/golden/photos')))
+args=ap.parse_args(); assert args.hald, 'podaj --hald lub HALD_DIR'
+H=Path(args.hald); O=Path(args.out); O.mkdir(parents=True,exist_ok=True)
+cat={c['id']:c for c in json.load((R/'tools/packs/catalog-33-full.json').open())['luts']}
+imgs={p:np.asarray(Image.open(Path(args.photos)/f'{p}.jpg').convert('RGB'),float)/255 for p in PHOTOS}
 S={}
 for f in FILMS:
     h=load_hald(H/cat[f]['source_hald']); l65=quant(trilinear(h,grid(65)),8)[1]

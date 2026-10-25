@@ -25,4 +25,4 @@ Skąd biorą się maxy (`worst-diagnosis.json`): źródłowe HaldCLUT-y mają sk
 
 Siatka rzadsza niż 144³ wygładza te skoki, więc max<1 dla wszystkich jest osiągalne tylko natywnie 144³.
 
-Skrypty: `gridmeasure.py` (65³ i 144³ → `grid-65-144-stats.json`), `worstdiag.py` (→ `worst-diagnosis.json`), `photo65.py` (→ `tools/golden/compare/photos/stats-65.json`).
+Skrypty: `gridmeasure.py` (65³ i 144³ → `grid-65-144-stats.json`), `worstdiag.py` (→ `worst-diagnosis.json`), `photo65.py` (→ `tools/golden/compare/photos/stats-65.json`). Ścieżki: `--hald`/`HALD_DIR`, `--out`/`OUT_DIR` (zob. `--help`). `build144png.py` – paczka 144³ PNG (D9).

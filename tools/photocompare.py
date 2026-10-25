@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Porownanie na zdjeciach: HaldCLUT 144^3 (oryginal) | LUT 33^3 RGB8 (trojliniowo, jak CpuLut) | |roznica| x10.
 
-Uzycie: python3 tools/photocompare.py <katalog_HaldCLUT> tools/packs/catalog-33-full.json tools/golden
-Wynik: tools/golden/compare/photos/<film>__<zdjecie>.jpg (JPEG q95) + stats.json + README.md
+Uzycie: python3 tools/photocompare.py <katalog_HaldCLUT> tools/packs/catalog-33-full.json tools/golden [--photos DIR] [--out DIR]
+Zdjecia: najpierw python3 tools/golden/fetch_photos.py (nie sa w repo).
+Wynik: <out>/<film>__<zdjecie>.jpg (JPEG q95, nie w repo; artefakt CI "photo-compare") + stats.json + SHA256SUMS
+(domyslnie <out> = tools/golden/compare/photos).
 ΔE2000 (sRGB D65 -> Lab) liczone na wyjsciach float (przed kwantyzacja do 8 bit).
 """
-import json, sys
+import argparse, hashlib, json, sys
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -28,10 +30,14 @@ def regions(mask):
     return out
 
 def main():
-    hald, assets, golden = map(Path, sys.argv[1:4])
-    cat = {c["id"]: c for c in json.load(assets.open())["luts"]}
-    od = golden / "compare" / "photos"; od.mkdir(parents=True, exist_ok=True)
-    imgs = {p: np.asarray(Image.open(golden / "photos" / f"{p}.jpg").convert("RGB"), np.float64) / 255 for p in PHOTOS}
+    ap = argparse.ArgumentParser()
+    ap.add_argument("hald", type=Path); ap.add_argument("catalog", type=Path); ap.add_argument("golden", type=Path)
+    ap.add_argument("--photos", type=Path); ap.add_argument("--out", type=Path)
+    a = ap.parse_args(); hald = a.hald
+    cat = {c["id"]: c for c in json.load(a.catalog.open())["luts"]}
+    od = a.out or a.golden / "compare" / "photos"; od.mkdir(parents=True, exist_ok=True)
+    pd = a.photos or a.golden / "photos"
+    imgs = {p: np.asarray(Image.open(pd / f"{p}.jpg").convert("RGB"), np.float64) / 255 for p in PHOTOS}
     stats = {}
     for f in FILMS:
         h = load_hald(hald / cat[f]["source_hald"])
@@ -55,6 +61,8 @@ def main():
             stats[f][p]["file"] = fn.name; stats[f][p]["bytes"] = fn.stat().st_size
             print(f, p, stats[f][p], flush=True)
     (od / "stats.json").write_text(json.dumps(stats, indent=1, ensure_ascii=False) + "\n")
+    files = sorted(od.glob("*.jpg"))
+    (od / "SHA256SUMS").write_text("".join(f"{hashlib.sha256(f.read_bytes()).hexdigest()}  {f.name}\n" for f in files))
 
 if __name__ == "__main__":
     main()

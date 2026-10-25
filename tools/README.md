@@ -17,7 +17,9 @@ Test na YahiaAngelo/Film-Luts: 296 plików, 0 błędów, 9 duplikatów, wszystki
 
 ## photocompare.py
 Porównanie na prawdziwych zdjęciach (`tools/golden/photos/`, CC0, źródła w `SOURCES.md`): HaldCLUT 144³ | 33³ RGB8 trójliniowo | różnica×10 dla 5 najgorszych filmów, ΔE2000 (mean/p99/max, px ΔE>3 z regionami).
-`python3 tools/photocompare.py <HaldCLUT> tools/packs/catalog-33-full.json tools/golden` → `tools/golden/compare/photos/`.
+`python3 tools/golden/fetch_photos.py` (zdjęcia z Commons, sha256; nie w repo), potem `python3 tools/photocompare.py <HaldCLUT> tools/packs/catalog-33-full.json tools/golden [--out DIR]` → JPEG-i (nie w repo, artefakt CI `photo-compare`) + `stats.json` + `SHA256SUMS`.
+Golden 17³ dla LUT-ów z APK: `python3 tools/golden/make_golden.py`, test `GoldenLutTest` w `core/engine`.
+Paczka 144³ PNG (D9): `python3 tools/packs/build144png.py --hald <HaldCLUT/> --out <katalog>` (poza repo).
 
 Zestaw startowy w APK (D8):
 `python3 tools/hald2lut.py <HaldCLUT> <Film-Luts> --out core/engine/src/main/assets/luts --identity --only negative_new/kodak_portra_400,negative_new/fuji_400h,colorslide/fuji_velvia_50,colorslide/kodak_kodachrome_64,colorslide/kodak_ektachrome_100_vs,bw/kodak_tri_x_400,bw/ilford_hp_5_plus_400,instant_consumer/polaroid_px_680,negative_old/fuji_superia_400,negative_new/kodak_portra_800`

@@ -19,3 +19,8 @@ google-services.json
 .kotlin/
 __pycache__/
 *.pyc
+# Zdjęcia testowe i porównania generowane (tools/golden/fetch_photos.py, tools/photocompare.py; artefakt CI)
+/tools/golden/photos/*.jpg
+/tools/golden/photos/orig/
+/tools/golden/compare/photos/*.jpg
+/pack144/

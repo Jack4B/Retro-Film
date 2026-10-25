@@ -1,11 +1,16 @@
-import sys,json
-sys.path.insert(0,'/workspace/Retro-Film/tools')
+import sys,json,argparse
+import os
 from pathlib import Path
+# Sciezki: argumenty CLI lub zmienne srodowiskowe (HALD_DIR = rozpakowany HaldCLUT.zip, OUT_DIR = wyniki).
+R = Path(os.environ.get("RF_ROOT", Path(__file__).resolve().parents[2]))
+sys.path.insert(0,str(R/'tools'))
 from multiprocessing import Pool
 import numpy as np
 from hald2lut import load_hald, trilinear, grid, quant, lab, de2000
 from luteval import evaluate, tetrahedral, stats
-A=Path('/workspace/Retro-Film/core/engine/src/main/assets/luts'); H=Path('/workspace/hald/HaldCLUT'); O=Path('/workspace/gridpack')
+ap=argparse.ArgumentParser(description='65^3 i 144^3 -> stats.json'); ap.add_argument('--hald',default=os.environ.get('HALD_DIR')); ap.add_argument('--out',default=os.environ.get('OUT_DIR','gridpack')); ap.add_argument('-j',type=int,default=6)
+args=ap.parse_args(); assert args.hald, 'podaj --hald lub HALD_DIR'
+A=R/'core/engine/src/main/assets/luts'; H=Path(args.hald); O=Path(args.out)
 def mid(h):
     n=h.shape[0]; v=(np.arange(n-1)+0.5)/(n-1); out=[]
     for bi in range(0,n-1,16):
@@ -20,6 +25,7 @@ def work(c):
     f=O/'144_8'/(c['id']+'.rgb8'); f.parent.mkdir(parents=True,exist_ok=True); f.write_bytes(np.round(h*255).astype(np.uint8).reshape(-1,3).tobytes())
     r['144_mid_tri_vs_tetra']=mid(h)
     print(r,flush=True); return r
-cat=json.load((A/'catalog.json').open())['luts']
-with Pool(6) as p: res=p.map(work,cat)
-json.dump(res,open(O/'stats.json','w'),indent=1)
+if __name__=='__main__':
+  cat=json.load((A/'catalog.json').open())['luts']
+  with Pool(args.j) as p: res=p.map(work,cat)
+  json.dump(res,open(O/'stats.json','w'),indent=1)

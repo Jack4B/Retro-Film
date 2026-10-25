@@ -70,6 +70,53 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
+  photo-compare:
+    # Porównania 144³ vs 33³ na zdjęciach (tools/photocompare.py); obrazy tylko jako artefakt, nie w repo.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Python deps
+        run: pip install numpy pillow
+      - name: Cache HaldCLUT.zip
+        id: hald
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: HaldCLUT.zip
+          key: haldclut-0ffca81f30c72d7bbb85adab0ed98bbdeb0e1034cd6f5986f9f993bb66999dc2
+      - name: Download HaldCLUT.zip (RawTherapee, CC BY-SA 4.0)
+        if: steps.hald.outputs.cache-hit != 'true'
+        run: curl -sSfL -o HaldCLUT.zip https://rawtherapee.com/shared/HaldCLUT.zip
+      - name: Verify HaldCLUT.zip
+        run: echo "0ffca81f30c72d7bbb85adab0ed98bbdeb0e1034cd6f5986f9f993bb66999dc2  HaldCLUT.zip" | sha256sum -c -
+      - name: Fetch photos (Wikimedia Commons, sha256)
+        run: python3 tools/golden/fetch_photos.py --cache "$RUNNER_TEMP/photos-orig"
+      - name: Generate comparisons
+        run: |
+          python3 -c "
+          import json, sys, zipfile
+          sys.path.insert(0, 'tools')
+          from photocompare import FILMS
+          cat = {c['id']: c for c in json.load(open('tools/packs/catalog-33-full.json'))['luts']}
+          z = zipfile.ZipFile('HaldCLUT.zip')
+          for f in FILMS:
+              z.extract('HaldCLUT/' + cat[f]['source_hald'], 'hald')
+          "
+          python3 tools/photocompare.py hald/HaldCLUT tools/packs/catalog-33-full.json tools/golden --out out/photo-compare
+          cp tools/golden/compare/photos/README.md out/photo-compare/
+          git diff --exit-code tools/golden/compare/photos/stats.json || echo "::warning::stats.json różni się od wersji w repo"
+          diff <(cut -c1-64 tools/golden/compare/photos/SHA256SUMS) <(cut -c1-64 out/photo-compare/SHA256SUMS) || echo "::warning::sumy JPEG różnią się od SHA256SUMS w repo (inna wersja libjpeg/Pillow?)"
+          du -sh out/photo-compare
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: photo-compare
+          path: out/photo-compare/
+          retention-days: 14
+
   release-apk:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [lint, build]

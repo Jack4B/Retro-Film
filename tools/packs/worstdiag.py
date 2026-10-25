@@ -1,12 +1,18 @@
-import sys,json
-sys.path.insert(0,'/workspace/Retro-Film/tools')
+import sys,json,argparse
+import os
+from pathlib import Path
+# Sciezki: argumenty CLI lub zmienne srodowiskowe (HALD_DIR = rozpakowany HaldCLUT.zip, OUT_DIR = wyniki).
+R = Path(os.environ.get("RF_ROOT", Path(__file__).resolve().parents[2]))
+sys.path.insert(0,str(R/'tools'))
 import numpy as np
 from hald2lut import load_hald, trilinear, grid, quant, lab, de2000
-H='/workspace/hald/HaldCLUT/'; cat={c['id']:c for c in json.load(open('/workspace/Retro-Film/tools/packs/catalog-33-full.json'))['luts']}
+ap=argparse.ArgumentParser(description='diagnoza maksimow dE'); ap.add_argument('--hald',default=os.environ.get('HALD_DIR')); ap.add_argument('--out',default=os.environ.get('OUT_FILE','worst-diagnosis.json'))
+args=ap.parse_args(); assert args.hald, 'podaj --hald lub HALD_DIR'
+H=Path(args.hald); cat={c['id']:c for c in json.load(open(R/'tools/packs/catalog-33-full.json'))['luts']}
 F=["colorslide/fuji_superia_200_xpro","bw/fuji_neopan_1600","negative_old/fuji_neopan_1600_p","negative_old/fuji_neopan_1600_pp","instant_consumer/polaroid_px_70_cold_p"]
 out={}
 for f in F:
-    h=load_hald(H+cat[f]['source_hald']); L=lab(h); pts=grid(144)
+    h=load_hald(H/cat[f]['source_hald']); L=lab(h); pts=grid(144)
     nb=np.zeros(h.shape[:3])
     for ax in range(3):
         d=de2000(np.take(L,range(1,144),ax),np.take(L,range(0,143),ax))
@@ -24,4 +30,4 @@ for f in F:
           'top0.1pct_mean_input_luma':round(float((pts[top]@[.2126,.7152,.0722]).mean()),3),
           'top0.1pct_mean_neighbor_dE':round(float(nb[top].mean()),3)}
     out[f]=r; print(f,json.dumps(r),flush=True)
-json.dump(out,open('/workspace/diag.json','w'),indent=1)
+json.dump(out,open(args.out,'w'),indent=1)
