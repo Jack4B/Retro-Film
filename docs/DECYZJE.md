@@ -9,8 +9,8 @@
 | D5 | Formuła `versionCode` | Proponowane |
 | D6 | Material 3 w wersji beta (Expressive) | Zdecydowane (tymczasowo) |
 | D7 | Kryterium jakości LUT-ów 33³ (ΔE2000) | **Proponowane – czeka na Jack4B** |
-| D8 | Dystrybucja LUT-ów: pobieranie z Release `luts-v1` + zestaw startowy w APK | Zdecydowane (rozmiar siatki: D9) |
-| D9 | Siatka filtrów do pobrania: natywne 144³ PNG | **Zdecydowane – Jack4B 2026-10-25** |
+| D8 | Dystrybucja LUT-ów: pobieranie z Jack4B/Retro-Film-LUTs@`luts-v1` + zestaw startowy w APK | Zdecydowane (rozmiar siatki: D9) |
+| D9 | Siatka filtrów do pobrania: natywne 144³ PNG (jeden film 256³) | **Zdecydowane – Jack4B 2026-10-25** |
 
 ## D1 – Licencje LUT-ów
 RawTherapee Film Simulation Collection (Pat David, Pavlov Dmitry, Michael Ezra), CC BY-SA 4.0, https://rawpedia.rawtherapee.com/Film_Simulation. Regenerowane do 33³ jako utwór zależny CC BY-SA 4.0; `luts/` wyłączone z MIT. Szczegóły: [LUTS.md](LUTS.md).
@@ -44,20 +44,22 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Status: wyłącznie propozycja – nie obowiązuje do decyzji Jack4B.
 
 ## D8 – LUT-y pobierane na żądanie (zestaw startowy w APK)
-- Pełna paczka LUT-ów jest w osobnym GitHub Release `luts-v1`, a nie w repo ani w APK. Release publikuje się **wyłącznie na polecenie Jack4B**.
-- Pobieranie tylko przez HTTPS z jednego hosta (GitHub Releases), bez mirrorów i bez telemetrii.
-- `catalog.json` z sha256 każdego pliku jest wbudowany w APK. Pobrany plik o innym sha256 (lub innym rozmiarze) jest odrzucany i usuwany.
+- Pełna paczka jest w osobnym repo **Jack4B/Retro-Film-LUTs**, przypiętym do tagu **`luts-v1`** (nigdy `main`): `https://raw.githubusercontent.com/Jack4B/Retro-Film-LUTs/luts-v1/<file>`, `file` = `luts/<kategoria>/<nazwa>.png`. Tag tworzy się **wyłącznie na polecenie Jack4B**.
+- Tylko HTTPS, jeden host na liście dozwolonych (`raw.githubusercontent.com`), także dla przekierowań. Bez mirrorów, bez telemetrii, bez identyfikatorów urządzenia, stały User-Agent `RetroFilm`.
+- Uprawnienia `INTERNET` i `ACCESS_NETWORK_STATE` – **sieć służy wyłącznie do pobierania filtrów**.
+- `app/src/main/assets/luts/catalog-144.json` (bajt w bajt z Retro-Film-LUTs@0432c5a; pola m.in. `grid`, `unpackedLength`, `sha256`, `bytes`) jest wbudowany w APK. SHA-256 i rozmiar sprawdzane **przed** przyjęciem pliku; niezgodność ⇒ usunięcie i `Failed(CHECKSUM)`; potem atomowy rename. Test JVM porównuje katalog z `SHA256SUMS` (260 wpisów).
+- WorkManager: wznawianie (HTTP Range do `.part`, kontrola `Content-Range`), kolejka wraca po odzyskaniu sieci; „tylko Wi‑Fi” (domyślnie wł.) ⇒ `NetworkType.UNMETERED`. Przed startem sprawdzane wolne miejsce (`Failed(STORAGE)`).
+- Do czasu podpięcia silnika i ekranu ustawień pobieranie jest za flagą `LutDownloadFeature.ENABLED = false`.
 - W APK jest mały zestaw offline: identity + 10 filmów startowych w 33³ RGB8 (`core/engine/src/main/assets/luts/`, `catalog.json` z polem `bundled`).
-- Uprawnienie `INTERNET` służy wyłącznie do pobierania LUT-ów.
 - Każda paczka zawiera `LICENSE` (CC BY-SA 4.0) i atrybucję: Pat David, Pavlov Dmitry, Michael Ezra – RawTherapee Film Simulation Collection.
 - Rozmiar siatki i format paczki do pobrania: zob. **D9**. Konwerter `tools/hald2lut.py` obsługuje dowolne `--size` i `--bits 8|16` (zestaw startowy w APK pozostaje 33³ RGB8).
 
 ## D9 – Filtry do pobrania: natywne 144³ PNG
-- Filtry do pobrania to natywne 144³ w PNG (oryginalne HaldCLUT, ~378 MB za 260 filmów).
+- Filtry do pobrania to natywne HaldCLUT w PNG: 259 × 144³ i 1 × 256³ (`negative_color/kodak_ektar_100`, poziom 16, 4096×4096); łącznie 378 138 252 B za 260 filmów.
 - Kryterium jakości: max ΔE2000 < 1 względem oryginału – spełnione z definicji (to oryginał; 33³ spełnia 5/260, 48³ 23/260, pomiary w PR #11).
 - JPG tylko dla miniatur i zdjęć wynikowych, nigdy dla samych LUT-ów.
-- Rozpakowanie przy pierwszym użyciu, cache z LRU, sha256 na PNG, długość po rozpakowaniu (144³·3 = 8957952 B) z `catalog-144.json`.
-- Budowa paczki: `tools/packs/build144png.py` (wynik poza repo; publikacja Release tylko na polecenie Jack4B).
+- Rozpakowanie przy pierwszym użyciu, cache z LRU, sha256 na PNG, długość po rozpakowaniu z `unpackedLength` w `catalog-144.json` (144³·3 = 8 957 952 B; 256³·3 = 50 331 648 B). Cache LRU ~180 MB liczony z rzeczywistych rozmiarów.
+- Budowa paczki: `tools/packs/build144png.py` (wynik w repo Jack4B/Retro-Film-LUTs; tag `luts-v1` tylko na polecenie Jack4B).
 - Decyzja Jack4B 2026-10-25.
 
 ## D10 – Zarządzanie barwami przy eksporcie (P3 → sRGB)
