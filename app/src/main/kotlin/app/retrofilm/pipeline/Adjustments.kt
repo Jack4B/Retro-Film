@@ -147,7 +147,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
-            px[i] = (c and ALPHA_MASK) or (to8(rgb[0]) shl RED_SHIFT) or (to8(rgb[1]) shl GREEN_SHIFT) or to8(rgb[2])
+            val d = Dither.at(i % width, firstRow + i / width)
+            px[i] = (c and ALPHA_MASK) or (to8(rgb[0] + d) shl RED_SHIFT) or (to8(rgb[1] + d) shl GREEN_SHIFT) or
+                to8(rgb[2] + d)
         }
     }
 
