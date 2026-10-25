@@ -15,6 +15,8 @@ data class Adjustments(
     val contrast: Float = 0f,
     val saturation: Float = 0f,
     val temperature: Float = 0f,
+    /** Tint −1..1: zielony ↔ magenta (druga oś balansu bieli). */
+    val tint: Float = 0f,
     /** Światła −1..1: minus przywraca szczegóły w jasnych partiach, plus je rozjaśnia. */
     val highlights: Float = 0f,
     /** Cienie −1..1: plus rozjaśnia ciemne partie, minus je pogłębia. */
@@ -44,7 +46,7 @@ data class Adjustments(
 /**
  * Czysta matematyka korekt na pikselach ARGB (bez Androida), wzorowana na darktable / RawTherapee:
  * 1. ekspozycja i temperatura w świetle liniowym (mnożniki kanałów, jak „exposure” i balans bieli);
- *    temperatura to przesunięcie ±[TEMPERATURE_EV] EV między R i B przy stałej luminancji;
+ *    temperatura i tint to adaptacja chromatyczna Bradforda ([WhiteBalance]) przy stałej luminancji bieli;
  * 2. miękkie przycięcie świateł (kolano od [KNEE]) zamiast ostrego obcięcia, potem kodowanie sRGB;
  * 3. nasycenie jak „vibrance”: plus wzmacnia głównie kolory mało nasycone (skóra i wysycone kolory
  *    nie przepalają się), minus odbarwia równomiernie, luminancja Rec.709 zachowana;
@@ -52,26 +54,39 @@ data class Adjustments(
  *    wartości ujemne spłaszczają obraz ku szarości.
  */
 class AdjustmentProcessor(private val adj: Adjustments) {
-    private val gainR: Float
-    private val gainG: Float
-    private val gainB: Float
+    private val m00: Float
+    private val m01: Float
+    private val m02: Float
+    private val m10: Float
+    private val m11: Float
+    private val m12: Float
+    private val m20: Float
+    private val m21: Float
+    private val m22: Float
     private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(it / BYTE_MAX) }
     private val encode: FloatArray
     private val contrastLut =
         FloatArray(CONTRAST_SIZE + 1) { contrastCurve(it.toFloat() / CONTRAST_SIZE, adj.contrast) }
 
+    private val maskLut: FloatArray
+
     init {
         val exposure = 2.0.pow(adj.exposure.toDouble()).toFloat()
-        val shift = 2.0.pow((TEMPERATURE_EV * adj.temperature).toDouble()).toFloat()
-        val r = shift
-        val b = 1f / shift
-        val norm = LUM_R * r + LUM_G + LUM_B * b
-        gainR = exposure * r / norm
-        gainG = exposure / norm
-        gainB = exposure * b / norm
-        // Kolano normalizuje się do największego mnożnika; bez rozjaśniania krzywa jest tożsamością.
-        val ceiling = maxOf(1f, gainR, gainG, gainB)
+        val wb = WhiteBalance.matrix(adj.temperature, adj.tint)
+        val m = FloatArray(MATRIX_SIZE) { wb[it] * exposure }
+        m00 = m[IDX_00]
+        m01 = m[IDX_01]
+        m02 = m[IDX_02]
+        m10 = m[IDX_10]
+        m11 = m[IDX_11]
+        m12 = m[IDX_12]
+        m20 = m[IDX_20]
+        m21 = m[IDX_21]
+        m22 = m[IDX_22]
+        // Kolano normalizuje się do największej sumy wiersza (jasność bieli); bez rozjaśniania krzywa jest tożsamością.
+        val ceiling = maxOf(1f, m00 + m01 + m02, m10 + m11 + m12, m20 + m21 + m22)
         encode = FloatArray(ENCODE_SIZE + 1) { linearToSrgb(softClip(it.toFloat() / ENCODE_SCALE, ceiling)) }
+        maskLut = FloatArray(BYTE_LEVELS) { encodeLinear(toLinear[it] * exposure) }
     }
 
     private val rgb = FloatArray(3)
@@ -82,15 +97,21 @@ class AdjustmentProcessor(private val adj: Adjustments) {
      * Przetwarza [count] pikseli ARGB w miejscu (alfa bez zmian). [width], [firstRow] i [totalRows]
      * opisują położenie porcji w obrazie (winieta i ziarno zależą od współrzędnych).
      */
-    fun process(px: IntArray, count: Int = px.size, width: Int = count, firstRow: Int = 0, totalRows: Int = 1) {
+    fun process(px: IntArray, count: Int = px.size, span: PixelSpan = PixelSpan(count), mask: ToneMask? = null) {
+        val width = span.width
+        val firstRow = span.firstRow
+        val totalRows = span.totalRows
         val cell = maxOf(1, maxOf(width, totalRows) / GRAIN_CELL_DIVISOR)
         for (i in 0 until count) {
             val c = px[i]
-            rgb[0] = encodeLinear(toLinear[(c shr RED_SHIFT) and BYTE_MASK] * gainR)
-            rgb[1] = encodeLinear(toLinear[(c shr GREEN_SHIFT) and BYTE_MASK] * gainG)
-            rgb[2] = encodeLinear(toLinear[c and BYTE_MASK] * gainB)
+            val lr = toLinear[(c shr RED_SHIFT) and BYTE_MASK]
+            val lg = toLinear[(c shr GREEN_SHIFT) and BYTE_MASK]
+            val lb = toLinear[c and BYTE_MASK]
+            rgb[0] = encodeLinear(m00 * lr + m01 * lg + m02 * lb)
+            rgb[1] = encodeLinear(m10 * lr + m11 * lg + m12 * lb)
+            rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             if (adj.saturation != 0f) vibrance()
-            if (hasTone) toneRecovery()
+            if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
             if (adj.contrast !=
                 0f
             ) {
@@ -113,8 +134,15 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     /** Cienie i światła: wpływ maleje do zera po drugiej stronie skali jasności (kwadratowa waga). */
-    private fun toneRecovery() {
-        val y = luma()
+    private fun toneRecovery(mask: ToneMask?, x: Int, row: Int) {
+        // Lokalna jasność otoczenia (po tej samej ekspozycji), a bez maski jasność samego piksela.
+        val y = if (mask !=
+            null
+        ) {
+            maskLut[(mask.sample(x, row) * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)]
+        } else {
+            luma()
+        }
         val wShadow = (1f - y) * (1f - y)
         val wHighlight = y * y
         for (k in 0..2) {
@@ -156,9 +184,18 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private fun to8(v: Float): Int = (v * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
 
     companion object {
-        const val TEMPERATURE_EV = 0.4f
         const val KNEE = 0.8f
         private const val TONE_GAIN = 0.5f
+        private const val MATRIX_SIZE = 9
+        private const val IDX_00 = 0
+        private const val IDX_01 = 1
+        private const val IDX_02 = 2
+        private const val IDX_10 = 3
+        private const val IDX_11 = 4
+        private const val IDX_12 = 5
+        private const val IDX_20 = 6
+        private const val IDX_21 = 7
+        private const val IDX_22 = 8
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
         private const val VIGNETTE_MAX = 0.65f
@@ -245,6 +282,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 }
 
+/** Położenie porcji pikseli w obrazie: szerokość wiersza, pierwszy wiersz i liczba wierszy całego obrazu. */
+data class PixelSpan(val width: Int, val firstRow: Int = 0, val totalRows: Int = 1)
+
 /** Nakłada [Adjustments] na bitmapę (nowa bitmapa ARGB_8888, źródło bez zmian). */
 object AdjustmentsApplier {
     private const val ROWS_PER_CHUNK = 64
@@ -255,12 +295,13 @@ object AdjustmentsApplier {
         val h = src.height
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val processor = AdjustmentProcessor(adj)
+        val mask = if (adj.shadows != 0f || adj.highlights != 0f) buildMask(src) else null
         val buf = IntArray(w * ROWS_PER_CHUNK)
         var y = 0
         while (y < h) {
             val rows = minOf(ROWS_PER_CHUNK, h - y)
             src.getPixels(buf, 0, w, 0, y, w, rows)
-            processor.process(buf, w * rows, w, y, h)
+            processor.process(buf, w * rows, PixelSpan(w, y, h), mask)
             out.setPixels(buf, 0, w, 0, y, w, rows)
             y += rows
         }
@@ -271,6 +312,21 @@ object AdjustmentsApplier {
             out.setPixels(all, 0, w, 0, 0, w, h)
         }
         return out
+    }
+
+    /** Lokalna jasność obrazu źródłowego dla cieni i świateł (jedno dodatkowe przejście porcjami). */
+    private fun buildMask(src: Bitmap): ToneMask {
+        val w = src.width
+        val builder = ToneMask.Builder(w, src.height)
+        val buf = IntArray(w * ROWS_PER_CHUNK)
+        var y = 0
+        while (y < src.height) {
+            val rows = minOf(ROWS_PER_CHUNK, src.height - y)
+            src.getPixels(buf, 0, w, 0, y, w, rows)
+            builder.add(buf, w * rows, w, y)
+            y += rows
+        }
+        return builder.build()
     }
 
     /** Wygodny skrót dla testów i podglądów małych kafelków. */

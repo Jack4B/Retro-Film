@@ -106,6 +106,9 @@ private fun ColorSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_temperature), a.temperature, { percentText(it) }) {
         state.adjustments = a.copy(temperature = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_tint), a.tint, { percentText(it) }) {
+        state.adjustments = a.copy(tint = it)
+    }
 }
 
 @Composable

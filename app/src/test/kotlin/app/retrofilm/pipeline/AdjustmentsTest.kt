@@ -114,7 +114,7 @@ class AdjustmentsTest {
 
     @Test fun vignetteDarkensCornersNotCenter() {
         val px = gray(128)
-        AdjustmentProcessor(Adjustments(vignette = 1f)).process(px, px.size, 9, 0, 9)
+        AdjustmentProcessor(Adjustments(vignette = 1f)).process(px, px.size, PixelSpan(9, 0, 9))
         val center = Color.red(px[4 * 9 + 4])
         val corner = Color.red(px[0])
         assertEquals(128f, center.toFloat(), 3f)
@@ -125,8 +125,8 @@ class AdjustmentsTest {
         val a = gray(128, 40, 40)
         val b = gray(128, 40, 40)
         val adj = Adjustments(grain = 1f)
-        AdjustmentProcessor(adj).process(a, a.size, 40, 0, 40)
-        AdjustmentProcessor(adj).process(b, b.size, 40, 0, 40)
+        AdjustmentProcessor(adj).process(a, a.size, PixelSpan(40, 0, 40))
+        AdjustmentProcessor(adj).process(b, b.size, PixelSpan(40, 0, 40))
         assertTrue("to samo ziarno dla tego samego obrazu", a.contentEquals(b))
         assertTrue("piksele się różnią", a.distinct().size > 10)
         val mean = a.map { Color.red(it) }.average()
@@ -147,5 +147,39 @@ class AdjustmentsTest {
         assertFalse(Adjustments(grain = 0.1f).isNeutral)
         assertFalse(Adjustments(vignette = 0.1f).isNeutral)
         assertFalse(Adjustments(fade = 0.1f).isNeutral)
+    }
+
+    @Test fun shadowsLiftIsLocalNearBrightAreas() {
+        val w = 200
+        val src = Bitmap.createBitmap(w, 40, Bitmap.Config.ARGB_8888)
+        for (x in 0 until w) {
+            for (y in 0 until 40) {
+                src.setPixel(
+                    x,
+                    y,
+                    if (x <
+                        w / 2
+                    ) {
+                        Color.rgb(40, 40, 40)
+                    } else {
+                        Color.rgb(230, 230, 230)
+                    }
+                )
+            }
+        }
+        val out = AdjustmentsApplier.apply(src, Adjustments(shadows = 1f))
+        val far = Color.red(out.getPixel(2, 20))
+        val near = Color.red(out.getPixel(w / 2 - 3, 20))
+        assertTrue("cień daleko od jasnego rośnie mocniej", far > near + 5)
+        assertTrue(near >= 40)
+    }
+
+    @Test fun tintMovesGreenMagentaAndStaysNeutralAtZero() {
+        val neutral = px(128, 128, 128, Adjustments(tint = 0f, exposure = 0.0001f))
+        assertEquals(Color.red(neutral), Color.green(neutral), 2)
+        val magenta = px(128, 128, 128, Adjustments(tint = 1f))
+        assertTrue(Color.green(magenta) < Color.red(magenta) - 5)
+        val green = px(128, 128, 128, Adjustments(tint = -1f))
+        assertTrue(Color.green(green) > Color.red(green) + 2)
     }
 }
