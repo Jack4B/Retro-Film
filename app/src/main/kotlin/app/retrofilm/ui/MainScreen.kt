@@ -43,42 +43,16 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     val filesPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) scope.launch { show(state.loadAll(context, uris)) }
     }
-    val createDoc = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(ExportPipeline.MIME)
-    ) { uri ->
-        if (uri != null) {
-            scope.launch { show(state.export { ExportPipeline.saveToUri(context.contentResolver, it, uri) }) }
-        }
-    }
     val onPick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     val onPickFiles = { filesPicker.launch(arrayOf("image/*")) }
-    val onSave: () -> Unit = {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val toMediaStore: suspend (ByteArray) -> Unit = {
-                val name = ExportPipeline.fileName(System.currentTimeMillis())
-                ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
-            }
-            scope.launch {
-                show(if (state.uris.size > 1) state.exportAll(context, toMediaStore) else state.export(toMediaStore))
-            }
-        } else {
-            createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
-        }
-    }
+    val onSave = rememberSaveAction(state, ::show)
     LaunchedEffect(Unit) { state.library.observeFavorites() }
     LaunchedEffect(Unit) { state.library.observeDownloads() }
     LaunchedEffect(state.photo, state.film, state.frame, state.intensity, state.adjustments) {
         state.refreshPreview()
     }
     val editing = state.photo != null
-    // Galeria otwiera się sama przy pierwszym wejściu na Start; po anulowaniu zostaje ekran z przyciskami.
-    var autoOpened by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!autoOpened && !editing) {
-            autoOpened = true
-            onPick()
-        }
-    }
+    AutoOpenGallery(editing, onPick)
     var showLibrary by rememberSaveable { mutableStateOf(false) }
     if (editing) BackHandler(onBack = state::closePhoto)
     if (editing && showLibrary) BackHandler { showLibrary = false }
@@ -101,5 +75,44 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
             onSettings = onSettings,
             snackbar = { SnackbarHost(snackbar) }
         )
+    }
+}
+
+/** Zapis jednym dotknięciem: MediaStore od API 29 (seria, gdy jest kilka zdjęć), SAF na API 26-28. */
+@Composable
+private fun rememberSaveAction(state: MainState, show: (UiMessage?) -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val createDoc = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument(ExportPipeline.MIME)
+    ) { uri ->
+        if (uri != null) {
+            scope.launch { show(state.export { ExportPipeline.saveToUri(context.contentResolver, it, uri) }) }
+        }
+    }
+    return {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val toMediaStore: suspend (ByteArray) -> Unit = {
+                val name = ExportPipeline.fileName(System.currentTimeMillis())
+                ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
+            }
+            scope.launch {
+                show(if (state.uris.size > 1) state.exportAll(context, toMediaStore) else state.export(toMediaStore))
+            }
+        } else {
+            createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
+        }
+    }
+}
+
+/** Galeria otwiera się sama przy pierwszym wejściu na Start; po anulowaniu zostaje ekran z przyciskami. */
+@Composable
+private fun AutoOpenGallery(editing: Boolean, onPick: () -> Unit) {
+    var autoOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!autoOpened && !editing) {
+            autoOpened = true
+            onPick()
+        }
     }
 }
