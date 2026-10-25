@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">Retro-Film</string>
+    <string name="action_pick">Wybierz zdjęcie</string>
+    <string name="action_export">Eksportuj JPEG</string>
+    <string name="action_settings">Ustawienia</string>
+    <string name="action_back">Wstecz</string>
+    <string name="no_photo">Wybierz zdjęcie, aby zacząć.</string>
+    <string name="preview_cd">Podgląd zdjęcia z filmem i ramką</string>
+    <string name="title_film">Film</string>
+    <string name="film_identity">Bez filmu (identity)</string>
+    <string name="films_missing">W tej wersji nie ma jeszcze wbudowanych filmów – dostępny jest tylko identity.</string>
+    <string name="title_frame">Ramka i podpis</string>
+    <string name="frame_enabled">Ramka</string>
+    <string name="signature_enabled">Podpis</string>
+    <string name="signature_label">Tekst podpisu</string>
+    <string name="margin_label">Margines: %1$d%%</string>
+    <string name="signature_too_long">Podpis jest za długi dla tej ramki. Skróć tekst albo zmień proporcje lub margines – eksport jest zablokowany.</string>
+    <string name="working">Przetwarzanie…</string>
+    <string name="export_done">Zapisano w Pictures/RetroFilm</string>
+    <string name="export_failed">Eksport nie powiódł się: %1$s</string>
+    <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
+    <string name="settings_placeholder">Ustawienia – ekran w przygotowaniu.</string>
 </resources>
