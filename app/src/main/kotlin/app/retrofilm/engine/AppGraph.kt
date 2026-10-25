@@ -33,7 +33,13 @@ class AppGraph(context: Context) {
     /** Stan ekranu pobierania (UI9): pakiety + LutCacheInfo z [lutPackRepository]. */
     val lutDownloadStateHolder: LutDownloadStateHolder by lazy {
         val files = context.applicationContext.filesDir
-        LutDownloadStateHolder(lutPackRepository, lutPackRepository, lutDownloadSettings, { files.usableSpace }, appScope)
+        LutDownloadStateHolder(
+            repository = lutPackRepository,
+            cacheInfo = lutPackRepository,
+            settings = lutDownloadSettings,
+            freeSpaceBytes = { files.usableSpace },
+            scope = appScope
+        )
     }
 
     val photoRenderer: PhotoRenderer by lazy { BitmapPhotoRenderer { photos[it] } }
