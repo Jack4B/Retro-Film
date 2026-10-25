@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-25 – Claude (Korekty)
+- Faza: redesign – zakładka Korekty
+- Zrobione: `Adjustments` (ekspozycja ±2 EV, kontrast, nasycenie, temperatura) i `AdjustmentMatrix` (czysta macierz 4×5) + `AdjustmentsApplier` (ColorMatrix) wpięte w `ExportPipeline.render` po nałożeniu filmu; zakładka Korekty w Edytorze (cztery suwaki zatwierdzane po puszczeniu, „Wyzeruj”); testy `AdjustmentsTest`. Wartości neutralne omijają krok (wynik filmu i golden bez zmian).
+- PR / gałąź: `f5/korekty` (baza: `f5/biblioteka-filmow`, #32).
+- Otwarte / P2 odłożone: korekty liczone w kodowaniu sRGB (nie w świetle liniowym) – prosty model; ziarno; cienie/światła; kopiuj/wklej ustawienia; zrzuty z telefonu (390); golden dla korekt na GPU, jeśli silnik dostanie je kiedyś natywnie.
+- Następny krok: review Lumen → Gauge → Critic.
+
 ## 2026-10-25 – Claude (Biblioteka filmów)
 - Faza: D12 – Biblioteka filmów z miniaturami
 - Zrobione: ekran „Filmy” (wyszukiwarka, kategorie z licznikami, ★ ulubione, „Na telefonie”, „Pobierz” wszystkie, siatka kafelków z gotowych JPG z APK, stany: na telefonie / ↓ rozmiar / pobieranie % / błąd; dotknięcie wybiera lub pobiera, przytrzymanie = ulubione, akcje TalkBack); dodatkowy widok „Na moim zdjęciu” z `LutMemoryCache` (nie zastępuje JPG); logika w `LibraryModel` z testami JVM; wejście z zakładki Film (ikona lupy); 10 miniatur startowych w `app/src/main/assets/thumbs/` (scena testowa, `tools/thumbs/make_thumbs.py` z #31).

@@ -54,6 +54,7 @@ private val TabHeight = 56.dp
 
 private enum class EditorTab(val label: Int) {
     Film(R.string.tab_film),
+    Adjust(R.string.tab_adjust),
     Frame(R.string.tab_frame)
 }
 
@@ -104,6 +105,7 @@ fun EditorScreen(
                     ) {
                         when (tab) {
                             EditorTab.Film -> FilmPanel(state, onOpenLibrary)
+                            EditorTab.Adjust -> AdjustPanel(state)
                             EditorTab.Frame -> FramePanel(state)
                         }
                     }

@@ -18,6 +18,7 @@
     <string name="editor_badge_before">Oryginał</string>
     <string name="editor_working">Przetwarzanie…</string>
     <string name="tab_film">Film</string>
+    <string name="tab_adjust">Korekty</string>
     <string name="tab_frame">Ramka</string>
 
     <!-- Film -->
@@ -73,6 +74,13 @@
     <string name="library_action_cancel">Anuluj pobieranie</string>
     <string name="film_favorite_add">Dodaj do ulubionych</string>
     <string name="film_favorite_remove">Usuń z ulubionych</string>
+
+    <!-- Korekty -->
+    <string name="adjust_exposure">Ekspozycja</string>
+    <string name="adjust_contrast">Kontrast</string>
+    <string name="adjust_saturation">Nasycenie</string>
+    <string name="adjust_temperature">Temperatura</string>
+    <string name="adjust_reset">Wyzeruj korekty</string>
 
     <!-- Ramka -->
     <string name="frame_enabled">Ramka</string>
