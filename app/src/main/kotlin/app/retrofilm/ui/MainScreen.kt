@@ -53,6 +53,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
             createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
         }
     }
+    LaunchedEffect(Unit) { state.observeFavorites() }
     LaunchedEffect(state.photo, state.film, state.frame, state.intensity) { state.refreshPreview() }
     val editing = state.photo != null
     if (editing) BackHandler(onBack = state::closePhoto)

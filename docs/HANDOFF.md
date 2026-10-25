@@ -13,9 +13,9 @@ Nowe wpisy na górze. Szablon:
 
 ## 2026-10-25 – Claude
 - Faza: redesign UI/UX, Edytor krok 1 (wg docs/OCENA-I-REDESIGN.md, PR #26)
-- Zrobione: `app` – Start (jedno CTA), Edytor z zakładkami Film / Ramka, przytrzymanie zdjęcia = oryginał, moc filmu 0–100%, kategorie z id katalogu, zapis jednym dotknięciem; `ExportPipeline.render` przyjmuje `intensity` (domyślnie 1f). Usunięty `GalleryScreen` z `feature:start` (decyzja Jack4B: zostaje Photo Picker z wyborem wielu zdjęć) razem z testem i zrzutami.
+- Zrobione: `app` – Start (jedno CTA), Edytor z zakładkami Film / Ramka, przytrzymanie zdjęcia = oryginał, moc filmu 0–100%, kategorie z id katalogu, miniatury filmów na zdjęciu użytkownika (`FilmThumbnails`, z `LutMemoryCache`, bez osobnej pamięci podręcznej), ulubione (DataStore), zapis jednym dotknięciem; `ExportPipeline.render` przyjmuje `intensity` (domyślnie 1f). Usunięty `GalleryScreen` z `feature:start` (decyzja Jack4B: zostaje Photo Picker z wyborem wielu zdjęć) razem z testem i zrzutami.
 - PR / gałąź: `f5/edytor-krok-1`.
-- Otwarte / P2 odłożone: seria (pasek miniatur, jeden film i jedna ramka na serię, podpis per zdjęcie), zakładka Korekty, miniatury filmów w APK, Biblioteka filmów, wielokrotny wybór w pickerze – kolejne PR-y.
+- Otwarte / P2 odłożone: pomiar miniatur na emulatorze (emulator.yml), zrzuty z telefonu (390) do porównania z makietami, seria (pasek miniatur, jeden film i jedna ramka na serię, podpis per zdjęcie), Korekty, miniatury w APK dla filmów do pobrania, Biblioteka filmów, wielokrotny wybór w pickerze – kolejne PR-y.
 - Następny krok: CI → review Gauge → Critic.
 
 ## 2026-10-25 – Forge

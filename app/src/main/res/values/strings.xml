@@ -23,6 +23,10 @@
     <!-- Film -->
     <string name="film_none">Bez filmu</string>
     <string name="film_all">Wszystkie</string>
+    <string name="film_favorites">Ulubione</string>
+    <string name="film_favorites_empty">Brak ulubionych. Wybierz film i dotknij gwiazdki.</string>
+    <string name="film_favorite_add_cd">Dodaj film %1$s do ulubionych</string>
+    <string name="film_favorite_remove_cd">Usuń film %1$s z ulubionych</string>
     <string name="film_selected">wybrany</string>
     <string name="film_not_selected">niewybrany</string>
     <string name="film_tile_cd">Film %1$s</string>
