@@ -59,3 +59,9 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Rozpakowanie przy pierwszym użyciu, cache z LRU, sha256 na PNG, długość po rozpakowaniu (144³·3 = 8957952 B) z `catalog-144.json`.
 - Budowa paczki: `tools/packs/build144png.py` (wynik poza repo; publikacja Release tylko na polecenie Jack4B).
 - Decyzja Jack4B 2026-10-25.
+
+## D10 – Zarządzanie barwami przy eksporcie (P3 → sRGB)
+
+- Filmy (HaldCLUT) są zbudowane i liczone w sRGB, więc zdjęcie spoza sRGB (np. Display P3) jest przed LUT-em konwertowane do sRGB.
+- Eksport zapisuje profil sRGB; przestrzeń barw bitmapy i profil ICC w pliku zawsze się zgadzają (testy `PipelineTest`).
+- Świadome ograniczenie: kolory spoza sRGB są przy filtrze obcinane; szerszy gamut P3 nie jest zachowywany.

@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
 import app.retrofilm.core.engine.LutCatalog
 import app.retrofilm.core.engine.LutEngineFactory
-import app.retrofilm.core.ui.engine.FilmEngine
 import app.retrofilm.core.ui.photo.PhotoRenderer
 import java.util.concurrent.ConcurrentHashMap
 
@@ -12,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 class AppGraph(context: Context) {
     private val photos = ConcurrentHashMap<Int, ImageBitmap>()
 
-    val filmEngine: FilmEngine by lazy {
+    val filmEngine: EngineFilmEngine by lazy {
         EngineFilmEngine(LutCatalog(context.applicationContext.assets), LutEngineFactory.create())
     }
 
