@@ -15,6 +15,9 @@
 ## Stan
 Test na YahiaAngelo/Film-Luts: 296 plików, 0 błędów, 9 duplikatów, wszystkie 13³. Konwersja HaldCLUT → 33³: 260 LUT-ów (katalog i raport: `tools/packs/`; w APK tylko zestaw startowy), 27 bez źródła HaldCLUT; wyniki ΔE w `report.json`.
 
+## thumbs/make_thumbs.py (D12)
+Miniatury JPG filmów do pobrania (w APK, ok. 4 MB dla 260 filmów): `python3 tools/thumbs/make_thumbs.py <katalog z kategoria/nazwa.png> --out <katalog> [--photo foto.jpg] [--size 160] [--quality 78] [--budget-mb 5]`. Trójliniowo jak silnik, na wspólnym zdjęciu wzorcowym (domyślnie deterministyczna scena testowa; do wydania zalecane zdjęcie CC0 z `tools/golden/fetch_photos.py`). Wynik: `<kategoria>/<nazwa>.jpg` + `thumbs.json` (bajty, sha256). Pełny komplet wymaga lokalnej kopii Jack4B/Retro-Film-LUTs@luts-v1 (poza repo aplikacji); kopię do `app/src/main/assets/thumbs/` wykonuje człowiek po przeglądzie.
+
 ## photocompare.py
 Porównanie na prawdziwych zdjęciach (`tools/golden/photos/`, CC0, źródła w `SOURCES.md`): HaldCLUT 144³ | 33³ RGB8 trójliniowo | różnica×10 dla 5 najgorszych filmów, ΔE2000 (mean/p99/max, px ΔE>3 z regionami).
 `python3 tools/golden/fetch_photos.py` (zdjęcia z Commons, sha256; nie w repo), potem `python3 tools/photocompare.py <HaldCLUT> tools/packs/catalog-33-full.json tools/golden [--out DIR]` → JPEG-i (nie w repo, artefakt CI `photo-compare`) + `stats.json` + `SHA256SUMS`.
