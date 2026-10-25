@@ -31,9 +31,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -54,7 +56,7 @@ fun SettingsScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { SettingsTopBar("Ustawienia", onBack) }
+        topBar = { SettingsTopBar(stringResource(R.string.settings_title), onBack) }
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -63,33 +65,33 @@ fun SettingsScreen(
                 bottom = padding.calculateBottomPadding() + 16.dp
             )
         ) {
-            item { SectionHeader("Wygląd") }
+            item { SectionHeader(stringResource(R.string.settings_section_appearance)) }
             if (state.dynamicColorSupported) {
                 item { DynamicColorRow(state.dynamicColor, onDynamicColorChange) }
             }
-            item { SectionHeader("Filtry") }
+            item { SectionHeader(stringResource(R.string.settings_section_filters)) }
             item {
                 NavRow(
-                    title = "Filtry",
-                    subtitle = "Pobieranie i usuwanie filtrów filmowych",
+                    title = stringResource(R.string.settings_filters),
+                    subtitle = stringResource(R.string.settings_filters_subtitle),
                     icon = { Icon(Icons.Outlined.FilterVintage, contentDescription = null) },
                     onClick = onOpenFilters
                 )
             }
-            item { SectionHeader("Licencje i autorzy") }
+            item { SectionHeader(stringResource(R.string.settings_section_licenses)) }
             items(ThirdPartyLicense.entries, key = { it.name }) { lic ->
                 NavRow(
-                    title = lic.title,
+                    title = stringResource(lic.title),
                     subtitle = "${lic.author} · ${lic.license}",
                     icon = { Icon(Icons.Outlined.Description, contentDescription = null) },
                     onClick = { onOpenLicense(lic) },
-                    clickLabel = "pokaż tekst licencji"
+                    clickLabel = stringResource(R.string.settings_show_license)
                 )
             }
-            item { SectionHeader("Prywatność") }
+            item { SectionHeader(stringResource(R.string.settings_section_privacy)) }
             item {
                 ListItem(
-                    headlineContent = { Text(PRIVACY_NOTE) },
+                    headlineContent = { Text(stringResource(R.string.settings_privacy_note)) },
                     leadingContent = { Icon(Icons.Outlined.Lock, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
                 )
@@ -98,7 +100,7 @@ fun SettingsScreen(
             item {
                 ListItem(
                     modifier = Modifier.semantics(mergeDescendants = true) {},
-                    headlineContent = { Text("Wersja aplikacji") },
+                    headlineContent = { Text(stringResource(R.string.settings_version)) },
                     supportingContent = { Text(state.versionName) },
                     leadingContent = { Icon(Icons.Outlined.Info, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
@@ -110,13 +112,15 @@ fun SettingsScreen(
 
 @Composable
 private fun DynamicColorRow(checked: Boolean, onChange: (Boolean) -> Unit) {
+    val toggleState = stringResource(if (checked) R.string.settings_on else R.string.settings_off)
     ListItem(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = MinTouch)
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
-        headlineContent = { Text("Dynamiczne kolory (Material You)") },
-        supportingContent = { Text("Kolory aplikacji dopasowane do tapety telefonu") },
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .semantics { stateDescription = toggleState },
+        headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
+        supportingContent = { Text(stringResource(R.string.settings_dynamic_color_subtitle)) },
         leadingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
         trailingContent = { Switch(checked = checked, onCheckedChange = null) },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
@@ -129,13 +133,14 @@ internal fun NavRow(
     subtitle: String,
     icon: @Composable () -> Unit,
     onClick: () -> Unit,
-    clickLabel: String = "otwórz"
+    clickLabel: String? = null
 ) {
+    val label = clickLabel ?: stringResource(R.string.settings_open)
     ListItem(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = MinTouch)
-            .clickable(onClickLabel = clickLabel, role = Role.Button, onClick = onClick),
+            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
         leadingContent = icon,
@@ -166,7 +171,7 @@ internal fun SettingsTopBar(title: String, onBack: () -> Unit) {
         title = { Text(title, modifier = Modifier.semantics { heading() }) },
         navigationIcon = {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.settings_back))
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

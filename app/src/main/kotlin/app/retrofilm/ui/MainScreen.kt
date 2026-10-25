@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -32,6 +33,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -42,6 +44,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.FrameAspect
@@ -161,7 +166,11 @@ private fun PreviewArea(state: MainState) {
 
 @Composable
 private fun FilmPicker(state: MainState) {
-    Text(stringResource(R.string.title_film), style = MaterialTheme.typography.titleMedium)
+    Text(
+        stringResource(R.string.title_film),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() }
+    )
     if (state.films.size <= 1) Text(stringResource(R.string.films_missing))
     Column(verticalArrangement = Arrangement.spacedBy(Gap / 2)) {
         state.films.forEach { f ->
@@ -177,7 +186,11 @@ private fun FilmPicker(state: MainState) {
 @Composable
 private fun FramePanel(state: MainState) {
     val f = state.frame
-    Text(stringResource(R.string.title_frame), style = MaterialTheme.typography.titleMedium)
+    Text(
+        stringResource(R.string.title_frame),
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.semantics { heading() }
+    )
     LabeledSwitch(stringResource(R.string.frame_enabled), f.enabled) { state.frame = f.copy(enabled = it) }
     if (!f.enabled) return
     Row(horizontalArrangement = Arrangement.spacedBy(Gap / 2)) {
@@ -208,8 +221,14 @@ private fun FramePanel(state: MainState) {
 
 @Composable
 private fun LabeledSwitch(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Gap)) {
-        Switch(checked = checked, onCheckedChange = onChange)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Gap),
+        modifier = Modifier
+            .minimumInteractiveComponentSize()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+    ) {
+        Switch(checked = checked, onCheckedChange = null)
         Text(label)
     }
 }

@@ -37,9 +37,11 @@ enum class Route(val path: String) {
 fun RetroFilmNavHost(graph: AppGraph, dynamicColor: Boolean, main: @Composable (navigate: (Route) -> Unit) -> Unit) {
     var route by rememberSaveable { mutableStateOf(Route.Main) }
     var license by rememberSaveable { mutableStateOf<ThirdPartyLicense?>(null) }
+    var licensesParent by rememberSaveable { mutableStateOf(Route.Settings) }
     val scope = rememberCoroutineScope()
-    val back: () -> Unit = { route.parent?.let { route = it } }
-    route.parent?.let { BackHandler(onBack = back) }
+    val parent = if (route == Route.Licenses) licensesParent else route.parent
+    val back: () -> Unit = { parent?.let { route = it } }
+    parent?.let { BackHandler(onBack = back) }
     when (route) {
         Route.Main -> main { route = it }
 
@@ -50,6 +52,7 @@ fun RetroFilmNavHost(graph: AppGraph, dynamicColor: Boolean, main: @Composable (
             onOpenFilters = { route = Route.Filters },
             onOpenLicense = {
                 license = it
+                licensesParent = Route.Settings
                 route = Route.Licenses
             }
         )
@@ -60,7 +63,10 @@ fun RetroFilmNavHost(graph: AppGraph, dynamicColor: Boolean, main: @Composable (
             onSelect = { license = if (license == it) null else it }
         )
 
-        Route.Filters -> FiltersRoute(graph, onBack = back, onOpenLicenses = { route = Route.Licenses })
+        Route.Filters -> FiltersRoute(graph, onBack = back, onOpenLicenses = {
+            licensesParent = Route.Filters
+            route = Route.Licenses
+        })
     }
 }
 

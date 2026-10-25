@@ -1,5 +1,8 @@
+@file:Suppress("MatchingDeclarationName") // stan + ekran w jednym pliku
+
 package app.retrofilm.feature.settings.lut
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,6 +55,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -68,10 +73,8 @@ import androidx.compose.ui.unit.sp
 import app.retrofilm.core.ui.lut.FailReason
 import app.retrofilm.core.ui.lut.LutPack
 import app.retrofilm.core.ui.lut.PackState
+import app.retrofilm.feature.settings.R
 import kotlin.math.roundToInt
-
-/** Wspólna nota prywatności (też na ekranie Eksport). */
-const val NETWORK_PRIVACY_NOTE = "Internet służy tylko do pobierania filtrów. Zdjęcia nie opuszczają telefonu."
 
 @Immutable
 data class LutDownloadUiState(
@@ -96,11 +99,12 @@ data class LutDownloadUiState(
     val waitingForWifi: Boolean get() = onlyWifi && !wifiAvailable && !offline
 }
 
-/** Komunikat błędu po polsku. */
-fun FailReason.message(): String = when (this) {
-    FailReason.NETWORK -> "Brak połączenia"
-    FailReason.CHECKSUM -> "Plik uszkodzony – odrzucono, spróbuj ponownie"
-    FailReason.STORAGE -> "Za mało miejsca"
+/** Komunikat błędu po polsku (zasób strings.xml). */
+@StringRes
+fun FailReason.message(): Int = when (this) {
+    FailReason.NETWORK -> R.string.lut_fail_network
+    FailReason.CHECKSUM -> R.string.lut_fail_checksum
+    FailReason.STORAGE -> R.string.lut_fail_storage
 }
 
 private const val BYTES_IN_KB = 1024.0
@@ -151,10 +155,19 @@ fun LutDownloadScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = cs.background),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Wstecz")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.lut_back)
+                        )
                     }
                 },
-                title = { Text("Filtry (LUT)", maxLines = 1) }
+                title = {
+                    Text(
+                        stringResource(R.string.lut_title),
+                        maxLines = 1,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                }
             )
         }
     ) { padding ->
@@ -167,19 +180,24 @@ fun LutDownloadScreen(
                 GroupCard {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "${state.readyCount} z ${state.packs.size} filmów gotowych",
+                            pluralStringResource(
+                                R.plurals.lut_ready_count,
+                                state.packs.size,
+                                state.readyCount,
+                                state.packs.size
+                            ),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.semantics { heading() }
                         )
                         Text(
-                            "Do pobrania: ${formatBytes(state.missingBytes)}",
+                            stringResource(R.string.lut_to_download, formatBytes(state.missingBytes)),
                             color = cs.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        SizeLine("Pobrane filtry", state.downloadedBytes)
-                        SizeLine("Pamięć podręczna", state.cacheBytes)
-                        SizeLine("Wolne miejsce", state.freeSpaceBytes)
+                        SizeLine(stringResource(R.string.lut_downloaded_size), state.downloadedBytes)
+                        SizeLine(stringResource(R.string.lut_cache_size), state.cacheBytes)
+                        SizeLine(stringResource(R.string.lut_free_space), state.freeSpaceBytes)
                         if (state.toDownload.isEmpty()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -189,7 +207,7 @@ fun LutDownloadScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Wszystkie filmy pobrane – działają bez internetu", color = cs.primary)
+                                Text(stringResource(R.string.lut_all_ready), color = cs.primary)
                             }
                         } else {
                             Button(
@@ -200,7 +218,7 @@ fun LutDownloadScreen(
                                 Icon(Icons.Outlined.Download, null, modifier = Modifier.size(20.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    "Pobierz wszystkie (~${formatBytes(state.missingBytes)})",
+                                    stringResource(R.string.lut_download_all, formatBytes(state.missingBytes)),
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
@@ -211,8 +229,8 @@ fun LutDownloadScreen(
             item(key = "wifi") {
                 GroupCard {
                     ListItem(
-                        headlineContent = { Text("Tylko przez Wi‑Fi") },
-                        supportingContent = { Text("Nie zużywa danych komórkowych") },
+                        headlineContent = { Text(stringResource(R.string.lut_only_wifi)) },
+                        supportingContent = { Text(stringResource(R.string.lut_only_wifi_subtitle)) },
                         leadingContent = { Icon(Icons.Outlined.Wifi, null) },
                         trailingContent = { Switch(checked = state.onlyWifi, onCheckedChange = null) },
                         colors = ListItemDefaults.colors(containerColor = cs.surfaceContainerLow),
@@ -225,39 +243,32 @@ fun LutDownloadScreen(
                 }
             }
             item(key = "privacy") {
-                Notice(icon = { Icon(Icons.Outlined.Lock, null) }, text = NETWORK_PRIVACY_NOTE)
+                Notice(icon = { Icon(Icons.Outlined.Lock, null) }, text = stringResource(R.string.lut_privacy_note))
             }
             if (state.offline || state.waitingForWifi) {
                 item(key = "network") {
                     Notice(
                         icon = { Icon(if (state.offline) Icons.Outlined.CloudOff else Icons.Outlined.Wifi, null) },
-                        text = if (state.offline) {
-                            "Jesteś offline. Filmy oznaczone „W aplikacji” i pobrane działają bez internetu. " +
-                                "Pobieranie wznowi się po połączeniu."
-                        } else {
-                            "Czekam na Wi‑Fi. Pobieranie ruszy po połączeniu z Wi‑Fi " +
-                                "(albo wyłącz „Tylko przez Wi‑Fi”)."
-                        }
+                        text = stringResource(if (state.offline) R.string.lut_offline else R.string.lut_waiting_wifi)
                     )
                 }
             }
             item(key = "cache") {
+                val cacheSize = formatBytes(state.cacheBytes)
+                val clearLabel = stringResource(R.string.lut_clear_cache_label, cacheSize)
                 GroupCard {
                     Column {
                         ListItem(
-                            headlineContent = { Text("Wyczyść pamięć podręczną") },
+                            headlineContent = { Text(stringResource(R.string.lut_clear_cache)) },
                             supportingContent = {
-                                Text(
-                                    "Zwolni ${formatBytes(state.cacheBytes)}. Pobrane filmy zostają – " +
-                                        "rozpakują się ponownie przy następnym użyciu."
-                                )
+                                Text(stringResource(R.string.lut_clear_cache_subtitle, cacheSize))
                             },
                             leadingContent = { Icon(Icons.Outlined.DeleteSweep, null) },
                             colors = ListItemDefaults.colors(containerColor = cs.surfaceContainerLow),
                             modifier = Modifier.heightIn(min = 56.dp).clickable(
                                 enabled = state.cacheBytes > 0L,
                                 role = Role.Button,
-                                onClickLabel = "Wyczyść pamięć podręczną, zwolni ${formatBytes(state.cacheBytes)}",
+                                onClickLabel = clearLabel,
                                 onClick = onClearCacheRequest
                             )
                         )
@@ -266,7 +277,7 @@ fun LutDownloadScreen(
             }
             item(key = "films-label") {
                 Text(
-                    "FILMY",
+                    stringResource(R.string.lut_films_header),
                     style = MaterialTheme.typography.labelMedium,
                     color = cs.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp).semantics { heading() }
@@ -276,17 +287,18 @@ fun LutDownloadScreen(
                 PackRow(pack, state.waitingForWifi, onDownload, onCancel, onDelete)
             }
             item(key = "licenses") {
+                val licensesLabel = stringResource(R.string.lut_licenses_label)
                 GroupCard {
                     ListItem(
-                        headlineContent = { Text("Licencje i autorzy") },
+                        headlineContent = { Text(stringResource(R.string.lut_licenses)) },
                         supportingContent = {
-                            Text("LUT-y: CC BY-SA 4.0 · RawTherapee Film Simulation Collection")
+                            Text(stringResource(R.string.lut_licenses_subtitle))
                         },
                         leadingContent = { Icon(Icons.Outlined.Info, null) },
                         trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
                         colors = ListItemDefaults.colors(containerColor = cs.surfaceContainerLow),
                         modifier = Modifier.heightIn(min = 56.dp)
-                            .clickable(onClickLabel = "Otwórz licencje i autorów", onClick = onOpenLicenses)
+                            .clickable(onClickLabel = licensesLabel, role = Role.Button, onClick = onOpenLicenses)
                     )
                 }
             }
@@ -305,6 +317,7 @@ private fun PackRow(
     val cs = MaterialTheme.colorScheme
     val st = pack.state
     val status = statusText(pack, waitingForWifi)
+    val packCd = stringResource(R.string.lut_pack_cd, pack.displayName, status)
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = cs.surfaceContainerLow),
@@ -314,7 +327,7 @@ private fun PackRow(
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.heightIn(min = 48.dp)) {
                 Column(
                     Modifier.weight(1f).semantics(mergeDescendants = true) {
-                        contentDescription = "${pack.displayName}, $status"
+                        contentDescription = packCd
                         if (st is PackState.Failed) liveRegion = LiveRegionMode.Polite
                     }
                 ) {
@@ -339,12 +352,18 @@ private fun PackRow(
             }
             if (st is PackState.Downloading && !pack.bundled) {
                 val pct = (st.progress * 100).roundToInt()
+                val progressCd = stringResource(R.string.lut_progress_cd, pack.displayName)
+                val progressState = if (waitingForWifi) {
+                    stringResource(R.string.lut_progress_wifi_state, pct)
+                } else {
+                    stringResource(R.string.lut_progress_state, pct)
+                }
                 LinearProgressIndicator(
                     progress = { st.progress.coerceIn(0f, 1f) },
                     modifier = Modifier.fillMaxWidth().padding(end = 12.dp, top = 4.dp, bottom = 4.dp)
                         .clearAndSetSemantics {
-                            contentDescription = "Postęp pobierania ${pack.displayName}"
-                            stateDescription = if (waitingForWifi) "Czeka na Wi‑Fi, $pct procent" else "$pct procent"
+                            contentDescription = progressCd
+                            stateDescription = progressState
                             progressBarRangeInfo = ProgressBarRangeInfo(st.progress.coerceIn(0f, 1f), 0f..1f)
                         }
                 )
@@ -353,16 +372,23 @@ private fun PackRow(
     }
 }
 
+@Composable
 private fun statusText(pack: LutPack, waitingForWifi: Boolean): String {
     val st = pack.state
     val size = formatBytes(pack.sizeBytes)
     return when {
-        pack.bundled -> "W aplikacji"
-        st is PackState.Downloading && waitingForWifi -> "Czeka na Wi‑Fi · $size"
-        st is PackState.Downloading -> "Pobieranie ${(st.progress * PERCENT).roundToInt()}% · $size"
-        st is PackState.Failed -> st.reason.message()
-        st == PackState.Ready -> "Pobrany · $size"
-        else -> "Do pobrania · $size"
+        pack.bundled -> stringResource(R.string.lut_status_bundled)
+
+        st is PackState.Downloading && waitingForWifi -> stringResource(R.string.lut_status_waiting, size)
+
+        st is PackState.Downloading ->
+            stringResource(R.string.lut_status_downloading, (st.progress * PERCENT).roundToInt(), size)
+
+        st is PackState.Failed -> stringResource(st.reason.message())
+
+        st == PackState.Ready -> stringResource(R.string.lut_status_ready, size)
+
+        else -> stringResource(R.string.lut_status_not_downloaded, size)
     }
 }
 
@@ -377,19 +403,23 @@ private fun PackAction(
     val size = formatBytes(pack.sizeBytes)
     when (pack.state) {
         PackState.NotDownloaded -> IconButton(onClick = { onDownload(pack.id) }) {
-            Icon(Icons.Outlined.Download, "Pobierz ${pack.displayName} ($size)", tint = cs.primary)
+            Icon(
+                Icons.Outlined.Download,
+                stringResource(R.string.lut_action_download, pack.displayName, size),
+                tint = cs.primary
+            )
         }
 
         is PackState.Downloading -> IconButton(onClick = { onCancel(pack.id) }) {
-            Icon(Icons.Outlined.Close, "Anuluj pobieranie ${pack.displayName}")
+            Icon(Icons.Outlined.Close, stringResource(R.string.lut_action_cancel, pack.displayName))
         }
 
         PackState.Ready -> IconButton(onClick = { onDelete(pack.id) }) {
-            Icon(Icons.Outlined.Delete, "Usuń ${pack.displayName}, zwolni $size")
+            Icon(Icons.Outlined.Delete, stringResource(R.string.lut_action_delete, pack.displayName, size))
         }
 
         is PackState.Failed -> IconButton(onClick = { onDownload(pack.id) }) {
-            Icon(Icons.Outlined.Refresh, "Spróbuj ponownie: ${pack.displayName}", tint = cs.primary)
+            Icon(Icons.Outlined.Refresh, stringResource(R.string.lut_action_retry, pack.displayName), tint = cs.primary)
         }
     }
 }
@@ -407,31 +437,31 @@ private fun SizeLine(label: String, bytes: Long) {
 
 @Composable
 private fun ClearCacheDialog(cacheBytes: Long, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val size = formatBytes(cacheBytes)
+    val confirmCd = stringResource(R.string.lut_dialog_confirm_cd, size)
+    val dismissCd = stringResource(R.string.lut_dialog_dismiss_cd)
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Outlined.DeleteSweep, null) },
-        title = { Text("Wyczyścić pamięć podręczną?", modifier = Modifier.semantics { heading() }) },
+        title = { Text(stringResource(R.string.lut_dialog_title), modifier = Modifier.semantics { heading() }) },
         text = {
-            Text(
-                "Zwolnisz ${formatBytes(cacheBytes)}. Pobrane filmy zostają na telefonie – " +
-                    "rozpakują się ponownie przy następnym użyciu (pierwsze zdjęcie może potrwać dłużej)."
-            )
+            Text(stringResource(R.string.lut_dialog_text, size))
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 modifier = Modifier.heightIn(min = 48.dp).semantics {
-                    contentDescription = "Wyczyść pamięć podręczną, zwolni ${formatBytes(cacheBytes)}"
+                    contentDescription = confirmCd
                 }
-            ) { Text("Wyczyść") }
+            ) { Text(stringResource(R.string.lut_dialog_confirm)) }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
                 modifier = Modifier.heightIn(min = 48.dp).semantics {
-                    contentDescription = "Anuluj, nie czyść pamięci podręcznej"
+                    contentDescription = dismissCd
                 }
-            ) { Text("Anuluj") }
+            ) { Text(stringResource(R.string.lut_dialog_dismiss)) }
         }
     )
 }

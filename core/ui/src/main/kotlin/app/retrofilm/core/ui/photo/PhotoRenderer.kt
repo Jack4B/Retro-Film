@@ -37,10 +37,18 @@ fun DrawScope.drawPhoto(renderer: PhotoRenderer, key: Int, rect: Rect, matrix: C
     with(renderer) { drawPhoto(key, rect, matrix) }
 }
 
+/** Zdjęcie; [contentDescription] = null dla miniatur dekoracyjnych (opis ma element nadrzędny). */
 @Composable
-fun Photo(contentDescription: String, key: Int, modifier: Modifier = Modifier, matrix: ColorMatrix? = null) {
+fun Photo(contentDescription: String?, key: Int, modifier: Modifier = Modifier, matrix: ColorMatrix? = null) {
     val renderer = LocalPhotoRenderer.current
-    Canvas(modifier.semantics { this.contentDescription = contentDescription }) {
+    val described = if (contentDescription ==
+        null
+    ) {
+        modifier
+    } else {
+        modifier.semantics { this.contentDescription = contentDescription }
+    }
+    Canvas(described) {
         drawPhoto(renderer, key, Rect(Offset.Zero, size), matrix)
     }
 }
