@@ -73,17 +73,62 @@ object FrameGeometry {
         )
     }
 
-    data class SignatureFit(val sizePx: Float, val lines: Int)
+    /** Krok dodatkowego zmniejszania podpisu w 2 liniach (poniżej 60%), patrz RAMKA-SPEC. */
+    const val SIGNATURE_SHRINK_STEP = 0.9f
+
+    /** Dolna granica bezpieczeństwa: 1% rozmiaru bazowego (pętla zawsze się kończy). */
+    const val SIGNATURE_FLOOR_SCALE = 0.01f
+
+    /** Wynik dopasowania: rozmiar fontu, liczba linii i wymiary bloku tekstu. */
+    data class SignatureFit(val sizePx: Float, val lines: Int, val width: Float, val height: Float)
 
     /**
-     * Dopasowanie podpisu: od 0.075·u zmniejsza do 60%, potem 2 linie przy 60%.
-     * [widthAt] zwraca szerokość tekstu w jednej linii dla danego rozmiaru.
+     * Dopasowanie podpisu do pasa (RAMKA-SPEC, „Podpis”):
+     * 1. rozmiar bazowy w jednej linii;
+     * 2. zmniejszanie w jednej linii najwyżej do 60% bazowego;
+     * 3. zawinięcie do 2 linii przy 60%;
+     * 4. gdy 2 linie nadal nie mieszczą się w [maxWidth] × [maxHeight] (albo łamanie daje > 2 linie),
+     *    dalsze zmniejszanie krokami ×0.9 aż do zmieszczenia (granica bezpieczeństwa 1% bazowego).
      */
-    fun fitSignature(base: Float, maxWidth: Float, widthAt: (Float) -> Float): SignatureFit {
-        val full = widthAt(base)
-        if (full <= maxWidth) return SignatureFit(base, 1)
-        val needed = base * maxWidth / full
-        val min = base * SIGNATURE_MIN_SCALE
-        return if (needed >= min) SignatureFit(needed, 1) else SignatureFit(min, 2)
+    fun fitSignature(base: Float, maxWidth: Float, maxHeight: Float, measurer: SignatureMeasurer): SignatureFit {
+        fun fits(b: TextBlock, maxLines: Int) = b.lines <= maxLines && b.width <= maxWidth && b.height <= maxHeight
+        val full = measurer.measure(base, null)
+        val oneLineSize = (base * maxWidth / full.width).coerceIn(base * SIGNATURE_MIN_SCALE, base)
+        val oneLine = if (oneLineSize == base) full else measurer.measure(oneLineSize, null)
+        return if (fits(oneLine, 1)) {
+            SignatureFit(oneLineSize, 1, oneLine.width, oneLine.height)
+        } else {
+            fitTwoLines(base, maxWidth, measurer, ::fits)
+        }
     }
+
+    private fun fitTwoLines(
+        base: Float,
+        maxWidth: Float,
+        measurer: SignatureMeasurer,
+        fits: (TextBlock, Int) -> Boolean
+    ): SignatureFit {
+        val floor = base * SIGNATURE_FLOOR_SCALE
+        var size = base * SIGNATURE_MIN_SCALE
+        var wrapped = measurer.measure(size, maxWidth)
+        while (!fits(wrapped, 2) && size * SIGNATURE_SHRINK_STEP >= floor) {
+            size *= SIGNATURE_SHRINK_STEP
+            wrapped = measurer.measure(size, maxWidth)
+        }
+        return SignatureFit(size, wrapped.lines, wrapped.width, wrapped.height)
+    }
+
+    /** Prostokąt bloku podpisu: wyśrodkowany poziomo na płótnie i pionowo w pasie; null bez pasa. */
+    fun signatureBounds(layout: FrameLayout, width: Float, height: Float): RectF? = layout.signatureBand?.let { band ->
+        RectF((layout.canvasWidth - width) / 2f, band.top + (band.height - height) / 2f, width, height)
+    }
+}
+
+/** Wymiary zmierzonego bloku tekstu. */
+data class TextBlock(val width: Float, val height: Float, val lines: Int)
+
+/** Wstrzykiwany pomiar tekstu podpisu (Compose w aplikacji, atrapa w testach). */
+fun interface SignatureMeasurer {
+    /** [wrapWidth] = null: jedna linia bez łamania; inaczej łamanie do tej szerokości bez limitu linii. */
+    fun measure(sizePx: Float, wrapWidth: Float?): TextBlock
 }

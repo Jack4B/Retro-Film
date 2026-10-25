@@ -1,0 +1,12 @@
+# Nakładka tylko dla modułów feature/* (CI: --config detekt.yml,detekt-feature.yml).
+# Ekrany Compose są bezstanowe: stan + callbacki w parametrach, układ w jednej funkcji,
+# wymiary (dp/sp) i proporcje w kodzie układu.
+complexity:
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreAnnotated: ['Composable']

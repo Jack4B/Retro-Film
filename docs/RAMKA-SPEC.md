@@ -23,7 +23,7 @@ Wszystkie wymiary są ułamkami krótszego boku `u = min(W, H)` płótna, więc 
 - Wysokość bazowa: **0,075·u**.
 - Za długi tekst: czcionka zmniejsza się najwyżej do **60%** bazowej; gdy nadal nie mieści się w 90% szerokości pola zdjęcia, tekst **zawija się do 2 linii** (podział po słowach).
 - Limit: **40 znaków**, licznik widoczny w polu. Placeholder: „Np. Tatry, Jezioro Bachotek”.
-- Podpis nigdy nie wychodzi poza ramkę.
+- Podpis nigdy nie wychodzi poza ramkę. Reguła gwarancji (`FrameGeometry.fitSignature`): jeśli 2 linie przy 60% nadal przekraczają 90% szerokości pola zdjęcia albo wysokość pasa podpisu (lub łamanie daje więcej niż 2 linie, np. bardzo długie słowo), czcionka zmniejsza się dalej krokami ×0,9, aż blok tekstu zmieści się w pasie (granica bezpieczeństwa: 1% bazowej). Blok jest wyśrodkowany poziomo na płótnie i pionowo w pasie (`FrameGeometry.signatureBounds`).
 
 ## Seria
 - Ta sama ramka (proporcje, margines, tło, font, kolor) dla całej serii; podpis można zmienić dla pojedynczego zdjęcia.
