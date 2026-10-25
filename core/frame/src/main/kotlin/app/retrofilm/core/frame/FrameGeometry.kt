@@ -76,11 +76,21 @@ object FrameGeometry {
     /** Krok dodatkowego zmniejszania podpisu w 2 liniach (poniżej 60%), patrz RAMKA-SPEC. */
     const val SIGNATURE_SHRINK_STEP = 0.9f
 
-    /** Dolna granica bezpieczeństwa: 1% rozmiaru bazowego (pętla zawsze się kończy). */
-    const val SIGNATURE_FLOOR_SCALE = 0.01f
+    /**
+     * Próg czytelności: 40% rozmiaru bazowego (0,4 · 0,075·u = 0,03·u). Poniżej tego progu
+     * podpis nie jest zmniejszany — wynik ma wtedy `fits = false` (żadnego „cichego” mikrotekstu).
+     */
+    const val SIGNATURE_FLOOR_SCALE = 0.40f
 
-    /** Wynik dopasowania: rozmiar fontu, liczba linii i wymiary bloku tekstu. */
-    data class SignatureFit(val sizePx: Float, val lines: Int, val width: Float, val height: Float)
+    /**
+     * Wynik dopasowania: rozmiar fontu, liczba linii i wymiary bloku tekstu.
+     * [fits] = false oznacza, że nawet przy progu czytelności blok nie mieści się w pasie —
+     * podglądu ani eksportu nie wolno wtedy rysować z tym podpisem (patrz RAMKA-SPEC).
+     */
+    data class SignatureFit(val sizePx: Float, val lines: Int, val width: Float, val height: Float, val fits: Boolean) {
+        /** Stosunek rozmiaru do bazowego (0,4..1). */
+        fun scale(base: Float) = sizePx / base
+    }
 
     /**
      * Dopasowanie podpisu do pasa (RAMKA-SPEC, „Podpis”):
@@ -88,7 +98,8 @@ object FrameGeometry {
      * 2. zmniejszanie w jednej linii najwyżej do 60% bazowego;
      * 3. zawinięcie do 2 linii przy 60%;
      * 4. gdy 2 linie nadal nie mieszczą się w [maxWidth] × [maxHeight] (albo łamanie daje > 2 linie),
-     *    dalsze zmniejszanie krokami ×0.9 aż do zmieszczenia (granica bezpieczeństwa 1% bazowego).
+     *    dalsze zmniejszanie krokami ×0.9, ostatnia próba dokładnie na progu czytelności (40% bazowego);
+     * 5. jeśli i to nie wystarcza — `fits = false` (rozmiar = próg), bez dalszego zmniejszania.
      */
     fun fitSignature(base: Float, maxWidth: Float, maxHeight: Float, measurer: SignatureMeasurer): SignatureFit {
         fun fits(b: TextBlock, maxLines: Int) = b.lines <= maxLines && b.width <= maxWidth && b.height <= maxHeight
@@ -96,7 +107,7 @@ object FrameGeometry {
         val oneLineSize = (base * maxWidth / full.width).coerceIn(base * SIGNATURE_MIN_SCALE, base)
         val oneLine = if (oneLineSize == base) full else measurer.measure(oneLineSize, null)
         return if (fits(oneLine, 1)) {
-            SignatureFit(oneLineSize, 1, oneLine.width, oneLine.height)
+            SignatureFit(oneLineSize, 1, oneLine.width, oneLine.height, fits = true)
         } else {
             fitTwoLines(base, maxWidth, measurer, ::fits)
         }
@@ -111,11 +122,11 @@ object FrameGeometry {
         val floor = base * SIGNATURE_FLOOR_SCALE
         var size = base * SIGNATURE_MIN_SCALE
         var wrapped = measurer.measure(size, maxWidth)
-        while (!fits(wrapped, 2) && size * SIGNATURE_SHRINK_STEP >= floor) {
-            size *= SIGNATURE_SHRINK_STEP
+        while (!fits(wrapped, 2) && size > floor) {
+            size = maxOf(size * SIGNATURE_SHRINK_STEP, floor)
             wrapped = measurer.measure(size, maxWidth)
         }
-        return SignatureFit(size, wrapped.lines, wrapped.width, wrapped.height)
+        return SignatureFit(size, wrapped.lines, wrapped.width, wrapped.height, fits = fits(wrapped, 2))
     }
 
     /** Prostokąt bloku podpisu: wyśrodkowany poziomo na płótnie i pionowo w pasie; null bez pasa. */

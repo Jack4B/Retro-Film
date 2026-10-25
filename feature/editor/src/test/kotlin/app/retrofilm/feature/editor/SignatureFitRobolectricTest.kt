@@ -30,7 +30,8 @@ class SignatureFitRobolectricTest {
 
     private val texts = listOf(
         "WŚMWŚMWŚMW ŻÓŁWŚMWĘŚ MWŚMWĄŚMWŃ ŹDŹBŁOMW",
-        "WŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMW"
+        "WŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMWŚMW",
+        "W".repeat(FrameGeometry.SIGNATURE_MAX_CHARS)
     )
 
     @Test fun fortyWideCharsFitBandAndFrame() {
@@ -62,6 +63,8 @@ class SignatureFitRobolectricTest {
                     )
                     val r = FrameGeometry.signatureBounds(l, drawn.size.width.toFloat(), drawn.size.height.toFloat())!!
                     val ctx = "\"$text\" W=$canvasW m=$margin fit=$fit rect=$r band=$band"
+                    assertTrue(ctx, fit.fits)
+                    assertTrue(ctx, fit.sizePx >= FrameGeometry.SIGNATURE_FLOOR_SCALE * l.signatureBaseSize)
                     assertTrue(ctx, fit.lines in 1..2)
                     assertTrue(ctx, !drawn.hasVisualOverflow)
                     assertTrue(ctx, r.left >= 0f && r.right <= l.canvasWidth)
