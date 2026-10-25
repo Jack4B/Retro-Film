@@ -110,15 +110,7 @@ fun EditorScreen(
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
             PreviewPane(state, Modifier.weight(1f).fillMaxWidth())
-            if (state.preview != null) {
-                Text(
-                    stringResource(R.string.editor_hint_hold),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = HintPad)
-                )
-            }
+            if (state.preview != null) HoldHint()
             if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
@@ -136,6 +128,17 @@ fun EditorScreen(
             }
         }
     }
+}
+
+@Composable
+private fun HoldHint() {
+    Text(
+        stringResource(R.string.editor_hint_hold),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = HintPad)
+    )
 }
 
 @Composable

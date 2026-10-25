@@ -120,11 +120,7 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
                     onFavorites = { onlyFavorites = true }
                 )
             }
-            val libraryCd = stringResource(R.string.library_open_cd)
-            IconButton(
-                onClick = onOpenLibrary,
-                modifier = Modifier.size(MinTouch).semantics { contentDescription = libraryCd }
-            ) { Icon(Icons.Filled.Search, contentDescription = null) }
+            LibraryButton(onOpenLibrary)
         }
         LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             item(key = IDENTITY_ID) {
@@ -159,6 +155,14 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
 @Composable
 private fun Hint(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = SidePad))
+}
+
+@Composable
+private fun LibraryButton(onClick: () -> Unit) {
+    val cd = stringResource(R.string.library_open_cd)
+    IconButton(onClick = onClick, modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }) {
+        Icon(Icons.Filled.Search, contentDescription = null)
+    }
 }
 
 /** Gwiazdka przy wybranym filmie: dodaje go do ulubionych albo usuwa. */
