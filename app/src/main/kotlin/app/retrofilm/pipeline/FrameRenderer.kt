@@ -15,8 +15,8 @@ import app.retrofilm.core.frame.FrameGeometry
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.core.frame.SignatureMeasurer
 import app.retrofilm.core.frame.SizeF
-import app.retrofilm.core.frame.TightFrame
 import app.retrofilm.core.frame.TextBlock
+import app.retrofilm.core.frame.TightFrame
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
