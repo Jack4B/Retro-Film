@@ -14,4 +14,4 @@ F? · ekran:
 - [ ] Wpis w docs/HANDOFF.md
 
 ## Review
-Merge dopiero po komentarzu `[Forge] APPROVE`.
+Kolejność: Gauge → Critic (komentarze `[Rola] P0/P1/P2`). Merge dopiero po `[Critic] APPROVE` i decyzji Jack4B.

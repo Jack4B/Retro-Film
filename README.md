@@ -5,6 +5,9 @@ Aplikacja na Androida do symulacji filmu analogowego za pomocą LUT-ów (.cube).
 ## Stan
 Projekt **w fazie projektowania**. Brak kodu, brak zrzutów ekranu, żadna funkcja nie jest jeszcze gotowa. Plan: [docs/PLAN.md](docs/PLAN.md).
 
+## Zespół
+Aplikację budują od zera boty zespołu (Forge, Lumen, Gauge, Critic, Python Programista Master, Nexus); decyzje podejmuje Jack4B. Zob. [AGENTS.md](AGENTS.md).
+
 ## Planowane
 - Edycja jednego zdjęcia i wielu naraz (seria).
 - Ramka z odręcznym podpisem, opcjonalny pasek EXIF.
@@ -12,7 +15,7 @@ Projekt **w fazie projektowania**. Brak kodu, brak zrzutów ekranu, żadna funkc
 
 ## Dokumentacja
 - [Architektura](docs/ARCHITEKTURA.md) · [Ekrany](docs/EKRANY.md) · [Decyzje](docs/DECYZJE.md) · [Specyfikacja ramki](docs/RAMKA-SPEC.md) · [Handoff](docs/HANDOFF.md) · [LUT-y](docs/LUTS.md)
-- [CONTRIBUTING](CONTRIBUTING.md) · [CLAUDE.md](CLAUDE.md) · [AGENTS.md](AGENTS.md) · [THIRD_PARTY](THIRD_PARTY.md)
+- [CONTRIBUTING](CONTRIBUTING.md) · [AGENTS.md](AGENTS.md) · [THIRD_PARTY](THIRD_PARTY.md)
 
 ## Instalacja
 Planowane: podpisane APK w GitHub Releases (Obtainium). Na razie brak wydań.

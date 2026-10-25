@@ -1,5 +1,7 @@
 # Plan
 
+Wykonawcy: Forge (kod, silnik), Lumen (makiety), Python Programista Master (`tools/`, LUT-y), Gauge → Critic (review), Nexus (koordynacja). Każda faza kończy się PR z `[Critic] APPROVE` i decyzją Jack4B.
+
 | Faza | Zakres | Gotowe, gdy |
 |---|---|---|
 | **F0** Szkielet + CI | Moduły, Hilt, motyw, nawigacja, ktlint/detekt, GitHub Actions | CI zielone, pusta aplikacja startuje |
