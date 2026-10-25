@@ -151,7 +151,7 @@ private fun PreviewPane(state: MainState, modifier: Modifier) {
                 color = MaterialTheme.colorScheme.error
             )
         } else if (!showBefore && state.preview != null) {
-            Badge(stringResource(R.string.editor_hint_hold), Modifier.align(Alignment.BottomCenter))
+            Badge(stringResource(R.string.editor_hint_hold), Modifier.align(Alignment.TopCenter))
         }
     }
 }
