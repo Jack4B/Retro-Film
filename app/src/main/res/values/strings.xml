@@ -95,6 +95,14 @@
     <string name="adjust_contrast">Kontrast</string>
     <string name="adjust_saturation">Nasycenie</string>
     <string name="adjust_temperature">Temperatura</string>
+    <string name="adjust_group_light">Światło</string>
+    <string name="adjust_group_color">Kolor</string>
+    <string name="adjust_group_film">Klisza</string>
+    <string name="adjust_highlights">Światła</string>
+    <string name="adjust_shadows">Cienie</string>
+    <string name="adjust_fade">Blaknięcie</string>
+    <string name="adjust_grain">Ziarno</string>
+    <string name="adjust_vignette">Winieta</string>
     <string name="adjust_reset">Wyzeruj korekty</string>
 
     <!-- Ramka -->

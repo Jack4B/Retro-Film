@@ -14,7 +14,17 @@ data class Adjustments(
     val exposure: Float = 0f,
     val contrast: Float = 0f,
     val saturation: Float = 0f,
-    val temperature: Float = 0f
+    val temperature: Float = 0f,
+    /** Światła −1..1: minus przywraca szczegóły w jasnych partiach, plus je rozjaśnia. */
+    val highlights: Float = 0f,
+    /** Cienie −1..1: plus rozjaśnia ciemne partie, minus je pogłębia. */
+    val shadows: Float = 0f,
+    /** Blaknięcie 0..1: podniesiona czerń i przytłumiona biel (wygląd starej odbitki). */
+    val fade: Float = 0f,
+    /** Ziarno filmowe 0..1. */
+    val grain: Float = 0f,
+    /** Winieta 0..1: przyciemnione rogi. */
+    val vignette: Float = 0f
 ) {
     val isNeutral: Boolean get() = this == None
 
@@ -57,30 +67,77 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         encode = FloatArray(ENCODE_SIZE + 1) { linearToSrgb(softClip(it.toFloat() / ENCODE_SCALE, ceiling)) }
     }
 
-    /** Przetwarza [count] pikseli ARGB w miejscu (alfa bez zmian). */
-    fun process(px: IntArray, count: Int = px.size) {
-        val sat = adj.saturation
-        val hasContrast = adj.contrast != 0f
+    private val rgb = FloatArray(3)
+    private val hasTone = adj.shadows != 0f || adj.highlights != 0f
+    private val hasEffects = adj.vignette > 0f || adj.grain > 0f
+
+    /**
+     * Przetwarza [count] pikseli ARGB w miejscu (alfa bez zmian). [width], [firstRow] i [totalRows]
+     * opisują położenie porcji w obrazie (winieta i ziarno zależą od współrzędnych).
+     */
+    fun process(px: IntArray, count: Int = px.size, width: Int = count, firstRow: Int = 0, totalRows: Int = 1) {
+        val cell = maxOf(1, maxOf(width, totalRows) / GRAIN_CELL_DIVISOR)
         for (i in 0 until count) {
             val c = px[i]
-            var r = encodeLinear(toLinear[(c shr RED_SHIFT) and BYTE_MASK] * gainR)
-            var g = encodeLinear(toLinear[(c shr GREEN_SHIFT) and BYTE_MASK] * gainG)
-            var b = encodeLinear(toLinear[c and BYTE_MASK] * gainB)
-            if (sat != 0f) {
-                val mx = maxOf(r, g, b)
-                val chroma = if (mx > EPS) (mx - minOf(r, g, b)) / mx else 0f
-                val f = if (sat < 0f) 1f + sat else 1f + sat * (1f - chroma)
-                val y = LUM_R * r + LUM_G * g + LUM_B * b
-                r = (y + (r - y) * f).coerceIn(0f, 1f)
-                g = (y + (g - y) * f).coerceIn(0f, 1f)
-                b = (y + (b - y) * f).coerceIn(0f, 1f)
+            rgb[0] = encodeLinear(toLinear[(c shr RED_SHIFT) and BYTE_MASK] * gainR)
+            rgb[1] = encodeLinear(toLinear[(c shr GREEN_SHIFT) and BYTE_MASK] * gainG)
+            rgb[2] = encodeLinear(toLinear[c and BYTE_MASK] * gainB)
+            if (adj.saturation != 0f) vibrance()
+            if (hasTone) toneRecovery()
+            if (adj.contrast !=
+                0f
+            ) {
+                for (k in 0..2) rgb[k] = contrastLut[(rgb[k].coerceIn(0f, 1f) * CONTRAST_SIZE + HALF).toInt()]
             }
-            if (hasContrast) {
-                r = contrastLut[(r * CONTRAST_SIZE + HALF).toInt()]
-                g = contrastLut[(g * CONTRAST_SIZE + HALF).toInt()]
-                b = contrastLut[(b * CONTRAST_SIZE + HALF).toInt()]
-            }
-            px[i] = (c and ALPHA_MASK) or (to8(r) shl RED_SHIFT) or (to8(g) shl GREEN_SHIFT) or to8(b)
+            if (adj.fade > 0f) fade()
+            if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
+            px[i] = (c and ALPHA_MASK) or (to8(rgb[0]) shl RED_SHIFT) or (to8(rgb[1]) shl GREEN_SHIFT) or to8(rgb[2])
+        }
+    }
+
+    private fun luma() = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]
+
+    private fun vibrance() {
+        val mx = maxOf(rgb[0], rgb[1], rgb[2])
+        val chroma = if (mx > EPS) (mx - minOf(rgb[0], rgb[1], rgb[2])) / mx else 0f
+        val f = if (adj.saturation < 0f) 1f + adj.saturation else 1f + adj.saturation * (1f - chroma)
+        val y = luma()
+        for (k in 0..2) rgb[k] = (y + (rgb[k] - y) * f).coerceIn(0f, 1f)
+    }
+
+    /** Cienie i światła: wpływ maleje do zera po drugiej stronie skali jasności (kwadratowa waga). */
+    private fun toneRecovery() {
+        val y = luma()
+        val wShadow = (1f - y) * (1f - y)
+        val wHighlight = y * y
+        for (k in 0..2) {
+            rgb[k] = shift(shift(rgb[k], adj.shadows, wShadow), adj.highlights, wHighlight)
+        }
+    }
+
+    private fun shift(v: Float, amount: Float, weight: Float): Float =
+        v + amount * TONE_GAIN * weight * (if (amount > 0f) 1f - v else v)
+
+    private fun fade() {
+        val lift = FADE_LIFT * adj.fade
+        val top = FADE_TOP * adj.fade
+        for (k in 0..2) rgb[k] = lift + rgb[k] * (1f - lift - top)
+    }
+
+    private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Int) {
+        if (adj.vignette > 0f) {
+            val nx = (x + HALF) / width * 2f - 1f
+            val ny = (y + HALF) / rows * 2f - 1f
+            val d2 = (nx * nx + ny * ny) / 2f
+            val f = 1f - adj.vignette * VIGNETTE_MAX * d2 * d2
+            for (k in 0..2) rgb[k] *= f
+        }
+        if (adj.grain > 0f) {
+            val gx = x / cell
+            val gy = y / cell
+            val amp = adj.grain * GRAIN_MAX * (1f - kotlin.math.abs(2f * luma() - 1f) * GRAIN_MIDTONE_BIAS)
+            val shared = noise(gx, gy, 0)
+            for (k in 0..2) rgb[k] += (shared * GRAIN_SHARED + noise(gx, gy, k + 1) * (1f - GRAIN_SHARED)) * amp
         }
     }
 
@@ -94,6 +151,22 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     companion object {
         const val TEMPERATURE_EV = 0.4f
         const val KNEE = 0.8f
+        private const val TONE_GAIN = 0.5f
+        private const val FADE_LIFT = 0.12f
+        private const val FADE_TOP = 0.06f
+        private const val VIGNETTE_MAX = 0.65f
+        private const val GRAIN_MAX = 0.12f
+        private const val GRAIN_MIDTONE_BIAS = 0.6f
+        private const val GRAIN_SHARED = 0.8f
+        private const val GRAIN_CELL_DIVISOR = 1400
+        private const val HASH_X = 374761393
+        private const val HASH_Y = 668265263
+        private const val HASH_SALT = 1442695041
+        private const val HASH_MIX = 1274126177
+        private const val HASH_SHIFT_A = 13
+        private const val HASH_SHIFT_B = 16
+        private const val HASH_MASK = 0xFFFF
+        private const val HASH_HALF = 32767.5f
         private const val BYTE_LEVELS = 256
         private const val BYTE_MAX = 255f
         private const val BYTE_MASK = 0xFF
@@ -116,6 +189,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val SRGB_SLOPE = 12.92f
         private const val SRGB_A = 0.055f
         private const val SRGB_GAMMA = 2.4
+
+        /** Deterministyczny szum −1..1 dla komórki ([x], [y]) i kanału [salt] (ten sam obraz = to samo ziarno). */
+        fun noise(x: Int, y: Int, salt: Int): Float {
+            var h = x * HASH_X + y * HASH_Y + salt * HASH_SALT
+            h = (h xor (h ushr HASH_SHIFT_A)) * HASH_MIX
+            h = h xor (h ushr HASH_SHIFT_B)
+            return (h and HASH_MASK) / HASH_HALF - 1f
+        }
 
         fun srgbToLinear(v: Float): Float = if (v <=
             SRGB_LINEAR_CUT
@@ -172,7 +253,7 @@ object AdjustmentsApplier {
         while (y < h) {
             val rows = minOf(ROWS_PER_CHUNK, h - y)
             src.getPixels(buf, 0, w, 0, y, w, rows)
-            processor.process(buf, w * rows)
+            processor.process(buf, w * rows, w, y, h)
             out.setPixels(buf, 0, w, 0, y, w, rows)
             y += rows
         }

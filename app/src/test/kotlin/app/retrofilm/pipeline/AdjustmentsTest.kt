@@ -93,4 +93,59 @@ class AdjustmentsTest {
         assertEquals(Color.rgb(100, 150, 200), src.getPixel(0, 0))
         assertTrue(out.getPixel(129, 69) != src.getPixel(129, 69))
     }
+
+    private fun gray(v: Int, w: Int = 9, h: Int = 9) = IntArray(w * h) { Color.rgb(v, v, v) }
+
+    @Test fun shadowsLiftAndHighlightsRecover() {
+        assertTrue(Color.red(px(40, 40, 40, Adjustments(shadows = 1f))) > 40 + 8)
+        assertTrue(Color.red(px(40, 40, 40, Adjustments(shadows = -1f))) < 40)
+        assertTrue(Color.red(px(220, 220, 220, Adjustments(highlights = -1f))) < 220 - 8)
+        // cienie nie ruszają jasnych tonów i odwrotnie
+        assertEquals(230f, Color.red(px(230, 230, 230, Adjustments(shadows = 1f))).toFloat(), 3f)
+        assertEquals(20f, Color.red(px(20, 20, 20, Adjustments(highlights = 1f))).toFloat(), 2f)
+    }
+
+    @Test fun fadeLiftsBlackAndDimsWhite() {
+        val black = Color.red(px(0, 0, 0, Adjustments(fade = 1f)))
+        val white = Color.red(px(255, 255, 255, Adjustments(fade = 1f)))
+        assertTrue(black in 25..40)
+        assertTrue(white < 255 && white > 230)
+    }
+
+    @Test fun vignetteDarkensCornersNotCenter() {
+        val px = gray(128)
+        AdjustmentProcessor(Adjustments(vignette = 1f)).process(px, px.size, 9, 0, 9)
+        val center = Color.red(px[4 * 9 + 4])
+        val corner = Color.red(px[0])
+        assertEquals(128f, center.toFloat(), 3f)
+        assertTrue("róg ciemniejszy", corner < center - 20)
+    }
+
+    @Test fun grainIsDeterministicNoisyAndKeepsAverageBrightness() {
+        val a = gray(128, 40, 40)
+        val b = gray(128, 40, 40)
+        val adj = Adjustments(grain = 1f)
+        AdjustmentProcessor(adj).process(a, a.size, 40, 0, 40)
+        AdjustmentProcessor(adj).process(b, b.size, 40, 0, 40)
+        assertTrue("to samo ziarno dla tego samego obrazu", a.contentEquals(b))
+        assertTrue("piksele się różnią", a.distinct().size > 10)
+        val mean = a.map { Color.red(it) }.average()
+        assertEquals(128.0, mean, 4.0)
+    }
+
+    @Test fun noiseStaysInRangeAndIsStable() {
+        for (x in 0 until 50) {
+            for (y in 0 until 50) {
+                val n = AdjustmentProcessor.noise(x, y, 1)
+                assertTrue(n >= -1f && n <= 1f)
+                assertEquals(n, AdjustmentProcessor.noise(x, y, 1), 0f)
+            }
+        }
+    }
+
+    @Test fun newFieldsMakeAdjustmentsNonNeutral() {
+        assertFalse(Adjustments(grain = 0.1f).isNeutral)
+        assertFalse(Adjustments(vignette = 0.1f).isNeutral)
+        assertFalse(Adjustments(fade = 0.1f).isNeutral)
+    }
 }
