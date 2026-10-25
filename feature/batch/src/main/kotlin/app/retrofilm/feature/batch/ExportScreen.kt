@@ -178,7 +178,8 @@ fun ExportScreen(
                     supportingContent = {
                         Text(
                             "Zapisywany jest tylko obraz: metadane aparatu i lokalizacja są usuwane. " +
-                                "Zdjęcia przetwarzane lokalnie."
+                                "Zdjęcia przetwarzane lokalnie. Internet służy tylko do pobierania filtrów. " +
+                                "Zdjęcia nie opuszczają telefonu."
                         )
                     },
                     leadingContent = { Icon(Icons.Outlined.Lock, contentDescription = null) },
