@@ -1,5 +1,7 @@
 # Ekrany
 
+> **Zmiany v2 (D12, redesign – makiety w [makiety/index.html](makiety/index.html), uzasadnienie w [OCENA-I-REDESIGN.md](OCENA-I-REDESIGN.md)):** nawigacja Start → Edytor (zakładki Film / Korekty / Ramka / Więcej) → zapis; osobne ekrany Seria, Biblioteka LUT i Eksport zastępuje pasek miniatur w Edytorze, „Biblioteka filmów” i arkusz „Zapisz”. „Ostatnie projekty” zastąpione ostatnio użytymi filmami i ostatnimi zapisami. Eksport tylko JPEG. W serii jeden film i jedna ramka, podpis osobno dla każdego zdjęcia. Własna galeria usunięta – tylko Photo Picker. Opis poniżej to stan sprzed v2 (do dalszej aktualizacji wraz z kodem).
+
 Każdy ekran ma stany: pusty, ładowanie, błąd. UI po polsku, cele ≥ 48 dp, kontrast AA, TalkBack.
 
 ## 1. Start
