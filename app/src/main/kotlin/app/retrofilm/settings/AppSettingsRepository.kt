@@ -5,8 +5,10 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import app.retrofilm.core.ui.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -21,6 +23,15 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         store.edit { it[DYNAMIC_COLOR] = enabled }
     }
 
+    /** Motyw: Ciemny (domyślnie, D3), Jasny albo Systemowy. Nieznana wartość = Ciemny. */
+    val themeMode: Flow<ThemeMode> = store.data.map { prefs ->
+        ThemeMode.entries.firstOrNull { it.name == prefs[THEME_MODE] } ?: ThemeMode.Dark
+    }
+
+    suspend fun setThemeMode(mode: ThemeMode) {
+        store.edit { it[THEME_MODE] = mode.name }
+    }
+
     /** Id ulubionych filmów (katalog LUT). Tylko lokalnie, bez synchronizacji. */
     val favoriteFilms: Flow<Set<String>> = store.data.map { it[FAVORITE_FILMS] ?: emptySet() }
 
@@ -33,6 +44,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
 
     companion object {
         internal val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        internal val THEME_MODE = stringPreferencesKey("theme_mode")
         internal val FAVORITE_FILMS = stringSetPreferencesKey("favorite_films")
 
         fun create(context: Context): AppSettingsRepository =
