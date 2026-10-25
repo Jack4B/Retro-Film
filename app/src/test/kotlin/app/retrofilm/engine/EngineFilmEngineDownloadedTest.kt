@@ -37,12 +37,12 @@ class EngineFilmEngineDownloadedTest {
     fun withoutDownloadsOnlyBundledFilmsAreListed() {
         val e = engine(null)
         assertTrue(e.availableLuts().isNotEmpty())
-        assertNull(e.load("negative_new/fuji_400h"))
+        assertNull(e.load(DOWNLOADABLE_ID))
     }
 
     @Test
     fun downloadedFilmIsListedAndLoadable() {
-        val film = FilmLut("negative_new/fuji_400h", "Fuji 400H")
+        val film = FilmLut(DOWNLOADABLE_ID, "Fuji Superia 200")
         val e = engine(FakeDownloaded(listOf(film), downloadedLut))
         assertTrue(film in e.availableLuts())
         assertSame(downloadedLut, e.load(film.id))
@@ -57,5 +57,9 @@ class EngineFilmEngineDownloadedTest {
         assertEquals(1, e.availableLuts().count { it.id == bundled.id })
         assertNotNull(e.load(bundled.id))
         assertEquals(0, fake.calls)
+    }
+
+    private companion object {
+        const val DOWNLOADABLE_ID = "negative_color/fuji_superia_200"
     }
 }
