@@ -89,25 +89,28 @@ internal fun categoryLabel(category: String): String = stringResource(
 /** Zakładka Film: ulubione, kategorie, miniatury filmów i moc. Zmiana mocy zatwierdzana po puszczeniu suwaka. */
 @Composable
 fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
-    var category by rememberSaveable { mutableStateOf<String?>(null) }
+    var brand by rememberSaveable { mutableStateOf<String?>(null) }
+    var type by rememberSaveable { mutableStateOf<String?>(null) }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
     val real = state.library.films.filter { it.id != IDENTITY_ID }
-    val categories = real.map { it.category }.distinct()
-    val current = category ?: real.firstOrNull { it.id == state.film }?.category ?: categories.firstOrNull()
-    val shown = real.filter {
-        if (onlyFavorites) it.id in state.library.favorites else it.category == current
-    }
+    val current = brand
+        ?: real.firstOrNull { it.id == state.film }?.let { FilmGroups.brandOf(it.id) }
+        ?: FilmGroups.brandsPresent(real).firstOrNull().orEmpty()
+    val shown = FilmGroups.filter(real, current, type, onlyFavorites, state.library.favorites)
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
-                FilmFilters(
-                    categories = categories,
-                    category = current,
+                FilmFilterBar(
+                    films = real,
+                    brand = current,
+                    type = type,
                     onlyFavorites = onlyFavorites,
-                    onCategory = {
-                        category = it
+                    onBrand = {
+                        brand = it
+                        type = null
                         onlyFavorites = false
                     },
+                    onType = { type = it },
                     onFavorites = { onlyFavorites = true }
                 )
             }
@@ -148,33 +151,6 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
 @Composable
 private fun Hint(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = SidePad))
-}
-
-@Composable
-private fun FilmFilters(
-    categories: List<String>,
-    category: String?,
-    onlyFavorites: Boolean,
-    onCategory: (String) -> Unit,
-    onFavorites: () -> Unit
-) {
-    if (categories.size <= 1) return
-    LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
-        item(key = "favorites") {
-            FilterChip(
-                selected = onlyFavorites,
-                onClick = onFavorites,
-                label = { Text(stringResource(R.string.film_favorites)) }
-            )
-        }
-        items(categories, key = { it }) { c ->
-            FilterChip(
-                selected = category == c && !onlyFavorites,
-                onClick = { onCategory(c) },
-                label = { Text(categoryLabel(c)) }
-            )
-        }
-    }
 }
 
 /** Gwiazdka przy wybranym filmie: dodaje go do ulubionych albo usuwa. */
