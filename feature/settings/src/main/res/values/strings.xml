@@ -10,6 +10,10 @@
     <string name="settings_section_privacy">Prywatność</string>
     <string name="settings_privacy_note">Internet służy tylko do pobierania filtrów. Zdjęcia nie opuszczają telefonu. Eksport usuwa EXIF i GPS.</string>
     <string name="settings_version">Wersja aplikacji</string>
+    <string name="settings_theme">Motyw</string>
+    <string name="settings_theme_system">Systemowy</string>
+    <string name="settings_theme_dark">Ciemny</string>
+    <string name="settings_theme_light">Jasny</string>
     <string name="settings_dynamic_color">Dynamiczne kolory (Material You)</string>
     <string name="settings_dynamic_color_subtitle">Kolory aplikacji dopasowane do tapety telefonu</string>
     <string name="settings_open">otwórz</string>
