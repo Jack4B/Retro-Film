@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-25 – Claude (Biblioteka filmów)
+- Faza: D12 – Biblioteka filmów z miniaturami
+- Zrobione: ekran „Filmy” (wyszukiwarka, kategorie z licznikami, ★ ulubione, „Na telefonie”, „Pobierz” wszystkie, siatka kafelków z gotowych JPG z APK, stany: na telefonie / ↓ rozmiar / pobieranie % / błąd; dotknięcie wybiera lub pobiera, przytrzymanie = ulubione, akcje TalkBack); dodatkowy widok „Na moim zdjęciu” z `LutMemoryCache` (nie zastępuje JPG); logika w `LibraryModel` z testami JVM; wejście z zakładki Film (ikona lupy); 10 miniatur startowych w `app/src/main/assets/thumbs/` (scena testowa, `tools/thumbs/make_thumbs.py` z #31).
+- PR / gałąź: `f5/biblioteka-filmow` (baza: `f5/pobieranie-filmow`, #30).
+- Otwarte / P2 odłożone: komplet 260 miniatur ze zdjęciem CC0 (@Forge, #31) – do tego czasu kafelki filmów do pobrania mają puste tło z nazwą i rozmiarem; po wygenerowaniu pełnego kompletu wymienić też 10 startowych, żeby wszystkie miały to samo zdjęcie wzorcowe; zrzuty z telefonu (390); test pobierania na urządzeniu.
+- Następny krok: review Lumen → Gauge → Critic.
+
 ## 2026-10-25 – Claude (włączenie pobierania filmów)
 - Faza: D8/D9 – pobieranie filmów
 - Zrobione: `LutDownloadFeature.ENABLED = true`; `EngineFilmEngine` widzi filmy pobrane (`DownloadedFilms`, implementuje `WorkLutPackRepository`); lista filmów w Edytorze odświeża się po pobraniu (`FilmLibrary`); test `EngineFilmEngineDownloadedTest`.

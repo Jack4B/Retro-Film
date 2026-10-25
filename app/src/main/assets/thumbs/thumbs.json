@@ -1,0 +1,59 @@
+{
+ "count": 10,
+ "photo": "test-scene",
+ "quality": 78,
+ "size": 160,
+ "thumbs": {
+  "bw/ilford_hp_5_plus_400": {
+   "bytes": 2716,
+   "file": "bw/ilford_hp_5_plus_400.jpg",
+   "sha256": "15b0d62cab94cb8bd44492fd672b7840fcd9b9ddea1d92c067a2edc156629b34"
+  },
+  "bw/kodak_tri_x_400": {
+   "bytes": 2650,
+   "file": "bw/kodak_tri_x_400.jpg",
+   "sha256": "403a7885115618cd57789805c827ccfb4a9a9e679d756dd97492ec16308236a6"
+  },
+  "colorslide/fuji_velvia_50": {
+   "bytes": 3264,
+   "file": "colorslide/fuji_velvia_50.jpg",
+   "sha256": "87d1893ef4be00142481cb6320f5124c0c4af1926fb69448fb8d71c1494c81e0"
+  },
+  "colorslide/kodak_ektachrome_100_vs": {
+   "bytes": 3359,
+   "file": "colorslide/kodak_ektachrome_100_vs.jpg",
+   "sha256": "bff6f502937f503df245439f851c7ea3343df82ea4ec777c8bfccdb8421f7818"
+  },
+  "colorslide/kodak_kodachrome_64": {
+   "bytes": 3261,
+   "file": "colorslide/kodak_kodachrome_64.jpg",
+   "sha256": "1493bfbbc1e0e0991388baca7f43891499310c099b386f8548db02e6bee71f2b"
+  },
+  "instant_consumer/polaroid_px_680": {
+   "bytes": 3085,
+   "file": "instant_consumer/polaroid_px_680.jpg",
+   "sha256": "eee7bd5efb0bff797511efb30ac7929790c7a77b3353d96be997fe4226e2ecb1"
+  },
+  "negative_new/fuji_400h": {
+   "bytes": 3231,
+   "file": "negative_new/fuji_400h.jpg",
+   "sha256": "29fcefd02810cf1b04f2b796db3dd23be5de67012eb6bbd26a67c54a57d6c5b7"
+  },
+  "negative_new/kodak_portra_400": {
+   "bytes": 3317,
+   "file": "negative_new/kodak_portra_400.jpg",
+   "sha256": "f3ac1f0c3c446db36504c26a7ecada774e0fda8a0dfab69eafc2970c29156b37"
+  },
+  "negative_new/kodak_portra_800": {
+   "bytes": 3426,
+   "file": "negative_new/kodak_portra_800.jpg",
+   "sha256": "69512439906c352d13b6346ad2cc9a384097dd0936bec3c460dad5af3eaefeb4"
+  },
+  "negative_old/fuji_superia_400": {
+   "bytes": 3325,
+   "file": "negative_old/fuji_superia_400.jpg",
+   "sha256": "e988369211d5a9ae9303b153ef774eb0e47eb77f27bb5057a083401049d4dc2c"
+  }
+ },
+ "total_bytes": 31634
+}

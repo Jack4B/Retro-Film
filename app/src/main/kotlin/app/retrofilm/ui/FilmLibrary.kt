@@ -3,8 +3,10 @@ package app.retrofilm.ui
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.retrofilm.core.ui.lut.LutPack
 import app.retrofilm.core.ui.lut.PackState
 import app.retrofilm.engine.AppGraph
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
@@ -22,6 +24,13 @@ class FilmLibrary(private val graph: AppGraph) {
     /** Ulubione filmy (id z katalogu); odczyt przez [observeFavorites]. */
     var favorites by mutableStateOf<Set<String>>(emptySet())
         private set
+
+    /** Pakiety do pobrania ze stanami (dotyka WorkManagera, więc tylko z ekranu Biblioteki). */
+    val packs: StateFlow<List<LutPack>> get() = graph.lutPackRepository.packs
+
+    fun download(id: String) = graph.lutPackRepository.download(id)
+
+    fun cancel(id: String) = graph.lutPackRepository.cancel(id)
 
     private fun build(): List<FilmOption> = listOf(FilmOption(IDENTITY_ID, null)) +
         graph.filmEngine.availableLuts().filter { it.id != IDENTITY_ID }.map { FilmOption(it.id, it.name) }

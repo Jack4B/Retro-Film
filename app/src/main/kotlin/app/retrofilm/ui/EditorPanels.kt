@@ -22,6 +22,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -72,7 +73,7 @@ private val TileCorner = 10.dp
 private val RowPadding = PaddingValues(horizontal = SidePad)
 
 @Composable
-private fun categoryLabel(category: String): String = stringResource(
+internal fun categoryLabel(category: String): String = stringResource(
     when (category) {
         "bw" -> R.string.film_category_bw
         "negative_color" -> R.string.film_category_negative_color
@@ -87,7 +88,7 @@ private fun categoryLabel(category: String): String = stringResource(
 
 /** Zakładka Film: ulubione, kategorie, miniatury filmów i moc. Zmiana mocy zatwierdzana po puszczeniu suwaka. */
 @Composable
-fun FilmPanel(state: MainState) {
+fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
     val real = state.library.films.filter { it.id != IDENTITY_ID }
@@ -96,19 +97,28 @@ fun FilmPanel(state: MainState) {
         (category == null || it.category == category) && (!onlyFavorites || it.id in state.library.favorites)
     }
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
-        FilmFilters(
-            categories = categories,
-            category = category,
-            onlyFavorites = onlyFavorites,
-            onCategory = {
-                category = it
-                onlyFavorites = false
-            },
-            onFavorites = {
-                onlyFavorites = true
-                category = null
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) {
+                FilmFilters(
+                    categories = categories,
+                    category = category,
+                    onlyFavorites = onlyFavorites,
+                    onCategory = {
+                        category = it
+                        onlyFavorites = false
+                    },
+                    onFavorites = {
+                        onlyFavorites = true
+                        category = null
+                    }
+                )
             }
-        )
+            val libraryCd = stringResource(R.string.library_open_cd)
+            IconButton(
+                onClick = onOpenLibrary,
+                modifier = Modifier.size(MinTouch).semantics { contentDescription = libraryCd }
+            ) { Icon(Icons.Filled.Search, contentDescription = null) }
+        }
         LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             item(key = IDENTITY_ID) {
                 FilmTile(
