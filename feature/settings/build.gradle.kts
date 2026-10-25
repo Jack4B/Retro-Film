@@ -7,12 +7,19 @@ plugins {
 android {
     namespace = "app.retrofilm.feature.settings"
     compileSdk = 37
-    defaultConfig { minSdk = 26 }
+    defaultConfig {
+        minSdk = 26
+        // Ta sama wersja co app (versionName z pliku VERSION).
+        buildConfigField("String", "APP_VERSION", "\"${rootProject.file("VERSION").readText().trim()}\"")
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
