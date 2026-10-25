@@ -68,3 +68,11 @@ Nowe wpisy na górze. Szablon:
 - Otwarte / P2 odłożone: potwierdzić format binarny z Python Programista Master; uruchomić `GpuVsCpuTest` na urządzeniach (API 26–32 i 33+).
 - Następny krok: review Gauge → Critic.
 
+
+## 2026-10-25 – Claude (alpha.2 → alpha.7: edytor, korekty, wiele zdjęć)
+- Faza: poza fazami (rozwój aplikacji po testach na telefonie)
+- Zrobione: grupy filmów (marka, rodzaj, ulubione), galeria na starcie, wiele zdjęć i zapis serii, podpis (4 kroje, wielkość, kolor), ramka `TightFrame`, korekty v3 (światło liniowe, Bradford, lokalne cienie i światła, ostrość, wyrazistość, HSL, tonowanie, blaknięcie, ziarno, winieta), kadr (obrót, prostowanie, proporcje), zoom podglądu, miniatury Biblioteki z wczytanego zdjęcia, ręczny Release z polem `tag`, ręczne nagrywanie zrzutów Roborazzi (`record-screenshots.yml`).
+- Dokumenty: `docs/ALGORYTMY.md` (źródła i licencje algorytmów; kodu GPL/AGPL nie kopiujemy, aplikacja jest na MIT).
+- PR / gałąź: #34–#53 (m.in. `f5/kolor-hsl`).
+- Otwarte / P2 odłożone: dehaze i CLAHE (kandydat: kod MIT z `awxkee/aire` z notą), krzywe tonalne, przesuwanie kadru palcem, miniatury zdjęć w pasku serii, test wydajności korekt na 12 Mpx na urządzeniu.
+- Następny krok: sprawdzić alpha.7 na telefonie (HSL, tonowanie, zoom, zapis serii).

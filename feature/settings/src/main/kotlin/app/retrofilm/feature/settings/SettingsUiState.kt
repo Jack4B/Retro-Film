@@ -29,6 +29,24 @@ enum class ThirdPartyLicense(
         author = "The Caveat Project Authors",
         license = "SIL OFL 1.1",
         assetPath = "licenses/OFL-Caveat.txt"
+    ),
+    MARCK_SCRIPT(
+        title = R.string.license_marck_script_title,
+        author = "Denis Masharov, Marck Fogel",
+        license = "SIL OFL 1.1",
+        assetPath = "licenses/OFL-MarckScript.txt"
+    ),
+    INDIE_FLOWER(
+        title = R.string.license_indie_flower_title,
+        author = "The Indie Flower Authors",
+        license = "SIL OFL 1.1",
+        assetPath = "licenses/OFL-IndieFlower.txt"
+    ),
+    SACRAMENTO(
+        title = R.string.license_sacramento_title,
+        author = "Brian J. Bonislawsky (Astigmatic)",
+        license = "SIL OFL 1.1",
+        assetPath = "licenses/OFL-Sacramento.txt"
     )
 }
 
