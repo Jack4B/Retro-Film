@@ -20,3 +20,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+Wyjątek / Exception: katalog luts/ nie jest objęty licencją MIT; jego zawartość jest licencjonowana na CC BY-SA 4.0 (zob. THIRD_PARTY.md, docs/LUTS.md).
+The luts/ directory is excluded from the MIT license above and is licensed under CC BY-SA 4.0.
