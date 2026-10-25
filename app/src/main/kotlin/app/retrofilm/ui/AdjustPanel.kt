@@ -2,10 +2,14 @@ package app.retrofilm.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
@@ -13,7 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,36 +40,95 @@ private val Gap = 4.dp
 private const val PERCENT = 100
 private const val RANGE = 1f
 
-/** Zakładka Korekty: cztery suwaki; zmiana zatwierdzana po puszczeniu suwaka (jak moc filmu). */
+private enum class AdjustGroup(val label: Int) {
+    Light(R.string.adjust_group_light),
+    Color(R.string.adjust_group_color),
+    Film(R.string.adjust_group_film)
+}
+
+/** Zakładka Korekty: trzy grupy (Światło, Kolor, Klisza); zmiana zatwierdzana po puszczeniu suwaka. */
 @Composable
 fun AdjustPanel(state: MainState) {
-    val a = state.adjustments
+    var group by rememberSaveable { mutableStateOf(AdjustGroup.Light) }
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
-        AdjustSlider(
-            label = stringResource(R.string.adjust_exposure),
-            value = a.exposure / Adjustments.EXPOSURE_MAX_EV,
-            display = { evText(it * Adjustments.EXPOSURE_MAX_EV) }
-        ) { state.adjustments = a.copy(exposure = it * Adjustments.EXPOSURE_MAX_EV) }
-        AdjustSlider(stringResource(R.string.adjust_contrast), a.contrast, { percentText(it) }) {
-            state.adjustments = a.copy(contrast = it)
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = SidePad),
+            horizontalArrangement = Arrangement.spacedBy(Gap)
+        ) {
+            items(AdjustGroup.entries, key = { it.name }) { g ->
+                FilterChip(
+                    selected = g == group,
+                    onClick = { group = g },
+                    label = { Text(stringResource(g.label)) }
+                )
+            }
         }
-        AdjustSlider(stringResource(R.string.adjust_saturation), a.saturation, { percentText(it) }) {
-            state.adjustments = a.copy(saturation = it)
-        }
-        AdjustSlider(stringResource(R.string.adjust_temperature), a.temperature, { percentText(it) }) {
-            state.adjustments = a.copy(temperature = it)
+        when (group) {
+            AdjustGroup.Light -> LightSliders(state)
+            AdjustGroup.Color -> ColorSliders(state)
+            AdjustGroup.Film -> FilmSliders(state)
         }
         OutlinedButton(
             onClick = { state.adjustments = Adjustments.None },
-            enabled = !a.isNeutral,
+            enabled = !state.adjustments.isNeutral,
             modifier = Modifier.padding(horizontal = SidePad).heightIn(min = MinTouch)
         ) { Text(stringResource(R.string.adjust_reset)) }
     }
 }
 
+@Composable
+private fun LightSliders(state: MainState) {
+    val a = state.adjustments
+    AdjustSlider(
+        label = stringResource(R.string.adjust_exposure),
+        value = a.exposure / Adjustments.EXPOSURE_MAX_EV,
+        display = { evText(it * Adjustments.EXPOSURE_MAX_EV) }
+    ) { state.adjustments = a.copy(exposure = it * Adjustments.EXPOSURE_MAX_EV) }
+    AdjustSlider(stringResource(R.string.adjust_contrast), a.contrast, { percentText(it) }) {
+        state.adjustments = a.copy(contrast = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_highlights), a.highlights, { percentText(it) }) {
+        state.adjustments = a.copy(highlights = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_shadows), a.shadows, { percentText(it) }) {
+        state.adjustments = a.copy(shadows = it)
+    }
+}
+
+@Composable
+private fun ColorSliders(state: MainState) {
+    val a = state.adjustments
+    AdjustSlider(stringResource(R.string.adjust_saturation), a.saturation, { percentText(it) }) {
+        state.adjustments = a.copy(saturation = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_temperature), a.temperature, { percentText(it) }) {
+        state.adjustments = a.copy(temperature = it)
+    }
+}
+
+@Composable
+private fun FilmSliders(state: MainState) {
+    val a = state.adjustments
+    AdjustSlider(stringResource(R.string.adjust_fade), a.fade, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(fade = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_grain), a.grain, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(grain = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_vignette), a.vignette, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(vignette = it)
+    }
+}
+
 /** Suwak −1..1 (wartość znormalizowana); [display] pokazuje wartość po polsku, [onCommit] woła się po puszczeniu. */
 @Composable
-private fun AdjustSlider(label: String, value: Float, display: (Float) -> String, onCommit: (Float) -> Unit) {
+private fun AdjustSlider(
+    label: String,
+    value: Float,
+    display: (Float) -> String,
+    range: ClosedFloatingPointRange<Float> = -RANGE..RANGE,
+    onCommit: (Float) -> Unit
+) {
     var drag by remember(value) { mutableFloatStateOf(value) }
     val shown = display(drag)
     Column(Modifier.padding(horizontal = SidePad)) {
@@ -75,7 +140,7 @@ private fun AdjustSlider(label: String, value: Float, display: (Float) -> String
             value = drag,
             onValueChange = { drag = it },
             onValueChangeFinished = { onCommit(drag) },
-            valueRange = -RANGE..RANGE,
+            valueRange = range,
             modifier = Modifier.heightIn(min = MinTouch).semantics {
                 contentDescription = label
                 stateDescription = shown
@@ -85,5 +150,7 @@ private fun AdjustSlider(label: String, value: Float, display: (Float) -> String
 }
 
 private fun percentText(v: Float): String = "%+d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
+
+private fun plainPercent(v: Float): String = "%d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
 
 private fun evText(ev: Float): String = "%+.1f EV".format(Locale.forLanguageTag("pl"), ev)
