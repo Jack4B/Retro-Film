@@ -10,19 +10,15 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.sp
 import app.retrofilm.core.frame.FrameGeometry
 import app.retrofilm.core.frame.SizeF
 import app.retrofilm.core.ui.CaveatFamily
 import app.retrofilm.core.ui.photo.LocalPhotoRenderer
 import app.retrofilm.core.ui.photo.drawPhoto
-import kotlin.math.roundToInt
 
 /** Podgląd ramki na żywo; ten sam układ co eksport (FrameGeometry). */
 @Composable
@@ -61,32 +57,25 @@ fun FramePreview(
             Rect(Offset(l.photo.left, l.photo.top), Size(l.photo.width, l.photo.height)),
             matrix
         )
-        val band = l.signatureBand ?: return@Canvas
-        if (signature.isBlank()) return@Canvas
-        fun style(px: Float) = TextStyle(
-            fontFamily = CaveatFamily,
-            fontSize = (px / density / fontScale).sp,
-            color = settings.signatureColor.color,
-            textAlign = TextAlign.Center
+        val band = l.signatureBand
+        if (band == null || signature.isBlank()) return@Canvas
+        val style = signatureStyle(settings.signatureColor.color, density * fontScale)
+        val fit = FrameGeometry.fitSignature(
+            l.signatureBaseSize,
+            l.signatureMaxWidth,
+            band.height,
+            ComposeSignatureMeasurer(measurer, signature, style)
         )
-        val maxW = l.signatureMaxWidth
-        val fit = FrameGeometry.fitSignature(l.signatureBaseSize, maxW) { px ->
-            measurer.measure(signature, style(px), maxLines = 1, softWrap = false).size.width.toFloat()
-        }
         val result = measurer.measure(
             signature,
             style(fit.sizePx),
             maxLines = fit.lines,
             softWrap = fit.lines > 1,
             overflow = TextOverflow.Ellipsis,
-            constraints = Constraints(maxWidth = maxW.roundToInt())
+            constraints = Constraints(maxWidth = l.signatureMaxWidth.toInt())
         )
-        drawText(
-            result,
-            topLeft = Offset(
-                (size.width - result.size.width) / 2f,
-                band.top + (band.height - result.size.height) / 2f
-            )
-        )
+        val r = FrameGeometry.signatureBounds(l, result.size.width.toFloat(), result.size.height.toFloat())
+            ?: return@Canvas
+        drawText(result, topLeft = Offset(r.left, r.top))
     }
 }

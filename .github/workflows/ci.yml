@@ -27,7 +27,9 @@ jobs:
         run: |
           curl -sSL -o detekt.jar https://github.com/detekt/detekt/releases/download/v1.23.8/detekt-cli-1.23.8-all.jar
           echo "2ce2ff952e150baf28a29cda70a363b0340b3e81a55f43e51ec5edffc3d066c1  detekt.jar" | sha256sum -c -
-          java -jar detekt.jar --input . --excludes "**/build/**" --config config/detekt/detekt.yml --build-upon-default-config
+          # core/* i app: pełne reguły; feature/*: nakładka z wyjątkami dla @Composable.
+          java -jar detekt.jar --input . --excludes "**/build/**,**/feature/**" --config config/detekt/detekt.yml --build-upon-default-config
+          java -jar detekt.jar --input feature --excludes "**/build/**" --config config/detekt/detekt.yml,config/detekt/detekt-feature.yml --build-upon-default-config
 
   build:
     runs-on: ubuntu-latest
@@ -51,7 +53,15 @@ jobs:
           echo "Ostatni release: $LAST"
           if [ "$CODE" -le "$LAST" ]; then echo "::error::versionCode $CODE <= $LAST"; exit 1; fi
       - name: Build and unit tests
-        run: ./gradlew assembleDebug testDebugUnitTest --stacktrace
+        # Roborazzi verify: porównanie z PNG w feature/*/src/test/screenshots.
+        run: ./gradlew assembleDebug testDebugUnitTest -Proborazzi.test.verify=true --stacktrace
+      - name: Upload Roborazzi diffs
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: roborazzi-diffs
+          path: '**/build/outputs/roborazzi/'
+          retention-days: 14
       - name: Upload debug APK
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
