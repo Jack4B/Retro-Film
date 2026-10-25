@@ -1,6 +1,14 @@
 naming:
   FunctionNaming:
     ignoreAnnotated: ['Composable']
+complexity:
+  # Ekrany Compose są bezstanowe: stan + callbacki w parametrach, układ w jednej funkcji.
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    ignoreAnnotated: ['Composable']
 style:
   MagicNumber:
     ignorePropertyDeclaration: true
+    # Wymiary (dp/sp) i proporcje w kodzie układu Compose.
+    ignoreAnnotated: ['Composable']
