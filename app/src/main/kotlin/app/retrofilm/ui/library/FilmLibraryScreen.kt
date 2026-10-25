@@ -73,7 +73,7 @@ fun FilmLibraryScreen(state: MainState, onBack: () -> Unit) {
     val packs by library.packs.collectAsState()
     val favorites = library.favorites
     var filter by rememberSaveable(stateSaver = FilterSaver) { mutableStateOf(LibraryFilter()) }
-    var onMyPhoto by rememberSaveable { mutableStateOf(false) }
+    var onMyPhoto by rememberSaveable { mutableStateOf(true) }
     val all = remember(library.films, packs) { LibraryModel.items(library.films, packs) }
     val shown = remember(all, filter, favorites) { LibraryModel.apply(all, filter, favorites) }
     val myPhoto = MyPhotoToggle(state.photo != null, onMyPhoto) { onMyPhoto = it }
