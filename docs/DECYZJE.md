@@ -9,6 +9,7 @@
 | D5 | Formuła `versionCode` | Proponowane |
 | D6 | Material 3 w wersji beta (Expressive) | Zdecydowane (tymczasowo) |
 | D7 | Kryterium jakości LUT-ów 33³ (ΔE2000) | **Proponowane – czeka na Jack4B** |
+| D8 | Dystrybucja LUT-ów: pobieranie z Release `luts-v1` + zestaw startowy w APK | Zdecydowane (rozmiar siatki: otwarte) |
 
 ## D1 – Licencje LUT-ów
 RawTherapee Film Simulation Collection (Pat David, Pavlov Dmitry, Michael Ezra), CC BY-SA 4.0, https://rawpedia.rawtherapee.com/Film_Simulation. Regenerowane do 33³ jako utwór zależny CC BY-SA 4.0; `luts/` wyłączone z MIT. Szczegóły: [LUTS.md](LUTS.md).
@@ -38,5 +39,14 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Propozycja: dla każdego filmu, ΔE2000 (sRGB D65 → Lab) 33³ RGB8 vs HaldCLUT 144³, wszystkie 144³ punktów, interpolacja jak w silniku (trójliniowa, `CpuLut`): **mean < 0,5 i p99 < 1,5**. Max – informacyjnie.
 - LUT-y z max > 3 oznaczone `approx: true` w `catalog.json`.
 - Identity LUT 33³ musi mieć max ΔE < 1 (golden test silnika, bez zmian).
-- Wynik (PR #11): 260/260 spełnia (33³ trój- i czworościenna, 48³ obie). Szczegóły: `core/engine/src/main/assets/luts/report.json`.
+- Wynik (PR #11): 260/260 spełnia (33³ trój- i czworościenna, 48³ obie). Szczegóły: `tools/packs/report-33-full.json`.
 - Status: wyłącznie propozycja – nie obowiązuje do decyzji Jack4B.
+
+## D8 – LUT-y pobierane na żądanie (zestaw startowy w APK)
+- Pełna paczka LUT-ów jest w osobnym GitHub Release `luts-v1`, a nie w repo ani w APK. Release publikuje się **wyłącznie na polecenie Jack4B**.
+- Pobieranie tylko przez HTTPS z jednego hosta (GitHub Releases), bez mirrorów i bez telemetrii.
+- `catalog.json` z sha256 każdego pliku jest wbudowany w APK. Pobrany plik o innym sha256 (lub innym rozmiarze) jest odrzucany i usuwany.
+- W APK jest mały zestaw offline: identity + 10 filmów startowych w 33³ RGB8 (`core/engine/src/main/assets/luts/`, `catalog.json` z polem `bundled`).
+- Uprawnienie `INTERNET` służy wyłącznie do pobierania LUT-ów.
+- Każda paczka zawiera `LICENSE` (CC BY-SA 4.0) i atrybucję: Pat David, Pavlov Dmitry, Michael Ezra – RawTherapee Film Simulation Collection.
+- Rozmiar siatki (33³ / 48³ / 65³ RGB8/RGB16 / natywne 144³) i format paczki: **do decyzji** na podstawie pomiarów z PR #11. Konwerter `tools/hald2lut.py` obsługuje dowolne `--size` i `--bits 8|16`.

@@ -78,9 +78,8 @@ def quant(lut, bits):
     return q.astype(np.uint8 if bits == 8 else "<u2"), q / m
 
 def write(path, q, bits):
-    n = q.shape[0]
-    assert bits == 8
-    path.write_bytes(q.reshape(-1, 3).tobytes())
+    """Surowe RGB, bez naglowka, R najszybciej; RGB16 = uint16 little-endian."""
+    path.write_bytes(q.reshape(-1, 3).astype(np.uint8 if bits == 8 else "<u2").tobytes())
 
 def evaluate(hald, lut33):
     n = hald.shape[0]; des = []
@@ -116,8 +115,13 @@ def main():
     ap.add_argument("filmluts", type=Path, help="klon YahiaAngelo/Film-Luts (nazwy i kategorie)")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--size", type=int, default=33)
+    ap.add_argument("--bits", type=int, choices=(8, 16), default=8, help="RGB8 (.rgb8) lub RGB16 LE (.rgb16)")
+    ap.add_argument("--only", help="lista id po przecinku (np. zestaw startowy do APK)")
+    ap.add_argument("--identity", action="store_true", help="dodaj identity.rgbN (id: identity)")
     ap.add_argument("--golden", type=Path)
     a = ap.parse_args()
+    only = set(a.only.split(",")) if a.only else None
+    ext = f"rgb{a.bits}"
     halds = sorted(a.hald.rglob("*.png"))
     g13 = grid(13); h13 = {}; cache = {}
     for p in halds:
@@ -143,24 +147,32 @@ def main():
     used = {e["hald"] for e in entries if e["hald"]}
     out = a.out; out.mkdir(parents=True, exist_ok=True)
     catalog = []; report = []; unmatched = []
+    if only:
+        entries = [e for e in entries if e["id"] in only]
+        assert {e["id"] for e in entries} == only, only - {e["id"] for e in entries}
+    if a.identity:
+        q, _ = quant(grid(a.size), a.bits); f = out / f"identity.{ext}"; write(f, q, a.bits)
+        catalog.append({"id": "identity", "name": "Identity", "displayName": "Bez filtra", "category": "identity", "size": a.size, "format": ext,
+                        "bytes": f.stat().st_size, "file": f"luts/identity.{ext}", "source_hald": None, "license": "CC0 1.0 (siatka tozsamosciowa)",
+                        "sha256": hashlib.sha256(f.read_bytes()).hexdigest(), "approx": False, "available": True})
     for e in entries:
         if e["hald"] is None: unmatched.append({"id": e["id"], "source_file": e["src"], "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"}); continue
         hald = load_hald(e["hald"]); lut = trilinear(hald, grid(a.size))
-        q, deq = quant(lut, 8); st = evaluate(hald, deq); bits = 8; st16 = None
-        if st["max"] >= 1:  # proba RGB16; plik zostaje RGB8, jesli 16 bit nie daje max < 1
+        bits = a.bits; q, deq = quant(lut, bits); st = evaluate(hald, deq); st16 = None
+        if bits == 8 and st["max"] >= 1:  # informacyjnie: czy RGB16 dalby max < 1
             q16, deq16 = quant(lut, 16); st16 = evaluate(hald, deq16)
-        f = out / f"{e['id']}.rgb8"; f.parent.mkdir(parents=True, exist_ok=True); write(f, q, bits)
+        f = out / f"{e['id']}.{ext}"; f.parent.mkdir(parents=True, exist_ok=True); write(f, q, bits)
         hrel = e["hald"].relative_to(a.hald).as_posix()
-        catalog.append({"id": e["id"], "name": e["name"], "category": e["category"], "size": a.size, "format": "rgb8", "bytes": a.size ** 3 * 3,
-                        "file": f"luts/{e['id']}.rgb8", "source_hald": hrel, "license": "CC BY-SA 4.0",
+        catalog.append({"id": e["id"], "name": e["name"], "category": e["category"], "size": a.size, "format": ext, "bytes": a.size ** 3 * 3 * bits // 8,
+                        "file": f"luts/{e['id']}.{ext}", "source_hald": hrel, "license": "CC BY-SA 4.0",
                         "sha256": hashlib.sha256(f.read_bytes()).hexdigest()})
         report.append({"id": e["id"], "source_hald": hrel, "match_rmse_13": round(e["rmse"], 5), "bits": bits, "deltaE2000": st, "deltaE2000_rgb16": st16,
                        "pass": st["max"] < 1, "pass_rgb16": None if st16 is None else st16["max"] < 1})
         print(e["id"], bits, st, st16, flush=True)
     halds_unused = [p.relative_to(a.hald).as_posix() for p in halds if p not in used]
-    json.dump({"format": "rgb8 (raw, bez naglowka, R najszybciej)", "size": a.size, "luts": catalog}, (out / "catalog.json").open("w"), ensure_ascii=False, indent=1)
+    json.dump({"format": f"{ext} (raw, bez naglowka, R najszybciej" + (", uint16 LE)" if a.bits == 16 else ")"), "size": a.size, "luts": catalog}, (out / "catalog.json").open("w"), ensure_ascii=False, indent=1)
     worst = max(report, key=lambda r: r["deltaE2000"]["max"])
-    json.dump({"method": "dE2000, sRGB(D65)->Lab, 33^3 po kwantyzacji + trilinear vs HaldCLUT 144^3, wszystkie 144^3 punktow",
+    json.dump({"method": f"dE2000, sRGB(D65)->Lab, {a.size}^3 po kwantyzacji + trilinear vs HaldCLUT 144^3, wszystkie 144^3 punktow",
                "count": len(report), "all_pass": all(r["pass"] for r in report), "pass_count": sum(r["pass"] for r in report),
                "global": {"mean_of_means": round(float(np.mean([r["deltaE2000"]["mean"] for r in report])), 4),
                           "max_p99": max(r["deltaE2000"]["p99"] for r in report), "max_max": worst["deltaE2000"]["max"]}, "worst": worst,

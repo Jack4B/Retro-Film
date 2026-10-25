@@ -3,7 +3,7 @@
 33^3 (pliki .rgb8 z assetow) i 48^3 (tylko statystyki), interpolacja trilinearna
 (jak CpuLut w core:engine, PR #5 - metoda glowna) i tetraedryczna (dodatkowo).
 Kryterium D7 (proponowane): mean < 0.5 i p99 < 1.5; max informacyjnie, approx gdy max > 3.
-Uzycie: luteval.py <HaldCLUT/> <assets/luts> [--golden tools/golden] [-j 4]
+Uzycie: luteval.py <HaldCLUT/> <katalog paczki z hald2lut.py --out (pelna paczka, nie w repo)> [--golden tools/golden] [-j 4]
 """
 import argparse, json, sys
 from multiprocessing import Pool

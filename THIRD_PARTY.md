@@ -3,7 +3,7 @@
 | Komponent | Źródło | Licencja | Status |
 |---|---|---|---|
 | Film-Simulator | github.com/YahiaAngelo/Film-Simulator (fork: Jack4B/Film-Simulator) | MIT | Inspiracja; parser `.cube` i silnik przenoszone z oryginału |
-| LUT-y filmowe – RawTherapee Film Simulation Collection (autorzy: Pat David, Pavlov Dmitry, Michael Ezra) | https://rawpedia.rawtherapee.com/Film_Simulation (przepakowane w YahiaAngelo/Film-Luts) | CC BY-SA 4.0 | dołączone: `core/engine/src/main/assets/luts/` (33³ RGB8, utwór zależny, CC BY-SA 4.0; LICENSE w katalogu) |
+| LUT-y filmowe – RawTherapee Film Simulation Collection (autorzy: Pat David, Pavlov Dmitry, Michael Ezra) | https://rawpedia.rawtherapee.com/Film_Simulation (przepakowane w YahiaAngelo/Film-Luts) | CC BY-SA 4.0 | w APK zestaw startowy (identity + 10 filmów): `core/engine/src/main/assets/luts/`; pełna paczka – release `luts-v1` (D8) (33³ RGB8, utwór zależny, CC BY-SA 4.0; LICENSE w katalogu) |
 | Font Caveat (podpis) | Google Fonts (github.com/googlefonts/caveat) | SIL OFL 1.1 | używany – dołączony: `core/ui/src/main/res/font/caveat.ttf`, licencja: `core/ui/src/main/assets/licenses/OFL-Caveat.txt` (dołączana do APK jako asset `licenses/OFL-Caveat.txt`) |
 | Shadery silnika (AGSL, GLES) w `core:engine` | własne (Retro-Film) | MIT | Nie przeniesiono kodu z YahiaAngelo/Film-Simulator – napisane od zera; przy ewentualnym przeniesieniu zachować nagłówek `Copyright YahiaAngelo` |
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Porownanie na zdjeciach: HaldCLUT 144^3 (oryginal) | LUT 33^3 RGB8 (trojliniowo, jak CpuLut) | |roznica| x10.
 
-Uzycie: python3 tools/photocompare.py <katalog_HaldCLUT> core/engine/src/main/assets/luts tools/golden
+Uzycie: python3 tools/photocompare.py <katalog_HaldCLUT> tools/packs/catalog-33-full.json tools/golden
 Wynik: tools/golden/compare/photos/<film>__<zdjecie>.jpg (JPEG q95) + stats.json + README.md
 ΔE2000 (sRGB D65 -> Lab) liczone na wyjsciach float (przed kwantyzacja do 8 bit).
 """
@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
-from hald2lut import load_hald, trilinear, lab, de2000  # noqa: E402
+from hald2lut import load_hald, trilinear, grid, quant, lab, de2000  # noqa: E402
 
 FILMS = ["colorslide/fuji_superia_200_xpro", "bw/fuji_neopan_1600", "negative_old/fuji_neopan_1600_p",
          "negative_old/fuji_neopan_1600_pp", "instant_consumer/polaroid_px_70_cold_p"]
@@ -29,13 +29,14 @@ def regions(mask):
 
 def main():
     hald, assets, golden = map(Path, sys.argv[1:4])
-    cat = {c["id"]: c for c in json.load((assets / "catalog.json").open())["luts"]}
+    cat = {c["id"]: c for c in json.load(assets.open())["luts"]}
     od = golden / "compare" / "photos"; od.mkdir(parents=True, exist_ok=True)
     imgs = {p: np.asarray(Image.open(golden / "photos" / f"{p}.jpg").convert("RGB"), np.float64) / 255 for p in PHOTOS}
     stats = {}
     for f in FILMS:
         h = load_hald(hald / cat[f]["source_hald"])
-        l33 = np.frombuffer((assets / f"{f}.rgb8").read_bytes(), np.uint8).reshape(33, 33, 33, 3) / 255.0
+        # 33^3 RGB8 liczone tak samo jak w hald2lut.py (bitowo identyczne z paczka)
+        l33 = quant(trilinear(h, grid(33)), 8)[1]
         for p, img in imgs.items():
             a = trilinear(h, img); b = trilinear(l33, img)
             d = de2000(lab(np.clip(a, 0, 1)), lab(np.clip(b, 0, 1)))
