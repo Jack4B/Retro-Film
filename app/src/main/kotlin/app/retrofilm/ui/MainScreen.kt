@@ -48,7 +48,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     val onSave = rememberSaveAction(state, ::show)
     LaunchedEffect(Unit) { state.library.observeFavorites() }
     LaunchedEffect(Unit) { state.library.observeDownloads() }
-    LaunchedEffect(state.photo, state.film, state.frame, state.intensity, state.adjustments) {
+    LaunchedEffect(state.photo, state.film, state.frame, state.intensity, state.adjustments, state.previewDetail) {
         state.refreshPreview()
     }
     val editing = state.photo != null

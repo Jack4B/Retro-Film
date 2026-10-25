@@ -2,9 +2,11 @@ package app.retrofilm.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,14 +38,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
@@ -52,7 +58,6 @@ private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
 private val TabHeight = 56.dp
-private val HintPad = 4.dp
 
 private enum class EditorTab(val label: Int) {
     Film(R.string.tab_film),
@@ -62,7 +67,7 @@ private enum class EditorTab(val label: Int) {
 
 /**
  * Edytor: zdjęcie na pierwszym planie, pod nim panel z zakładkami Film / Ramka.
- * Przytrzymanie zdjęcia pokazuje oryginał; „Zapisz” zapisuje od razu z bieżącymi ustawieniami.
+ * Przycisk „Przed” pokazuje oryginał, szczypanie i dwukrotne dotknięcie przybliżają podgląd; „Zapisz” zapisuje od razu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongParameterList") // zdarzenia ekranu przekazywane jawnie
@@ -76,6 +81,7 @@ fun EditorScreen(
     snackbar: @Composable () -> Unit
 ) {
     var tab by rememberSaveable { mutableStateOf(EditorTab.Film) }
+    var showBefore by rememberSaveable { mutableStateOf(false) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,28 +95,13 @@ fun EditorScreen(
                     }
                 },
                 title = {},
-                actions = {
-                    Button(
-                        onClick = onSave,
-                        enabled = !state.busy && state.signatureStatus() != SignatureFitStatus.TooLong,
-                        modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch)
-                    ) {
-                        val many = state.uris.size > 1
-                        val label = if (many) {
-                            stringResource(R.string.editor_save_all, state.uris.size)
-                        } else {
-                            stringResource(R.string.editor_save)
-                        }
-                        Text(label, fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                actions = { EditorActions(state, showBefore, { showBefore = !showBefore }, onSave) }
             )
         },
         snackbarHost = snackbar
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
-            PreviewPane(state, Modifier.weight(1f).fillMaxWidth())
-            if (state.preview != null) HoldHint()
+            PreviewPane(state, showBefore, Modifier.weight(1f).fillMaxWidth())
             if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
@@ -131,32 +122,45 @@ fun EditorScreen(
 }
 
 @Composable
-private fun HoldHint() {
-    Text(
-        stringResource(R.string.editor_hint_hold),
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().padding(top = HintPad)
+private fun RowScope.EditorActions(
+    state: MainState,
+    showBefore: Boolean,
+    onToggleBefore: () -> Unit,
+    onSave: () -> Unit
+) {
+    FilterChip(
+        selected = showBefore,
+        onClick = onToggleBefore,
+        label = { Text(stringResource(R.string.editor_before_toggle)) },
+        modifier = Modifier.padding(end = EdgePad)
     )
+    Button(
+        onClick = onSave,
+        enabled = !state.busy && state.signatureStatus() != SignatureFitStatus.TooLong,
+        modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch)
+    ) {
+        val label = if (state.uris.size > 1) {
+            stringResource(R.string.editor_save_all, state.uris.size)
+        } else {
+            stringResource(R.string.editor_save)
+        }
+        Text(label, fontWeight = FontWeight.SemiBold)
+    }
 }
 
 @Composable
-private fun PreviewPane(state: MainState, modifier: Modifier) {
-    var showBefore by remember { mutableStateOf(false) }
+private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifier) {
+    val zoom = remember { ZoomState() }
+    LaunchedEffect(state.photo) { zoom.reset() }
+    LaunchedEffect(zoom.isDetailed) { state.updateDetail(zoom.isDetailed) }
     val shown = if (showBefore) state.before else state.preview
     val cd = stringResource(if (showBefore) R.string.editor_preview_before_cd else R.string.editor_preview_cd)
     Box(
-        modifier.pointerInput(Unit) {
-            detectTapGestures(onPress = {
-                showBefore = true
-                try {
-                    tryAwaitRelease()
-                } finally {
-                    showBefore = false
-                }
-            })
-        },
+        modifier
+            .clipToBounds()
+            .onSizeChanged { zoom.size = it }
+            .pointerInput(Unit) { detectTransformGestures { centroid, pan, z, _ -> zoom.transform(centroid, pan, z) } }
+            .pointerInput(Unit) { detectTapGestures(onDoubleTap = { zoom.toggle(it) }) },
         contentAlignment = Alignment.Center
     ) {
         if (shown != null) {
@@ -164,7 +168,12 @@ private fun PreviewPane(state: MainState, modifier: Modifier) {
                 bitmap = shown.asImageBitmap(),
                 contentDescription = cd,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize().graphicsLayer {
+                    scaleX = zoom.scale
+                    scaleY = zoom.scale
+                    translationX = zoom.offset.x
+                    translationY = zoom.offset.y
+                }
             )
         }
         if (shown == null || state.busy) CircularProgressIndicator()

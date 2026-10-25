@@ -22,7 +22,7 @@
     <string name="export_many_partial">Zapisano zdjęcia: %1$d, nie udało się: %2$d</string>
     <string name="editor_preview_cd">Podgląd zdjęcia z filmem i ramką. Przytrzymaj, aby zobaczyć oryginał.</string>
     <string name="editor_preview_before_cd">Oryginał bez filmu i ramki</string>
-    <string name="editor_hint_hold">Przytrzymaj zdjęcie: przed / po</string>
+    <string name="editor_before_toggle">Przed</string>
     <string name="editor_badge_before">Oryginał</string>
     <string name="editor_working">Przetwarzanie…</string>
     <string name="tab_film">Film</string>
