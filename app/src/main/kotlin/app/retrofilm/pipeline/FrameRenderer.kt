@@ -26,17 +26,26 @@ data class FrameOptions(
     val aspect: FrameAspect = FrameAspect.Original,
     val margin: Float = FrameGeometry.DEFAULT_MARGIN,
     val signatureEnabled: Boolean = false,
-    val signature: String = ""
+    val signature: String = "",
+    val font: SignatureFont = SignatureFont.Caveat,
+    /** Kolor atramentu (ARGB). */
+    val inkColor: Int = PaintSignatureMeasurer.SIGNATURE_COLOR,
+    /** Wielkość podpisu jako ułamek maksymalnej (większego i tak nie mieści ramka). */
+    val signatureScale: Float = 1f
 ) {
     val drawsSignature get() = enabled && signatureEnabled && signature.isNotBlank()
 }
 
 /** Pomiar podpisu przez [StaticLayout] – te same parametry co przy rysowaniu w [FrameRenderer]. */
-class PaintSignatureMeasurer(private val text: String, private val typeface: Typeface) : SignatureMeasurer {
+class PaintSignatureMeasurer(
+    private val text: String,
+    private val typeface: Typeface,
+    private val inkColor: Int = SIGNATURE_COLOR
+) : SignatureMeasurer {
     fun paint(sizePx: Float) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = this@PaintSignatureMeasurer.typeface
         textSize = sizePx
-        color = SIGNATURE_COLOR
+        color = inkColor
     }
 
     fun layout(sizePx: Float, width: Float): StaticLayout =
@@ -102,19 +111,20 @@ object FrameRenderer {
         canvas.drawColor(Color.WHITE)
         val p = layout.photo
         canvas.drawBitmap(photo, null, AndroidRectF(p.left, p.top, p.right, p.bottom), Paint(Paint.FILTER_BITMAP_FLAG))
-        if (options.drawsSignature) drawSignature(canvas, layout, options.signature, typeface)
+        if (options.drawsSignature) drawSignature(canvas, layout, options, typeface)
         return out
     }
 
     private fun drawSignature(
         canvas: Canvas,
         layout: app.retrofilm.core.frame.FrameLayout,
-        text: String,
+        options: FrameOptions,
         typeface: Typeface
     ) {
         val band = layout.signatureBand ?: return
-        val measurer = PaintSignatureMeasurer(text, typeface)
-        val fit = FrameGeometry.fitSignature(layout.signatureBaseSize, layout.signatureMaxWidth, band.height, measurer)
+        val measurer = PaintSignatureMeasurer(options.signature, typeface, options.inkColor)
+        val baseSize = layout.signatureBaseSize * options.signatureScale
+        val fit = FrameGeometry.fitSignature(baseSize, layout.signatureMaxWidth, band.height, measurer)
         if (!fit.fits) throw SignatureTooLongException()
         val bounds = FrameGeometry.signatureBounds(layout, fit.width, fit.height) ?: return
         val static = measurer.layout(fit.sizePx, layout.signatureMaxWidth)

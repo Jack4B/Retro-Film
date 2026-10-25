@@ -18,6 +18,7 @@ import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +41,11 @@ const val IDENTITY_ID = "identity"
 
 /** Stan ścieżki testowej: zdjęcie → film → ramka/podpis → eksport. */
 @Suppress("TooManyFunctions") // stan jednej ścieżki: wczytanie, podgląd, zapis pojedynczy i seria
-class MainState(private val graph: AppGraph, private val typeface: Typeface) {
+class MainState(
+    private val graph: AppGraph,
+    private val typeface: Typeface,
+    private val fonts: (SignatureFont) -> Typeface = { typeface }
+) {
     var photo by mutableStateOf<Bitmap?>(null)
         private set
     var preview by mutableStateOf<Bitmap?>(null)
@@ -96,7 +101,7 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     /** Status podpisu dla bieżącego zdjęcia i ramki (blokada eksportu przy TooLong). */
     fun signatureStatus(): SignatureFitStatus {
         val p = photo ?: return SignatureFitStatus.None
-        return FrameRenderer.status(frame, p.width, p.height, typeface)
+        return FrameRenderer.status(frame, p.width, p.height, signatureTypeface())
     }
 
     suspend fun load(context: Context, uri: Uri): UiMessage? = withBusy {
@@ -132,6 +137,7 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
     suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val lutNow = lut()
+        val face = signatureTypeface()
         val result = exportBatch(uris, { exportProgress = it + 1 }) { uri ->
             val bmp = withContext(Dispatchers.IO) {
                 PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
@@ -142,11 +148,11 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
                     lutNow,
                     graph.filmEngine.renderer,
                     frame,
-                    typeface,
+                    face,
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(bmp, rendered, frame, typeface)
+                ExportPipeline.encode(bmp, rendered, frame, face)
             }
             withContext(Dispatchers.IO) { save(jpeg) }
         }
@@ -163,7 +169,15 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
             orig to
-                ExportPipeline.render(small, lut(), graph.filmEngine.renderer, frame, typeface, intensity, adjustments)
+                ExportPipeline.render(
+                    small,
+                    lut(),
+                    graph.filmEngine.renderer,
+                    frame,
+                    signatureTypeface(),
+                    intensity,
+                    adjustments
+                )
         }
         before = orig
         preview = shown
@@ -180,11 +194,11 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
                     lut(),
                     graph.filmEngine.renderer,
                     frame,
-                    typeface,
+                    signatureTypeface(),
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(p, rendered, frame, typeface)
+                ExportPipeline.encode(p, rendered, frame, signatureTypeface())
             }
             withContext(Dispatchers.IO) { save(jpeg) }
             UiMessage.Saved
@@ -198,6 +212,8 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
             UiMessage.ExportFailed(e.message.orEmpty())
         }
     }
+
+    private fun signatureTypeface(): Typeface = fonts(frame.font)
 
     /** Identity = brak zmian pikseli, więc pomijamy render (zachowuje dokładnie kolory i przestrzeń barw). */
     private fun lut(): Lut? = if (film == IDENTITY_ID) null else graph.filmEngine.load(film)
