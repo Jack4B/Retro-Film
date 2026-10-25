@@ -63,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.FrameGeometry
+import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.core.ui.photo.Photo
 import kotlin.math.roundToInt
 

@@ -48,3 +48,14 @@ interface LutDownloadSettings {
 
     fun setOnlyWifi(enabled: Boolean)
 }
+
+/**
+ * Rozmiary na dysku (D9): pobrane PNG 144³ osobno od rozpakowanego cache (LRU).
+ * [clearCache] usuwa tylko cache; pobrane filmy zostają.
+ */
+interface LutCacheInfo {
+    val downloadedBytes: StateFlow<Long>
+    val cacheBytes: StateFlow<Long>
+
+    fun clearCache()
+}
