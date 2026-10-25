@@ -93,6 +93,27 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease
+      - name: Print signing certificate fingerprint
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.RELEASE_CERT_SHA256 }}
+        run: |
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          OUT=$("$ANDROID_HOME/build-tools/$BT/apksigner" verify --print-certs "$APK")
+          echo "$OUT"
+          FP=$(echo "$OUT" | grep -m1 'certificate SHA-256 digest:' | sed 's/.*digest: *//')
+          if [ -z "$FP" ]; then echo "::error::Nie znaleziono odcisku SHA-256"; exit 1; fi
+          echo "SHA-256 certyfikatu podpisu: $FP"
+          echo "### Certyfikat podpisu APK" >> "$GITHUB_STEP_SUMMARY"
+          echo "SHA-256: \`$FP\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$EXPECTED_CERT_SHA256" ]; then
+            norm() { echo "$1" | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]'; }
+            if [ "$(norm "$FP")" != "$(norm "$EXPECTED_CERT_SHA256")" ]; then
+              echo "::error::Odcisk certyfikatu ($FP) różni się od RELEASE_CERT_SHA256"
+              exit 1
+            fi
+            echo "Odcisk zgodny z RELEASE_CERT_SHA256."
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: retro-film-release-apk
