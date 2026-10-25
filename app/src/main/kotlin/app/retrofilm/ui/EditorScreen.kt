@@ -63,7 +63,13 @@ private enum class EditorTab(val label: Int) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditorScreen(state: MainState, onBack: () -> Unit, onSave: () -> Unit, snackbar: @Composable () -> Unit) {
+fun EditorScreen(
+    state: MainState,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onOpenLibrary: () -> Unit,
+    snackbar: @Composable () -> Unit
+) {
     var tab by rememberSaveable { mutableStateOf(EditorTab.Film) }
     Scaffold(
         topBar = {
@@ -97,7 +103,7 @@ fun EditorScreen(state: MainState, onBack: () -> Unit, onSave: () -> Unit, snack
                         Modifier.fillMaxWidth().heightIn(max = PanelMaxHeight).verticalScroll(rememberScrollState())
                     ) {
                         when (tab) {
-                            EditorTab.Film -> FilmPanel(state)
+                            EditorTab.Film -> FilmPanel(state, onOpenLibrary)
                             EditorTab.Frame -> FramePanel(state)
                         }
                     }

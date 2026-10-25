@@ -9,10 +9,15 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import app.retrofilm.pipeline.ExportPipeline
+import app.retrofilm.ui.library.FilmLibraryScreen
 import kotlinx.coroutines.launch
 
 /**
@@ -57,9 +62,19 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     LaunchedEffect(Unit) { state.library.observeDownloads() }
     LaunchedEffect(state.photo, state.film, state.frame, state.intensity) { state.refreshPreview() }
     val editing = state.photo != null
+    var showLibrary by rememberSaveable { mutableStateOf(false) }
     if (editing) BackHandler(onBack = state::closePhoto)
-    if (editing) {
-        EditorScreen(state, onBack = state::closePhoto, onSave = onSave, snackbar = { SnackbarHost(snackbar) })
+    if (editing && showLibrary) BackHandler { showLibrary = false }
+    if (editing && showLibrary) {
+        FilmLibraryScreen(state, onBack = { showLibrary = false })
+    } else if (editing) {
+        EditorScreen(
+            state,
+            onBack = state::closePhoto,
+            onSave = onSave,
+            onOpenLibrary = { showLibrary = true },
+            snackbar = { SnackbarHost(snackbar) }
+        )
     } else {
         StartScreen(state, onPick = onPick, onSettings = onSettings, snackbar = { SnackbarHost(snackbar) })
     }

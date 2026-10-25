@@ -43,6 +43,37 @@
     <string name="film_category_instant_pro">Błyskawiczne (pro)</string>
     <string name="films_missing">W tej wersji dostępne są tylko filmy startowe. Więcej pobierzesz w Ustawieniach.</string>
 
+    <!-- Biblioteka filmów -->
+    <string name="library_title">Filmy</string>
+    <string name="library_back">Wróć do edytora</string>
+    <string name="library_open_cd">Otwórz bibliotekę filmów</string>
+    <string name="library_search">Szukaj filmu</string>
+    <string name="library_on_device">Na telefonie</string>
+    <string name="library_on_my_photo">Na moim zdjęciu</string>
+    <string name="library_hint">Dotknij, aby wybrać lub pobrać film. Przytrzymaj, aby dodać do ulubionych.</string>
+    <string name="library_empty">Nic nie znaleziono. Zmień wyszukiwanie lub filtr.</string>
+    <string name="library_download_title">Pobierz więcej filmów</string>
+    <string name="library_download_all">Pobierz</string>
+    <plurals name="library_download_summary">
+        <item quantity="one">%1$d film · ok. %2$s · tylko przez Wi‑Fi</item>
+        <item quantity="few">%1$d filmy · ok. %2$s · tylko przez Wi‑Fi</item>
+        <item quantity="many">%1$d filmów · ok. %2$s · tylko przez Wi‑Fi</item>
+        <item quantity="other">%1$d filmu · ok. %2$s · tylko przez Wi‑Fi</item>
+    </plurals>
+    <string name="library_tile_cd">Film %1$s, %2$s</string>
+    <string name="library_status_on_device">na telefonie</string>
+    <string name="library_status_download">do pobrania, %1$s</string>
+    <string name="library_status_downloading">pobieranie %1$d%%</string>
+    <string name="library_status_failed">błąd pobierania, dotknij, aby ponowić</string>
+    <string name="library_badge_download">↓ %1$s</string>
+    <string name="library_badge_downloading">%1$d%%</string>
+    <string name="library_badge_failed">Błąd</string>
+    <string name="library_action_select">Wybierz film</string>
+    <string name="library_action_download">Pobierz film</string>
+    <string name="library_action_cancel">Anuluj pobieranie</string>
+    <string name="film_favorite_add">Dodaj do ulubionych</string>
+    <string name="film_favorite_remove">Usuń z ulubionych</string>
+
     <!-- Ramka -->
     <string name="frame_enabled">Ramka</string>
     <string name="signature_enabled">Podpis</string>
