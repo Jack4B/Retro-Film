@@ -11,6 +11,9 @@ import kotlin.math.max
 object TightFrame {
     /** Dodatkowa wysokość dołu pod podpis (ułamek u), ponad zwykły margines. */
     const val SIGNATURE_EXTRA = 0.07f
+
+    /** Domyślna wielkość podpisu (ułamek bazowej 0,075·u); suwak 100% = ta wartość, pas dołu rośnie proporcjonalnie. */
+    const val DEFAULT_SIGNATURE_SCALE = 0.8f
     private const val FIXED_POINT_STEPS = 12
 
     /** Rozmiar płótna: stałe proporcje wg [aspect], a „Oryginał” = zdjęcie + marginesy, skalowane do [longSide]. */
@@ -21,11 +24,12 @@ object TightFrame {
         photoH: Float,
         margin: Float,
         signature: Boolean,
-        longSide: Float
+        longSide: Float,
+        signatureScale: Float = DEFAULT_SIGNATURE_SCALE
     ): Pair<Float, Float> {
         if (aspect != FrameAspect.Original) return FrameGeometry.canvasSize(aspect, photoW, photoH, longSide)
         val k = margin.coerceIn(0f, FrameGeometry.MAX_MARGIN)
-        val extra = if (signature) SIGNATURE_EXTRA else 0f
+        val extra = if (signature) extraFor(signatureScale) else 0f
         var u = minOf(photoW, photoH)
         var cw = photoW
         var ch = photoH
@@ -38,12 +42,21 @@ object TightFrame {
         return cw * scale to ch * scale
     }
 
-    fun layout(canvas: SizeF, photoSize: SizeF, margin: Float, signature: Boolean): FrameLayout {
+    /** Dodatkowy dół (ułamek u) rośnie z wielkością podpisu, żeby większy podpis miał miejsce. */
+    private fun extraFor(signatureScale: Float): Float = SIGNATURE_EXTRA * signatureScale / DEFAULT_SIGNATURE_SCALE
+
+    fun layout(
+        canvas: SizeF,
+        photoSize: SizeF,
+        margin: Float,
+        signature: Boolean,
+        signatureScale: Float = DEFAULT_SIGNATURE_SCALE
+    ): FrameLayout {
         val w = canvas.width
         val h = canvas.height
         val u = minOf(w, h)
         val m = margin.coerceIn(0f, FrameGeometry.MAX_MARGIN) * u
-        val extra = if (signature) SIGNATURE_EXTRA * u else 0f
+        val extra = if (signature) extraFor(signatureScale) * u else 0f
         val area = RectF(m, m, w - 2 * m, (h - 2 * m - extra).coerceAtLeast(0f))
         val scale = minOf(area.width / photoSize.width, area.height / photoSize.height)
         val pw = photoSize.width * scale
@@ -71,13 +84,27 @@ object TightFrame {
         aspect: FrameAspect,
         margin: Float,
         photoAspect: Float,
-        measurer: SignatureMeasurer
+        measurer: SignatureMeasurer,
+        signatureScale: Float = DEFAULT_SIGNATURE_SCALE
     ): SignatureFitStatus {
         if (!frameEnabled || !signatureEnabled || signature.isBlank()) return SignatureFitStatus.None
-        val (w, h) = canvasSize(aspect, photoAspect, 1f, margin, true, SignatureFitCheck.REFERENCE_LONG_SIDE)
-        val l = layout(SizeF(w, h), SizeF(photoAspect, 1f), margin, signature = true)
+        val (w, h) = canvasSize(
+            aspect,
+            photoAspect,
+            1f,
+            margin,
+            true,
+            SignatureFitCheck.REFERENCE_LONG_SIDE,
+            signatureScale
+        )
+        val l = layout(SizeF(w, h), SizeF(photoAspect, 1f), margin, signature = true, signatureScale = signatureScale)
         val band = requireNotNull(l.signatureBand) { "Pas podpisu istnieje przy signature = true" }
-        val fit = FrameGeometry.fitSignature(l.signatureBaseSize, l.signatureMaxWidth, band.height, measurer)
+        val fit = FrameGeometry.fitSignature(
+            l.signatureBaseSize * signatureScale,
+            l.signatureMaxWidth,
+            band.height,
+            measurer
+        )
         return if (fit.fits) SignatureFitStatus.Fits else SignatureFitStatus.TooLong
     }
 }

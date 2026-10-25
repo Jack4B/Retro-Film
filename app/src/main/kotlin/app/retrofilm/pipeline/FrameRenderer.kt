@@ -30,8 +30,8 @@ data class FrameOptions(
     val font: SignatureFont = SignatureFont.Caveat,
     /** Kolor atramentu (ARGB). */
     val inkColor: Int = PaintSignatureMeasurer.SIGNATURE_COLOR,
-    /** Wielkość podpisu jako ułamek maksymalnej (większego i tak nie mieści ramka). */
-    val signatureScale: Float = 1f
+    /** Wielkość podpisu jako ułamek bazowej; domyślnie 0,8 (suwak 100%), do 1,0 (suwak 125%). */
+    val signatureScale: Float = TightFrame.DEFAULT_SIGNATURE_SCALE
 ) {
     val drawsSignature get() = enabled && signatureEnabled && signature.isNotBlank()
 }
@@ -83,7 +83,8 @@ object FrameRenderer {
             aspect = options.aspect,
             margin = options.margin,
             photoAspect = photoW.toFloat() / photoH,
-            measurer = PaintSignatureMeasurer(options.signature, typeface)
+            measurer = PaintSignatureMeasurer(options.signature, typeface),
+            signatureScale = options.signatureScale
         )
 
     /**
@@ -98,7 +99,8 @@ object FrameRenderer {
             photo.height.toFloat(),
             options.margin,
             options.drawsSignature,
-            maxOf(photo.width, photo.height).toFloat()
+            maxOf(photo.width, photo.height).toFloat(),
+            options.signatureScale
         )
         val w = cw.roundToInt().coerceAtLeast(1)
         val h = ch.roundToInt().coerceAtLeast(1)
@@ -106,7 +108,8 @@ object FrameRenderer {
             SizeF(w.toFloat(), h.toFloat()),
             SizeF(photo.width.toFloat(), photo.height.toFloat()),
             options.margin,
-            options.drawsSignature
+            options.drawsSignature,
+            options.signatureScale
         )
         val out = blank(w, h, colorSpaceSource)
         val canvas = Canvas(out)

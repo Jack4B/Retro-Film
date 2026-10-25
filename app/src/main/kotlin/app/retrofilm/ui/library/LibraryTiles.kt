@@ -92,7 +92,8 @@ internal fun LibraryTile(
     }
     val useMyPhoto = onMyPhoto && state.photo != null && item.status == FilmStatus.OnDevice
     if (useMyPhoto) LaunchedEffect(item.id, state.photo) { state.thumbnails.ensure(item.id, state.photo) }
-    val image = if (useMyPhoto) state.thumbnails.bitmaps[item.id] ?: jpg else jpg
+    // Na zdjęciu użytkownika nie pokazujemy najpierw miniatury z APK, żeby obraz się nie zmieniał w trakcie ładowania.
+    val image = if (useMyPhoto) state.thumbnails.bitmaps[item.id] else jpg
     val scope = rememberCoroutineScope()
     TileContent(item, image, flags, onClick) { scope.launch { state.library.toggleFavorite(item.id) } }
 }
