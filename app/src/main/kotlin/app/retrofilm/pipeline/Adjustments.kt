@@ -39,7 +39,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val gainG: Float
     private val gainB: Float
     private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(it / BYTE_MAX) }
-    private val encode = FloatArray(ENCODE_SIZE + 1) { linearToSrgb(softClip(it.toFloat() / ENCODE_SCALE)) }
+    private val encode: FloatArray
     private val contrastLut =
         FloatArray(CONTRAST_SIZE + 1) { contrastCurve(it.toFloat() / CONTRAST_SIZE, adj.contrast) }
 
@@ -52,6 +52,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         gainR = exposure * r / norm
         gainG = exposure / norm
         gainB = exposure * b / norm
+        // Kolano normalizuje się do największego mnożnika; bez rozjaśniania krzywa jest tożsamością.
+        val ceiling = maxOf(1f, gainR, gainG, gainB)
+        encode = FloatArray(ENCODE_SIZE + 1) { linearToSrgb(softClip(it.toFloat() / ENCODE_SCALE, ceiling)) }
     }
 
     /** Przetwarza [count] pikseli ARGB w miejscu (alfa bez zmian). */
@@ -128,10 +131,15 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             ((1 + SRGB_A) * v.toDouble().pow(1 / SRGB_GAMMA) - SRGB_A).toFloat()
         }
 
-        /** Miękkie kolano świateł: tożsamość do [KNEE], potem płynne dojście do 1,0 (bez ostrego obcięcia). */
-        fun softClip(v: Float): Float = when {
-            v <= KNEE -> v
-            else -> KNEE + (1f - KNEE) * (1f - exp(-(v - KNEE) / (1f - KNEE)))
+        /**
+         * Miękkie kolano świateł: tożsamość do [KNEE], potem płynne dojście do 1,0 w punkcie [ceiling]
+         * (największy mnożnik korekt). Gdy [ceiling] <= 1, nic nie jest rozjaśniane i krzywa jest tożsamością.
+         */
+        fun softClip(v: Float, ceiling: Float): Float {
+            if (ceiling <= 1f || v <= KNEE) return v.coerceAtMost(1f)
+            val width = 1f - KNEE
+            val shape = (1f - exp(-(v - KNEE) / width)) / (1f - exp(-(ceiling - KNEE) / width))
+            return KNEE + width * shape.coerceAtMost(1f)
         }
 
         /** Krzywa kontrastu na wartości 0..1: sigmoida (c > 0) albo spłaszczenie (c < 0); 0, 0,5 i 1 stałe. */
