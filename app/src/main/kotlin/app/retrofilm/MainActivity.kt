@@ -7,6 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import app.retrofilm.core.ui.RetroFilmTheme
@@ -24,10 +26,13 @@ class MainActivity : ComponentActivity() {
         val typeface = signatureTypeface()
         setContent {
             CompositionLocalProvider(LocalPhotoRenderer provides graph.photoRenderer) {
-                RetroFilmTheme {
+                val dynamicColor by graph.appSettings.dynamicColor.collectAsState(initial = false)
+                RetroFilmTheme(dynamicColor = dynamicColor) {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         val state = remember { MainState(graph, typeface) }
-                        RetroFilmNavHost { navigate -> MainScreen(state, onSettings = { navigate(Route.Settings) }) }
+                        RetroFilmNavHost(graph, dynamicColor) { navigate ->
+                            MainScreen(state, onSettings = { navigate(Route.Settings) })
+                        }
                     }
                 }
             }

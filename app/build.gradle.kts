@@ -81,11 +81,12 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
-
-    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.compose.material.icons)
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.core)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)

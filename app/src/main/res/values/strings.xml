@@ -2,7 +2,6 @@
     <string name="app_name">Retro-Film</string>
     <string name="action_pick">Wybierz zdjęcie</string>
     <string name="action_export">Eksportuj JPEG</string>
-    <string name="action_settings">Ustawienia</string>
     <string name="action_back">Wstecz</string>
     <string name="no_photo">Wybierz zdjęcie, aby zacząć.</string>
     <string name="preview_cd">Podgląd zdjęcia z filmem i ramką</string>
@@ -19,5 +18,6 @@
     <string name="export_done">Zapisano w Pictures/RetroFilm</string>
     <string name="export_failed">Eksport nie powiódł się: %1$s</string>
     <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
-    <string name="settings_placeholder">Ustawienia – ekran w przygotowaniu.</string>
+    <string name="app_title">Retro Film</string>
+    <string name="cd_open_settings">Otwórz ustawienia</string>
 </resources>
