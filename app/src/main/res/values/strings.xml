@@ -21,7 +21,7 @@
     <string name="tab_frame">Ramka</string>
 
     <!-- Film -->
-    <string name="film_none">Bez filmu</string>
+    <string name="film_none">Oryginał</string>
     <string name="film_all">Wszystkie</string>
     <string name="film_favorites">Ulubione</string>
     <string name="film_favorites_empty">Brak ulubionych. Wybierz film i dotknij gwiazdki.</string>
