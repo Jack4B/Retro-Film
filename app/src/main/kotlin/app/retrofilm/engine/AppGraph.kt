@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.ui.graphics.ImageBitmap
 import app.retrofilm.core.engine.LutCatalog
 import app.retrofilm.core.engine.LutEngineFactory
+import app.retrofilm.core.engine.pack.LutPackFiles
+import app.retrofilm.core.engine.pack.LutRawCache
 import app.retrofilm.core.ui.photo.PhotoRenderer
 import app.retrofilm.feature.settings.lut.LutDownloadStateHolder
 import app.retrofilm.lut.PrefsLutDownloadSettings
@@ -13,13 +15,22 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Prosta fabryka zależności aplikacji (bez frameworka DI). Jedna instancja na proces. */
 class AppGraph(context: Context) {
     private val photos = ConcurrentHashMap<Int, ImageBitmap>()
 
     val filmEngine: EngineFilmEngine by lazy {
-        EngineFilmEngine(LutCatalog(context.applicationContext.assets), LutEngineFactory.create())
+        // D9: startowe PNG 144³ dekodowane raz i trzymane w tym samym LRU co pakiety pobierane.
+        EngineFilmEngine(LutCatalog(context.applicationContext.assets, lutRawCache), LutEngineFactory.create())
+    }
+
+    private val lutCacheBytes = MutableStateFlow(0L)
+
+    /** Jeden [LutRawCache] na proces (limit LRU wspólny dla filmów startowych i pobranych). */
+    private val lutRawCache: LutRawCache by lazy {
+        LutRawCache(LutPackFiles.cacheDir(context.applicationContext)) { lutCacheBytes.value = it }
     }
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -31,7 +42,7 @@ class AppGraph(context: Context) {
 
     /** Pakiety pobierane (D8); implementuje też LutCacheInfo. */
     val lutPackRepository: WorkLutPackRepository by lazy {
-        WorkLutPackRepository(context, lutDownloadSettings, appScope)
+        WorkLutPackRepository(context, lutDownloadSettings, appScope, lutRawCache, lutCacheBytes)
     }
 
     /** Stan ekranu pobierania (UI9): pakiety + LutCacheInfo z [lutPackRepository]. */

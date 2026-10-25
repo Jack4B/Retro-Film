@@ -1,6 +1,7 @@
 package app.retrofilm.core.engine
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LutFormatTest {
@@ -46,5 +47,22 @@ class LutFormatTest {
         assertEquals("rgb16", e[0].format)
         assertEquals(33, e[1].size)
         assertEquals("rgb8", e[1].format)
+    }
+
+    @Test
+    fun catalogReadsHaldPngEntry() {
+        val json = """{"grid":144,"luts":[{"id":"bw/a","name":"A","file":"luts/bw/a.png","format":"png144",""" +
+            """"grid":144,"unpackedLength":8957952}]}"""
+        val e = LutCatalog.parse(json).single()
+        assertEquals(144, e.size)
+        assertEquals(8_957_952L, e.unpackedLength)
+        assertTrue(e.isHald)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun catalogRejectsWrongUnpackedLength() {
+        LutCatalog.parse(
+            """{"luts":[{"id":"a","name":"A","file":"a.png","format":"png144","grid":144,"unpackedLength":1}]}"""
+        )
     }
 }

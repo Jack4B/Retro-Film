@@ -24,10 +24,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** Implementacja D8: pobieranie przez WorkManager, PNG w filesDir, rozpakowane LUT-y w [LutRawCache]. */
+/**
+ * Implementacja D8: pobieranie przez WorkManager, PNG w filesDir, rozpakowane LUT-y w [LutRawCache].
+ * [cache] jest współdzielony z katalogiem startowym w APK (D9); [cacheState] dostaje jego rozmiar.
+ */
 @Suppress("TooManyFunctions")
-class WorkLutPackRepository(context: Context, private val settings: LutDownloadSettings, scope: CoroutineScope) :
-    LutPackRepository,
+class WorkLutPackRepository(
+    context: Context,
+    private val settings: LutDownloadSettings,
+    scope: CoroutineScope,
+    private val cache: LutRawCache,
+    private val cacheState: MutableStateFlow<Long>
+) : LutPackRepository,
     LutCacheInfo {
     private val app = context.applicationContext
     private val workManager = WorkManager.getInstance(app)
@@ -42,8 +50,6 @@ class WorkLutPackRepository(context: Context, private val settings: LutDownloadS
     private val downloadedState = MutableStateFlow(downloadedSize())
     override val downloadedBytes: StateFlow<Long> = downloadedState.asStateFlow()
 
-    private val cacheState = MutableStateFlow(0L)
-    private val cache = LutRawCache(LutPackFiles.cacheDir(app)) { cacheState.value = it }
     override val cacheBytes: StateFlow<Long> = cacheState.asStateFlow()
 
     init {
