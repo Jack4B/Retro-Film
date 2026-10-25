@@ -12,13 +12,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -26,6 +31,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -48,9 +54,11 @@ import kotlinx.coroutines.launch
 private val Gap = 12.dp
 private val Pad = 16.dp
 private val PreviewMax = 420.dp
+private val MinTouch = 48.dp
 private const val PERCENT = 100
 
 /** Ekran testowej ścieżki: Photo Picker → film → ramka/podpis → eksport JPEG. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(state: MainState, onSettings: () -> Unit) {
     val context = LocalContext.current
@@ -85,7 +93,19 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
         }
     }
     LaunchedEffect(state.photo, state.film, state.frame) { state.refreshPreview() }
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { inner ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_title)) },
+                actions = {
+                    IconButton(onClick = onSettings, modifier = Modifier.size(MinTouch)) {
+                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.cd_open_settings))
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbar) }
+    ) { inner ->
         Column(
             Modifier.fillMaxSize().padding(inner).verticalScroll(rememberScrollState()).padding(Pad),
             verticalArrangement = Arrangement.spacedBy(Gap)
@@ -94,8 +114,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
                 busy = state.busy,
                 canExport = state.photo != null,
                 onPick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                onExport = onExport,
-                onSettings = onSettings
+                onExport = onExport
             )
             PreviewArea(state)
             FilmPicker(state)
@@ -105,17 +124,10 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
 }
 
 @Composable
-private fun Actions(
-    busy: Boolean,
-    canExport: Boolean,
-    onPick: () -> Unit,
-    onExport: () -> Unit,
-    onSettings: () -> Unit
-) {
+private fun Actions(busy: Boolean, canExport: Boolean, onPick: () -> Unit, onExport: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(Gap), verticalAlignment = Alignment.CenterVertically) {
         Button(onClick = onPick, enabled = !busy) { Text(stringResource(R.string.action_pick)) }
         Button(onClick = onExport, enabled = !busy && canExport) { Text(stringResource(R.string.action_export)) }
-        OutlinedButton(onClick = onSettings) { Text(stringResource(R.string.action_settings)) }
     }
     if (busy) {
         Row(horizontalArrangement = Arrangement.spacedBy(Gap), verticalAlignment = Alignment.CenterVertically) {

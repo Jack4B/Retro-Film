@@ -8,6 +8,7 @@ import app.retrofilm.core.ui.photo.PhotoRenderer
 import app.retrofilm.feature.settings.lut.LutDownloadStateHolder
 import app.retrofilm.lut.PrefsLutDownloadSettings
 import app.retrofilm.lut.WorkLutPackRepository
+import app.retrofilm.settings.AppSettingsRepository
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,9 @@ class AppGraph(context: Context) {
     }
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** Ustawienia aplikacji w DataStore (dynamiczne kolory). */
+    val appSettings: AppSettingsRepository by lazy { AppSettingsRepository.create(context) }
 
     val lutDownloadSettings: PrefsLutDownloadSettings by lazy { PrefsLutDownloadSettings(context) }
 
