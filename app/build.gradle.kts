@@ -37,6 +37,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
+            // Local builds without a keystore fall back to debug signing; CI fails earlier if the keystore is missing.
             signingConfig = if (keystorePath != null) {
                 signingConfigs.getByName("release")
             } else {
