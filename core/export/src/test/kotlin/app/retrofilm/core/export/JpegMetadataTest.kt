@@ -62,4 +62,28 @@ class JpegMetadataTest {
         jpeg.copyOfRange(0, 2) + segment + jpeg.copyOfRange(2, jpeg.size)
 
     private fun containsAscii(a: ByteArray, s: String) = String(a, Charsets.ISO_8859_1).contains(s)
+
+    @Test
+    fun `strip zostawia ICC i Adobe, usuwa EXIF, XMP i obce APP2`() {
+        fun seg(m: Int, payload: ByteArray): ByteArray {
+            val len = payload.size + 2
+            return byteArrayOf(0xFF.toByte(), m.toByte(), (len shr 8).toByte(), len.toByte()) + payload
+        }
+        val icc = "ICC_PROFILE".toByteArray() + byteArrayOf(0, 1, 1) + ByteArray(16) { 7 }
+        val jpeg = byteArrayOf(0xFF.toByte(), 0xD8.toByte()) +
+            seg(0xE0, "JFIF".toByteArray() + 0) +
+            seg(0xE1, "Exif".toByteArray() + byteArrayOf(0, 0, 1, 2)) +
+            seg(0xE2, icc) +
+            seg(0xE2, "FPXR".toByteArray() + 0) +
+            seg(0xEE, "Adobe".toByteArray() + byteArrayOf(0, 100)) +
+            seg(0xFE, "komentarz".toByteArray()) +
+            byteArrayOf(0xFF.toByte(), 0xDA.toByte(), 0, 2, 0xFF.toByte(), 0xD9.toByte())
+        val out = JpegMetadata.strip(jpeg)
+        org.junit.Assert.assertTrue(JpegMetadata.hasIcc(out))
+        org.junit.Assert.assertFalse(JpegMetadata.hasExif(out))
+        org.junit.Assert.assertFalse(JpegMetadata.hasMetadata(out))
+        org.junit.Assert.assertTrue(String(out, Charsets.ISO_8859_1).contains("Adobe"))
+        org.junit.Assert.assertFalse(String(out, Charsets.ISO_8859_1).contains("FPXR"))
+        org.junit.Assert.assertTrue(String(out, Charsets.ISO_8859_1).contains(String(icc, Charsets.ISO_8859_1)))
+    }
 }

@@ -10,6 +10,8 @@ object JpegMetadata {
     private const val SOS = 0xDA
     private const val EOI = 0xD9
     private const val APP0 = 0xE0
+    private const val APP2 = 0xE2
+    private const val APP14 = 0xEE
     private const val APP15 = 0xEF
     private const val COM = 0xFE
     private const val TEM = 0x01
@@ -19,8 +21,8 @@ object JpegMetadata {
     private const val SHIFT = 8
 
     /**
-     * Usuwa wszystkie segmenty APP1..APP15 (EXIF, GPS, XMP, ICC, IPTC…) i komentarze COM.
-     * Zostawia APP0 (JFIF) oraz dane obrazu bez zmian.
+     * Biała lista: z segmentów APPn zostają tylko APP0 (JFIF), APP2 `ICC_PROFILE` (profil koloru,
+     * np. Display P3) i APP14 `Adobe`. Reszta APPn (EXIF, GPS, XMP, IPTC, MPF…) i COM są usuwane.
      */
     fun strip(jpeg: ByteArray): ByteArray {
         require(jpeg.size >= 2 && u(jpeg, 0) == MARKER && u(jpeg, 1) == SOI) { "To nie jest JPEG" }
@@ -46,7 +48,7 @@ object JpegMetadata {
             val len = (u(jpeg, i + 2) shl SHIFT) or u(jpeg, i + 3)
             val end = i + 2 + len
             require(end <= jpeg.size) { "Segment poza końcem pliku" }
-            val drop = (marker in (APP0 + 1)..APP15) || marker == COM
+            val drop = ((marker in APP0..APP15) && !allowed(jpeg, marker, i + 4, end)) || marker == COM
             if (!drop) out.write(jpeg, i, end - i)
             i = end
         }
@@ -59,9 +61,25 @@ object JpegMetadata {
             EXIF.indices.all { jpeg[start + it] == EXIF[it] }
     }
 
-    /** Czy plik zawiera jakikolwiek segment APP1..APP15 lub COM. */
-    fun hasMetadata(jpeg: ByteArray): Boolean =
-        segments(jpeg).any { (marker, _) -> marker in (APP0 + 1)..APP15 || marker == COM }
+    /** Czy plik zawiera segment APPn spoza białej listy lub COM. */
+    fun hasMetadata(jpeg: ByteArray): Boolean = segments(jpeg).any { (marker, start) ->
+        (marker in APP0..APP15 && !allowed(jpeg, marker, start, jpeg.size)) || marker == COM
+    }
+
+    /** Czy plik zawiera profil ICC (APP2 z nagłówkiem `ICC_PROFILE\0`). */
+    fun hasIcc(jpeg: ByteArray): Boolean = segments(jpeg).any { (marker, start) ->
+        marker == APP2 && startsWith(jpeg, start, jpeg.size, ICC)
+    }
+
+    private fun allowed(a: ByteArray, marker: Int, start: Int, end: Int): Boolean = when (marker) {
+        APP0 -> true
+        APP2 -> startsWith(a, start, end, ICC)
+        APP14 -> startsWith(a, start, end, ADOBE)
+        else -> false
+    }
+
+    private fun startsWith(a: ByteArray, start: Int, end: Int, p: ByteArray): Boolean =
+        start + p.size <= minOf(end, a.size) && p.indices.all { a[start + it] == p[it] }
 
     /** Pary (marker, początek danych segmentu) aż do SOS. */
     private fun segments(jpeg: ByteArray): List<Pair<Int, Int>> {
@@ -84,4 +102,6 @@ object JpegMetadata {
     private fun u(a: ByteArray, i: Int): Int = a[i].toInt() and BYTE
 
     private val EXIF = byteArrayOf(0x45, 0x78, 0x69, 0x66, 0, 0)
+    private val ICC = "ICC_PROFILE".toByteArray(Charsets.US_ASCII) + 0
+    private val ADOBE = "Adobe".toByteArray(Charsets.US_ASCII)
 }
