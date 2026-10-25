@@ -1,0 +1,5383 @@
+{
+ "method": "dE2000, sRGB(D65)->Lab, 33^3 po kwantyzacji + trilinear vs HaldCLUT 144^3, wszystkie 144^3 punktow",
+ "count": 260,
+ "all_pass": false,
+ "pass_count": 5,
+ "global": {
+  "mean_of_means": 0.1918,
+  "max_p99": 1.3602,
+  "max_max": 6.3929
+ },
+ "worst": {
+  "id": "colorslide/fuji_superia_200_xpro",
+  "source_hald": "Color/Fuji/Fuji Superia 200 XPRO.png",
+  "match_rmse_13": 0.03296,
+  "bits": 8,
+  "deltaE2000": {
+   "mean": 0.1804,
+   "p99": 0.9321,
+   "max": 6.3929,
+   "points": 2985984
+  },
+  "deltaE2000_rgb16": {
+   "mean": 0.1663,
+   "p99": 0.922,
+   "max": 6.3055,
+   "points": 2985984
+  },
+  "pass": false,
+  "pass_rgb16": false
+ },
+ "unmatched_catalog": [
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_acros_g",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_acros+g.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_acros_r",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_acros+r.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_acros_ye",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_acros+ye.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_acros",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_acros.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_astia",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_astia.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_classic_chrome",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_classic_chrome.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_mono_g",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_mono+g.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_mono_r",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_mono+r.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_mono_ye",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_mono+ye.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_mono",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_mono.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_pro_neg_hi",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_pro_neg_hi.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_pro_neg_std",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_pro_neg_std.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_provia",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_provia.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_sepia",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_sepia.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "fujixtransiii/fuji_xtrans_iii_velvia",
+   "source_file": "luts/fujixtransiii/fuji_xtrans_iii_velvia.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3510_constlclip",
+   "source_file": "luts/print/fuji_3510_constlclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3510_constlmap",
+   "source_file": "luts/print/fuji_3510_constlmap.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3510_cuspclip",
+   "source_file": "luts/print/fuji_3510_cuspclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3513_constlclip",
+   "source_file": "luts/print/fuji_3513_constlclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3513_constlmap",
+   "source_file": "luts/print/fuji_3513_constlmap.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/fuji_3513_cuspclip",
+   "source_file": "luts/print/fuji_3513_cuspclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2383_constlclip",
+   "source_file": "luts/print/kodak_2383_constlclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2383_constlmap",
+   "source_file": "luts/print/kodak_2383_constlmap.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2383_cuspclip",
+   "source_file": "luts/print/kodak_2383_cuspclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2393_constlclip",
+   "source_file": "luts/print/kodak_2393_constlclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2393_constlmap",
+   "source_file": "luts/print/kodak_2393_constlmap.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  },
+  {
+   "id": "print/kodak_2393_cuspclip",
+   "source_file": "luts/print/kodak_2393_cuspclip.cube",
+   "reason": "brak HaldCLUT o tej nazwie w HaldCLUT.zip"
+  }
+ ],
+ "hald_not_in_catalog": [
+  "Black-and-White/Ilford/Ilford HPS 800.png",
+  "Color/CreativePack-1/Anime.png",
+  "Color/CreativePack-1/BleachBypass1.png",
+  "Color/CreativePack-1/BleachBypass2.png",
+  "Color/CreativePack-1/BleachBypass3.png",
+  "Color/CreativePack-1/BleachBypass4.png",
+  "Color/CreativePack-1/CandleLight.png",
+  "Color/CreativePack-1/ColorNegative.png",
+  "Color/CreativePack-1/CrispWarm.png",
+  "Color/CreativePack-1/CrispWinter.png",
+  "Color/CreativePack-1/DropBlues.png",
+  "Color/CreativePack-1/EdgyEmber.png",
+  "Color/CreativePack-1/FallColors.png",
+  "Color/CreativePack-1/FoggyNight.png",
+  "Color/CreativePack-1/FuturisticBleak1.png",
+  "Color/CreativePack-1/FuturisticBleak2.png",
+  "Color/CreativePack-1/FuturisticBleak3.png",
+  "Color/CreativePack-1/FuturisticBleak4.png",
+  "Color/CreativePack-1/HorrorBlue.png",
+  "Color/CreativePack-1/LateSunset.png",
+  "Color/CreativePack-1/Moonlight.png",
+  "Color/CreativePack-1/NightFromDay.png",
+  "Color/CreativePack-1/RedBlueYellow.png",
+  "Color/CreativePack-1/Smokey.png",
+  "Color/CreativePack-1/SoftWarming.png",
+  "Color/CreativePack-1/TealMagentaGold.png",
+  "Color/CreativePack-1/TealOrange.png",
+  "Color/CreativePack-1/TealOrange1.png",
+  "Color/CreativePack-1/TealOrange2.png",
+  "Color/CreativePack-1/TealOrange3.png",
+  "Color/CreativePack-1/TensionGreen1.png",
+  "Color/CreativePack-1/TensionGreen2.png",
+  "Color/CreativePack-1/TensionGreen3.png",
+  "Color/CreativePack-1/TensionGreen4.png",
+  "Color/Kodak/Kodak Portra 400 NC 3 +.png",
+  "Negative.png"
+ ],
+ "luts": [
+  {
+   "id": "bw/agfa_apx_100",
+   "source_hald": "Black-and-White/Agfa/Agfa APX 100.png",
+   "match_rmse_13": 0.02093,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0903,
+    "p99": 0.6968,
+    "max": 1.6986,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0832,
+    "p99": 0.6907,
+    "max": 1.6727,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/agfa_apx_25",
+   "source_hald": "Black-and-White/Agfa/Agfa APX 25.png",
+   "match_rmse_13": 0.02453,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0915,
+    "p99": 0.5222,
+    "max": 1.5518,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0843,
+    "p99": 0.5244,
+    "max": 1.4988,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/fuji_neopan_1600",
+   "source_hald": "Black-and-White/Fuji/Fuji Neopan 1600 2.png",
+   "match_rmse_13": 0.02487,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1652,
+    "p99": 0.7387,
+    "max": 4.9048,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1607,
+    "p99": 0.7326,
+    "max": 4.9471,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/fuji_neopan_acros_100",
+   "source_hald": "Black-and-White/Fuji/Fuji Neopan Acros 100.png",
+   "match_rmse_13": 0.02884,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0966,
+    "p99": 0.4125,
+    "max": 1.0332,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0881,
+    "p99": 0.4064,
+    "max": 0.9764,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": true
+  },
+  {
+   "id": "bw/ilford_delta_100",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 100.png",
+   "match_rmse_13": 0.02115,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0951,
+    "p99": 0.5055,
+    "max": 1.439,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0878,
+    "p99": 0.5153,
+    "max": 1.4896,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/ilford_delta_3200",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 3200 2.png",
+   "match_rmse_13": 0.02526,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1576,
+    "p99": 0.6667,
+    "max": 2.9351,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1527,
+    "p99": 0.6599,
+    "max": 2.9374,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/ilford_delta_400",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 400.png",
+   "match_rmse_13": 0.02085,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0941,
+    "p99": 0.309,
+    "max": 0.9707,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": null,
+   "pass": true,
+   "pass_rgb16": null
+  },
+  {
+   "id": "bw/ilford_fp_4_plus_125",
+   "source_hald": "Black-and-White/Ilford/Ilford FP4 Plus 125.png",
+   "match_rmse_13": 0.02058,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0941,
+    "p99": 0.4363,
+    "max": 1.2392,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0859,
+    "p99": 0.431,
+    "max": 1.2083,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/ilford_hp_5_plus_400",
+   "source_hald": "Black-and-White/Ilford/Ilford HP5 Plus 400.png",
+   "match_rmse_13": 0.0244,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0904,
+    "p99": 0.3236,
+    "max": 1.1269,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0831,
+    "p99": 0.3002,
+    "max": 1.103,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/ilford_pan_f_plus_50",
+   "source_hald": "Black-and-White/Ilford/Ilford Pan F Plus 50.png",
+   "match_rmse_13": 0.02172,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0964,
+    "p99": 0.5634,
+    "max": 1.3831,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0881,
+    "p99": 0.5617,
+    "max": 1.4304,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/ilford_xp_2",
+   "source_hald": "Black-and-White/Ilford/Ilford XP2.png",
+   "match_rmse_13": 0.02186,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0947,
+    "p99": 0.3222,
+    "max": 1.0595,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0865,
+    "p99": 0.2976,
+    "max": 1.0012,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/kodak_bw_400_cn",
+   "source_hald": "Black-and-White/Kodak/Kodak BW 400 CN.png",
+   "match_rmse_13": 0.02633,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.098,
+    "p99": 0.4243,
+    "max": 1.0078,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0892,
+    "p99": 0.4178,
+    "max": 0.957,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": true
+  },
+  {
+   "id": "bw/kodak_hie_hs_infra",
+   "source_hald": "Black-and-White/Kodak/Kodak HIE (HS Infra).png",
+   "match_rmse_13": 0.02514,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0879,
+    "p99": 0.4779,
+    "max": 2.3359,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0819,
+    "p99": 0.4771,
+    "max": 2.3205,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/kodak_t_max_100",
+   "source_hald": "Black-and-White/Kodak/Kodak T-Max 100.png",
+   "match_rmse_13": 0.02281,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0964,
+    "p99": 0.4151,
+    "max": 1.1051,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0886,
+    "p99": 0.4146,
+    "max": 0.9858,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": true
+  },
+  {
+   "id": "bw/kodak_t_max_3200",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 2.png",
+   "match_rmse_13": 0.06479,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1296,
+    "p99": 0.4675,
+    "max": 1.81,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1239,
+    "p99": 0.454,
+    "max": 1.8322,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/kodak_t_max_400",
+   "source_hald": "Black-and-White/Kodak/Kodak T-Max 400.png",
+   "match_rmse_13": 0.02151,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.096,
+    "p99": 0.4481,
+    "max": 1.4511,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0857,
+    "p99": 0.4359,
+    "max": 1.41,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/kodak_tri_x_400",
+   "source_hald": "Black-and-White/Kodak/Kodak TRI-X 400 2.png",
+   "match_rmse_13": 0.02163,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1348,
+    "p99": 0.6197,
+    "max": 2.3534,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1295,
+    "p99": 0.6146,
+    "max": 2.3634,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/polaroid_664",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 664.png",
+   "match_rmse_13": 0.01969,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0887,
+    "p99": 0.2652,
+    "max": 1.7175,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.081,
+    "p99": 0.2242,
+    "max": 1.7367,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/polaroid_667",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 667.png",
+   "match_rmse_13": 0.01696,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0874,
+    "p99": 0.282,
+    "max": 1.3006,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0797,
+    "p99": 0.2412,
+    "max": 1.3039,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/polaroid_672",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 672.png",
+   "match_rmse_13": 0.02359,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0937,
+    "p99": 0.2864,
+    "max": 0.8385,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": null,
+   "pass": true,
+   "pass_rgb16": null
+  },
+  {
+   "id": "bw/rollei_ir_400",
+   "source_hald": "Black-and-White/Rollei/Rollei IR 400.png",
+   "match_rmse_13": 0.01696,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0629,
+    "p99": 0.4933,
+    "max": 1.3406,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0596,
+    "p99": 0.494,
+    "max": 1.3855,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/rollei_ortho_25",
+   "source_hald": "Black-and-White/Rollei/Rollei Ortho 25.png",
+   "match_rmse_13": 0.01901,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0911,
+    "p99": 0.3799,
+    "max": 1.3689,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0835,
+    "p99": 0.3638,
+    "max": 1.3664,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "bw/rollei_retro_100_tonal",
+   "source_hald": "Black-and-White/Rollei/Rollei Retro 100 Tonal.png",
+   "match_rmse_13": 0.02506,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0927,
+    "p99": 0.4535,
+    "max": 1.0367,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0832,
+    "p99": 0.4495,
+    "max": 0.9925,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": true
+  },
+  {
+   "id": "bw/rollei_retro_80s",
+   "source_hald": "Black-and-White/Rollei/Rollei Retro 80s.png",
+   "match_rmse_13": 0.02257,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0847,
+    "p99": 0.2675,
+    "max": 0.8348,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": null,
+   "pass": true,
+   "pass_rgb16": null
+  },
+  {
+   "id": "colorslide/agfa_precisa_100",
+   "source_hald": "Color/Agfa/Agfa Precisa 100.png",
+   "match_rmse_13": 0.02318,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1612,
+    "p99": 0.5653,
+    "max": 1.4352,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.141,
+    "p99": 0.4964,
+    "max": 1.3505,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_astia_100_generic",
+   "source_hald": "Color/Fuji/Fuji Astia 100 Generic.png",
+   "match_rmse_13": 0.02202,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1409,
+    "p99": 0.5102,
+    "max": 1.612,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1121,
+    "p99": 0.4165,
+    "max": 1.1793,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_astia_100f",
+   "source_hald": "Color/Fuji/Fuji Astia 100F.png",
+   "match_rmse_13": 0.02227,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1798,
+    "p99": 0.6839,
+    "max": 2.5835,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.159,
+    "p99": 0.6171,
+    "max": 2.5712,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_fp_100c",
+   "source_hald": "Color/Fuji/Fuji FP-100c 3.png",
+   "match_rmse_13": 0.16064,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2134,
+    "p99": 0.783,
+    "max": 2.9015,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2023,
+    "p99": 0.7578,
+    "max": 2.809,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_provia_100_generic",
+   "source_hald": "Color/Fuji/Fuji Provia 100 Generic.png",
+   "match_rmse_13": 0.02126,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1374,
+    "p99": 0.5068,
+    "max": 1.7338,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1117,
+    "p99": 0.4193,
+    "max": 1.3981,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_provia_100f",
+   "source_hald": "Color/Fuji/Fuji Provia 100F.png",
+   "match_rmse_13": 0.02343,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1563,
+    "p99": 0.5586,
+    "max": 1.6134,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1359,
+    "p99": 0.4894,
+    "max": 1.5299,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_provia_400f",
+   "source_hald": "Color/Fuji/Fuji Provia 400F.png",
+   "match_rmse_13": 0.0193,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1737,
+    "p99": 0.585,
+    "max": 1.7077,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1547,
+    "p99": 0.5044,
+    "max": 1.538,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_provia_400x",
+   "source_hald": "Color/Fuji/Fuji Provia 400X.png",
+   "match_rmse_13": 0.02567,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1486,
+    "p99": 0.5236,
+    "max": 2.6244,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1335,
+    "p99": 0.4628,
+    "max": 2.5632,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_sensia_100",
+   "source_hald": "Color/Fuji/Fuji Sensia 100.png",
+   "match_rmse_13": 0.02227,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1545,
+    "p99": 0.5516,
+    "max": 1.6535,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.137,
+    "p99": 0.4805,
+    "max": 1.5134,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_superia_200_xpro",
+   "source_hald": "Color/Fuji/Fuji Superia 200 XPRO.png",
+   "match_rmse_13": 0.03296,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1804,
+    "p99": 0.9321,
+    "max": 6.3929,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1663,
+    "p99": 0.922,
+    "max": 6.3055,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_velvia_100_generic",
+   "source_hald": "Color/Fuji/Fuji Velvia 100 Generic.png",
+   "match_rmse_13": 0.0215,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1281,
+    "p99": 0.4869,
+    "max": 1.4744,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1089,
+    "p99": 0.4169,
+    "max": 1.2682,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/fuji_velvia_50",
+   "source_hald": "Color/Fuji/Fuji Velvia 50.png",
+   "match_rmse_13": 0.02183,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.147,
+    "p99": 0.5292,
+    "max": 1.7346,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1243,
+    "p99": 0.4654,
+    "max": 1.6954,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_e_100_gx_ektachrome_100",
+   "source_hald": "Color/Kodak/Kodak E-100 GX Ektachrome 100.png",
+   "match_rmse_13": 0.02064,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1651,
+    "p99": 0.5574,
+    "max": 1.6293,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1459,
+    "p99": 0.4826,
+    "max": 1.6327,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_ektachrome_100_vs",
+   "source_hald": "Color/Kodak/Kodak Ektachrome 100 VS.png",
+   "match_rmse_13": 0.0237,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1673,
+    "p99": 0.6245,
+    "max": 1.8534,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1451,
+    "p99": 0.5755,
+    "max": 1.8143,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_ektachrome_100_vs_generic",
+   "source_hald": "Color/Kodak/Kodak Ektachrome 100 VS Generic.png",
+   "match_rmse_13": 0.01979,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1433,
+    "p99": 0.5421,
+    "max": 1.6718,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1232,
+    "p99": 0.4846,
+    "max": 1.3631,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_elite_chrome_200",
+   "source_hald": "Color/Kodak/Kodak Elite Chrome 200.png",
+   "match_rmse_13": 0.01802,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1533,
+    "p99": 0.5445,
+    "max": 1.5618,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1361,
+    "p99": 0.472,
+    "max": 1.2198,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_elite_chrome_400",
+   "source_hald": "Color/Kodak/Kodak Elite Chrome 400.png",
+   "match_rmse_13": 0.02132,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1619,
+    "p99": 0.57,
+    "max": 1.5679,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.142,
+    "p99": 0.4998,
+    "max": 1.3325,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_elite_extracolor_100",
+   "source_hald": "Color/Kodak/Kodak Elite ExtraColor 100.png",
+   "match_rmse_13": 0.02364,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1501,
+    "p99": 0.5428,
+    "max": 1.5814,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1313,
+    "p99": 0.4694,
+    "max": 1.3826,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_kodachrome_200",
+   "source_hald": "Color/Kodak/Kodak Kodachrome 200.png",
+   "match_rmse_13": 0.01941,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1778,
+    "p99": 0.5978,
+    "max": 3.0597,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1571,
+    "p99": 0.5336,
+    "max": 2.9665,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_kodachrome_25",
+   "source_hald": "Color/Kodak/Kodak Kodachrome 25.png",
+   "match_rmse_13": 0.0232,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2124,
+    "p99": 1.0027,
+    "max": 3.6758,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1945,
+    "p99": 0.9985,
+    "max": 3.6974,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_kodachrome_64",
+   "source_hald": "Color/Kodak/Kodak Kodachrome 64.png",
+   "match_rmse_13": 0.01957,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.172,
+    "p99": 0.5858,
+    "max": 2.0239,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1541,
+    "p99": 0.5198,
+    "max": 1.9067,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/kodak_kodachrome_64_generic",
+   "source_hald": "Color/Kodak/Kodak Kodachrome 64 Generic.png",
+   "match_rmse_13": 0.01944,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1508,
+    "p99": 0.5658,
+    "max": 2.1764,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1281,
+    "p99": 0.5075,
+    "max": 2.1548,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/lomography_x_pro_slide_200",
+   "source_hald": "Color/Lomography/Lomography X-Pro Slide 200.png",
+   "match_rmse_13": 0.02117,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1555,
+    "p99": 0.5445,
+    "max": 1.6227,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1361,
+    "p99": 0.4738,
+    "max": 1.5184,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/polaroid_669",
+   "source_hald": "Color/Polaroid/Polaroid 669 3.png",
+   "match_rmse_13": 0.02784,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2265,
+    "p99": 0.7471,
+    "max": 2.3588,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2138,
+    "p99": 0.7136,
+    "max": 2.5492,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/polaroid_690",
+   "source_hald": "Color/Polaroid/Polaroid 690 3.png",
+   "match_rmse_13": 0.02434,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1994,
+    "p99": 0.7146,
+    "max": 2.6216,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1887,
+    "p99": 0.6897,
+    "max": 2.7212,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "colorslide/polaroid_polachrome",
+   "source_hald": "Color/Polaroid/Polaroid Polachrome.png",
+   "match_rmse_13": 0.01754,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1985,
+    "p99": 0.6522,
+    "max": 2.4468,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1784,
+    "p99": 0.5836,
+    "max": 2.388,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 3.png",
+   "match_rmse_13": 0.01712,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3202,
+    "p99": 0.7914,
+    "max": 1.3963,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3018,
+    "p99": 0.7097,
+    "max": 1.3772,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold_ppp",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 6 +++.png",
+   "match_rmse_13": 0.01272,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.306,
+    "p99": 0.8049,
+    "max": 1.8362,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2876,
+    "p99": 0.728,
+    "max": 1.7298,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 5 ++.png",
+   "match_rmse_13": 0.01424,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3232,
+    "p99": 0.8315,
+    "max": 1.8137,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3053,
+    "p99": 0.758,
+    "max": 1.7642,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 4 +.png",
+   "match_rmse_13": 0.01427,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3189,
+    "p99": 0.7895,
+    "max": 1.4976,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3006,
+    "p99": 0.7084,
+    "max": 1.4523,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 1 --.png",
+   "match_rmse_13": 0.02411,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3192,
+    "p99": 0.8146,
+    "max": 1.398,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3002,
+    "p99": 0.7218,
+    "max": 1.3944,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Cold 2 -.png",
+   "match_rmse_13": 0.02187,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3161,
+    "p99": 0.8315,
+    "max": 1.4754,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2977,
+    "p99": 0.7397,
+    "max": 1.168,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 3.png",
+   "match_rmse_13": 0.01632,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3444,
+    "p99": 0.8697,
+    "max": 1.5133,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3255,
+    "p99": 0.7802,
+    "max": 1.3003,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm_ppp",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 6 +++.png",
+   "match_rmse_13": 0.01226,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3449,
+    "p99": 0.84,
+    "max": 1.4543,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3272,
+    "p99": 0.7388,
+    "max": 1.2721,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 5 ++.png",
+   "match_rmse_13": 0.01278,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3293,
+    "p99": 0.8404,
+    "max": 1.3842,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3121,
+    "p99": 0.7506,
+    "max": 1.1683,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 4 +.png",
+   "match_rmse_13": 0.01553,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3171,
+    "p99": 0.8656,
+    "max": 1.357,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2992,
+    "p99": 0.7882,
+    "max": 1.2506,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 1 --.png",
+   "match_rmse_13": 0.02427,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3516,
+    "p99": 0.8654,
+    "max": 1.4552,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3327,
+    "p99": 0.7757,
+    "max": 1.2463,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_100uv_warm_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-100UV+ Warm 2 -.png",
+   "match_rmse_13": 0.02097,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.3538,
+    "p99": 0.8546,
+    "max": 1.4048,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.3375,
+    "p99": 0.761,
+    "max": 1.2047,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 3.png",
+   "match_rmse_13": 0.01891,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2825,
+    "p99": 1.1259,
+    "max": 2.7567,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2682,
+    "p99": 1.1141,
+    "max": 2.7264,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 5 ++.png",
+   "match_rmse_13": 0.0168,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2877,
+    "p99": 1.1695,
+    "max": 2.9416,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2735,
+    "p99": 1.1597,
+    "max": 2.8872,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 4 +.png",
+   "match_rmse_13": 0.01717,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2827,
+    "p99": 1.1176,
+    "max": 2.5794,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2683,
+    "p99": 1.1076,
+    "max": 2.638,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 1 --.png",
+   "match_rmse_13": 0.0198,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2474,
+    "p99": 0.9005,
+    "max": 3.316,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2332,
+    "p99": 0.8737,
+    "max": 3.1752,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 2 -.png",
+   "match_rmse_13": 0.02086,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2503,
+    "p99": 0.8823,
+    "max": 2.8743,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.235,
+    "p99": 0.8453,
+    "max": 3.0118,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 3.png",
+   "match_rmse_13": 0.01938,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2869,
+    "p99": 1.1211,
+    "max": 2.9803,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2722,
+    "p99": 1.1057,
+    "max": 2.9224,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 5 ++.png",
+   "match_rmse_13": 0.01962,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2745,
+    "p99": 1.1099,
+    "max": 3.208,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2602,
+    "p99": 1.0959,
+    "max": 3.1423,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold_pp_alt",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 6 ++ Alt.png",
+   "match_rmse_13": 0.02086,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2943,
+    "p99": 1.0545,
+    "max": 2.6765,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2779,
+    "p99": 1.0304,
+    "max": 2.5599,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 4 +.png",
+   "match_rmse_13": 0.02041,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2814,
+    "p99": 1.0546,
+    "max": 2.9947,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2673,
+    "p99": 1.0389,
+    "max": 3.0007,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 1 --.png",
+   "match_rmse_13": 0.02457,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2406,
+    "p99": 0.8626,
+    "max": 2.7122,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2259,
+    "p99": 0.8332,
+    "max": 2.682,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Cold 2 -.png",
+   "match_rmse_13": 0.0209,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2504,
+    "p99": 0.8785,
+    "max": 2.84,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2349,
+    "p99": 0.8413,
+    "max": 2.8528,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_warm",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Warm 3.png",
+   "match_rmse_13": 0.01872,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2731,
+    "p99": 1.0025,
+    "max": 2.4767,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2583,
+    "p99": 0.9838,
+    "max": 2.3261,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_warm_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Warm 5 ++.png",
+   "match_rmse_13": 0.01892,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2711,
+    "p99": 0.9942,
+    "max": 2.3243,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2571,
+    "p99": 0.9778,
+    "max": 2.2631,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_warm_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Warm 4 +.png",
+   "match_rmse_13": 0.01816,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2737,
+    "p99": 1.0015,
+    "max": 2.5154,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2589,
+    "p99": 0.9837,
+    "max": 2.502,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_warm_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Warm 1 --.png",
+   "match_rmse_13": 0.02427,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2398,
+    "p99": 0.8331,
+    "max": 2.7816,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2258,
+    "p99": 0.8065,
+    "max": 2.6642,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_680_warm_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-680 Warm 2 -.png",
+   "match_rmse_13": 0.0206,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2423,
+    "p99": 0.8109,
+    "max": 2.2486,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.228,
+    "p99": 0.7765,
+    "max": 2.2292,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 3.png",
+   "match_rmse_13": 0.01727,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2718,
+    "p99": 1.2444,
+    "max": 3.408,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2587,
+    "p99": 1.2331,
+    "max": 3.3705,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_ppp",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 6 +++.png",
+   "match_rmse_13": 0.0128,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2486,
+    "p99": 0.9298,
+    "max": 2.5103,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2354,
+    "p99": 0.9151,
+    "max": 2.5099,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 5 ++.png",
+   "match_rmse_13": 0.01382,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2633,
+    "p99": 1.1191,
+    "max": 3.3704,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2505,
+    "p99": 1.1036,
+    "max": 3.3589,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 4 +.png",
+   "match_rmse_13": 0.01656,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2725,
+    "p99": 1.2185,
+    "max": 3.1211,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2594,
+    "p99": 1.2071,
+    "max": 3.1092,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 1 --.png",
+   "match_rmse_13": 0.02148,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.231,
+    "p99": 0.8469,
+    "max": 3.1404,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2162,
+    "p99": 0.8144,
+    "max": 3.1062,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 2 -.png",
+   "match_rmse_13": 0.01886,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2376,
+    "p99": 0.901,
+    "max": 3.044,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2241,
+    "p99": 0.8765,
+    "max": 2.7846,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_cold",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Cold 3.png",
+   "match_rmse_13": 0.01954,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.281,
+    "p99": 1.3211,
+    "max": 3.253,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2689,
+    "p99": 1.3112,
+    "max": 3.1936,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_cold_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Cold 5 ++.png",
+   "match_rmse_13": 0.01902,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2627,
+    "p99": 1.0419,
+    "max": 3.2812,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2492,
+    "p99": 1.0214,
+    "max": 3.2703,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_cold_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Cold 4 +.png",
+   "match_rmse_13": 0.02006,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2847,
+    "p99": 1.3602,
+    "max": 3.839,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2723,
+    "p99": 1.3488,
+    "max": 3.6706,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Cold 1 --.png",
+   "match_rmse_13": 0.02179,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2319,
+    "p99": 0.892,
+    "max": 3.3199,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2172,
+    "p99": 0.8572,
+    "max": 3.3178,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Cold 2 -.png",
+   "match_rmse_13": 0.01854,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2383,
+    "p99": 0.8881,
+    "max": 2.9309,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2238,
+    "p99": 0.8574,
+    "max": 2.8484,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_warm",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Warm 3.png",
+   "match_rmse_13": 0.01656,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2714,
+    "p99": 1.2158,
+    "max": 3.2542,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.258,
+    "p99": 1.2042,
+    "max": 3.2434,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_warm_pp",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Warm 5 ++.png",
+   "match_rmse_13": 0.01681,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2679,
+    "p99": 1.1891,
+    "max": 3.7154,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2551,
+    "p99": 1.1787,
+    "max": 3.7296,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_warm_p",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Warm 4 +.png",
+   "match_rmse_13": 0.01756,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2764,
+    "p99": 1.318,
+    "max": 3.8194,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2637,
+    "p99": 1.3126,
+    "max": 3.7168,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_warm_mm",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Warm 1 --.png",
+   "match_rmse_13": 0.02109,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2274,
+    "p99": 0.8205,
+    "max": 2.8872,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2127,
+    "p99": 0.7862,
+    "max": 2.8614,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_px_70_warm_m",
+   "source_hald": "Color/Polaroid/Polaroid PX-70 Warm 2 -.png",
+   "match_rmse_13": 0.01775,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2308,
+    "p99": 0.8643,
+    "max": 2.5047,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2172,
+    "p99": 0.8408,
+    "max": 2.5275,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 4.png",
+   "match_rmse_13": 0.01601,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2045,
+    "p99": 0.5424,
+    "max": 1.2873,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1897,
+    "p99": 0.4961,
+    "max": 1.185,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_pp",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 6 ++.png",
+   "match_rmse_13": 0.01622,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2134,
+    "p99": 0.6402,
+    "max": 1.679,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1996,
+    "p99": 0.609,
+    "max": 1.7051,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_p",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 5 +.png",
+   "match_rmse_13": 0.01247,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1995,
+    "p99": 0.5095,
+    "max": 1.1107,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1846,
+    "p99": 0.4536,
+    "max": 1.0683,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_mmm",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 1 ---.png",
+   "match_rmse_13": 0.01974,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2098,
+    "p99": 0.7082,
+    "max": 2.6511,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1959,
+    "p99": 0.6683,
+    "max": 2.3819,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_mm",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 2 --.png",
+   "match_rmse_13": 0.01992,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2084,
+    "p99": 0.6603,
+    "max": 1.9184,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1946,
+    "p99": 0.6205,
+    "max": 1.8224,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_m",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) 3 -.png",
+   "match_rmse_13": 0.01751,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2085,
+    "p99": 0.6051,
+    "max": 1.4052,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1947,
+    "p99": 0.5681,
+    "max": 1.3666,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_cold",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) Cold 4.png",
+   "match_rmse_13": 0.01509,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2162,
+    "p99": 0.5759,
+    "max": 1.3007,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2003,
+    "p99": 0.5245,
+    "max": 1.1565,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_cold_mmm",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) Cold 1 ---.png",
+   "match_rmse_13": 0.02005,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2131,
+    "p99": 0.7127,
+    "max": 2.3803,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1994,
+    "p99": 0.676,
+    "max": 2.414,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) Cold 2 --.png",
+   "match_rmse_13": 0.0194,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2104,
+    "p99": 0.672,
+    "max": 2.0103,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1966,
+    "p99": 0.6322,
+    "max": 1.9246,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_consumer/polaroid_time_zero_expired_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid Time Zero (Expired) Cold 3 -.png",
+   "match_rmse_13": 0.01685,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2184,
+    "p99": 0.6379,
+    "max": 1.6555,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.204,
+    "p99": 0.5979,
+    "max": 1.5713,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c",
+   "source_hald": "Color/Fuji/Fuji FP-100c 3.png",
+   "match_rmse_13": 0.0259,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2134,
+    "p99": 0.783,
+    "max": 2.9015,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2023,
+    "p99": 0.7578,
+    "max": 2.809,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_ppp",
+   "source_hald": "Color/Fuji/Fuji FP-100c 8 +++.png",
+   "match_rmse_13": 0.02408,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2255,
+    "p99": 0.7524,
+    "max": 2.3937,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2126,
+    "p99": 0.7176,
+    "max": 2.2892,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_pp",
+   "source_hald": "Color/Fuji/Fuji FP-100c 6 ++.png",
+   "match_rmse_13": 0.02792,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2176,
+    "p99": 0.816,
+    "max": 2.6224,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2066,
+    "p99": 0.7897,
+    "max": 2.6839,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_pp_alt",
+   "source_hald": "Color/Fuji/Fuji FP-100c 7 ++ Alt.png",
+   "match_rmse_13": 0.02292,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2271,
+    "p99": 0.7853,
+    "max": 3.1924,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2139,
+    "p99": 0.751,
+    "max": 3.0045,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_p",
+   "source_hald": "Color/Fuji/Fuji FP-100c 5 +.png",
+   "match_rmse_13": 0.02717,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2159,
+    "p99": 0.8147,
+    "max": 2.7165,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2048,
+    "p99": 0.7908,
+    "max": 2.6213,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_mm",
+   "source_hald": "Color/Fuji/Fuji FP-100c 1 --.png",
+   "match_rmse_13": 0.02628,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2116,
+    "p99": 0.7741,
+    "max": 3.6965,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2011,
+    "p99": 0.7531,
+    "max": 3.6718,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_m",
+   "source_hald": "Color/Fuji/Fuji FP-100c 2 -.png",
+   "match_rmse_13": 0.02688,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2046,
+    "p99": 0.763,
+    "max": 3.605,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1936,
+    "p99": 0.7414,
+    "max": 3.618,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_alt",
+   "source_hald": "Color/Fuji/Fuji FP-100c 4 Alt.png",
+   "match_rmse_13": 0.02111,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.157,
+    "p99": 0.5416,
+    "max": 1.5774,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1414,
+    "p99": 0.4818,
+    "max": 1.2623,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_cool",
+   "source_hald": "Color/Fuji/Fuji FP-100c Cool 3.png",
+   "match_rmse_13": 0.02564,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2136,
+    "p99": 0.7783,
+    "max": 2.8112,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2022,
+    "p99": 0.7519,
+    "max": 2.6421,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_cool_pp",
+   "source_hald": "Color/Fuji/Fuji FP-100c Cool 5 ++.png",
+   "match_rmse_13": 0.02629,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2177,
+    "p99": 0.7784,
+    "max": 2.4741,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.206,
+    "p99": 0.7502,
+    "max": 2.3777,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_cool_p",
+   "source_hald": "Color/Fuji/Fuji FP-100c Cool 4 +.png",
+   "match_rmse_13": 0.02746,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2145,
+    "p99": 0.7865,
+    "max": 2.7096,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2034,
+    "p99": 0.7645,
+    "max": 2.7286,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_cool_mm",
+   "source_hald": "Color/Fuji/Fuji FP-100c Cool 1 --.png",
+   "match_rmse_13": 0.02829,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2103,
+    "p99": 0.7909,
+    "max": 3.8368,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2007,
+    "p99": 0.7754,
+    "max": 3.8283,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_cool_m",
+   "source_hald": "Color/Fuji/Fuji FP-100c Cool 2 -.png",
+   "match_rmse_13": 0.02736,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2041,
+    "p99": 0.7665,
+    "max": 3.7253,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1934,
+    "p99": 0.7465,
+    "max": 3.5269,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 3.png",
+   "match_rmse_13": 0.02657,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2356,
+    "p99": 0.9164,
+    "max": 3.3785,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2225,
+    "p99": 0.893,
+    "max": 3.3993,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_ppp",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 7 +++.png",
+   "match_rmse_13": 0.02261,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2332,
+    "p99": 0.9125,
+    "max": 3.7672,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2195,
+    "p99": 0.8837,
+    "max": 3.7438,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_pp",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 5 ++.png",
+   "match_rmse_13": 0.02336,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2307,
+    "p99": 0.9066,
+    "max": 3.5393,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2173,
+    "p99": 0.8852,
+    "max": 3.546,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_pp_alt",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 6 ++ Alt.png",
+   "match_rmse_13": 0.02422,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2365,
+    "p99": 0.941,
+    "max": 3.524,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2231,
+    "p99": 0.9201,
+    "max": 3.504,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_p",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 4 +.png",
+   "match_rmse_13": 0.02646,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2343,
+    "p99": 0.9215,
+    "max": 3.8068,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2211,
+    "p99": 0.8981,
+    "max": 3.4751,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_mm",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 1 --.png",
+   "match_rmse_13": 0.02684,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2438,
+    "p99": 1.0143,
+    "max": 3.4239,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2317,
+    "p99": 0.9993,
+    "max": 3.467,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_100c_negative_m",
+   "source_hald": "Color/Fuji/Fuji FP-100c Negative 2 -.png",
+   "match_rmse_13": 0.02602,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2352,
+    "p99": 0.9051,
+    "max": 3.2449,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2214,
+    "p99": 0.8804,
+    "max": 3.2278,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 3.png",
+   "match_rmse_13": 0.0212,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1358,
+    "p99": 0.6599,
+    "max": 2.3388,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1304,
+    "p99": 0.6511,
+    "max": 2.2758,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_ppp",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 6 +++.png",
+   "match_rmse_13": 0.01702,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1299,
+    "p99": 0.5743,
+    "max": 1.9596,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1241,
+    "p99": 0.5647,
+    "max": 1.8791,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_pp",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 5 ++.png",
+   "match_rmse_13": 0.0184,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1346,
+    "p99": 0.6517,
+    "max": 2.2596,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.129,
+    "p99": 0.6421,
+    "max": 2.1874,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_p",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 4 +.png",
+   "match_rmse_13": 0.01953,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1365,
+    "p99": 0.6863,
+    "max": 2.4188,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1311,
+    "p99": 0.6795,
+    "max": 2.3874,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_mm",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 1 --.png",
+   "match_rmse_13": 0.0218,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1377,
+    "p99": 0.5459,
+    "max": 1.8621,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1323,
+    "p99": 0.535,
+    "max": 1.8397,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_m",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b 2 -.png",
+   "match_rmse_13": 0.02285,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1256,
+    "p99": 0.4856,
+    "max": 1.3543,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1197,
+    "p99": 0.4714,
+    "max": 1.3107,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_hc",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b HC.png",
+   "match_rmse_13": 0.02184,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1389,
+    "p99": 0.7154,
+    "max": 2.5837,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1337,
+    "p99": 0.7085,
+    "max": 2.4926,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 3.png",
+   "match_rmse_13": 0.02143,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1276,
+    "p99": 0.5783,
+    "max": 2.2204,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.122,
+    "p99": 0.567,
+    "max": 2.1292,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_ppp",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 6 +++.png",
+   "match_rmse_13": 0.01156,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1401,
+    "p99": 0.6763,
+    "max": 2.8781,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1354,
+    "p99": 0.6715,
+    "max": 2.7783,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_pp",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 5 ++.png",
+   "match_rmse_13": 0.01683,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1289,
+    "p99": 0.6058,
+    "max": 2.2151,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1234,
+    "p99": 0.5987,
+    "max": 2.188,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_p",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 4 +.png",
+   "match_rmse_13": 0.02271,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1285,
+    "p99": 0.6226,
+    "max": 2.2498,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1233,
+    "p99": 0.6144,
+    "max": 2.3296,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_mm",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 1 --.png",
+   "match_rmse_13": 0.02001,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1149,
+    "p99": 0.423,
+    "max": 1.2028,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.109,
+    "p99": 0.4038,
+    "max": 1.1927,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_m",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative 2 -.png",
+   "match_rmse_13": 0.01996,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1167,
+    "p99": 0.4511,
+    "max": 1.376,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.111,
+    "p99": 0.4349,
+    "max": 1.4181,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/fuji_fp_3000b_negative_early",
+   "source_hald": "Black-and-White/Fuji/Fuji FP-3000b Negative Early.png",
+   "match_rmse_13": 0.01846,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1277,
+    "p99": 0.5864,
+    "max": 2.073,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1223,
+    "p99": 0.5811,
+    "max": 2.1342,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 3.png",
+   "match_rmse_13": 0.02569,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1257,
+    "p99": 0.46,
+    "max": 1.9329,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1198,
+    "p99": 0.4426,
+    "max": 1.9329,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_pp",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 5 ++.png",
+   "match_rmse_13": 0.02477,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1206,
+    "p99": 0.452,
+    "max": 1.7666,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1148,
+    "p99": 0.434,
+    "max": 1.7739,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_p",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 4 +.png",
+   "match_rmse_13": 0.02479,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1212,
+    "p99": 0.449,
+    "max": 1.7666,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1153,
+    "p99": 0.4329,
+    "max": 1.7739,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_mm",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 1 --.png",
+   "match_rmse_13": 0.02369,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1316,
+    "p99": 0.4912,
+    "max": 2.5414,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1258,
+    "p99": 0.476,
+    "max": 2.5414,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_m",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 2 -.png",
+   "match_rmse_13": 0.02486,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1306,
+    "p99": 0.4775,
+    "max": 2.129,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1247,
+    "p99": 0.4622,
+    "max": 2.1792,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_negative",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 Negative 2.png",
+   "match_rmse_13": 0.0227,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1155,
+    "p99": 0.4174,
+    "max": 1.3633,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1097,
+    "p99": 0.3989,
+    "max": 1.3527,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_negative_p",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 Negative 3 +.png",
+   "match_rmse_13": 0.01825,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1173,
+    "p99": 0.396,
+    "max": 1.1175,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1107,
+    "p99": 0.3711,
+    "max": 1.1434,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_negative_m",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 Negative 1 -.png",
+   "match_rmse_13": 0.02134,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1158,
+    "p99": 0.4147,
+    "max": 1.3462,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1098,
+    "p99": 0.3933,
+    "max": 1.2818,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_665_negative_hc",
+   "source_hald": "Black-and-White/Polaroid/Polaroid 665 Negative HC.png",
+   "match_rmse_13": 0.01978,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1106,
+    "p99": 0.4212,
+    "max": 1.6272,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1048,
+    "p99": 0.404,
+    "max": 1.6033,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_ppp",
+   "source_hald": "Color/Polaroid/Polaroid 669 6 +++.png",
+   "match_rmse_13": 0.02079,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2399,
+    "p99": 0.7496,
+    "max": 2.5026,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2243,
+    "p99": 0.7045,
+    "max": 2.4905,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_pp",
+   "source_hald": "Color/Polaroid/Polaroid 669 5 ++.png",
+   "match_rmse_13": 0.02237,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2384,
+    "p99": 0.7516,
+    "max": 2.5853,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2233,
+    "p99": 0.7051,
+    "max": 2.3291,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_p",
+   "source_hald": "Color/Polaroid/Polaroid 669 4 +.png",
+   "match_rmse_13": 0.0242,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2377,
+    "p99": 0.7455,
+    "max": 2.2184,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2229,
+    "p99": 0.7048,
+    "max": 2.2336,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_mm",
+   "source_hald": "Color/Polaroid/Polaroid 669 1 --.png",
+   "match_rmse_13": 0.02767,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2232,
+    "p99": 0.723,
+    "max": 2.136,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2107,
+    "p99": 0.6928,
+    "max": 2.0709,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_m",
+   "source_hald": "Color/Polaroid/Polaroid 669 2 -.png",
+   "match_rmse_13": 0.02972,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2204,
+    "p99": 0.7117,
+    "max": 2.0539,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2074,
+    "p99": 0.6688,
+    "max": 2.0512,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_cold",
+   "source_hald": "Color/Polaroid/Polaroid 669 Cold 3.png",
+   "match_rmse_13": 0.02374,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2385,
+    "p99": 0.8093,
+    "max": 3.1528,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2249,
+    "p99": 0.7794,
+    "max": 2.9627,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_cold_p",
+   "source_hald": "Color/Polaroid/Polaroid 669 Cold 4 +.png",
+   "match_rmse_13": 0.02233,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.239,
+    "p99": 0.8145,
+    "max": 2.7888,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.225,
+    "p99": 0.7807,
+    "max": 2.6568,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid 669 Cold 1 --.png",
+   "match_rmse_13": 0.02331,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2389,
+    "p99": 0.7516,
+    "max": 2.2905,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2248,
+    "p99": 0.7148,
+    "max": 2.1882,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_669_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid 669 Cold 2 -.png",
+   "match_rmse_13": 0.02235,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2287,
+    "p99": 0.7141,
+    "max": 2.3789,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2143,
+    "p99": 0.6694,
+    "max": 2.4489,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_pp",
+   "source_hald": "Color/Polaroid/Polaroid 690 5 ++.png",
+   "match_rmse_13": 0.01843,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2079,
+    "p99": 0.6708,
+    "max": 3.0127,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1948,
+    "p99": 0.628,
+    "max": 2.9336,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_p",
+   "source_hald": "Color/Polaroid/Polaroid 690 4 +.png",
+   "match_rmse_13": 0.02409,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2017,
+    "p99": 0.7135,
+    "max": 2.8336,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1903,
+    "p99": 0.6811,
+    "max": 2.9282,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_mm",
+   "source_hald": "Color/Polaroid/Polaroid 690 1 --.png",
+   "match_rmse_13": 0.02383,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1822,
+    "p99": 0.6246,
+    "max": 2.2602,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1716,
+    "p99": 0.5921,
+    "max": 2.3141,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_m",
+   "source_hald": "Color/Polaroid/Polaroid 690 2 -.png",
+   "match_rmse_13": 0.02447,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1853,
+    "p99": 0.631,
+    "max": 2.445,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1743,
+    "p99": 0.5989,
+    "max": 2.5821,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_cold",
+   "source_hald": "Color/Polaroid/Polaroid 690 Cold 3.png",
+   "match_rmse_13": 0.02488,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2021,
+    "p99": 0.7124,
+    "max": 2.7986,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1914,
+    "p99": 0.6885,
+    "max": 2.7525,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_cold_pp",
+   "source_hald": "Color/Polaroid/Polaroid 690 Cold 5 ++.png",
+   "match_rmse_13": 0.02131,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2093,
+    "p99": 0.6809,
+    "max": 2.5576,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1966,
+    "p99": 0.6386,
+    "max": 2.5031,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_cold_p",
+   "source_hald": "Color/Polaroid/Polaroid 690 Cold 4 +.png",
+   "match_rmse_13": 0.02474,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2055,
+    "p99": 0.7076,
+    "max": 2.3827,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1941,
+    "p99": 0.6787,
+    "max": 2.2562,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_cold_mm",
+   "source_hald": "Color/Polaroid/Polaroid 690 Cold 1 --.png",
+   "match_rmse_13": 0.02418,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1842,
+    "p99": 0.6204,
+    "max": 2.273,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1731,
+    "p99": 0.5895,
+    "max": 2.2961,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_cold_m",
+   "source_hald": "Color/Polaroid/Polaroid 690 Cold 2 -.png",
+   "match_rmse_13": 0.02398,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1992,
+    "p99": 0.6805,
+    "max": 2.3413,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1878,
+    "p99": 0.6519,
+    "max": 2.2514,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_warm",
+   "source_hald": "Color/Polaroid/Polaroid 690 Warm 3.png",
+   "match_rmse_13": 0.02432,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1972,
+    "p99": 0.6902,
+    "max": 1.8853,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1863,
+    "p99": 0.6599,
+    "max": 1.8871,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_warm_pp",
+   "source_hald": "Color/Polaroid/Polaroid 690 Warm 5 ++.png",
+   "match_rmse_13": 0.01996,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2068,
+    "p99": 0.6803,
+    "max": 2.0447,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1944,
+    "p99": 0.6387,
+    "max": 1.9511,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_warm_p",
+   "source_hald": "Color/Polaroid/Polaroid 690 Warm 4 +.png",
+   "match_rmse_13": 0.02424,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2019,
+    "p99": 0.7013,
+    "max": 1.8501,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1906,
+    "p99": 0.6687,
+    "max": 1.836,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_warm_mm",
+   "source_hald": "Color/Polaroid/Polaroid 690 Warm 1 --.png",
+   "match_rmse_13": 0.02311,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1909,
+    "p99": 0.6248,
+    "max": 2.2136,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1802,
+    "p99": 0.5919,
+    "max": 2.2901,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "instant_pro/polaroid_690_warm_m",
+   "source_hald": "Color/Polaroid/Polaroid 690 Warm 2 -.png",
+   "match_rmse_13": 0.02456,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1843,
+    "p99": 0.6123,
+    "max": 1.9543,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1727,
+    "p99": 0.5735,
+    "max": 1.9332,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/agfa_ultra_color_100",
+   "source_hald": "Color/Agfa/Agfa Ultra Color 100.png",
+   "match_rmse_13": 0.02375,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1353,
+    "p99": 0.5108,
+    "max": 1.998,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1223,
+    "p99": 0.4586,
+    "max": 1.99,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/agfa_vista_200",
+   "source_hald": "Color/Agfa/Agfa Vista 200.png",
+   "match_rmse_13": 0.0208,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1403,
+    "p99": 0.5071,
+    "max": 1.4746,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1241,
+    "p99": 0.436,
+    "max": 1.352,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/fuji_superia_200",
+   "source_hald": "Color/Fuji/Fuji Superia 200.png",
+   "match_rmse_13": 0.02382,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1516,
+    "p99": 0.5345,
+    "max": 1.9295,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1382,
+    "p99": 0.4792,
+    "max": 1.8333,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/fuji_superia_hg_1600",
+   "source_hald": "Color/Fuji/Fuji Superia HG 1600.png",
+   "match_rmse_13": 0.02092,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1907,
+    "p99": 0.7218,
+    "max": 3.1834,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1725,
+    "p99": 0.6679,
+    "max": 3.1587,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/fuji_superia_reala_100",
+   "source_hald": "Color/Fuji/Fuji Superia Reala 100.png",
+   "match_rmse_13": 0.02647,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.162,
+    "p99": 0.5784,
+    "max": 1.5446,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1435,
+    "p99": 0.5173,
+    "max": 1.5228,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/fuji_superia_x_tra_800",
+   "source_hald": "Color/Fuji/Fuji Superia X-Tra 800.png",
+   "match_rmse_13": 0.02817,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1802,
+    "p99": 0.6738,
+    "max": 2.3204,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1637,
+    "p99": 0.6236,
+    "max": 2.2802,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_ektar_100",
+   "source_hald": "Color/Kodak/Kodak Ektar 100.png",
+   "match_rmse_13": 0.02202,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1783,
+    "p99": 0.5673,
+    "max": 1.7784,
+    "points": 16777216
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1505,
+    "p99": 0.4977,
+    "max": 1.7606,
+    "points": 16777216
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_elite_100_xpro",
+   "source_hald": "Color/Kodak/Kodak Elite 100 XPRO.png",
+   "match_rmse_13": 0.02279,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1647,
+    "p99": 0.5676,
+    "max": 1.802,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1486,
+    "p99": 0.5062,
+    "max": 1.7682,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_elite_color_200",
+   "source_hald": "Color/Kodak/Kodak Elite Color 200.png",
+   "match_rmse_13": 0.02163,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1667,
+    "p99": 0.5509,
+    "max": 1.7754,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1478,
+    "p99": 0.4893,
+    "max": 1.4587,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_elite_color_400",
+   "source_hald": "Color/Kodak/Kodak Elite Color 400.png",
+   "match_rmse_13": 0.02393,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1571,
+    "p99": 0.5558,
+    "max": 1.7171,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1401,
+    "p99": 0.4922,
+    "max": 1.3037,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_portra_160_nc",
+   "source_hald": "Color/Kodak/Kodak Portra 160 NC 2.png",
+   "match_rmse_13": 0.02118,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2138,
+    "p99": 0.6785,
+    "max": 2.5481,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2003,
+    "p99": 0.6414,
+    "max": 2.4805,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/kodak_portra_160_vc",
+   "source_hald": "Color/Kodak/Kodak Portra 160 VC 2.png",
+   "match_rmse_13": 0.02106,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2134,
+    "p99": 0.686,
+    "max": 2.3465,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2006,
+    "p99": 0.6572,
+    "max": 2.1118,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_color/lomography_redscale_100",
+   "source_hald": "Color/Lomography/Lomography Redscale 100.png",
+   "match_rmse_13": 0.02607,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1915,
+    "p99": 0.6487,
+    "max": 2.4629,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1736,
+    "p99": 0.5871,
+    "max": 2.515,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_160c",
+   "source_hald": "Color/Fuji/Fuji 160C 2.png",
+   "match_rmse_13": 0.02153,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1827,
+    "p99": 0.5745,
+    "max": 1.753,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1707,
+    "p99": 0.539,
+    "max": 1.5654,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_160c_pp",
+   "source_hald": "Color/Fuji/Fuji 160C 4 ++.png",
+   "match_rmse_13": 0.02102,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1885,
+    "p99": 0.5793,
+    "max": 1.7197,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1756,
+    "p99": 0.5379,
+    "max": 1.4355,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_160c_p",
+   "source_hald": "Color/Fuji/Fuji 160C 3 +.png",
+   "match_rmse_13": 0.02083,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1856,
+    "p99": 0.5742,
+    "max": 1.7815,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1732,
+    "p99": 0.5346,
+    "max": 1.5188,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_160c_m",
+   "source_hald": "Color/Fuji/Fuji 160C 1 -.png",
+   "match_rmse_13": 0.022,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.188,
+    "p99": 0.5794,
+    "max": 1.8059,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1755,
+    "p99": 0.5401,
+    "max": 1.5008,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_400h",
+   "source_hald": "Color/Fuji/Fuji 400H 2.png",
+   "match_rmse_13": 0.02133,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1866,
+    "p99": 0.582,
+    "max": 1.5517,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1743,
+    "p99": 0.5438,
+    "max": 1.5874,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_400h_pp",
+   "source_hald": "Color/Fuji/Fuji 400H 4 ++.png",
+   "match_rmse_13": 0.02109,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1871,
+    "p99": 0.5887,
+    "max": 1.9069,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1747,
+    "p99": 0.5478,
+    "max": 1.6351,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_400h_p",
+   "source_hald": "Color/Fuji/Fuji 400H 3 +.png",
+   "match_rmse_13": 0.02128,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1872,
+    "p99": 0.5889,
+    "max": 2.0528,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.175,
+    "p99": 0.5519,
+    "max": 1.6955,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_400h_m",
+   "source_hald": "Color/Fuji/Fuji 400H 1 -.png",
+   "match_rmse_13": 0.02138,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1919,
+    "p99": 0.5856,
+    "max": 1.6509,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1789,
+    "p99": 0.542,
+    "max": 1.6072,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_800z",
+   "source_hald": "Color/Fuji/Fuji 800Z 2.png",
+   "match_rmse_13": 0.02184,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1947,
+    "p99": 0.6122,
+    "max": 1.6197,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.182,
+    "p99": 0.5749,
+    "max": 1.6909,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_800z_pp",
+   "source_hald": "Color/Fuji/Fuji 800Z 4 ++.png",
+   "match_rmse_13": 0.02244,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.198,
+    "p99": 0.6328,
+    "max": 1.6455,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1848,
+    "p99": 0.588,
+    "max": 1.504,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_800z_p",
+   "source_hald": "Color/Fuji/Fuji 800Z 3 +.png",
+   "match_rmse_13": 0.02231,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1965,
+    "p99": 0.6238,
+    "max": 1.7033,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1833,
+    "p99": 0.5799,
+    "max": 1.4285,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/fuji_800z_m",
+   "source_hald": "Color/Fuji/Fuji 800Z 1 -.png",
+   "match_rmse_13": 0.02266,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1981,
+    "p99": 0.6108,
+    "max": 1.8079,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1851,
+    "p99": 0.5718,
+    "max": 1.6977,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/ilford_hp_5",
+   "source_hald": "Black-and-White/Ilford/Ilford HP5 2.png",
+   "match_rmse_13": 0.02292,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1157,
+    "p99": 0.4242,
+    "max": 1.0645,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1096,
+    "p99": 0.4043,
+    "max": 1.0709,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/ilford_hp_5_pp",
+   "source_hald": "Black-and-White/Ilford/Ilford HP5 4 ++.png",
+   "match_rmse_13": 0.02035,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1125,
+    "p99": 0.4124,
+    "max": 0.9704,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": null,
+   "pass": true,
+   "pass_rgb16": null
+  },
+  {
+   "id": "negative_new/ilford_hp_5_p",
+   "source_hald": "Black-and-White/Ilford/Ilford HP5 3 +.png",
+   "match_rmse_13": 0.02204,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1134,
+    "p99": 0.4099,
+    "max": 0.9848,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": null,
+   "pass": true,
+   "pass_rgb16": null
+  },
+  {
+   "id": "negative_new/ilford_hp_5_m",
+   "source_hald": "Black-and-White/Ilford/Ilford HP5 1 -.png",
+   "match_rmse_13": 0.02434,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.12,
+    "p99": 0.4318,
+    "max": 1.1216,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.114,
+    "p99": 0.4113,
+    "max": 1.1108,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_160",
+   "source_hald": "Color/Kodak/Kodak Portra 160 2.png",
+   "match_rmse_13": 0.02125,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1937,
+    "p99": 0.6186,
+    "max": 2.2264,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1811,
+    "p99": 0.5842,
+    "max": 1.983,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_160_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 160 4 ++.png",
+   "match_rmse_13": 0.02113,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1911,
+    "p99": 0.6199,
+    "max": 1.8948,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1784,
+    "p99": 0.5845,
+    "max": 1.644,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_160_p",
+   "source_hald": "Color/Kodak/Kodak Portra 160 3 +.png",
+   "match_rmse_13": 0.02136,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1932,
+    "p99": 0.6224,
+    "max": 1.9708,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1806,
+    "p99": 0.5854,
+    "max": 1.9277,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_160_m",
+   "source_hald": "Color/Kodak/Kodak Portra 160 1 -.png",
+   "match_rmse_13": 0.02178,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1984,
+    "p99": 0.6205,
+    "max": 1.861,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1851,
+    "p99": 0.5819,
+    "max": 1.8971,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_400",
+   "source_hald": "Color/Kodak/Kodak Portra 400 2.png",
+   "match_rmse_13": 0.02333,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1929,
+    "p99": 0.6544,
+    "max": 2.2304,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1811,
+    "p99": 0.6263,
+    "max": 2.1031,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_400_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 400 4 ++.png",
+   "match_rmse_13": 0.02313,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1947,
+    "p99": 0.6546,
+    "max": 2.0712,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1824,
+    "p99": 0.6237,
+    "max": 2.0039,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_400_p",
+   "source_hald": "Color/Kodak/Kodak Portra 400 3 +.png",
+   "match_rmse_13": 0.02238,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.193,
+    "p99": 0.6397,
+    "max": 2.1963,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.181,
+    "p99": 0.6093,
+    "max": 2.121,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_400_m",
+   "source_hald": "Color/Kodak/Kodak Portra 400 1 -.png",
+   "match_rmse_13": 0.02289,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1961,
+    "p99": 0.6478,
+    "max": 2.2361,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1844,
+    "p99": 0.6185,
+    "max": 2.1817,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_800",
+   "source_hald": "Color/Kodak/Kodak Portra 800 2.png",
+   "match_rmse_13": 0.02409,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1795,
+    "p99": 0.6034,
+    "max": 1.6428,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1686,
+    "p99": 0.5676,
+    "max": 1.4355,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_800_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 800 4 ++.png",
+   "match_rmse_13": 0.02386,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1887,
+    "p99": 0.6767,
+    "max": 2.0665,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1772,
+    "p99": 0.6428,
+    "max": 2.0146,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_800_p",
+   "source_hald": "Color/Kodak/Kodak Portra 800 3 +.png",
+   "match_rmse_13": 0.02354,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1811,
+    "p99": 0.6128,
+    "max": 1.8227,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1699,
+    "p99": 0.5784,
+    "max": 1.5576,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_800_m",
+   "source_hald": "Color/Kodak/Kodak Portra 800 1 -.png",
+   "match_rmse_13": 0.02329,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1809,
+    "p99": 0.5948,
+    "max": 1.6055,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1699,
+    "p99": 0.5616,
+    "max": 1.4812,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_portra_800_hc",
+   "source_hald": "Color/Kodak/Kodak Portra 800 HC.png",
+   "match_rmse_13": 0.02347,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1822,
+    "p99": 0.6215,
+    "max": 1.8158,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1714,
+    "p99": 0.5903,
+    "max": 1.5551,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tmax_3200",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 2.png",
+   "match_rmse_13": 0.01921,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1296,
+    "p99": 0.4675,
+    "max": 1.81,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1239,
+    "p99": 0.454,
+    "max": 1.8322,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tmax_3200_pp",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 5 ++.png",
+   "match_rmse_13": 0.01634,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1302,
+    "p99": 0.45,
+    "max": 1.7551,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.124,
+    "p99": 0.4294,
+    "max": 1.742,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tmax_3200_p",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 4 +.png",
+   "match_rmse_13": 0.01947,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.13,
+    "p99": 0.466,
+    "max": 1.7477,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.124,
+    "p99": 0.4489,
+    "max": 1.7687,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tmax_3200_m",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 1 -.png",
+   "match_rmse_13": 0.02228,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.134,
+    "p99": 0.4673,
+    "max": 1.5837,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1279,
+    "p99": 0.4515,
+    "max": 1.6611,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tmax_3200_alt",
+   "source_hald": "Black-and-White/Kodak/Kodak TMAX 3200 3 Alt.png",
+   "match_rmse_13": 0.01998,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.094,
+    "p99": 0.5208,
+    "max": 1.5947,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0865,
+    "p99": 0.52,
+    "max": 1.478,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tri_x_400_pp",
+   "source_hald": "Black-and-White/Kodak/Kodak TRI-X 400 5 ++.png",
+   "match_rmse_13": 0.02343,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1472,
+    "p99": 0.703,
+    "max": 2.7881,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1421,
+    "p99": 0.6965,
+    "max": 2.7514,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tri_x_400_p",
+   "source_hald": "Black-and-White/Kodak/Kodak TRI-X 400 4 +.png",
+   "match_rmse_13": 0.02357,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1469,
+    "p99": 0.705,
+    "max": 2.8111,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.142,
+    "p99": 0.6986,
+    "max": 2.8125,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tri_x_400_m",
+   "source_hald": "Black-and-White/Kodak/Kodak TRI-X 400 1 -.png",
+   "match_rmse_13": 0.02302,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1383,
+    "p99": 0.6088,
+    "max": 2.1078,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1333,
+    "p99": 0.6028,
+    "max": 2.0896,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_new/kodak_tri_x_400_alt",
+   "source_hald": "Black-and-White/Kodak/Kodak TRI-X 400 3 Alt.png",
+   "match_rmse_13": 0.01955,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.0947,
+    "p99": 0.3713,
+    "max": 1.3867,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.0872,
+    "p99": 0.3692,
+    "max": 1.3978,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_neopan_1600_pp",
+   "source_hald": "Black-and-White/Fuji/Fuji Neopan 1600 4 ++.png",
+   "match_rmse_13": 0.0248,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1604,
+    "p99": 0.7113,
+    "max": 4.7318,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1555,
+    "p99": 0.7037,
+    "max": 4.793,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_neopan_1600_p",
+   "source_hald": "Black-and-White/Fuji/Fuji Neopan 1600 3 +.png",
+   "match_rmse_13": 0.02505,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1612,
+    "p99": 0.7028,
+    "max": 4.8062,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1566,
+    "p99": 0.696,
+    "max": 4.8121,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_neopan_1600_m",
+   "source_hald": "Black-and-White/Fuji/Fuji Neopan 1600 1 -.png",
+   "match_rmse_13": 0.02447,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1589,
+    "p99": 0.6704,
+    "max": 3.5503,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1541,
+    "p99": 0.6637,
+    "max": 3.6022,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_100",
+   "source_hald": "Color/Fuji/Fuji Superia 100 2.png",
+   "match_rmse_13": 0.02104,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1918,
+    "p99": 0.6086,
+    "max": 1.906,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.18,
+    "p99": 0.5722,
+    "max": 1.8828,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_100_pp",
+   "source_hald": "Color/Fuji/Fuji Superia 100 4 ++.png",
+   "match_rmse_13": 0.02054,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1922,
+    "p99": 0.6352,
+    "max": 1.9275,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1803,
+    "p99": 0.5954,
+    "max": 1.8964,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_100_p",
+   "source_hald": "Color/Fuji/Fuji Superia 100 3 +.png",
+   "match_rmse_13": 0.0208,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1921,
+    "p99": 0.637,
+    "max": 2.4952,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1801,
+    "p99": 0.5967,
+    "max": 2.3721,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_100_m",
+   "source_hald": "Color/Fuji/Fuji Superia 100 1 -.png",
+   "match_rmse_13": 0.02174,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1931,
+    "p99": 0.6093,
+    "max": 1.9492,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1811,
+    "p99": 0.574,
+    "max": 1.7755,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_1600",
+   "source_hald": "Color/Fuji/Fuji Superia 1600 2.png",
+   "match_rmse_13": 0.02153,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2095,
+    "p99": 0.7151,
+    "max": 1.8957,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1965,
+    "p99": 0.6802,
+    "max": 1.9372,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_1600_pp",
+   "source_hald": "Color/Fuji/Fuji Superia 1600 4 ++.png",
+   "match_rmse_13": 0.02025,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2264,
+    "p99": 0.7296,
+    "max": 1.8324,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2121,
+    "p99": 0.6928,
+    "max": 1.8061,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_1600_p",
+   "source_hald": "Color/Fuji/Fuji Superia 1600 3 +.png",
+   "match_rmse_13": 0.02015,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2124,
+    "p99": 0.7052,
+    "max": 2.0519,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1989,
+    "p99": 0.6712,
+    "max": 2.0012,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_1600_m",
+   "source_hald": "Color/Fuji/Fuji Superia 1600 1 -.png",
+   "match_rmse_13": 0.02235,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2075,
+    "p99": 0.7054,
+    "max": 2.1736,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1948,
+    "p99": 0.6771,
+    "max": 2.3462,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_400",
+   "source_hald": "Color/Fuji/Fuji Superia 400 2.png",
+   "match_rmse_13": 0.02243,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2159,
+    "p99": 0.7217,
+    "max": 2.4141,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2039,
+    "p99": 0.6903,
+    "max": 2.3447,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_400_pp",
+   "source_hald": "Color/Fuji/Fuji Superia 400 4 ++.png",
+   "match_rmse_13": 0.02251,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2151,
+    "p99": 0.7271,
+    "max": 2.45,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2033,
+    "p99": 0.6976,
+    "max": 2.2713,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_400_p",
+   "source_hald": "Color/Fuji/Fuji Superia 400 3 +.png",
+   "match_rmse_13": 0.02143,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2176,
+    "p99": 0.7214,
+    "max": 2.6422,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2052,
+    "p99": 0.69,
+    "max": 2.4806,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_400_m",
+   "source_hald": "Color/Fuji/Fuji Superia 400 1 -.png",
+   "match_rmse_13": 0.02235,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2148,
+    "p99": 0.7133,
+    "max": 2.5732,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2023,
+    "p99": 0.6829,
+    "max": 2.4509,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_800",
+   "source_hald": "Color/Fuji/Fuji Superia 800 2.png",
+   "match_rmse_13": 0.02201,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2042,
+    "p99": 0.6868,
+    "max": 2.0624,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1917,
+    "p99": 0.6506,
+    "max": 1.9843,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_800_pp",
+   "source_hald": "Color/Fuji/Fuji Superia 800 4 ++.png",
+   "match_rmse_13": 0.0207,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2245,
+    "p99": 0.7436,
+    "max": 3.7465,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2109,
+    "p99": 0.7086,
+    "max": 3.639,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_800_p",
+   "source_hald": "Color/Fuji/Fuji Superia 800 3 +.png",
+   "match_rmse_13": 0.02267,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2088,
+    "p99": 0.7284,
+    "max": 2.7347,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1959,
+    "p99": 0.6908,
+    "max": 2.5645,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/fuji_superia_800_m",
+   "source_hald": "Color/Fuji/Fuji Superia 800 1 -.png",
+   "match_rmse_13": 0.02379,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2018,
+    "p99": 0.7112,
+    "max": 2.1075,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1901,
+    "p99": 0.6843,
+    "max": 2.0905,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/ilford_delta_3200_pp",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 3200 4 ++.png",
+   "match_rmse_13": 0.02306,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.138,
+    "p99": 0.5003,
+    "max": 1.897,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1323,
+    "p99": 0.4888,
+    "max": 1.9529,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/ilford_delta_3200_p",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 3200 3 +.png",
+   "match_rmse_13": 0.02315,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1473,
+    "p99": 0.6287,
+    "max": 2.4757,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1422,
+    "p99": 0.6234,
+    "max": 2.5187,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/ilford_delta_3200_m",
+   "source_hald": "Black-and-White/Ilford/Ilford Delta 3200 1 -.png",
+   "match_rmse_13": 0.0263,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.1577,
+    "p99": 0.6643,
+    "max": 3.1889,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1526,
+    "p99": 0.6576,
+    "max": 3.2248,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_nc_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 160 NC 4 ++.png",
+   "match_rmse_13": 0.02096,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2134,
+    "p99": 0.6704,
+    "max": 2.0148,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1999,
+    "p99": 0.6355,
+    "max": 1.9279,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_nc_p",
+   "source_hald": "Color/Kodak/Kodak Portra 160 NC 3 +.png",
+   "match_rmse_13": 0.02021,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2198,
+    "p99": 0.6897,
+    "max": 2.2887,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2065,
+    "p99": 0.6544,
+    "max": 2.235,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_nc_m",
+   "source_hald": "Color/Kodak/Kodak Portra 160 NC 1 -.png",
+   "match_rmse_13": 0.02192,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2131,
+    "p99": 0.6718,
+    "max": 2.2614,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1996,
+    "p99": 0.6369,
+    "max": 2.2103,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_vc_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 160 VC 4 ++.png",
+   "match_rmse_13": 0.0198,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2197,
+    "p99": 0.69,
+    "max": 1.9458,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2063,
+    "p99": 0.6519,
+    "max": 1.8676,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_vc_p",
+   "source_hald": "Color/Kodak/Kodak Portra 160 VC 3 +.png",
+   "match_rmse_13": 0.01994,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2167,
+    "p99": 0.6894,
+    "max": 2.39,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2033,
+    "p99": 0.6562,
+    "max": 2.2028,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_160_vc_m",
+   "source_hald": "Color/Kodak/Kodak Portra 160 VC 1 -.png",
+   "match_rmse_13": 0.02111,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2124,
+    "p99": 0.682,
+    "max": 2.2583,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1993,
+    "p99": 0.6516,
+    "max": 2.0519,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_nc",
+   "source_hald": "Color/Kodak/Kodak Portra 400 NC 2.png",
+   "match_rmse_13": 0.02059,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2181,
+    "p99": 0.6804,
+    "max": 2.3347,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2046,
+    "p99": 0.6434,
+    "max": 2.2693,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_nc_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 400 NC 4 ++.png",
+   "match_rmse_13": 0.02067,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2199,
+    "p99": 0.6993,
+    "max": 2.4953,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2067,
+    "p99": 0.6641,
+    "max": 2.5018,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_nc_m",
+   "source_hald": "Color/Kodak/Kodak Portra 400 NC 1 -.png",
+   "match_rmse_13": 0.02121,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2158,
+    "p99": 0.673,
+    "max": 2.4355,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2026,
+    "p99": 0.64,
+    "max": 2.3858,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_uc",
+   "source_hald": "Color/Kodak/Kodak Portra 400 UC 2.png",
+   "match_rmse_13": 0.02483,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2111,
+    "p99": 0.6771,
+    "max": 2.4924,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1993,
+    "p99": 0.65,
+    "max": 2.1981,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_uc_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 400 UC 4 ++.png",
+   "match_rmse_13": 0.0238,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2128,
+    "p99": 0.6865,
+    "max": 2.5273,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2009,
+    "p99": 0.657,
+    "max": 2.4843,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_uc_p",
+   "source_hald": "Color/Kodak/Kodak Portra 400 UC 3 +.png",
+   "match_rmse_13": 0.02337,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2118,
+    "p99": 0.6657,
+    "max": 2.1345,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1995,
+    "p99": 0.6366,
+    "max": 2.1461,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_uc_m",
+   "source_hald": "Color/Kodak/Kodak Portra 400 UC 1 -.png",
+   "match_rmse_13": 0.0252,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2091,
+    "p99": 0.6681,
+    "max": 2.3303,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.1977,
+    "p99": 0.6418,
+    "max": 2.2265,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_vc",
+   "source_hald": "Color/Kodak/Kodak Portra 400 VC 2.png",
+   "match_rmse_13": 0.02121,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2143,
+    "p99": 0.6714,
+    "max": 2.6606,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2014,
+    "p99": 0.6378,
+    "max": 2.4154,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_vc_pp",
+   "source_hald": "Color/Kodak/Kodak Portra 400 VC 4 ++.png",
+   "match_rmse_13": 0.02012,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2223,
+    "p99": 0.694,
+    "max": 2.3266,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2085,
+    "p99": 0.6556,
+    "max": 2.3348,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_vc_p",
+   "source_hald": "Color/Kodak/Kodak Portra 400 VC 3 +.png",
+   "match_rmse_13": 0.02025,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2187,
+    "p99": 0.6734,
+    "max": 2.1808,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.205,
+    "p99": 0.6318,
+    "max": 2.1852,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  },
+  {
+   "id": "negative_old/kodak_portra_400_vc_m",
+   "source_hald": "Color/Kodak/Kodak Portra 400 VC 1 -.png",
+   "match_rmse_13": 0.02209,
+   "bits": 8,
+   "deltaE2000": {
+    "mean": 0.2129,
+    "p99": 0.6688,
+    "max": 2.7952,
+    "points": 2985984
+   },
+   "deltaE2000_rgb16": {
+    "mean": 0.2004,
+    "p99": 0.6349,
+    "max": 2.4866,
+    "points": 2985984
+   },
+   "pass": false,
+   "pass_rgb16": false
+  }
+ ]
+}

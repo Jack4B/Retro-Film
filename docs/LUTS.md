@@ -5,7 +5,7 @@
 - Źródło: https://rawpedia.rawtherapee.com/Film_Simulation (YahiaAngelo/Film-Luts je przepakowuje).
 - Licencja: **CC BY-SA 4.0**. Nasze LUT-y 33³ to utwór zależny – także CC BY-SA 4.0. Katalog `luts/` jest wyłączony z MIT.
 - Nazwy filmów tylko opisowe; brak powiązania z producentami, brak logo.
-- Status: **jeszcze nie dołączone do repo**.
+- Status: dołączone w `core/engine/src/main/assets/luts/` (format: docs/LUT-BIN.md, PR #5).
 
 ## Regeneracja
 - Narzędzie `lutcheck.py` (Python Programista Master, osobny PR).

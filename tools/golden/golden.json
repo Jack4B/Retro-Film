@@ -1,0 +1,30 @@
+{
+ "layout": "17^3 siatka: wiersz y = b*17+g, kolumna x = r; wartosci round(i*255/16); wynik = trilinear na LUT 33^3 (po dekwantyzacji), round do 8 bit; tolerancja testu <=1 poziom",
+ "cases": [
+  {
+   "lut": "bw/agfa_apx_100",
+   "input": "grid17.png",
+   "expected": "bw__agfa_apx_100.png"
+  },
+  {
+   "lut": "instant_consumer/polaroid_px_100uv_cold_pp",
+   "input": "grid17.png",
+   "expected": "instant_consumer__polaroid_px_100uv_cold_pp.png"
+  },
+  {
+   "lut": "instant_pro/fuji_fp_100c",
+   "input": "grid17.png",
+   "expected": "instant_pro__fuji_fp_100c.png"
+  },
+  {
+   "lut": "instant_pro/polaroid_690_pp",
+   "input": "grid17.png",
+   "expected": "instant_pro__polaroid_690_pp.png"
+  },
+  {
+   "lut": "negative_new/kodak_portra_800_pp",
+   "input": "grid17.png",
+   "expected": "negative_new__kodak_portra_800_pp.png"
+  }
+ ]
+}

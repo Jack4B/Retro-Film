@@ -1,0 +1,16 @@
+LUT-y Retro-Film (katalog core/engine/src/main/assets/luts/ oraz luts/)
+=====================================================================
+
+Utwór zależny od: RawTherapee Film Simulation Collection (HaldCLUT)
+Autorzy oryginału: Pat David, Pavlov Dmitry, Michael Ezra
+Źródło: https://rawpedia.rawtherapee.com/Film_Simulation
+        (archiwum: https://rawtherapee.com/shared/HaldCLUT.zip)
+Licencja oryginału: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+Tekst licencji: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+Zmiany (Jack4B, 2026): HaldCLUT poziomu 12 (144³) przepróbkowane trilinearnie
+do siatki 33³ i skwantyzowane do RGB8 (surowy format .rgb8, docs/LUT-BIN.md, PR #5);
+nazwy/kategorie wg katalogu YahiaAngelo/Film-Luts. Te pliki są udostępniane na tej
+samej licencji: CC BY-SA 4.0. Brak gwarancji. Nie są objęte licencją MIT projektu.
+
+Nazwy filmów są wyłącznie opisowe; brak powiązania z producentami ani ich poparcia.
