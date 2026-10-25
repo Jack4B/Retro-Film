@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+import app.retrofilm.core.frame.TightFrame
 import app.retrofilm.pipeline.SignatureFont
 import kotlin.math.roundToInt
 
@@ -36,7 +37,8 @@ private val SwatchGap = 8.dp
 private val SwatchSize = 48.dp
 private val SwatchDot = 32.dp
 private val SwatchBorder = 2.dp
-private const val MIN_SCALE = 0.4f
+private const val MIN_SCALE = 0.32f
+private const val MAX_SCALE = 1f
 private const val PERCENT = 100
 
 /** Atramenty do wyboru: ARGB zapisywany w ramce i nazwa dla TalkBack. */
@@ -65,11 +67,19 @@ fun SignatureStyleControls(state: MainState) {
                 )
             }
         }
-        Text(stringResource(R.string.signature_size_label, (f.signatureScale * PERCENT).roundToInt()))
+        Text(
+            stringResource(
+                R.string.signature_size_label,
+                (
+                    f.signatureScale / TightFrame.DEFAULT_SIGNATURE_SCALE *
+                        PERCENT
+                    ).roundToInt()
+            )
+        )
         Slider(
             value = f.signatureScale,
             onValueChange = { state.frame = f.copy(signatureScale = it) },
-            valueRange = MIN_SCALE..1f,
+            valueRange = MIN_SCALE..MAX_SCALE,
             modifier = Modifier.heightIn(min = SwatchSize)
         )
         Text(stringResource(R.string.signature_ink_label))

@@ -50,4 +50,14 @@ class TightFrameTest {
         val b = requireNotNull(FrameGeometry.signatureBounds(l, fit.width, fit.height))
         assertTrue(b.top >= band.top && b.bottom <= band.bottom)
     }
+
+    @Test fun biggerSignatureGetsProportionallyTallerBottom() {
+        fun bottom(scale: Float): Float {
+            val (w, h) = TightFrame.canvasSize(FrameAspect.Original, 4000f, 3000f, 0.03f, true, 2000f, scale)
+            val l = TightFrame.layout(SizeF(w, h), photo, 0.03f, signature = true, signatureScale = scale)
+            return (h - l.photo.bottom) / minOf(w, h)
+        }
+        assertTrue(bottom(1.0f) > bottom(0.8f))
+        assertTrue(bottom(0.8f) > bottom(0.4f))
+    }
 }
