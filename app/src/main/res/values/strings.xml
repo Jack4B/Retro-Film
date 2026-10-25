@@ -112,6 +112,8 @@
     <string name="adjust_group_detail">Detal</string>
     <string name="adjust_sharpness">Ostrość</string>
     <string name="adjust_clarity">Wyrazistość</string>
+    <string name="adjust_dehaze">Usuń zamglenie</string>
+    <string name="adjust_denoise">Odszumianie kolorów</string>
     <string name="adjust_highlights">Światła</string>
     <string name="adjust_shadows">Cienie</string>
     <string name="adjust_fade">Blaknięcie</string>

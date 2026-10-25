@@ -31,6 +31,10 @@ data class Adjustments(
     val sharpness: Float = 0f,
     /** Wyrazistość −1..1: lokalny kontrast w półtonach; minus zmiękcza. */
     val clarity: Float = 0f,
+    /** Usuwanie zamglenia 0..1 (dark channel prior, zob. [Dehaze]). */
+    val dehaze: Float = 0f,
+    /** Odszumianie kolorów 0..1 (zob. [ChromaDenoise]). */
+    val denoise: Float = 0f,
     /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
     val hsl: HslAdjust = HslAdjust(),
     /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */
@@ -46,6 +50,9 @@ data class Adjustments(
 
     /** Czy potrzebny jest przebieg po sąsiedztwie pikseli ([DetailFilter]). */
     val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f
+
+    /** Czy potrzebny jest przebieg po całym obrazie przed korektami tonalnymi (dehaze, odszumianie). */
+    val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f
 
     companion object {
         val None = Adjustments()
@@ -345,6 +352,23 @@ object AdjustmentsApplier {
 
     fun apply(src: Bitmap, adj: Adjustments): Bitmap {
         if (adj.isNeutral) return src
+        return applyTo(if (adj.hasRestoration) restore(src, adj) else src, adj)
+    }
+
+    /** Dehaze i odszumianie na kopii źródła, przed korektami tonalnymi (żeby nie usuwały ziarna z efektów). */
+    private fun restore(src: Bitmap, adj: Adjustments): Bitmap {
+        val w = src.width
+        val h = src.height
+        val all = IntArray(w * h)
+        src.getPixels(all, 0, w, 0, 0, w, h)
+        ChromaDenoise.apply(all, w, h, adj.denoise)
+        Dehaze.apply(all, w, h, adj.dehaze)
+        val work = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        work.setPixels(all, 0, w, 0, 0, w, h)
+        return work
+    }
+
+    private fun applyTo(src: Bitmap, adj: Adjustments): Bitmap {
         val w = src.width
         val h = src.height
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
