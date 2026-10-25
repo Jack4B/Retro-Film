@@ -1,0 +1,21 @@
+{
+  "_comment": "PLACEHOLDER. Prawdziwe sha256/bytes wypełnia skrypt Pythona z plików w Jack4B/Retro-Film-LUTs@luts-v1. Wpis bez sha256 nie jest pobieralny.",
+  "version": 1,
+  "tag": "luts-v1",
+  "size": 144,
+  "format": "png-hald",
+  "packs": [
+    {
+      "id": "example-color-film",
+      "displayName": "Przykładowy film kolorowy",
+      "category": "color",
+      "file": "color/example-color-film.png",
+      "size": 144,
+      "format": "png-hald",
+      "sha256": "",
+      "bytes": 0,
+      "unpackedBytes": 8957952,
+      "bundled": false
+    }
+  ]
+}
