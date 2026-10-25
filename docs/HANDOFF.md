@@ -13,9 +13,9 @@ Nowe wpisy na górze. Szablon:
 
 ## 2026-10-25 – Claude (Biblioteka filmów)
 - Faza: D12 – Biblioteka filmów z miniaturami
-- Zrobione: ekran „Filmy” (wyszukiwarka, kategorie z licznikami, ★ ulubione, „Na telefonie”, „Pobierz” wszystkie, siatka kafelków z gotowych JPG z APK, stany: na telefonie / ↓ rozmiar / pobieranie % / błąd; dotknięcie wybiera lub pobiera, przytrzymanie = ulubione, akcje TalkBack); dodatkowy widok „Na moim zdjęciu” z `LutMemoryCache` (nie zastępuje JPG); logika w `LibraryModel` z testami JVM; wejście z zakładki Film (ikona lupy); 10 miniatur startowych w `app/src/main/assets/thumbs/` (scena testowa, `tools/thumbs/make_thumbs.py` z #31).
+- Zrobione: ekran „Filmy” (wyszukiwarka, kategorie z licznikami, ★ ulubione, „Na telefonie”, „Pobierz” wszystkie, siatka kafelków z gotowych JPG z APK, stany: na telefonie / ↓ rozmiar / pobieranie % / błąd; dotknięcie wybiera lub pobiera, przytrzymanie = ulubione, akcje TalkBack); dodatkowy widok „Na moim zdjęciu” z `LutMemoryCache` (nie zastępuje JPG); logika w `LibraryModel` z testami JVM; wejście z zakładki Film (ikona lupy); miniatury JPG (260 plików) pochodzą z #31 (`app/src/main/assets/thumbs/`) – ten PR ich nie zawiera; do czasu scalenia #31 kafelki mają puste tło z nazwą.
 - PR / gałąź: `f5/biblioteka-filmow` (baza: `f5/pobieranie-filmow`, #30).
-- Otwarte / P2 odłożone: komplet 260 miniatur ze zdjęciem CC0 (@Forge, #31) – do tego czasu kafelki filmów do pobrania mają puste tło z nazwą i rozmiarem; po wygenerowaniu pełnego kompletu wymienić też 10 startowych, żeby wszystkie miały to samo zdjęcie wzorcowe; zrzuty z telefonu (390); test pobierania na urządzeniu.
+- Otwarte / P2 odłożone: scalić #31 (komplet 260 miniatur od Forge) przed lub razem z tym PR; zrzuty z telefonu (390); test pobierania na urządzeniu.
 - Następny krok: review Lumen → Gauge → Critic.
 
 ## 2026-10-25 – Claude (włączenie pobierania filmów)
