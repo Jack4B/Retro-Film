@@ -41,6 +41,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
@@ -51,6 +52,7 @@ private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
 private val TabHeight = 56.dp
+private val HintPad = 4.dp
 
 private enum class EditorTab(val label: Int) {
     Film(R.string.tab_film),
@@ -108,6 +110,7 @@ fun EditorScreen(
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
             PreviewPane(state, Modifier.weight(1f).fillMaxWidth())
+            if (state.preview != null) HoldHint()
             if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
@@ -125,6 +128,17 @@ fun EditorScreen(
             }
         }
     }
+}
+
+@Composable
+private fun HoldHint() {
+    Text(
+        stringResource(R.string.editor_hint_hold),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = HintPad)
+    )
 }
 
 @Composable
@@ -161,8 +175,6 @@ private fun PreviewPane(state: MainState, modifier: Modifier) {
                 Modifier.align(Alignment.BottomCenter),
                 color = MaterialTheme.colorScheme.error
             )
-        } else if (!showBefore && state.preview != null) {
-            Badge(stringResource(R.string.editor_hint_hold), Modifier.align(Alignment.TopCenter))
         }
     }
 }

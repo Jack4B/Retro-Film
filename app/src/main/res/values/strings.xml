@@ -36,6 +36,8 @@
     <string name="film_brand_ilford">Ilford</string>
     <string name="film_brand_other">Inne marki</string>
     <string name="film_favorites">Ulubione</string>
+    <string name="film_favorite_on">W ulubionych</string>
+    <string name="film_favorite_off">Dotknij gwiazdki, aby dodać do ulubionych</string>
     <string name="film_favorites_empty">Brak ulubionych. Wybierz film i dotknij gwiazdki.</string>
     <string name="film_favorite_add_cd">Dodaj film %1$s do ulubionych</string>
     <string name="film_favorite_remove_cd">Usuń film %1$s z ulubionych</string>

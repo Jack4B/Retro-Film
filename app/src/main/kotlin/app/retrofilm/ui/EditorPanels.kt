@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -67,6 +68,11 @@ private val MinTouch = 48.dp
 private val Gap = 12.dp
 private val SidePad = 16.dp
 private val ChipGap = 8.dp
+
+/** Złota gwiazdka widoczna w obu motywach (kontrast z miniaturą i z tłem panelu). */
+private val FavoriteGold = Color(0xFFFFB300)
+private val FavoriteBadge = 18.dp
+private val FavoriteIcon = 30.dp
 private val TileWidth = 76.dp
 private val TileThumb = 72.dp
 private val TileCorner = 10.dp
@@ -114,11 +120,7 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
                     onFavorites = { onlyFavorites = true }
                 )
             }
-            val libraryCd = stringResource(R.string.library_open_cd)
-            IconButton(
-                onClick = onOpenLibrary,
-                modifier = Modifier.size(MinTouch).semantics { contentDescription = libraryCd }
-            ) { Icon(Icons.Filled.Search, contentDescription = null) }
+            LibraryButton(onOpenLibrary)
         }
         LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             item(key = IDENTITY_ID) {
@@ -126,6 +128,7 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
                     name = stringResource(R.string.film_none),
                     thumbnail = state.thumbnails.bitmaps[IDENTITY_ID],
                     selected = state.film == IDENTITY_ID,
+                    favorite = false,
                     onVisible = { state.thumbnails.ensure(IDENTITY_ID, state.photo) }
                 ) { state.film = IDENTITY_ID }
             }
@@ -134,6 +137,7 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
                     name = f.name.orEmpty(),
                     thumbnail = state.thumbnails.bitmaps[f.id],
                     selected = state.film == f.id,
+                    favorite = f.id in state.library.favorites,
                     onVisible = { state.thumbnails.ensure(f.id, state.photo) }
                 ) { state.film = f.id }
             }
@@ -153,6 +157,14 @@ private fun Hint(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = SidePad))
 }
 
+@Composable
+private fun LibraryButton(onClick: () -> Unit) {
+    val cd = stringResource(R.string.library_open_cd)
+    IconButton(onClick = onClick, modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }) {
+        Icon(Icons.Filled.Search, contentDescription = null)
+    }
+}
+
 /** Gwiazdka przy wybranym filmie: dodaje go do ulubionych albo usuwa. */
 @Composable
 private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
@@ -167,11 +179,14 @@ private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
         Modifier.fillMaxWidth().padding(horizontal = SidePad),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            selected.name.orEmpty(),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.weight(1f)
-        )
+        Column(Modifier.weight(1f)) {
+            Text(selected.name.orEmpty(), style = MaterialTheme.typography.titleSmall)
+            Text(
+                stringResource(if (favorite) R.string.film_favorite_on else R.string.film_favorite_off),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (favorite) FavoriteGold else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         IconButton(
             onClick = { scope.launch { state.library.toggleFavorite(selected.id) } },
             modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }
@@ -179,17 +194,20 @@ private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
             Icon(
                 Icons.Filled.Star,
                 contentDescription = null,
-                tint = if (favorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (favorite) FavoriteGold else MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(FavoriteIcon)
             )
         }
     }
 }
 
+@Suppress("LongParameterList") // kafelek: nazwa, miniatura i dwa znaczniki stanu + dwa zdarzenia
 @Composable
 private fun FilmTile(
     name: String,
     thumbnail: Bitmap?,
     selected: Boolean,
+    favorite: Boolean,
     onVisible: suspend () -> Unit,
     onClick: () -> Unit
 ) {
@@ -219,6 +237,14 @@ private fun FilmTile(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
+                )
+            }
+            if (favorite) {
+                Icon(
+                    Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = FavoriteGold,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(FavoriteBadge)
                 )
             }
         }
