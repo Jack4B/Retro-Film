@@ -203,4 +203,22 @@ class AdjustmentsTest {
         assertEquals("proporcje kanałów zachowane", ratioBefore, ratioAfter, 0.35f)
         assertTrue(Color.red(out) in 31..255 && Color.blue(out) <= 255)
     }
+
+    @Test fun grainIsSmoothBetweenNeighbours() {
+        var maxStep = 0f
+        for (x in 0 until 60) {
+            maxStep =
+                maxOf(maxStep, kotlin.math.abs(FilmGrain.luma(x + 1, 5, 4) - FilmGrain.luma(x, 5, 4)))
+        }
+        assertTrue("sąsiednie piksele ziarna nie skaczą", maxStep < 0.6f)
+        assertTrue(FilmGrain.midtoneWeight(0.5f) > FilmGrain.midtoneWeight(0.02f))
+    }
+
+    @Test fun vibranceBoostsSkinLessThanBlue() {
+        val skin = px(200, 140, 110, Adjustments(saturation = 1f))
+        val blue = px(110, 140, 200, Adjustments(saturation = 1f))
+        val skinGain = Color.red(skin) - Color.blue(skin) - (200 - 110)
+        val blueGain = Color.blue(blue) - Color.red(blue) - (200 - 110)
+        assertTrue("skóra mniej wzmocniona niż niebieski", skinGain < blueGain)
+    }
 }

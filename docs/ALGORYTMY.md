@@ -12,10 +12,10 @@ Apache 2.0) można by przenieść z zachowaniem noty autorskiej w `THIRD_PARTY.m
 | Ekspozycja | mnożnik 2^EV w świetle liniowym, miękkie kolano świateł (bez ostrego przycięcia) | standard (scene-referred) |
 | Temperatura i tint | adaptacja chromatyczna Bradforda do D65, temperatura w miredach (±70), tint prostopadle do krzywej dziennej; luminancja bieli zachowana (`WhiteBalance`) | CIE: krzywa światła dziennego, macierz Bradforda, macierze sRGB D65 |
 | Kontrast | sigmoida wokół szarości 0,5, czerń i biel nieruchome; minus spłaszcza | standardowa krzywa logistyczna |
-| Nasycenie | vibrance: plus wzmacnia głównie kolory mało nasycone, minus odbarwia równomiernie, luminancja Rec.709 | opis publiczny (Photoshop/Lightroom vibrance), własna implementacja |
+| Nasycenie | vibrance: plus wzmacnia głównie kolory mało nasycone, z ochroną odcieni skóry (pomarańcz–róż); minus odbarwia równomiernie, luminancja Rec.709 | opis publiczny (Photoshop/Lightroom) |
 | Światła i cienie | lokalna ekspozycja: mnożnik 2^(siła · EV · waga) z jasności otoczenia (rozmyta siatka ~512 komórek, `ToneMask`), gładkie progi jasności, przeniesiony z liniowego na gamma; zachowuje proporcje kanałów | zasada „Shadow/Highlight” i ekspozycja strefowa (publicznie opisane) |
 | Blaknięcie, winieta | podniesiona czerń i przytłumiona biel; przyciemnienie rogów (d⁴) | standardowe modele |
-| Ziarno | deterministyczny szum na hashu całkowitoliczbowym, stały dla obrazu, skalowany z rozmiarem, silniejszy w półtonach | własne |
+| Ziarno | szum wartościowy z gładką interpolacją w dwóch oktawach (gruba + drobna) plus drobny szum barwny, deterministyczny, skalowany z rozmiarem, najsilniejszy w półtonach | własne |
 | Ostrość, wyrazistość | unsharp mask na jasności z progiem szumu; wyrazistość = ta sama maska z dużym promieniem i wagą półtonów | klasyczna maska unsharp |
 | Kadr, obrót, prostowanie | największy prostokąt o zadanych proporcjach wpisany w obrócone zdjęcie (`GeometryMath`) | geometria |
 
