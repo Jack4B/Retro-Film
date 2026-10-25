@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tło ikony aplikacji: ciemne tło marki (core/ui Theme.kt, RfBackground). -->
+    <color name="ic_launcher_background">#0E0E10</color>
+</resources>
