@@ -15,6 +15,7 @@ import org.junit.Test
  * Golden: siatka 17³ (tools/golden/grid17.png) przez LUT-y z APK, trilinear, porównanie z PNG
  * z tools/golden (tools/golden/make_golden.py), tolerancja ≤ 1 poziom. golden.json musi
  * pokrywać dokładnie identity + filmy startowe z assets/luts/catalog.json.
+ * D9: filmy startowe to HaldCLUT PNG 144³ dekodowane tym samym [LutCatalog.open] co w aplikacji.
  */
 class GoldenLutTest {
     private val assets = File("src/main/assets")
@@ -39,16 +40,40 @@ class GoldenLutTest {
         assertEquals(apk, cases().map { it.lut }.toSet())
     }
 
+    /** D9: filmy startowe to te same bajty co pakiety 144³ (sha256 = wpis app/.../catalog-144.json). */
+    @Test
+    fun startersAreByteIdenticalToPack144() {
+        val pack = objects(File("../../app/src/main/assets/luts/catalog-144.json").readText())
+            .associateBy { field(it, "id") }
+        val starters = objects(File(assets, "luts/catalog.json").readText()).filter { field(it, "id") != "identity" }
+        assertEquals(10, starters.size)
+        for (s in starters) {
+            val id = field(s, "id")
+            val p = pack.getValue(id)
+            assertEquals(id, "png144", field(s, "format"))
+            assertEquals(id, field(p, "file"), field(s, "file"))
+            assertEquals(id, field(p, "sha256"), field(s, "sha256"))
+            assertEquals(id, field(p, "sha256"), sha256(File(assets, field(s, "file")).readBytes()))
+        }
+    }
+
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+
     @Test
     fun lutOutputsMatchGolden() {
         val catalog = objects(File(assets, "luts/catalog.json").readText()).associateBy { field(it, "id") }
         for (c in cases()) {
             val bytes = File(assets, c.file).readBytes()
-            val sha = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            val sha = sha256(bytes)
             assertEquals("sha256 ${c.lut}", field(catalog.getValue(c.lut), "sha256"), sha)
-            val n = Regex("\"size\"\\s*:\\s*(\\d+)").find(catalog.getValue(c.lut))!!.groupValues[1].toInt()
-            assertEquals(n * n * n * 3, bytes.size)
-            val maxDiff = maxDiff(bytes, n, ImageIO.read(File(golden, c.input)), ImageIO.read(File(golden, c.expected)))
+            val entry = LutCatalog.parse("""{"luts":[${catalog.getValue(c.lut)}]}""").single()
+            val lut = LutCatalog.open(entry, cache = null) { bytes.inputStream() }
+            val n = lut.size
+            if (entry.isHald) assertEquals("${c.lut}: siatka", 144, n)
+            assertEquals(entry.unpackedLength, lut.data.size.toLong())
+            val maxDiff =
+                maxDiff(lut.data, n, ImageIO.read(File(golden, c.input)), ImageIO.read(File(golden, c.expected)))
             assertTrue("${c.lut}: max różnica $maxDiff > 1", maxDiff <= 1)
         }
     }

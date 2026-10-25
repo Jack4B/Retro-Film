@@ -7,7 +7,8 @@ import java.io.InputStream
 import java.util.zip.Inflater
 
 /**
- * Dekoder HaldCLUT PNG (8 bit/kanał, RGB lub RGBA, bez przeplotu) do siatki LUT [Lut].
+ * Dekoder HaldCLUT PNG (8 bit/kanał, RGB, RGBA, szarość lub szarość+alfa, bez przeplotu) do siatki
+ * LUT [Lut]. Szarość (filmy cz-b w pakiecie 144³ – 66 z 260 plików) rozwijana do R=G=B.
  *
  * Poziom L: obraz L^3 x L^3, siatka L^2. Kolejność Hald: piksele wierszami, `r` najszybciej,
  * potem `g`, na końcu `b` – identyczna jak w buforze [Lut], więc piksele kopiujemy liniowo.
@@ -16,11 +17,15 @@ import java.util.zip.Inflater
 object HaldClutDecoder {
     const val FORMAT_PNG_HALD = "png-hald"
     private val PNG_SIGNATURE = byteArrayOf(-119, 80, 78, 71, 13, 10, 26, 10)
+    private const val COLOR_GRAY = 0
     private const val COLOR_RGB = 2
+    private const val COLOR_GRAY_ALPHA = 4
     private const val COLOR_RGBA = 6
     private const val BIT_DEPTH_8 = 8
     private const val BYTE_MASK = 0xFF
     private const val CHUNK_TYPE_LENGTH = 4
+    private const val GRAY_CHANNELS = 1
+    private const val GRAY_ALPHA_CHANNELS = 2
     private const val RGB_CHANNELS = 3
     private const val RGBA_CHANNELS = 4
     private const val FILTER_AVERAGE = 3
@@ -71,6 +76,8 @@ object HaldClutDecoder {
                     require(depth == BIT_DEPTH_8) { "Obsługiwane tylko 8 bit/kanał, jest $depth" }
                     require(interlace == 0) { "PNG z przeplotem nieobsługiwany" }
                     channels = when (color) {
+                        COLOR_GRAY -> GRAY_CHANNELS
+                        COLOR_GRAY_ALPHA -> GRAY_ALPHA_CHANNELS
                         COLOR_RGB -> RGB_CHANNELS
                         COLOR_RGBA -> RGBA_CHANNELS
                         else -> throw IllegalArgumentException("Nieobsługiwany typ koloru PNG: $color")
@@ -126,10 +133,11 @@ object HaldClutDecoder {
                 cur[x] = (v + pred).toByte()
             }
             var x = 0
+            val gray = bpp < RGB_CHANNELS
             while (x < stride) {
                 out[o++] = cur[x]
-                out[o++] = cur[x + 1]
-                out[o++] = cur[x + 2]
+                out[o++] = if (gray) cur[x] else cur[x + 1]
+                out[o++] = if (gray) cur[x] else cur[x + 2]
                 x += bpp
             }
             val t = prev

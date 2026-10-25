@@ -36,6 +36,19 @@ class HaldClutDecoderTest {
         }
     }
 
+    /** Filmy cz-b w pakiecie 144³ to PNG w skali szarości (color type 0) – rozwijane do R=G=B. */
+    @Test
+    fun grayscaleHaldDecodesToNeutralRgb() {
+        val png = java.io.File("src/main/assets/luts/bw/ilford_hp_5_plus_400.png")
+        assertEquals(0, png.readBytes()[GRAY_COLOR_TYPE_OFFSET].toInt())
+        val lut = png.inputStream().use { HaldClutDecoder.decode(it, expectedSize = 144) }
+        assertEquals(144, lut.size)
+        for (i in lut.data.indices step 3) {
+            assertEquals(lut.data[i], lut.data[i + 1])
+            assertEquals(lut.data[i], lut.data[i + 2])
+        }
+    }
+
     @Test
     fun identityLevel16DecodesTo256Grid() {
         val lut = HaldClutDecoder.decode(identityHald(level = 16).inputStream(), expectedSize = 256)
@@ -52,6 +65,8 @@ class HaldClutDecoderTest {
 
     companion object {
         fun value(i: Int, n: Int) = Math.round(i * 255f / (n - 1))
+
+        private const val GRAY_COLOR_TYPE_OFFSET = 25
 
         /** Syntetyczny Hald tożsamościowy: piksel k ↦ (r,g,b), r najszybciej. */
         @Suppress("LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth")

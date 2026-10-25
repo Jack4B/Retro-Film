@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Golden PNG 17^3 dla LUT-ow z APK (identity + 10 filmow startowych, core/engine/src/main/assets/luts).
-Nie wymaga HaldCLUT. Test: core/engine/src/test/.../GoldenLutTest.kt (tolerancja <=1 poziom).
+D9: filmy startowe to HaldCLUT PNG 144^3 (format png144, bajty 1:1 z Jack4B/Retro-Film-LUTs@0432c5a);
+identity zostaje rgb8 33^3 (tozsamosc jest dokladna przy kazdej siatce). Test: core/engine/src/test/.../GoldenLutTest.kt (tolerancja <=1 poziom).
 
 Uzycie: python3 tools/golden/make_golden.py [--assets DIR] [--out tools/golden]
 """
-import argparse, hashlib, json
+import argparse, hashlib, io, json
 from pathlib import Path
 import numpy as np
 from PIL import Image
@@ -34,12 +35,20 @@ def main():
     for c in json.load((a.assets / "catalog.json").open())["luts"]:
         data = (a.assets.parent / c["file"]).read_bytes()
         assert hashlib.sha256(data).hexdigest() == c["sha256"], c["id"]
-        s = c["size"]; lut = np.frombuffer(data, np.uint8).reshape(s, s, s, 3) / 255.0
+        s = c.get("grid", c["size"])
+        if c.get("format", "rgb8") in ("png144", "png-hald"):
+            img_h = np.asarray(Image.open(io.BytesIO(data)).convert("RGB"), np.uint8)  # Hald: wiersze, r najszybciej
+            assert img_h.shape[0] == img_h.shape[1] and round(img_h.shape[0] ** (1 / 3)) ** 2 == s, c["id"]
+            raw = img_h.reshape(-1)
+        else:
+            raw = np.frombuffer(data, np.uint8)
+        assert raw.size == c.get("unpackedLength", s ** 3 * 3), c["id"]
+        lut = raw.reshape(s, s, s, 3) / 255.0
         res = np.round(np.clip(trilinear(lut, img / 255.0), 0, 1) * 255).astype(np.uint8)
         fn = c["id"].replace("/", "__") + ".png"
         Image.fromarray(res.reshape(n * n, n, 3)).save(a.out / fn)
         cases.append({"lut": c["id"], "file": c["file"], "input": "grid17.png", "expected": fn})
-    json.dump({"layout": "17^3 siatka: wiersz y = b*17+g, kolumna x = r; wartosci round(i*255/16); wynik = trilinear na LUT 33^3 (po dekwantyzacji), round do 8 bit; tolerancja testu <=1 poziom",
+    json.dump({"layout": "17^3 siatka: wiersz y = b*17+g, kolumna x = r; wartosci round(i*255/16); wynik = trilinear na siatce LUT z APK (filmy: Hald PNG 144^3, identity: rgb8 33^3; po dekwantyzacji), round do 8 bit; tolerancja testu <=1 poziom",
                "source": "LUT-y z APK (core/engine/src/main/assets/luts/catalog.json): identity + filmy startowe; generator tools/golden/make_golden.py",
                "cases": cases}, (a.out / "golden.json").open("w"), ensure_ascii=False, indent=1)
     print(len(cases), "przypadkow")

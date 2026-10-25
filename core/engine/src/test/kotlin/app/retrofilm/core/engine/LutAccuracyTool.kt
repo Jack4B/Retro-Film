@@ -1,5 +1,6 @@
 package app.retrofilm.core.engine
 
+import app.retrofilm.core.engine.pack.HaldClutDecoder
 import java.io.File
 import java.util.Locale
 import javax.imageio.ImageIO
@@ -16,7 +17,8 @@ import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 /**
- * Narzędzie (nie zwykły test): porównuje interpolację trójliniową i czworościenną LUT-ów 33³ (.rgb8)
+ * Narzędzie (nie zwykły test): porównuje interpolację trójliniową i czworościenną LUT-ów z APK
+ * (.rgb8 albo Hald PNG 144³)
  * z oryginałem HaldCLUT (ground truth) – ΔE2000 (sRGB D65 → Lab) we wszystkich punktach siatki HaldCLUT.
  *
  * Uruchomienie (pomijane bez zmiennych środowiskowych):
@@ -39,7 +41,12 @@ class LutAccuracyTool {
         val pool = java.util.concurrent.ForkJoinPool(2)
         val rows = pool.submit<List<Triple<String, Stats, Stats>>> {
             entries.parallelStream().map { (id, hald) ->
-                val lut = Lut.fromBinary(File(lutDir, "$id.rgb8").readBytes())
+                val raw = File(lutDir, "$id.rgb8")
+                val lut = if (raw.exists()) {
+                    Lut.fromBinary(raw.readBytes())
+                } else {
+                    File(lutDir, "$id.png").inputStream().use { HaldClutDecoder.decode(it) }
+                }
                 val truth = loadHald(File(haldDir, hald))
                 Triple(
                     id,

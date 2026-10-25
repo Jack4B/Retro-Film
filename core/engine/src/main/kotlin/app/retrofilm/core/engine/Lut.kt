@@ -55,6 +55,12 @@ class Lut(val size: Int, val data: ByteArray, val bytesPerChannel: Int = 1) {
             else -> throw IllegalArgumentException("Nieznany format LUT: $format")
         }
 
+        /** Bajty/kanał po rozpakowaniu; formaty PNG (Hald) dają RGB8. */
+        fun bytesPerChannelOrOne(format: String): Int = when (format.lowercase()) {
+            FORMAT_RGB16 -> 2
+            else -> 1
+        }
+
         /** Wczytuje LUT o zadanym rozmiarze i formacie (z katalogu); długość jest walidowana. */
         fun fromBinary(bytes: ByteArray, size: Int, format: String = FORMAT_RGB8): Lut =
             Lut(size, bytes, bytesPerChannel(format))

@@ -1,5 +1,5 @@
 {
- "layout": "17^3 siatka: wiersz y = b*17+g, kolumna x = r; wartosci round(i*255/16); wynik = trilinear na LUT 33^3 (po dekwantyzacji), round do 8 bit; tolerancja testu <=1 poziom",
+ "layout": "17^3 siatka: wiersz y = b*17+g, kolumna x = r; wartosci round(i*255/16); wynik = trilinear na siatce LUT z APK (filmy: Hald PNG 144^3, identity: rgb8 33^3; po dekwantyzacji), round do 8 bit; tolerancja testu <=1 poziom",
  "source": "LUT-y z APK (core/engine/src/main/assets/luts/catalog.json): identity + filmy startowe; generator tools/golden/make_golden.py",
  "cases": [
   {
@@ -10,61 +10,61 @@
   },
   {
    "lut": "bw/ilford_hp_5_plus_400",
-   "file": "luts/bw/ilford_hp_5_plus_400.rgb8",
+   "file": "luts/bw/ilford_hp_5_plus_400.png",
    "input": "grid17.png",
    "expected": "bw__ilford_hp_5_plus_400.png"
   },
   {
    "lut": "bw/kodak_tri_x_400",
-   "file": "luts/bw/kodak_tri_x_400.rgb8",
+   "file": "luts/bw/kodak_tri_x_400.png",
    "input": "grid17.png",
    "expected": "bw__kodak_tri_x_400.png"
   },
   {
    "lut": "colorslide/fuji_velvia_50",
-   "file": "luts/colorslide/fuji_velvia_50.rgb8",
+   "file": "luts/colorslide/fuji_velvia_50.png",
    "input": "grid17.png",
    "expected": "colorslide__fuji_velvia_50.png"
   },
   {
    "lut": "colorslide/kodak_ektachrome_100_vs",
-   "file": "luts/colorslide/kodak_ektachrome_100_vs.rgb8",
+   "file": "luts/colorslide/kodak_ektachrome_100_vs.png",
    "input": "grid17.png",
    "expected": "colorslide__kodak_ektachrome_100_vs.png"
   },
   {
    "lut": "colorslide/kodak_kodachrome_64",
-   "file": "luts/colorslide/kodak_kodachrome_64.rgb8",
+   "file": "luts/colorslide/kodak_kodachrome_64.png",
    "input": "grid17.png",
    "expected": "colorslide__kodak_kodachrome_64.png"
   },
   {
    "lut": "instant_consumer/polaroid_px_680",
-   "file": "luts/instant_consumer/polaroid_px_680.rgb8",
+   "file": "luts/instant_consumer/polaroid_px_680.png",
    "input": "grid17.png",
    "expected": "instant_consumer__polaroid_px_680.png"
   },
   {
    "lut": "negative_new/fuji_400h",
-   "file": "luts/negative_new/fuji_400h.rgb8",
+   "file": "luts/negative_new/fuji_400h.png",
    "input": "grid17.png",
    "expected": "negative_new__fuji_400h.png"
   },
   {
    "lut": "negative_new/kodak_portra_400",
-   "file": "luts/negative_new/kodak_portra_400.rgb8",
+   "file": "luts/negative_new/kodak_portra_400.png",
    "input": "grid17.png",
    "expected": "negative_new__kodak_portra_400.png"
   },
   {
    "lut": "negative_new/kodak_portra_800",
-   "file": "luts/negative_new/kodak_portra_800.rgb8",
+   "file": "luts/negative_new/kodak_portra_800.png",
    "input": "grid17.png",
    "expected": "negative_new__kodak_portra_800.png"
   },
   {
    "lut": "negative_old/fuji_superia_400",
-   "file": "luts/negative_old/fuji_superia_400.rgb8",
+   "file": "luts/negative_old/fuji_superia_400.png",
    "input": "grid17.png",
    "expected": "negative_old__fuji_superia_400.png"
   }
