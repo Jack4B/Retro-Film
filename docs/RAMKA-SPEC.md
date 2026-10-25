@@ -30,3 +30,11 @@ Wszystkie wymiary są ułamkami krótszego boku `u = min(W, H)` płótna, więc 
 
 ## Bez parametrów zdjęcia
 - Brak paska EXIF (ISO, przysłona, ogniskowa, czas) i brak przełącznika do niego.
+
+## Podpis rysowany palcem („Narysuj”)
+- Dwa tryby podpisu: **Wpisz** (Caveat, reguły wyżej) i **Narysuj**.
+- Zapis: **wektor** — lista ścieżek (punkty w układzie 0..1 względem prostokąta rysowania, grubość jako ułamek `u`), JSON w Room; bez bitmapy, więc ostry w każdej rozdzielczości eksportu.
+- Skalowanie: bounding box rysunku wpasowany proporcjonalnie (contain) w obszar 90% szerokości pola zdjęcia × 70% wysokości pasa 20%, wyśrodkowany w pasie.
+- Kolor jak dla podpisu tekstowego; grubość linii bazowo 0,006·u.
+- Kontrolki: Cofnij (ostatnia ścieżka), Wyczyść, Użyj. Pusty rysunek = podpis wyłączony.
+- Seria: rysunek jest częścią wspólnej ramki serii; dla pojedynczego zdjęcia można go zastąpić innym rysunkiem albo tekstem.
