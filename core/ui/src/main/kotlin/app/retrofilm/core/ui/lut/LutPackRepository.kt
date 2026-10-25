@@ -50,7 +50,9 @@ interface LutDownloadSettings {
 }
 
 /**
- * Rozmiary na dysku (D9): pobrane PNG 144³ osobno od rozpakowanego cache (LRU).
+ * Rozmiary na dysku (D9): pobrane PNG osobno od rozpakowanego cache (LRU).
+ * Filmy mają siatkę 144³ (8 957 952 B po rozpakowaniu), a `kodak_ektar_100` 256³ (50 331 648 B);
+ * [cacheBytes] sumuje rzeczywiste długości (`unpackedLength` z `catalog-144.json`), nie stałą.
  * [clearCache] usuwa tylko cache; pobrane filmy zostają.
  */
 interface LutCacheInfo {
