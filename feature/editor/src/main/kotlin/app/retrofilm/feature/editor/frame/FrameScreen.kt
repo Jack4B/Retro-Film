@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -51,9 +52,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -160,6 +163,9 @@ fun FrameScreen(
             ) {
                 FramePreview(s, state.signature, state.current.aspect, state.current.seed, state.previewMatrix)
             }
+            // Komunikat tuż pod podglądem: podpis za długi nie jest rysowany (patrz RAMKA-SPEC).
+            val fitStatus = rememberSignatureFitStatus(s, state.signature, state.current.aspect)
+            if (fitStatus == SignatureFitStatus.TooLong) SignatureTooLongBanner()
             if (series) SeriesStrip(state, onSelectPhoto)
 
             ToggleRow("Ramka", if (s.enabled) "Włączona" else "Wyłączona (domyślnie)", s.enabled) {
@@ -237,6 +243,33 @@ fun FrameScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SignatureTooLongBanner() {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = SIGNATURE_TOO_LONG_A11Y
+                liveRegion = LiveRegionMode.Polite
+                error(SIGNATURE_TOO_LONG_MESSAGE)
+            },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Filled.Warning,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onErrorContainer
+        )
+        Spacer(Modifier.size(12.dp))
+        Text(
+            SIGNATURE_TOO_LONG_MESSAGE,
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

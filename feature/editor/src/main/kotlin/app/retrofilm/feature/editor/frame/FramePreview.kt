@@ -74,6 +74,8 @@ fun FramePreview(
             overflow = TextOverflow.Ellipsis,
             constraints = Constraints(maxWidth = l.signatureMaxWidth.toInt())
         )
+        // Za długi podpis (fits = false) nie jest rysowany — ani w podglądzie, ani w eksporcie.
+        if (!fit.fits) return@Canvas
         val r = FrameGeometry.signatureBounds(l, result.size.width.toFloat(), result.size.height.toFloat())
             ?: return@Canvas
         drawText(result, topLeft = Offset(r.left, r.top))

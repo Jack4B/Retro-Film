@@ -60,9 +60,16 @@ class FrameGeometryTest {
     }
 
     @Test fun signatureShrinksBelowMinWhenTwoLinesOverflow() {
-        val fit = FrameGeometry.fitSignature(10f, 100f, 100f, linear(60f))
+        val fit = FrameGeometry.fitSignature(10f, 100f, 100f, linear(40f))
+        assertTrue(fit.fits)
         assertEquals(2, fit.lines)
-        assertTrue(fit.sizePx < 6f)
+        assertTrue(fit.sizePx < 6f && fit.sizePx >= 4f)
         assertTrue(fit.width <= 100f)
+    }
+
+    @Test fun signatureStopsAtReadabilityFloorAndReportsTooLong() {
+        val fit = FrameGeometry.fitSignature(10f, 100f, 100f, linear(60f))
+        assertEquals(false, fit.fits)
+        assertEquals(4f, fit.sizePx, 0.001f)
     }
 }
