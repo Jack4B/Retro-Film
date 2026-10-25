@@ -17,6 +17,9 @@ import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
+import app.retrofilm.pipeline.Geometry
+import app.retrofilm.pipeline.GeometryApplier
+import app.retrofilm.pipeline.GeometryMath
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
@@ -57,6 +60,15 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Kadr i obrót; stosowany przed filmem, więc podgląd, ramka i zapis widzą ten sam kadr. */
+    var geometry by mutableStateOf(Geometry())
+        private set
+
+    fun updateGeometry(g: Geometry) {
+        geometry = g
+        before = null
+    }
 
     /** Zdjęcia wybrane w galerii (jedno lub kilka); te same ustawienia dotyczą wszystkich. */
     var uris by mutableStateOf<List<Uri>>(emptyList())
@@ -100,6 +112,7 @@ class MainState(
 
     /** Wraca do ekranu startowego (nic nie jest zapisywane). */
     fun closePhoto() {
+        geometry = Geometry()
         uris = emptyList()
         index = 0
         photo = null
@@ -111,7 +124,8 @@ class MainState(
     /** Status podpisu dla bieżącego zdjęcia i ramki (blokada eksportu przy TooLong). */
     fun signatureStatus(): SignatureFitStatus {
         val p = photo ?: return SignatureFitStatus.None
-        return FrameRenderer.status(frame, p.width, p.height, signatureTypeface())
+        val (w, h) = GeometryMath.outputSize(p.width, p.height, geometry)
+        return FrameRenderer.status(frame, w, h, signatureTypeface())
     }
 
     suspend fun load(context: Context, uri: Uri): UiMessage? = withBusy {
@@ -153,8 +167,9 @@ class MainState(
                 PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
             }
             val jpeg = withContext(Dispatchers.Default) {
+                val cropped = GeometryApplier.apply(bmp, geometry)
                 val rendered = ExportPipeline.render(
-                    bmp,
+                    cropped,
                     lutNow,
                     graph.filmEngine.renderer,
                     frame,
@@ -162,7 +177,7 @@ class MainState(
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(bmp, rendered, frame, face)
+                ExportPipeline.encode(cropped, rendered, frame, face)
             }
             withContext(Dispatchers.IO) { save(jpeg) }
         }
@@ -175,7 +190,10 @@ class MainState(
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
         val (orig, shown) = withContext(Dispatchers.Default) {
-            val small = scaleDown(p, if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE)
+            val small = GeometryApplier.apply(
+                scaleDown(p, if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE),
+                geometry
+            )
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
             orig to
@@ -199,8 +217,9 @@ class MainState(
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val jpeg = withContext(Dispatchers.Default) {
+                val cropped = GeometryApplier.apply(p, geometry)
                 val rendered = ExportPipeline.render(
-                    p,
+                    cropped,
                     lut(),
                     graph.filmEngine.renderer,
                     frame,
@@ -208,7 +227,7 @@ class MainState(
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(p, rendered, frame, signatureTypeface())
+                ExportPipeline.encode(cropped, rendered, frame, signatureTypeface())
             }
             withContext(Dispatchers.IO) { save(jpeg) }
             UiMessage.Saved

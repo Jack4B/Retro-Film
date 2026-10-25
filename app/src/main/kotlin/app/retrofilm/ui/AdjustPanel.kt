@@ -122,7 +122,7 @@ private fun FilmSliders(state: MainState) {
 
 /** Suwak −1..1 (wartość znormalizowana); [display] pokazuje wartość po polsku, [onCommit] woła się po puszczeniu. */
 @Composable
-private fun AdjustSlider(
+internal fun AdjustSlider(
     label: String,
     value: Float,
     display: (Float) -> String,
