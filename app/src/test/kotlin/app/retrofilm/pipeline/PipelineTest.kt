@@ -116,15 +116,45 @@ class PipelineTest {
     }
 
     @Test
-    fun displayP3SurvivesFrameAndKeepsIccInExport() {
+    fun frameRendererKeepsColorSpaceOfItsInput() {
         val p3 = ColorSpace.get(ColorSpace.Named.DISPLAY_P3)
         val photo = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888, false, p3)
         photo.eraseColor(Color.rgb(200, 120, 40))
         val rendered = FrameRenderer.render(photo, FrameOptions(enabled = true), Typeface.DEFAULT)
         assertEquals(p3, rendered.colorSpace)
         val jpeg = JpegExporter.encode(rendered)
-        assertTrue("Brak profilu ICC po eksporcie P3", JpegMetadata.hasIcc(jpeg))
+        assertTrue("Brak profilu ICC po eksporcie", JpegMetadata.hasIcc(jpeg))
         assertFalse(JpegMetadata.hasExif(jpeg))
+    }
+
+    @Test
+    fun displayP3IsConvertedToSrgbAndExportProfileMatchesPixels() = runBlocking {
+        val p3 = ColorSpace.get(ColorSpace.Named.DISPLAY_P3)
+        val srgb = ColorSpace.get(ColorSpace.Named.SRGB)
+        val src = floatArrayOf(0.6f, 0.45f, 0.3f)
+        val photo = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888, false, p3)
+        photo.eraseColor(Color.pack(src[0], src[1], src[2], 1f, p3))
+        val engine = AppGraph(RuntimeEnvironment.getApplication()).filmEngine.renderer
+        val rendered = ExportPipeline.render(photo, null, engine, FrameOptions(enabled = false), Typeface.DEFAULT)
+        assertEquals(srgb, rendered.colorSpace)
+        val jpeg = JpegExporter.encode(rendered)
+        val decoded = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size)
+        assertEquals("Profil w pliku musi odpowiadać pikselom (sRGB)", srgb, decoded.colorSpace)
+        val expected = ColorSpace.connect(p3, srgb).transform(src.copyOf()).map { Math.round(it * 255f) }
+        for (bmp in listOf(rendered, decoded)) {
+            val c = bmp.getPixel(32, 24)
+            val actual = listOf(Color.red(c), Color.green(c), Color.blue(c))
+            for (i in 0..2) {
+                assertTrue("kanał $i: $actual vs $expected", kotlin.math.abs(actual[i] - expected[i]) <= 1)
+            }
+        }
+    }
+
+    @Test
+    fun colorPolicyDecision() {
+        assertTrue(ColorPolicy.needsSrgbConversion(false))
+        assertFalse(ColorPolicy.needsSrgbConversion(true))
+        assertFalse(ColorPolicy.needsSrgbConversion(null))
     }
 
     private fun tooLong() = FrameOptions(

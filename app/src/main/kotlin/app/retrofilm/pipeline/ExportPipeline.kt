@@ -19,10 +19,14 @@ object ExportPipeline {
     const val ALBUM = "RetroFilm"
     const val MIME = "image/jpeg"
 
-    /** Nakłada LUT (null = oryginał) i ramkę; wynik zachowuje przestrzeń barw [photo]. */
+    /**
+     * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada LUT (null = oryginał) i ramkę.
+     * Wynik jest zawsze w sRGB, więc `Bitmap.compress` zapisze profil zgodny z pikselami.
+     */
     suspend fun render(photo: Bitmap, lut: Lut?, engine: LutEngine, frame: FrameOptions, typeface: Typeface): Bitmap {
-        val filmed = if (lut == null) photo else engine.apply(photo, lut, 1f)
-        return FrameRenderer.render(filmed, frame, typeface, colorSpaceSource = photo)
+        val srgb = ColorPolicy.toSrgb(photo)
+        val filmed = if (lut == null) srgb else engine.apply(srgb, lut, 1f)
+        return FrameRenderer.render(filmed, frame, typeface, colorSpaceSource = srgb)
     }
 
     /**
