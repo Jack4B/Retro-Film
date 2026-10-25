@@ -43,6 +43,7 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         private set
     var busy by mutableStateOf(false)
         private set
+
     /** Podgląd oryginału (to samo skalowanie co [preview]) – pokazywany po przytrzymaniu zdjęcia. */
     var before by mutableStateOf<Bitmap?>(null)
         private set
