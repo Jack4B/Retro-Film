@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-25 – Forge/Lumen (redesign, krok 1)
+- Faza: redesign UI/UX wg docs/OCENA-I-REDESIGN.md
+- Zrobione: `app` – Start (jedno CTA), Edytor z zakładkami Film / Ramka, przytrzymanie zdjęcia = oryginał, moc filmu (suwak 0–100%, zatwierdzana po puszczeniu), kategorie filmów z id katalogu, zapis jednym dotknięciem; `ExportPipeline.render` przyjmuje `intensity`. Teksty w `strings.xml`.
+- PR / gałąź: #26 (`ccr-0dd79b3e-ffwulp`).
+- Otwarte / P2 odłożone: kod nie był budowany lokalnie (brak Android SDK i dostępu do Google Maven w środowisku) – weryfikuje CI; zakładka Korekty, seria (pasek miniatur, WorkManager), miniatury filmów, Biblioteka filmów, arkusz Zapisz, PNG – czekają na odpowiedzi Jack4B (pytania 1–5 w ocenie); `GalleryScreen` i osobne ekrany Edytor/Ramka/Eksport z feature:* zostają nieużywane do decyzji; zrzuty Roborazzi nie zmienione (nie ruszano feature:*).
+- Następny krok: CI zielone → review Gauge → Critic.
+
 ## 2026-10-25 – Lumen (przegląd koncepcji)
 - Faza: poza fazami (ocena + redesign UI/UX)
 - Zrobione: `docs/OCENA-I-REDESIGN.md` (ocena koncepcji, uwagi T1–T12, pytania do Jack4B) i `docs/makiety/index.html` (8 makiet v2).
