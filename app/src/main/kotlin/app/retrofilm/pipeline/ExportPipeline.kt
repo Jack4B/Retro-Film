@@ -30,11 +30,13 @@ object ExportPipeline {
         engine: LutEngine,
         frame: FrameOptions,
         typeface: Typeface,
-        intensity: Float = 1f
+        intensity: Float = 1f,
+        adjustments: Adjustments = Adjustments.None
     ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
         val filmed = if (lut == null) srgb else engine.apply(srgb, lut, intensity)
-        return FrameRenderer.render(filmed, frame, typeface, colorSpaceSource = srgb)
+        val adjusted = AdjustmentsApplier.apply(filmed, adjustments)
+        return FrameRenderer.render(adjusted, frame, typeface, colorSpaceSource = srgb)
     }
 
     /**

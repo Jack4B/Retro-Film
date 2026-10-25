@@ -60,7 +60,9 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     }
     LaunchedEffect(Unit) { state.library.observeFavorites() }
     LaunchedEffect(Unit) { state.library.observeDownloads() }
-    LaunchedEffect(state.photo, state.film, state.frame, state.intensity) { state.refreshPreview() }
+    LaunchedEffect(state.photo, state.film, state.frame, state.intensity, state.adjustments) {
+        state.refreshPreview()
+    }
     val editing = state.photo != null
     var showLibrary by rememberSaveable { mutableStateOf(false) }
     if (editing) BackHandler(onBack = state::closePhoto)

@@ -12,6 +12,7 @@ import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
@@ -51,6 +52,9 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
 
     /** Moc filmu 0..1 (miks z oryginałem); 1 = pełny film. */
     var intensity by mutableFloatStateOf(1f)
+
+    /** Korekty (ekspozycja, kontrast, nasycenie, temperatura) po nałożeniu filmu; neutralne = bez zmian. */
+    var adjustments by mutableStateOf(Adjustments.None)
     var frame by mutableStateOf(FrameOptions())
 
     /** Miniatury filmów na bieżącym zdjęciu (zob. [FilmThumbnails]). */
@@ -101,7 +105,8 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
             val small = scaleDown(p, PREVIEW_SIDE)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
-            orig to ExportPipeline.render(small, lut(), graph.filmEngine.renderer, frame, typeface, intensity)
+            orig to
+                ExportPipeline.render(small, lut(), graph.filmEngine.renderer, frame, typeface, intensity, adjustments)
         }
         before = orig
         preview = shown
@@ -113,7 +118,15 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val jpeg = withContext(Dispatchers.Default) {
-                val rendered = ExportPipeline.render(p, lut(), graph.filmEngine.renderer, frame, typeface, intensity)
+                val rendered = ExportPipeline.render(
+                    p,
+                    lut(),
+                    graph.filmEngine.renderer,
+                    frame,
+                    typeface,
+                    intensity,
+                    adjustments
+                )
                 ExportPipeline.encode(p, rendered, frame, typeface)
             }
             withContext(Dispatchers.IO) { save(jpeg) }
