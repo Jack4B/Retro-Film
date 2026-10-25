@@ -31,6 +31,10 @@
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
     <string name="crop_straighten">Prostowanie</string>
+    <string name="crop_flip">Zamień poziom/pion</string>
+    <string name="crop_zoom">Docięcie (przybliżenie)</string>
+    <string name="crop_pan_x">Przesuń kadr poziomo</string>
+    <string name="crop_pan_y">Przesuń kadr pionowo</string>
     <string name="crop_reset">Wyzeruj kadr</string>
     <string name="tab_frame">Ramka</string>
 

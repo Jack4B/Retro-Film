@@ -75,4 +75,30 @@ class GeometryTest {
         assertEquals(4, out.height)
         assertEquals(Color.RED, out.getPixel(1, 0)) // po obrocie w prawo trafia w prawy górny róg
     }
+
+    @Test fun zoomShrinksCropKeepingAspectAndPanStaysInside() {
+        val g = Geometry(zoom = 2f)
+        assertFalse(g.isNeutral)
+        assertEquals(2000 to 1500, GeometryMath.outputSize(4000, 3000, g))
+        val edge = GeometryMath.crop(4000, 3000, g.copy(panX = 1f, panY = -1f))
+        assertEquals(1000f, edge.offsetX, 1f)
+        assertEquals(-750f, edge.offsetY, 1f)
+        assertEquals(0f, GeometryMath.crop(4000, 3000, Geometry(zoom = 1f, panX = 1f)).offsetX, 0.5f)
+    }
+
+    @Test fun panStaysInsideWhenStraightened() {
+        val c = GeometryMath.crop(4000, 3000, Geometry(zoom = 2f, straighten = 10f, panX = 1f, panY = 1f))
+        val rad = Math.toRadians(10.0)
+        val ex = c.width / 2 * Math.cos(rad) + c.height / 2 * Math.sin(rad)
+        val ey = c.width / 2 * Math.sin(rad) + c.height / 2 * Math.cos(rad)
+        assertTrue(c.offsetX + ex <= 2000.5)
+        assertTrue(c.offsetY + ey <= 1500.5)
+    }
+
+    @Test fun fourByThreeAndFlip() {
+        val (w, h) = GeometryMath.outputSize(4000, 2000, Geometry(aspect = CropAspect.Standard43))
+        assertEquals(4f / 3f, w.toFloat() / h, 0.01f)
+        val (fw, fh) = GeometryMath.outputSize(4000, 3000, Geometry(aspect = CropAspect.Standard43, flip = true))
+        assertEquals(3f / 4f, fw.toFloat() / fh, 0.01f)
+    }
 }

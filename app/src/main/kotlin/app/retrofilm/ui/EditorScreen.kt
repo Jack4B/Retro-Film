@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -64,6 +65,8 @@ private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
 private val TabHeight = 56.dp
+private val PanelCorner = 20.dp
+private val PanelElevation = 8.dp
 
 private enum class EditorTab(val label: Int) {
     Film(R.string.tab_film),
@@ -92,7 +95,7 @@ fun EditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceDim),
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.size(MinTouch)) {
                         Icon(
@@ -105,6 +108,7 @@ fun EditorScreen(
                 actions = { EditorActions(state, showBefore, { showBefore = !showBefore }, onSave) }
             )
         },
+        containerColor = MaterialTheme.colorScheme.surfaceDim,
         snackbarHost = snackbar
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
@@ -120,7 +124,11 @@ fun EditorScreen(
 @Composable
 private fun EditorPanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, onOpenLibrary: () -> Unit) {
     val maxHeight = (LocalConfiguration.current.screenHeightDp * PANEL_SCREEN_FRACTION).dp
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner),
+        shadowElevation = PanelElevation
+    ) {
         Column {
             Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState())) {
                 when (tab) {
