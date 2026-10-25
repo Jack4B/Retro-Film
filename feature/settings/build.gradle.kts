@@ -18,6 +18,7 @@ android {
 
 dependencies {
     implementation(project(":core:ui"))
+    implementation(libs.kotlinx.coroutines.core)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.tooling.preview)
