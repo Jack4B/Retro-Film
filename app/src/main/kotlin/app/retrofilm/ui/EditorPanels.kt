@@ -90,10 +90,10 @@ private fun categoryLabel(category: String): String = stringResource(
 fun FilmPanel(state: MainState) {
     var category by rememberSaveable { mutableStateOf<String?>(null) }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
-    val real = state.films.filter { it.id != IDENTITY_ID }
+    val real = state.library.films.filter { it.id != IDENTITY_ID }
     val categories = real.map { it.category }.distinct()
     val shown = real.filter {
-        (category == null || it.category == category) && (!onlyFavorites || it.id in state.favorites)
+        (category == null || it.category == category) && (!onlyFavorites || it.id in state.library.favorites)
     }
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
         FilmFilters(
@@ -181,7 +181,7 @@ private fun FilmFilters(
 private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
     val selected = films.firstOrNull { it.id == state.film } ?: return
     val scope = rememberCoroutineScope()
-    val favorite = selected.id in state.favorites
+    val favorite = selected.id in state.library.favorites
     val cd = stringResource(
         if (favorite) R.string.film_favorite_remove_cd else R.string.film_favorite_add_cd,
         selected.name.orEmpty()
@@ -196,7 +196,7 @@ private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
             modifier = Modifier.weight(1f)
         )
         IconButton(
-            onClick = { scope.launch { state.toggleFavorite(selected.id) } },
+            onClick = { scope.launch { state.library.toggleFavorite(selected.id) } },
             modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }
         ) {
             Icon(

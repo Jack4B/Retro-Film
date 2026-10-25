@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-25 – Claude (włączenie pobierania filmów)
+- Faza: D8/D9 – pobieranie filmów
+- Zrobione: `LutDownloadFeature.ENABLED = true`; `EngineFilmEngine` widzi filmy pobrane (`DownloadedFilms`, implementuje `WorkLutPackRepository`); lista filmów w Edytorze odświeża się po pobraniu (`FilmLibrary`); test `EngineFilmEngineDownloadedTest`.
+- PR / gałąź: `f5/pobieranie-filmow` (baza: `f5/edytor-krok-1`, #27).
+- Otwarte / P2 odłożone: nie sprawdziłem, czy tag `luts-v1` istnieje w Jack4B/Retro-Film-LUTs (poza moim zakresem) – bez niego pobieranie się nie uda; miniatury w APK dla filmów do pobrania i Biblioteka filmów (D12); test pobierania na urządzeniu/emulatorze.
+- Następny krok: @Forge: emulator.yml i test pobierania na telefonie; potwierdzić tag `luts-v1`.
+
 ## 2026-10-25 – Claude
 - Faza: redesign UI/UX, Edytor krok 1 (wg docs/OCENA-I-REDESIGN.md, PR #26)
 - Zrobione: `app` – Start (jedno CTA), Edytor z zakładkami Film / Ramka, przytrzymanie zdjęcia = oryginał, moc filmu 0–100%, kategorie z id katalogu, miniatury filmów na zdjęciu użytkownika (`FilmThumbnails`, z `LutMemoryCache`, bez osobnej pamięci podręcznej), ulubione (DataStore), zapis jednym dotknięciem; `ExportPipeline.render` przyjmuje `intensity` (domyślnie 1f). Usunięty `GalleryScreen` z `feature:start` (decyzja Jack4B: zostaje Photo Picker z wyborem wielu zdjęć) razem z testem i zrzutami.

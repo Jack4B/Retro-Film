@@ -12,12 +12,14 @@ import app.retrofilm.core.engine.pack.LutPackFiles
 import app.retrofilm.core.engine.pack.LutRawCache
 import app.retrofilm.core.engine.pack.PackDownloader
 import app.retrofilm.core.engine.pack.PackEntry
+import app.retrofilm.core.ui.engine.FilmLut
 import app.retrofilm.core.ui.lut.FailReason
 import app.retrofilm.core.ui.lut.LutCacheInfo
 import app.retrofilm.core.ui.lut.LutDownloadSettings
 import app.retrofilm.core.ui.lut.LutPack
 import app.retrofilm.core.ui.lut.LutPackRepository
 import app.retrofilm.core.ui.lut.PackState
+import app.retrofilm.engine.DownloadedFilms
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +38,8 @@ class WorkLutPackRepository(
     private val cache: LutRawCache,
     private val cacheState: MutableStateFlow<Long>
 ) : LutPackRepository,
-    LutCacheInfo {
+    LutCacheInfo,
+    DownloadedFilms {
     private val app = context.applicationContext
     private val workManager = WorkManager.getInstance(app)
 
@@ -87,9 +90,13 @@ class WorkLutPackRepository(
         cache.clear()
     }
 
+    /** Pobrane i gotowe filmy (PNG na urządzeniu); startowe z APK są w katalogu silnika. */
+    override fun available(): List<FilmLut> =
+        entries.filter { !it.bundled && LutPackFiles.pngFile(app, it).exists() }.map { FilmLut(it.id, it.displayName) }
+
     /** LUT pobranego filmu; rozpakowanie PNG → raw przy pierwszym użyciu. `null` gdy niepobrany. */
     @Suppress("ReturnCount")
-    fun lutFor(id: String): Lut? {
+    override fun lutFor(id: String): Lut? {
         val entry = entries.firstOrNull { it.id == id && !it.bundled } ?: return null
         val png = LutPackFiles.pngFile(app, entry)
         if (!png.exists()) return null

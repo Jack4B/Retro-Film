@@ -49,7 +49,7 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Uprawnienia `INTERNET` i `ACCESS_NETWORK_STATE` – **sieć służy wyłącznie do pobierania filtrów**.
 - `app/src/main/assets/luts/catalog-144.json` (bajt w bajt z Retro-Film-LUTs@0432c5a; pola m.in. `grid`, `unpackedLength`, `sha256`, `bytes`) jest wbudowany w APK. SHA-256 i rozmiar sprawdzane **przed** przyjęciem pliku; niezgodność ⇒ usunięcie i `Failed(CHECKSUM)`; potem atomowy rename. Test JVM porównuje katalog z `SHA256SUMS` (260 wpisów).
 - WorkManager: wznawianie (HTTP Range do `.part`, kontrola `Content-Range`), kolejka wraca po odzyskaniu sieci; „tylko Wi‑Fi” (domyślnie wł.) ⇒ `NetworkType.UNMETERED`. Przed startem sprawdzane wolne miejsce (`Failed(STORAGE)`).
-- Do czasu podpięcia silnika i ekranu ustawień pobieranie jest za flagą `LutDownloadFeature.ENABLED = false`.
+- Pobieranie jest **włączone** (`LutDownloadFeature.ENABLED = true`, polecenie Jack4B 2026-10-25); pobrane filmy widzi silnik (`DownloadedFilms`) i lista w Edytorze. Wymaga istniejącego tagu `luts-v1` w Jack4B/Retro-Film-LUTs (tag zakłada się wyłącznie na polecenie Jack4B).
 - W APK jest mały zestaw offline: identity + 10 filmów startowych w 33³ RGB8 (`core/engine/src/main/assets/luts/`, `catalog.json` z polem `bundled`).
 - Każda paczka zawiera `LICENSE` (CC BY-SA 4.0) i atrybucję: Pat David, Pavlov Dmitry, Michael Ezra – RawTherapee Film Simulation Collection.
 - Rozmiar siatki i format paczki do pobrania: zob. **D9**. Konwerter `tools/hald2lut.py` obsługuje dowolne `--size` i `--bits 8|16` (zestaw startowy w APK pozostaje 33³ RGB8).

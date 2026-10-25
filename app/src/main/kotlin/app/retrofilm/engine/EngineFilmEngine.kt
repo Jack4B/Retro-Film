@@ -11,6 +11,15 @@ import app.retrofilm.core.ui.engine.FilmEngine
 import app.retrofilm.core.ui.engine.FilmLut
 import java.util.concurrent.ConcurrentHashMap
 
+/** Filmy pobrane (D8/D9) widziane przez silnik obok filmów startowych z APK. */
+interface DownloadedFilms {
+    /** Filmy gotowe do użycia (pobrane PNG na urządzeniu), z id jak w katalogu (`kategoria/nazwa`). */
+    fun available(): List<FilmLut>
+
+    /** LUT pobranego filmu; `null`, gdy niepobrany. */
+    fun lutFor(id: String): Lut?
+}
+
 /**
  * Adapter `core:ui` [FilmEngine] nad `core:engine`: lista klisz z [LutCatalog], podgląd jako
  * macierz koloru dopasowana MNK do LUT-u ([LutAffineFit]); pełny render przez [renderer] ([LutEngine]).
@@ -20,11 +29,17 @@ class EngineFilmEngine(
     val renderer: LutEngine,
     private val open: (LutCatalog, LutEntry) -> Lut = { c, e -> c.open(e) },
     /** Ograniczony LRU zdekodowanych LUT-ów (domyślnie 3 × 144³); wcześniej mapa bez limitu. */
-    internal val luts: LutMemoryCache = LutMemoryCache()
+    internal val luts: LutMemoryCache = LutMemoryCache(),
+    /** Filmy pobrane; wołane leniwie (dopiero przy liście lub ładowaniu filmu spoza APK). */
+    private val downloaded: () -> DownloadedFilms? = { null }
 ) : FilmEngine {
     private val fits = ConcurrentHashMap<String, Array<FloatArray>>()
 
-    override fun availableLuts(): List<FilmLut> = catalog.entries.map { FilmLut(it.id, it.name) }
+    override fun availableLuts(): List<FilmLut> {
+        val bundled = catalog.entries.map { FilmLut(it.id, it.name) }
+        val known = bundled.mapTo(HashSet()) { it.id }
+        return bundled + downloaded()?.available().orEmpty().filter { it.id !in known }
+    }
 
     @Suppress("ReturnCount")
     override fun previewMatrix(lut: FilmLut?, intensity: Float): ColorMatrix? {
@@ -36,6 +51,7 @@ class EngineFilmEngine(
     /** Pełny LUT do renderu (eksport / pełna jakość); null gdy brak w katalogu. */
     fun load(id: String): Lut? = luts.getOrPut(id) {
         catalog.entries.firstOrNull { it.id == id }?.let { entry -> open(catalog, entry) }
+            ?: downloaded()?.lutFor(id)
     }
 
     companion object {

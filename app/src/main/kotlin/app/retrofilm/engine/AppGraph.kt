@@ -23,7 +23,11 @@ class AppGraph(context: Context) {
 
     val filmEngine: EngineFilmEngine by lazy {
         // D9: startowe PNG 144³ dekodowane raz i trzymane w tym samym LRU co pakiety pobierane.
-        EngineFilmEngine(LutCatalog(context.applicationContext.assets, lutRawCache), LutEngineFactory.create())
+        EngineFilmEngine(
+            LutCatalog(context.applicationContext.assets, lutRawCache),
+            LutEngineFactory.create(),
+            downloaded = { lutPackRepository }
+        )
     }
 
     private val lutCacheBytes = MutableStateFlow(0L)
