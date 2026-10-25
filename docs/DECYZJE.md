@@ -7,6 +7,7 @@
 | D3 | Dynamic color domyślnie wył. | Zdecydowane |
 | D4 | LUT-y w APK czy pobierane na żądanie | **Otwarte – decyduje Jack4B** |
 | D5 | Formuła `versionCode` | Proponowane |
+| D6 | Material 3 w wersji beta (Expressive) | Zdecydowane (tymczasowo) |
 
 ## D1 – Licencje LUT-ów
 RawTherapee Film Simulation Collection (Pat David, Pavlov Dmitry, Michael Ezra), CC BY-SA 4.0, https://rawpedia.rawtherapee.com/Film_Simulation. Regenerowane do 33³ jako utwór zależny CC BY-SA 4.0; `luts/` wyłączone z MIT. Szczegóły: [LUTS.md](LUTS.md).
@@ -25,3 +26,9 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 `versionCode = (major*10000 + minor*100 + patch) * 1000 + run_number % 1000`
 - Uwaga: `% 1000` się powtarza – przed przekroczeniem 999 zwiększ `patch`.
 - CI kończy się błędem, jeśli nowy `versionCode` ≤ `versionCode` ostatniego wydania.
+
+## D6 – Material 3 `1.5.0-beta02` (Expressive)
+- `androidx.compose.material3:material3` przypięte jawnie do `1.5.0-beta02` w `gradle/libs.versions.toml` (nadpisuje wersję z Compose BOM).
+- Powód: Jack4B chce Material 3 Expressive (`MaterialExpressiveTheme`, `MotionScheme.expressive()`), którego nie ma w stabilnym wydaniu.
+- Ryzyko: API Expressive jest eksperymentalne (`@ExperimentalMaterial3ExpressiveApi`) i może się zmienić lub zawierać błędy; beta może być niezgodna z innymi artefaktami z BOM.
+- Plan: po wydaniu stabilnej wersji 1.5.0 przejść na stabilną (najlepiej usunąć nadpisanie i brać wersję z BOM) i poprawić ewentualne zmiany API.

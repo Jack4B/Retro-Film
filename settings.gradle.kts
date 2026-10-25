@@ -15,6 +15,6 @@ dependencyResolutionManagement {
 rootProject.name = "Retro-Film"
 include(
     ":app",
-    ":core:engine", ":core:frame", ":core:batch", ":core:data", ":core:export",
+    ":core:ui", ":core:engine", ":core:frame", ":core:batch", ":core:data", ":core:export",
     ":feature:start", ":feature:editor", ":feature:batch", ":feature:luts", ":feature:settings"
 )

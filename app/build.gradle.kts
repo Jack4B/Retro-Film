@@ -59,6 +59,7 @@ tasks.register("printVersionCode") {
 }
 
 dependencies {
+    implementation(project(":core:ui"))
     implementation(project(":core:engine"))
     implementation(project(":core:frame"))
     implementation(project(":core:batch"))
