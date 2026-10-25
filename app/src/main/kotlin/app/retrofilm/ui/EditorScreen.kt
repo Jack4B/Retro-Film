@@ -45,15 +45,21 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
+import kotlin.math.roundToInt
 
 private val MinTouch = 48.dp
-private val PanelMaxHeight = 280.dp
+private const val PANEL_SCREEN_FRACTION = 0.42f
+private const val PERCENT = 100
+private val CaptionPad = 6.dp
 private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
@@ -103,24 +109,50 @@ fun EditorScreen(
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
             PreviewPane(state, showBefore, Modifier.weight(1f).fillMaxWidth())
+            if (state.preview != null) FilmCaption(state)
             if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
-            Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-                Column {
-                    Column(
-                        Modifier.fillMaxWidth().heightIn(max = PanelMaxHeight).verticalScroll(rememberScrollState())
-                    ) {
-                        when (tab) {
-                            EditorTab.Film -> FilmPanel(state, onOpenLibrary)
-                            EditorTab.Adjust -> AdjustPanel(state)
-                            EditorTab.Crop -> CropPanel(state)
-                            EditorTab.Frame -> FramePanel(state)
-                        }
-                    }
-                    TabBar(tab) { tab = it }
-                }
-            }
+            EditorPanel(state, tab, { tab = it }, onOpenLibrary)
         }
     }
+}
+
+/** Dolny panel: zawartość wybranej zakładki (przewijana, do ~42% wysokości ekranu) i pasek zakładek. */
+@Composable
+private fun EditorPanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, onOpenLibrary: () -> Unit) {
+    val maxHeight = (LocalConfiguration.current.screenHeightDp * PANEL_SCREEN_FRACTION).dp
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+        Column {
+            Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState())) {
+                when (tab) {
+                    EditorTab.Film -> FilmPanel(state, onOpenLibrary)
+                    EditorTab.Adjust -> AdjustPanel(state)
+                    EditorTab.Crop -> CropPanel(state)
+                    EditorTab.Frame -> FramePanel(state)
+                }
+            }
+            TabBar(tab, onTab)
+        }
+    }
+}
+
+/** Jedna linia pod zdjęciem: nazwa wybranego filmu i jego moc, żeby zawsze było widać, co jest nałożone. */
+@Composable
+private fun FilmCaption(state: MainState) {
+    val text = if (state.film == IDENTITY_ID) {
+        stringResource(R.string.film_none)
+    } else {
+        val name = state.library.films.firstOrNull { it.id == state.film }?.name.orEmpty()
+        stringResource(R.string.film_caption, name, (state.intensity * PERCENT).roundToInt())
+    }
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = EdgePad, vertical = CaptionPad)
+    )
 }
 
 @Composable

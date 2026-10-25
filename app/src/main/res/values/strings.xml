@@ -36,6 +36,7 @@
 
     <!-- Film -->
     <string name="film_none">Oryginał</string>
+    <string name="film_caption">%1$s · %2$d%%</string>
     <string name="film_all">Wszystkie</string>
     <string name="film_brand_kodak">Kodak</string>
     <string name="film_brand_fuji">Fuji</string>
