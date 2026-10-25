@@ -3,8 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val versionNameValue: String = rootProject.file("VERSION").readText().trim()
-val versionParts = versionNameValue.split(".").map { it.toInt() }
+val versionFile: String = rootProject.file("VERSION").readText().trim()
+// W release.yml nazwa wersji pochodzi z taga (bez "v"), np. 0.1.0-alpha.1.
+val versionNameValue: String = System.getenv("RELEASE_VERSION_NAME")?.takeIf { it.isNotBlank() } ?: versionFile
+val versionParts = versionNameValue.substringBefore("-").split(".").map { it.toInt() }
+check(versionNameValue.substringBefore("-") == versionFile) {
+    "Wersja z taga ($versionNameValue) nie zgadza się z plikiem VERSION ($versionFile)"
+}
 val runNumber: Int = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 0) % 1000
 val versionCodeValue: Int =
     (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2]) * 1000 + runNumber
