@@ -149,9 +149,20 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private fun vibrance() {
         val mx = maxOf(rgb[0], rgb[1], rgb[2])
         val chroma = if (mx > EPS) (mx - minOf(rgb[0], rgb[1], rgb[2])) / mx else 0f
-        val f = if (adj.saturation < 0f) 1f + adj.saturation else 1f + adj.saturation * (1f - chroma)
+        val f = if (adj.saturation < 0f) 1f + adj.saturation else 1f + adj.saturation * (1f - chroma) * skinGuard()
         val y = luma()
         for (k in 0..2) rgb[k] = (y + (rgb[k] - y) * f).coerceIn(0f, 1f)
+    }
+
+    /** 1 poza odcieniami skóry, w pomarańczowo-różowym zakresie mniej o [SKIN_GUARD]. */
+    private fun skinGuard(): Float {
+        val r = rgb[0]
+        val g = rgb[1]
+        val b = rgb[2]
+        if (r < g || g < b || r - b < EPS) return 1f
+        val hue = (g - b) / (r - b)
+        val d = (hue - SKIN_HUE) / SKIN_WIDTH
+        return 1f - SKIN_GUARD * maxOf(0f, 1f - d * d)
     }
 
     /**
@@ -178,16 +189,17 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
             val ny = (y + HALF) / rows * 2f - 1f
-            val d2 = (nx * nx + ny * ny) / 2f
-            val f = 1f - adj.vignette * VIGNETTE_MAX * d2 * d2
+            val r = kotlin.math.sqrt((nx * nx + ny * ny) / 2f)
+            val t = ((r - VIGNETTE_START) / (1f - VIGNETTE_START)).coerceIn(0f, 1f)
+            val f = 1f - adj.vignette * VIGNETTE_MAX * t * t * (VIGNETTE_A - VIGNETTE_B * t)
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
-            val gx = x / cell
-            val gy = y / cell
-            val amp = adj.grain * GRAIN_MAX * (1f - kotlin.math.abs(2f * luma() - 1f) * GRAIN_MIDTONE_BIAS)
-            val shared = noise(gx, gy, 0)
-            for (k in 0..2) rgb[k] += (shared * GRAIN_SHARED + noise(gx, gy, k + 1) * (1f - GRAIN_SHARED)) * amp
+            val amp = adj.grain * GRAIN_MAX * FilmGrain.midtoneWeight(luma().coerceIn(0f, 1f))
+            val shared = FilmGrain.luma(x, y, cell)
+            for (k in 0..2) {
+                rgb[k] += (shared * GRAIN_SHARED + FilmGrain.chroma(x, y, cell, k) * (1f - GRAIN_SHARED)) * amp
+            }
         }
     }
 
@@ -221,9 +233,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val FADE_TOP = 0.06f
         private const val VIGNETTE_MAX = 0.65f
         private const val GRAIN_MAX = 0.12f
-        private const val GRAIN_MIDTONE_BIAS = 0.6f
+        private const val SKIN_HUE = 0.5f
+        private const val SKIN_WIDTH = 0.4f
+        private const val SKIN_GUARD = 0.55f
+        private const val VIGNETTE_START = 0.35f
+        private const val VIGNETTE_A = 3f
+        private const val VIGNETTE_B = 2f
         private const val GRAIN_SHARED = 0.8f
-        private const val GRAIN_CELL_DIVISOR = 1400
+        private const val GRAIN_CELL_DIVISOR = 1200
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263
         private const val HASH_SALT = 1442695041
