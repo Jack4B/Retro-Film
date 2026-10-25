@@ -3,9 +3,7 @@ package app.retrofilm.lut
 import android.content.Context
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.pack.DownloadFailure
-import app.retrofilm.core.engine.pack.HaldClutDecoder
 import app.retrofilm.core.engine.pack.LutDownloadFeature
 import app.retrofilm.core.engine.pack.LutDownloadWorker
 import app.retrofilm.core.engine.pack.LutPackFiles
@@ -85,17 +83,6 @@ class WorkLutPackRepository(
     /** Usuwa tylko rozpakowany cache; pobrane PNG zostają. */
     override fun clearCache() {
         cache.clear()
-    }
-
-    /** LUT pobranego filmu; rozpakowanie PNG → raw przy pierwszym użyciu. `null` gdy niepobrany. */
-    @Suppress("ReturnCount")
-    fun lutFor(id: String): Lut? {
-        val entry = entries.firstOrNull { it.id == id && !it.bundled } ?: return null
-        val png = LutPackFiles.pngFile(app, entry)
-        if (!png.exists()) return null
-        return cache.get(entry.localName, entry.grid, entry.unpackedLength) {
-            png.inputStream().use { HaldClutDecoder.decode(it, entry.grid) }
-        }
     }
 
     private fun refresh() {

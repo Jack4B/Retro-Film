@@ -1,9 +1,10 @@
 package app.retrofilm.core.engine.pack
 
 /**
- * Flaga funkcji: pobieranie filtrów (D8) jest **wyłączone**, dopóki silnik i ekran ustawień
- * nie są podpięte do prawdziwego repozytorium. Gdy wyłączone: brak wpisów do pobrania i brak zadań sieciowych.
+ * Flaga funkcji: pobieranie filtrów (D8). Włączone na polecenie Jack4B: pobrane filmy są widoczne
+ * w silniku i w Edytorze (`EngineFilmEngine` + `DownloadedFilms`). Wyłączenie = brak wpisów do pobrania
+ * i brak zadań sieciowych.
  */
 object LutDownloadFeature {
-    const val ENABLED = false
+    const val ENABLED = true
 }

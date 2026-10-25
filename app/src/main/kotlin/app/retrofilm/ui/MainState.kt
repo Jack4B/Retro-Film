@@ -53,17 +53,11 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     var intensity by mutableFloatStateOf(1f)
     var frame by mutableStateOf(FrameOptions())
 
-    /** Ulubione filmy (id z katalogu); zapisywane w DataStore, odczyt przez [observeFavorites]. */
-    var favorites by mutableStateOf<Set<String>>(emptySet())
-        private set
-
     /** Miniatury filmów na bieżącym zdjęciu (zob. [FilmThumbnails]). */
     val thumbnails = FilmThumbnails(graph, typeface)
 
-    val films: List<FilmOption> by lazy {
-        listOf(FilmOption(IDENTITY_ID, null)) +
-            graph.filmEngine.availableLuts().filter { it.id != IDENTITY_ID }.map { FilmOption(it.id, it.name) }
-    }
+    /** Filmy startowe i pobrane oraz ulubione (zob. [FilmLibrary]). */
+    val library = FilmLibrary(graph)
 
     @androidx.annotation.VisibleForTesting
     internal fun setPhotoForTest(bitmap: Bitmap) {
@@ -76,15 +70,6 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         preview = null
         before = null
         thumbnails.reset()
-    }
-
-    /** Zbiera ulubione z DataStore; wołane z `LaunchedEffect` ekranu. */
-    suspend fun observeFavorites() {
-        graph.appSettings.favoriteFilms.collect { favorites = it }
-    }
-
-    suspend fun toggleFavorite(id: String) {
-        graph.appSettings.setFavorite(id, id !in favorites)
     }
 
     /** Status podpisu dla bieżącego zdjęcia i ramki (blokada eksportu przy TooLong). */
