@@ -20,6 +20,7 @@ import app.retrofilm.core.ui.RetroFilmTheme
 import app.retrofilm.core.ui.ThemeMode
 import app.retrofilm.core.ui.photo.LocalPhotoRenderer
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.pipeline.SignatureFont
 import app.retrofilm.ui.MainScreen
 import app.retrofilm.ui.MainState
 import app.retrofilm.ui.RetroFilmNavHost
@@ -30,6 +31,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val graph = AppGraph.get(this)
         val typeface = signatureTypeface()
+        val fonts = signatureFonts()
         setContent {
             CompositionLocalProvider(LocalPhotoRenderer provides graph.photoRenderer) {
                 val dynamicColor by graph.appSettings.dynamicColor.collectAsState(initial = false)
@@ -38,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 SideEffect { applySystemBars(dark) }
                 RetroFilmTheme(dynamicColor = dynamicColor, darkTheme = dark) {
                     Surface(modifier = Modifier.fillMaxSize()) {
-                        val state = remember { MainState(graph, typeface) }
+                        val state = remember { MainState(graph, typeface, fonts) }
                         RetroFilmNavHost(graph, dynamicColor, themeMode) { navigate ->
                             MainScreen(state, onSettings = { navigate(Route.Settings) })
                         }
@@ -52,6 +54,12 @@ class MainActivity : ComponentActivity() {
     private fun applySystemBars(dark: Boolean) {
         val style = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark }
         enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+    }
+
+    /** Wszystkie kroje podpisu z core:ui, wczytywane przy pierwszym użyciu. */
+    private fun signatureFonts(): (SignatureFont) -> Typeface {
+        val cache = mutableMapOf<SignatureFont, Typeface>()
+        return { font -> cache.getOrPut(font) { resources.getFont(font.res) } }
     }
 
     /** Caveat z core:ui – ten sam krój co podpis w podglądzie ramki. */

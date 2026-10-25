@@ -334,6 +334,7 @@ fun FramePanel(state: MainState) {
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            SignatureStyleControls(state)
         }
     }
 }
