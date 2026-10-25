@@ -7,11 +7,20 @@ import kotlinx.coroutines.flow.update
 /** Atrapa do podglądów i testów (tylko debug). Zmienia stany natychmiast, bez sieci. */
 class FakeLutPackRepository(initial: List<LutPack>) :
     LutPackRepository,
-    LutDownloadSettings {
+    LutDownloadSettings,
+    LutCacheInfo {
     private val _packs = MutableStateFlow(initial)
     override val packs: StateFlow<List<LutPack>> = _packs
     private val _onlyWifi = MutableStateFlow(true)
     override val onlyWifi: StateFlow<Boolean> = _onlyWifi
+    private val _downloadedBytes = MutableStateFlow(0L)
+    override val downloadedBytes: StateFlow<Long> = _downloadedBytes
+    private val _cacheBytes = MutableStateFlow(0L)
+    override val cacheBytes: StateFlow<Long> = _cacheBytes
+
+    override fun clearCache() {
+        _cacheBytes.value = 0L
+    }
 
     override fun download(id: String) = set(id, PackState.Ready)
 
