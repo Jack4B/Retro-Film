@@ -26,9 +26,6 @@
     <string name="license_film_simulator_title">Film-Simulator</string>
     <string name="license_haldclut_title">Filtry filmowe (HaldCLUT)</string>
     <string name="license_caveat_title">Font Caveat</string>
-    <string name="license_marck_script_title">Font Marck Script</string>
-    <string name="license_indie_flower_title">Font Indie Flower</string>
-    <string name="license_sacramento_title">Font Sacramento</string>
 
     <string name="lut_back">Wstecz</string>
     <string name="lut_title">Filtry (LUT)</string>
