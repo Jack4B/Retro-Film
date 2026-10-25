@@ -10,7 +10,7 @@ val AccentAmber = Color(0xFFF5A33B)
 
 private val DarkColors = darkColorScheme(
     primary = AccentAmber,
-    secondary = AccentAmber,
+    secondary = AccentAmber
 )
 
 @Composable
