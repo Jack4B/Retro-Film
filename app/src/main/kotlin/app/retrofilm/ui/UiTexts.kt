@@ -13,12 +13,11 @@ class UiTexts private constructor(private val context: Context) {
         is UiMessage.ExportFailed -> context.getString(R.string.export_failed, msg.reason)
     }
 
-    private fun saved(msg: UiMessage.SavedMany): String =
-        if (msg.failed == 0) {
-            context.getString(R.string.export_many_done, msg.saved)
-        } else {
-            context.getString(R.string.export_many_partial, msg.saved, msg.failed)
-        }
+    private fun saved(msg: UiMessage.SavedMany): String = if (msg.failed == 0) {
+        context.getString(R.string.export_many_done, msg.saved)
+    } else {
+        context.getString(R.string.export_many_partial, msg.saved, msg.failed)
+    }
 
     companion object {
         fun from(context: Context) = UiTexts(context)
