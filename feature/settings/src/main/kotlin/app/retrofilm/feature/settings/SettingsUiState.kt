@@ -2,6 +2,7 @@ package app.retrofilm.feature.settings
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import app.retrofilm.core.ui.ThemeMode
 import app.retrofilm.core.ui.supportsDynamicColor
 
 /** Komponenty wymagające atrybucji, z tekstem licencji w assets core:ui. */
@@ -34,6 +35,8 @@ enum class ThirdPartyLicense(
 /** Stan ekranu Ustawienia. Ekran jest bezstanowy – stan trzyma wywołujący. */
 @Immutable
 data class SettingsUiState(
+    /** Motyw (ciemny / jasny / systemowy); `null` ukrywa wybór (np. w zrzutach bez tej opcji). */
+    val themeMode: ThemeMode? = null,
     /** Dynamiczne kolory (Material You), domyślnie wyłączone. */
     val dynamicColor: Boolean = false,
     /** Przełącznik widoczny tylko na API 31+. */

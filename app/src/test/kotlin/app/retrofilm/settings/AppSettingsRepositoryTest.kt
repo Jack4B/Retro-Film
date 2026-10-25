@@ -1,6 +1,7 @@
 package app.retrofilm.settings
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import app.retrofilm.core.ui.ThemeMode
 import java.io.File
 import java.nio.file.Files
 import kotlinx.coroutines.CoroutineScope
@@ -57,5 +58,14 @@ class AppSettingsRepositoryTest {
         )
         withRepo { it.setFavorite("bw/kodak_tri_x_400", false) }
         assertEquals(setOf("negative_new/kodak_portra_400"), withRepo { it.favoriteFilms.first() })
+    }
+
+    @Test
+    fun themeModeDefaultsToDarkAndIsPersisted() {
+        assertEquals(ThemeMode.Dark, withRepo { it.themeMode.first() })
+        withRepo { it.setThemeMode(ThemeMode.Light) }
+        assertEquals(ThemeMode.Light, withRepo { it.themeMode.first() })
+        withRepo { it.setThemeMode(ThemeMode.System) }
+        assertEquals(ThemeMode.System, withRepo { it.themeMode.first() })
     }
 }
