@@ -10,7 +10,9 @@ import kotlin.math.max
  */
 object DetailFilter {
     private const val SHARP_RADIUS_DIV = 1500
-    private const val CLARITY_RADIUS_DIV = 45
+    private const val CLARITY_RADIUS_DIV = 25
+    private const val CLARITY_TARGET = 600
+    private const val CLARITY_EPS = 0.0036f
     private const val SHARP_GAIN = 1.6f
     private const val CLARITY_GAIN = 0.9f
     private const val NOISE_FLOOR = 2f
@@ -37,14 +39,27 @@ object DetailFilter {
             for (i in luma.indices) delta[i] += softThreshold(luma[i] - blur[i]) * sharpness * SHARP_GAIN
         }
         if (clarity != 0f) {
-            val radius = max(2, longSide / CLARITY_RADIUS_DIV)
-            val blur = boxBlur(luma, width, height, radius)
+            val base = edgePreservingBase(luma, width, height)
             for (i in luma.indices) {
                 val mid = 1f - abs(2f * luma[i] / BYTE_MAX - 1f)
-                delta[i] += (luma[i] - blur[i]) * clarity * CLARITY_GAIN * mid
+                delta[i] += (luma[i] - base[i]) * clarity * CLARITY_GAIN * mid
             }
         }
         for (i in px.indices) px[i] = shifted(px[i], delta[i])
+    }
+
+    /**
+     * Warstwa bazowa jasności z filtru prowadzonego w zmniejszonej skali: różnica od niej to lokalny kontrast
+     * bez halo przy krawędziach (zwykłe rozmycie rysuje jasne obwódki wokół kontrastowych krawędzi).
+     */
+    private fun edgePreservingBase(luma: FloatArray, w: Int, h: Int): FloatArray {
+        val low = Lowres.forSize(w, h, CLARITY_TARGET)
+        val small = low.down(FloatArray(luma.size) { luma[it] / BYTE_MAX })
+        val radius = max(2, max(low.w, low.h) / CLARITY_RADIUS_DIV)
+        val filtered = GuidedFilter.filter(small, small, low.w, low.h, radius, CLARITY_EPS)
+        val base = FloatArray(luma.size)
+        for (y in 0 until h) for (x in 0 until w) base[y * w + x] = low.sample(filtered, x, y) * BYTE_MAX
+        return base
     }
 
     private fun lumaOf(c: Int): Float =
@@ -75,7 +90,7 @@ object DetailFilter {
         return a
     }
 
-    private fun blurRows(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
+    internal fun blurRows(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
         val window = (2 * r + 1).toFloat()
         for (y in 0 until h) {
             val row = y * w
@@ -88,7 +103,7 @@ object DetailFilter {
         }
     }
 
-    private fun blurCols(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
+    internal fun blurCols(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
         val window = (2 * r + 1).toFloat()
         for (x in 0 until w) {
             var sum = 0f

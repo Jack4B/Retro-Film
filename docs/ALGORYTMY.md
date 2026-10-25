@@ -32,6 +32,9 @@ Apache 2.0) można by przenieść z zachowaniem noty autorskiej w `THIRD_PARTY.m
 | CyberTimon/RapidRAW | **AGPL-3.0** | tylko inspiracja pomysłami, kodu nie kopiujemy |
 | darktable, RawTherapee, ART, Ansel, Filmulator | **GPL** | tylko inspiracja pomysłami, kodu nie kopiujemy |
 | LibRaw | LGPL/CDDL | do rozważenia przy obsłudze RAW (osobna decyzja) |
+| Wyrazistość | warstwa bazowa z filtru prowadzonego (guided filter, He i in. 2010/2013) w zmniejszonej skali; lokalny kontrast = jasność − baza, waga półtonów; bez halo przy krawędziach | publikacja naukowa, własna implementacja |
+| Usuń zamglenie | dark channel prior (He, Sun, Tang 2009): światło atmosferyczne z górnych 0,1% ciemnego kanału, mapa transmisji t = 1 − ω·dark, udoskonalona filtrem prowadzonym, J = (I − A)/max(t, t0) + A | publikacja naukowa, własna implementacja |
+| Odszumianie kolorów | rozkład na Y/Cb/Cr, wygładzanie Cb/Cr filtrem prowadzonym z jasnością jako przewodnikiem (kolory nie wyciekają przez krawędzie), jasność nietknięta | publikacja naukowa, własna implementacja |
 
 Zmiana tej polityki (np. przejście aplikacji na GPL, żeby móc korzystać z darktable/RawTherapee) to decyzja Jack4B, nie robimy jej sami.
 
