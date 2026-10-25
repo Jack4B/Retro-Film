@@ -47,7 +47,7 @@ import app.retrofilm.core.frame.SignatureFitStatus
 
 private val MinTouch = 48.dp
 private val PanelMaxHeight = 280.dp
-private val BadgeAlpha = 0.72f
+private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
 private val TabHeight = 56.dp
@@ -151,7 +151,7 @@ private fun PreviewPane(state: MainState, modifier: Modifier) {
 @Composable
 private fun Badge(text: String, modifier: Modifier, color: Color = Color.White) {
     Surface(
-        color = Color.Black.copy(alpha = BadgeAlpha),
+        color = Color.Black.copy(alpha = BADGE_ALPHA),
         shape = MaterialTheme.shapes.medium,
         modifier = modifier.padding(BadgePad)
     ) {

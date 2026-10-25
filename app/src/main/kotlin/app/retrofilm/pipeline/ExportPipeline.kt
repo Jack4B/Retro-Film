@@ -23,6 +23,7 @@ object ExportPipeline {
      * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada LUT (null = oryginał) i ramkę.
      * Wynik jest zawsze w sRGB, więc `Bitmap.compress` zapisze profil zgodny z pikselami.
      */
+    @Suppress("LongParameterList") // intensywność dochodzi do istniejących parametrów; grupowanie później
     suspend fun render(
         photo: Bitmap,
         lut: Lut?,
