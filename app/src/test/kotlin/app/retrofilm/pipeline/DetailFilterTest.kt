@@ -49,7 +49,8 @@ class DetailFilterTest {
         val down = up.copyOf()
         DetailFilter.apply(up, w, 20, 0f, 1f)
         DetailFilter.apply(down, w, 20, 0f, -1f)
-        fun spread(p: IntArray) = (0 until w).maxOf { red(p[5 * w + it]) } - (0 until w).minOf { red(p[5 * w + it]) }
+        val inner = 40 until 160 // środek obrazu, bez wpływu uciętego rozmycia na brzegach
+        fun spread(p: IntArray) = inner.maxOf { red(p[5 * w + it]) } - inner.minOf { red(p[5 * w + it]) }
         assertTrue(spread(up) > 36)
         assertTrue(spread(down) < 36)
     }
