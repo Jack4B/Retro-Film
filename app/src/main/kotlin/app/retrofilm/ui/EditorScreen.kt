@@ -63,6 +63,7 @@ private enum class EditorTab(val label: Int) {
  * Przytrzymanie zdjęcia pokazuje oryginał; „Zapisz” zapisuje od razu z bieżącymi ustawieniami.
  */
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LongParameterList") // zdarzenia ekranu przekazywane jawnie
 @Composable
 fun EditorScreen(
     state: MainState,

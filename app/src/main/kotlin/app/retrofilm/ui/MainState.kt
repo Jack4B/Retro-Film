@@ -39,6 +39,7 @@ sealed interface UiMessage {
 const val IDENTITY_ID = "identity"
 
 /** Stan ścieżki testowej: zdjęcie → film → ramka/podpis → eksport. */
+@Suppress("TooManyFunctions") // stan jednej ścieżki: wczytanie, podgląd, zapis pojedynczy i seria
 class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     var photo by mutableStateOf<Bitmap?>(null)
         private set
