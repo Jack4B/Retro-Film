@@ -93,24 +93,22 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
     val real = state.library.films.filter { it.id != IDENTITY_ID }
     val categories = real.map { it.category }.distinct()
+    val current = category ?: real.firstOrNull { it.id == state.film }?.category ?: categories.firstOrNull()
     val shown = real.filter {
-        (category == null || it.category == category) && (!onlyFavorites || it.id in state.library.favorites)
+        if (onlyFavorites) it.id in state.library.favorites else it.category == current
     }
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
                 FilmFilters(
                     categories = categories,
-                    category = category,
+                    category = current,
                     onlyFavorites = onlyFavorites,
                     onCategory = {
                         category = it
                         onlyFavorites = false
                     },
-                    onFavorites = {
-                        onlyFavorites = true
-                        category = null
-                    }
+                    onFavorites = { onlyFavorites = true }
                 )
             }
             val libraryCd = stringResource(R.string.library_open_cd)
@@ -157,18 +155,11 @@ private fun FilmFilters(
     categories: List<String>,
     category: String?,
     onlyFavorites: Boolean,
-    onCategory: (String?) -> Unit,
+    onCategory: (String) -> Unit,
     onFavorites: () -> Unit
 ) {
     if (categories.size <= 1) return
     LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
-        item(key = "all") {
-            FilterChip(
-                selected = category == null && !onlyFavorites,
-                onClick = { onCategory(null) },
-                label = { Text(stringResource(R.string.film_all)) }
-            )
-        }
         item(key = "favorites") {
             FilterChip(
                 selected = onlyFavorites,
@@ -178,7 +169,7 @@ private fun FilmFilters(
         }
         items(categories, key = { it }) { c ->
             FilterChip(
-                selected = category == c,
+                selected = category == c && !onlyFavorites,
                 onClick = { onCategory(c) },
                 label = { Text(categoryLabel(c)) }
             )
