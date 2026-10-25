@@ -23,12 +23,14 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -79,11 +82,16 @@ data class LutDownloadUiState(
     /** Brak jakiegokolwiek połączenia. */
     val offline: Boolean = false,
     /** Połączenie jest, ale nie Wi‑Fi. */
-    val wifiAvailable: Boolean = true
+    val wifiAvailable: Boolean = true,
+    /** [app.retrofilm.core.ui.lut.LutCacheInfo.downloadedBytes]: suma pobranych PNG, per film. */
+    val downloadedBytes: Long = packs.filter { !it.bundled && it.state == PackState.Ready }.sumOf { it.sizeBytes },
+    /** [app.retrofilm.core.ui.lut.LutCacheInfo.cacheBytes]: rozpakowany cache (np. 256³ ≈ 50 MB na film). */
+    val cacheBytes: Long = 0L,
+    /** Widoczny dialog potwierdzenia „Wyczyść pamięć podręczną”. */
+    val showClearCacheDialog: Boolean = false
 ) {
     val toDownload: List<LutPack> get() = packs.filter { !it.bundled && it.state != PackState.Ready }
     val missingBytes: Long get() = toDownload.sumOf { it.sizeBytes }
-    val downloadedBytes: Long get() = packs.filter { !it.bundled && it.state == PackState.Ready }.sumOf { it.sizeBytes }
     val readyCount: Int get() = packs.count { it.bundled || it.state == PackState.Ready }
     val waitingForWifi: Boolean get() = onlyWifi && !wifiAvailable && !offline
 }
@@ -126,8 +134,14 @@ fun LutDownloadScreen(
     onDownloadAll: () -> Unit,
     onOnlyWifiChange: (Boolean) -> Unit,
     onOpenLicenses: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClearCacheRequest: () -> Unit = {},
+    onClearCacheConfirm: () -> Unit = {},
+    onClearCacheDismiss: () -> Unit = {}
 ) {
+    if (state.showClearCacheDialog) {
+        ClearCacheDialog(state.cacheBytes, onClearCacheConfirm, onClearCacheDismiss)
+    }
     val cs = MaterialTheme.colorScheme
     val busy = state.packs.any { it.state is PackState.Downloading }
     Scaffold(
@@ -159,13 +173,13 @@ fun LutDownloadScreen(
                             modifier = Modifier.semantics { heading() }
                         )
                         Text(
-                            "Do pobrania: ${formatBytes(state.missingBytes)} · pobrane: " +
-                                "${formatBytes(
-                                    state.downloadedBytes
-                                )} · wolne miejsce: ${formatBytes(state.freeSpaceBytes)}",
+                            "Do pobrania: ${formatBytes(state.missingBytes)}",
                             color = cs.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        SizeLine("Pobrane filtry", state.downloadedBytes)
+                        SizeLine("Pamięć podręczna", state.cacheBytes)
+                        SizeLine("Wolne miejsce", state.freeSpaceBytes)
                         if (state.toDownload.isEmpty()) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -225,6 +239,29 @@ fun LutDownloadScreen(
                                 "(albo wyłącz „Tylko przez Wi‑Fi”)."
                         }
                     )
+                }
+            }
+            item(key = "cache") {
+                GroupCard {
+                    Column {
+                        ListItem(
+                            headlineContent = { Text("Wyczyść pamięć podręczną") },
+                            supportingContent = {
+                                Text(
+                                    "Zwolni ${formatBytes(state.cacheBytes)}. Pobrane filmy zostają – " +
+                                        "rozpakują się ponownie przy następnym użyciu."
+                                )
+                            },
+                            leadingContent = { Icon(Icons.Outlined.DeleteSweep, null) },
+                            colors = ListItemDefaults.colors(containerColor = cs.surfaceContainerLow),
+                            modifier = Modifier.heightIn(min = 56.dp).clickable(
+                                enabled = state.cacheBytes > 0L,
+                                role = Role.Button,
+                                onClickLabel = "Wyczyść pamięć podręczną, zwolni ${formatBytes(state.cacheBytes)}",
+                                onClick = onClearCacheRequest
+                            )
+                        )
+                    }
                 }
             }
             item(key = "films-label") {
@@ -355,6 +392,48 @@ private fun PackAction(
             Icon(Icons.Outlined.Refresh, "Spróbuj ponownie: ${pack.displayName}", tint = cs.primary)
         }
     }
+}
+
+@Composable
+private fun SizeLine(label: String, bytes: Long) {
+    Row(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text(formatBytes(bytes), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun ClearCacheDialog(cacheBytes: Long, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Outlined.DeleteSweep, null) },
+        title = { Text("Wyczyścić pamięć podręczną?", modifier = Modifier.semantics { heading() }) },
+        text = {
+            Text(
+                "Zwolnisz ${formatBytes(cacheBytes)}. Pobrane filmy zostają na telefonie – " +
+                    "rozpakują się ponownie przy następnym użyciu (pierwsze zdjęcie może potrwać dłużej)."
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.heightIn(min = 48.dp).semantics {
+                    contentDescription = "Wyczyść pamięć podręczną, zwolni ${formatBytes(cacheBytes)}"
+                }
+            ) { Text("Wyczyść") }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.heightIn(min = 48.dp).semantics {
+                    contentDescription = "Anuluj, nie czyść pamięci podręcznej"
+                }
+            ) { Text("Anuluj") }
+        }
+    )
 }
 
 @Composable

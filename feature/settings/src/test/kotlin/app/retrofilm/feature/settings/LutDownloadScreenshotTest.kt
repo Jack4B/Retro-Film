@@ -1,5 +1,6 @@
 package app.retrofilm.feature.settings
 
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import app.retrofilm.core.ui.RetroFilmTheme
@@ -38,6 +39,9 @@ private fun packs(vararg states: PackState): List<LutPack> = listOf(
 
 private val nd = PackState.NotDownloaded
 private val ok = PackState.Ready
+
+/** Rozpakowany cache jednego filmu N³ × RGB8, np. 256³ ≈ 50 MB. */
+private fun cacheOf(n: Long): Long = n * n * n * 3
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -89,6 +93,27 @@ class LutDownloadScreenshotTest {
     )
 
     @Test fun offline() = shot("offline", LutDownloadUiState(packs(ok, nd, nd, nd, nd, nd), FREE, offline = true))
+
+    private fun cacheState(dialog: Boolean): LutDownloadUiState {
+        val p = packs(ok, ok, ok, nd, nd, nd)
+        // Pobrane PNG: realne rozmiary per film; cache: jeden film 256³, dwa 144³.
+        val cache = cacheOf(256) + cacheOf(144) * 2
+        return LutDownloadUiState(p, FREE, cacheBytes = cache, showClearCacheDialog = dialog)
+    }
+
+    @Test fun cache() = shot("cache", cacheState(dialog = false))
+
+    @Test fun clear_dialog() {
+        compose.setContent {
+            RetroFilmTheme { LutDownloadScreen(cacheState(dialog = true), {}, {}, {}, {}, {}, {}, {}) }
+        }
+        compose.onNode(isDialog()).captureRoboImage("src/test/screenshots/lut-wyczysc-dialog.png")
+    }
+
+    @Test fun cacheSizeIsPerFilm() {
+        assertEquals(50_331_648L, cacheOf(256))
+        assertEquals("48 MB", formatBytes(cacheOf(256))) // formatBytes liczy w MiB
+    }
 
     @Test fun formatsPolish() {
         assertEquals("820 KB", formatBytes(820 * KB))
