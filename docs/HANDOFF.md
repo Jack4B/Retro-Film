@@ -17,6 +17,7 @@ Nowe wpisy na górze. Szablon:
 - PR / gałąź: `ccr-0dd79b3e-ffwulp`.
 - Otwarte / P2 odłożone: README i PLAN nadal opisują stan sprzed kodu (T2); EKRANY.md ma notę o v2, ale treść sprzed v2; informacja o braku powiązania z producentami w „Licencje i autorzy” (do zatwierdzenia); kod UI w #27 („Edytor krok 1”), potem seria, Korekty, miniatury, Biblioteka filmów.
 - Następny krok: review Gauge → Critic.
+- Dopisane: D13 (motyw jasny/ciemny) i makiety w obu motywach (przycisk „Motyw” w `docs/makiety/index.html`).
 
 ## 2026-10-25 – Forge
 - Faza: F3 (spięcie aplikacji)

@@ -6,6 +6,12 @@
 <title>Retro-Film – makiety v2</title>
 <style>
 :root{--bg:#0E0E10;--s1:#1A1A1E;--s2:#26262C;--s3:#303038;--tx:#F2F2F2;--tx2:#A0A0A8;--ac:#F5A33B;--onac:#1A1206;--sel:#3A2A12;--ol:#3A3A42;--err:#FF8A80}
+:root[data-theme="light"]{--bg:#FBF8F3;--s1:#F3EDE4;--s2:#EAE2D6;--s3:#E2D9CB;--tx:#211B13;--tx2:#51473B;--ac:#8A5200;--onac:#FFFFFF;--sel:#FFDDB3;--ol:#7F7568;--err:#B3261E}
+:root[data-theme="light"] body{background:#E9E4DB}
+:root[data-theme="light"] .phone{border-color:#cfc6b8}
+:root[data-theme="light"] .scrim{background:#0006}
+:root[data-theme="light"] .tabs{border-top-color:#D5CBBB}
+.themebtn{position:fixed;right:16px;top:16px;z-index:9;min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--ol);background:var(--s1);color:var(--tx);font:inherit;cursor:pointer}
 *{box-sizing:border-box;margin:0}
 body{background:#050506;color:var(--tx);font:15px/1.4 Roboto,system-ui,sans-serif;padding:24px 16px 64px}
 h1{font-size:26px;margin-bottom:6px}
@@ -45,6 +51,7 @@ h1{font-size:26px;margin-bottom:6px}
 .slider u:before{content:"";position:absolute;left:var(--v,50%);top:-9px;width:4px;height:24px;background:var(--ac);border-radius:2px}
 .card{background:var(--s1);border-radius:16px;padding:14px 16px;margin:0 16px 10px}
 .hint{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:#000b;border-radius:16px;padding:6px 14px;font-size:12px}
+.badge,.hint{color:#fff}
 .badge{position:absolute;top:10px;left:10px;background:#000b;border-radius:10px;padding:4px 10px;font-size:12px}
 .strip{display:flex;gap:6px;padding:8px 16px;overflow:hidden}
 .strip i{width:44px;height:44px;border-radius:8px;flex:none;background:linear-gradient(#ffb865,#8a5a55)}
@@ -67,8 +74,9 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 </style>
 </head>
 <body>
+<button class="themebtn" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'" aria-label="Przełącz motyw makiet">◐ Motyw</button>
 <h1>Retro-Film – makiety v2</h1>
-<p class="lead">Propozycja redesignu UI/UX, wersja po decyzjach Jack4B. Statyczne makiety 360×740 dp w palecie z <code>core/ui/Theme.kt</code> (tło #0E0E10, akcent #F5A33B). Zdjęcia są umowne; nazwy filmów są prawdziwe, jak w <code>catalog.json</code> (D11). Decyzje v0.1 (D12): zakładki w Edytorze, eksport tylko JPEG, w serii jeden film i jedna ramka, podpis osobno dla każdego zdjęcia, miniatury w APK także dla filmów do pobrania, bez galerii własnej. Uzasadnienie: <code>docs/OCENA-I-REDESIGN.md</code>.</p>
+<p class="lead">Propozycja redesignu UI/UX, wersja po decyzjach Jack4B. Statyczne makiety 360×740 dp w palecie z <code>core/ui/Theme.kt</code>: ciemny (tło #0E0E10, akcent #F5A33B) i jasny (tło #FBF8F3, akcent #8A5200 – kontrast AA). Przycisk „Motyw” w rogu przełącza podgląd. Zdjęcia są umowne; nazwy filmów są prawdziwe, jak w <code>catalog.json</code> (D11). Decyzje v0.1 (D12): zakładki w Edytorze, eksport tylko JPEG, w serii jeden film i jedna ramka, podpis osobno dla każdego zdjęcia, miniatury w APK także dla filmów do pobrania, bez galerii własnej. Uzasadnienie: <code>docs/OCENA-I-REDESIGN.md</code>.</p>
 
 <h3>A. Przepływ główny: Start → Edytor (jedno miejsce pracy) → Eksport (arkusz)</h3>
 <div class="row">
@@ -131,7 +139,7 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <!-- 3 EDYTOR RAMKA -->
 <div class="fig"><div class="phone">
   <div class="bar"><div class="ico">←</div><b style="font-size:16px">3 z 12</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
-  <div class="photo" style="background:#17171a"><div class="frame"><div class="p"><div class="sun" style="width:40px;height:40px"></div><div class="m1"></div><div class="m2"></div></div><div class="sig">Tatry, sierpień</div></div></div>
+  <div class="photo" style="background:var(--s1)"><div class="frame"><div class="p"><div class="sun" style="width:40px;height:40px"></div><div class="m1"></div><div class="m2"></div></div><div class="sig">Tatry, sierpień</div></div></div>
   <div class="panel" style="padding-bottom:2px">
     <div class="scroll" style="padding-bottom:8px;align-items:center"><span class="chip on">Ramka włączona</span><span class="chip on">1:1</span><span class="chip">4:5</span><span class="chip">3:2</span><span class="chip">Oryginał</span></div>
     <div class="scroll" style="padding-bottom:6px;align-items:center">
@@ -224,10 +232,11 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <!-- 7 USTAWIENIA -->
 <div class="fig"><div class="phone">
   <div class="bar"><div class="ico">←</div><b>Ustawienia</b></div>
+  <div style="padding:4px 16px;color:var(--tx2);font-size:12px;letter-spacing:.08em">WYGLĄD</div>
+  <div class="card"><b>Motyw</b><div class="seg" style="margin-top:8px"><div>Systemowy</div><div class="on">Ciemny</div><div>Jasny</div></div></div>
   <div style="padding:4px 16px;color:var(--tx2);font-size:12px;letter-spacing:.08em">DOMYŚLNE</div>
   <div class="card"><b>Ramka i podpis</b><div style="color:var(--tx2);font-size:13px">Wył. · biała · 1:1</div></div>
   <div class="card"><b>Zapis</b><div style="color:var(--tx2);font-size:13px">JPEG · wysoka · oryginalny rozmiar</div></div>
-  <div style="padding:10px 16px 4px;color:var(--tx2);font-size:12px;letter-spacing:.08em">WYGLĄD</div>
   <div class="card" style="display:flex;align-items:center"><div style="flex:1"><b>Kolory z tapety</b><div style="color:var(--tx2);font-size:13px">Material You, Android 12+</div></div><div style="width:52px;height:32px;border-radius:16px;border:2px solid var(--ol)"></div></div>
   <div style="padding:10px 16px 4px;color:var(--tx2);font-size:12px;letter-spacing:.08em">PAMIĘĆ I SIEĆ</div>
   <div class="card"><b>Pobrane filmy: 820 KB · cache 0 MB</b><div style="color:var(--tx2);font-size:13px">Wyczyść · tylko Wi-Fi: wł.</div></div>
@@ -236,6 +245,7 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 </div>
 <h2>7 · Ustawienia</h2><ul>
 <li>Sekcje zamiast płaskiej listy; domyślna ramka/podpis/jakość (wymóg EKRANY.md, dziś brak).</li>
+<li><b>Motyw:</b> Systemowy / Ciemny (domyślny, D3) / Jasny (D13). Jasny akcent #8A5200, bo #F5A33B na jasnym tle ma kontrast ≈ 2:1.</li>
 <li>Prywatność jako jedno zdanie w „O aplikacji” – dziś powtórzona na trzech ekranach.</li></ul></div>
 
 <!-- 8 STAN BŁĘDU / SERIA -->

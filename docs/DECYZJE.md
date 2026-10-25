@@ -14,6 +14,7 @@
 | D10 | Zarządzanie barwami przy eksporcie (P3 → sRGB) | Opisane niżej; status do potwierdzenia przez Jack4B |
 | D11 | Nazwy filmów w UI: prawdziwe, jak w paczce LUT | **Zdecydowane – Jack4B 2026-10-25** |
 | D12 | Zakres v0.1 i UX (redesign v2) | **Zdecydowane – Jack4B 2026-10-25** |
+| D13 | Motyw jasny i ciemny (wybór w Ustawieniach) | **Zdecydowane – Jack4B 2026-10-25** |
 
 ## D1 – Licencje LUT-ów
 RawTherapee Film Simulation Collection (Pat David, Pavlov Dmitry, Michael Ezra), CC BY-SA 4.0, https://rawpedia.rawtherapee.com/Film_Simulation. Regenerowane do 33³ jako utwór zależny CC BY-SA 4.0; `luts/` wyłączone z MIT. Szczegóły: [LUTS.md](LUTS.md).
@@ -85,3 +86,10 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - **Miniatury filmów:** w APK (JPG, ok. 4 MB łącznie), także dla filmów do pobrania, żeby wybierać po wyglądzie.
 - **Biblioteka:** 260 filmów obsłużone kategoriami z licznikami, wyszukiwaniem i ulubionymi.
 - Decyzja Jack4B, 2026-10-25 (PR #26). Kod UI idzie osobnymi PR-ami po zatwierdzeniu makiet (pierwszy: „Edytor krok 1”, PR #27).
+
+## D13 – Motyw jasny i ciemny
+- Wybór w Ustawieniach → Wygląd: **Systemowy / Ciemny / Jasny**. Domyślnie **Ciemny** (D3 bez zmian).
+- Paleta jasna: tło #FBF8F3, tekst #211B13, akcent #8A5200 (kontrast AA; jasny bursztyn #F5A33B na jasnym tle ma ≈ 2:1, więc w jasnym motywie nie służy do tekstu ani przycisków).
+- Dynamic color (D3, domyślnie wył.) działa w obu motywach.
+- Nakładki na zdjęciu (np. „Przytrzymaj zdjęcie”) zawsze ciemne z białym tekstem, niezależnie od motywu.
+- Decyzja Jack4B, 2026-10-25 (czat). Kod: PR „Motyw jasny”.
