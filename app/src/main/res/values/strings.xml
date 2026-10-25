@@ -6,12 +6,18 @@
     <!-- Start -->
     <string name="start_headline">Zdjęcia jak z kliszy.</string>
     <string name="start_promise">Działa offline, bez konta. Lokalizacja jest usuwana z każdego zapisanego pliku.</string>
-    <string name="start_pick">Wybierz zdjęcie</string>
+    <string name="start_pick">Wybierz zdjęcia</string>
     <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
 
     <!-- Edytor -->
     <string name="editor_back">Wróć do wyboru zdjęcia</string>
     <string name="editor_save">Zapisz</string>
+    <string name="editor_save_all">Zapisz wszystkie (%1$d)</string>
+    <string name="photos_position">Zdjęcie %1$d z %2$d</string>
+    <string name="photos_saving">Zapisywanie %1$d z %2$d</string>
+    <string name="photos_pick_cd">Zdjęcie numer %1$d</string>
+    <string name="export_many_done">Zapisano zdjęcia: %1$d</string>
+    <string name="export_many_partial">Zapisano zdjęcia: %1$d, nie udało się: %2$d</string>
     <string name="editor_preview_cd">Podgląd zdjęcia z filmem i ramką. Przytrzymaj, aby zobaczyć oryginał.</string>
     <string name="editor_preview_before_cd">Oryginał bez filmu i ramki</string>
     <string name="editor_hint_hold">Przytrzymaj zdjęcie: przed / po</string>

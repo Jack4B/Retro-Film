@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.retrofilm.core.engine.Lut
@@ -31,6 +32,7 @@ sealed interface UiMessage {
     data object SignatureTooLong : UiMessage
     data object Saved : UiMessage
     data object LoadFailed : UiMessage
+    data class SavedMany(val saved: Int, val failed: Int) : UiMessage
     data class ExportFailed(val reason: String) : UiMessage
 }
 
@@ -49,6 +51,18 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Zdjęcia wybrane w galerii (jedno lub kilka); te same ustawienia dotyczą wszystkich. */
+    var uris by mutableStateOf<List<Uri>>(emptyList())
+        private set
+
+    /** Które z [uris] jest teraz w Edytorze (od 0). */
+    var index by mutableIntStateOf(0)
+        private set
+
+    /** Numer zdjęcia zapisywanego w serii (od 1); 0 = nic się nie zapisuje. */
+    var exportProgress by mutableIntStateOf(0)
+        private set
 
     /** Moc filmu 0..1 (miks z oryginałem); 1 = pełny film. */
     var intensity by mutableFloatStateOf(1f)
@@ -70,6 +84,8 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
 
     /** Wraca do ekranu startowego (nic nie jest zapisywane). */
     fun closePhoto() {
+        uris = emptyList()
+        index = 0
         photo = null
         preview = null
         before = null
@@ -95,6 +111,46 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         } catch (_: IOException) {
             UiMessage.LoadFailed
         }
+    }
+
+    /** Start z galerii: pierwsze zdjęcie otwiera Edytor, reszta czeka w pasku zdjęć. */
+    suspend fun loadAll(context: Context, picked: List<Uri>): UiMessage? {
+        if (picked.isEmpty()) return null
+        uris = picked
+        index = 0
+        return load(context, picked.first()).also { if (it != null) uris = emptyList() }
+    }
+
+    /** Przełącza Edytor na inne zdjęcie z serii, zachowując film, korekty i ramkę. */
+    suspend fun select(context: Context, i: Int): UiMessage? {
+        if (i == index || i !in uris.indices) return null
+        index = i
+        return load(context, uris[i])
+    }
+
+    /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
+    suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
+        val lutNow = lut()
+        val result = exportBatch(uris, { exportProgress = it + 1 }) { uri ->
+            val bmp = withContext(Dispatchers.IO) {
+                PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
+            }
+            val jpeg = withContext(Dispatchers.Default) {
+                val rendered = ExportPipeline.render(
+                    bmp,
+                    lutNow,
+                    graph.filmEngine.renderer,
+                    frame,
+                    typeface,
+                    intensity,
+                    adjustments
+                )
+                ExportPipeline.encode(bmp, rendered, frame, typeface)
+            }
+            withContext(Dispatchers.IO) { save(jpeg) }
+        }
+        exportProgress = 0
+        UiMessage.SavedMany(result.saved, result.failed)
     }
 
     /** Podgląd: ta sama ścieżka co eksport, na pomniejszonej kopii. */

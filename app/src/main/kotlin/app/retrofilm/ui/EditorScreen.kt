@@ -69,6 +69,7 @@ fun EditorScreen(
     onBack: () -> Unit,
     onSave: () -> Unit,
     onOpenLibrary: () -> Unit,
+    onSelectPhoto: (Int) -> Unit,
     snackbar: @Composable () -> Unit
 ) {
     var tab by rememberSaveable { mutableStateOf(EditorTab.Film) }
@@ -90,7 +91,15 @@ fun EditorScreen(
                         onClick = onSave,
                         enabled = !state.busy && state.signatureStatus() != SignatureFitStatus.TooLong,
                         modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch)
-                    ) { Text(stringResource(R.string.editor_save), fontWeight = FontWeight.SemiBold) }
+                    ) {
+                        val many = state.uris.size > 1
+                        val label = if (many) {
+                            stringResource(R.string.editor_save_all, state.uris.size)
+                        } else {
+                            stringResource(R.string.editor_save)
+                        }
+                        Text(label, fontWeight = FontWeight.SemiBold)
+                    }
                 }
             )
         },
@@ -98,6 +107,7 @@ fun EditorScreen(
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
             PreviewPane(state, Modifier.weight(1f).fillMaxWidth())
+            if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
             Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column {
                     Column(
