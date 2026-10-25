@@ -20,8 +20,10 @@ import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.ui.library.FilmLibraryScreen
 import kotlinx.coroutines.launch
 
+private const val MAX_PICKED = 30
+
 /**
- * Korzeń ścieżki: Start (wybór zdjęcia) → Edytor (Film / Ramka) → zapis jednym dotknięciem.
+ * Korzeń ścieżki: Start (galeria: jedno lub kilka zdjęć) → Edytor (Film / Ramka) → zapis jednym dotknięciem.
  * Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
  */
 @Composable
@@ -33,8 +35,10 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     fun show(msg: UiMessage?) {
         msg?.let { scope.launch { snackbar.showSnackbar(texts.of(it)) } }
     }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { show(state.load(context, uri)) }
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(MAX_PICKED)
+    ) { uris ->
+        if (uris.isNotEmpty()) scope.launch { show(state.loadAll(context, uris)) }
     }
     val createDoc = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument(ExportPipeline.MIME)
@@ -46,13 +50,12 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
     val onPick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     val onSave: () -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val toMediaStore: suspend (ByteArray) -> Unit = {
+                val name = ExportPipeline.fileName(System.currentTimeMillis())
+                ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
+            }
             scope.launch {
-                show(
-                    state.export {
-                        val name = ExportPipeline.fileName(System.currentTimeMillis())
-                        ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
-                    }
-                )
+                show(if (state.uris.size > 1) state.exportAll(context, toMediaStore) else state.export(toMediaStore))
             }
         } else {
             createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
@@ -75,6 +78,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
             onBack = state::closePhoto,
             onSave = onSave,
             onOpenLibrary = { showLibrary = true },
+            onSelectPhoto = { i -> scope.launch { show(state.select(context, i)) } },
             snackbar = { SnackbarHost(snackbar) }
         )
     } else {
