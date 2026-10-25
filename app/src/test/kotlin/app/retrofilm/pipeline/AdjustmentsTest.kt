@@ -176,7 +176,7 @@ class AdjustmentsTest {
 
     @Test fun tintMovesGreenMagentaAndStaysNeutralAtZero() {
         val neutral = px(128, 128, 128, Adjustments(tint = 0f, exposure = 0.0001f))
-        assertEquals(Color.red(neutral), Color.green(neutral), 2)
+        assertEquals(Color.red(neutral).toFloat(), Color.green(neutral).toFloat(), 2f)
         val magenta = px(128, 128, 128, Adjustments(tint = 1f))
         assertTrue(Color.green(magenta) < Color.red(magenta) - 5)
         val green = px(128, 128, 128, Adjustments(tint = -1f))
