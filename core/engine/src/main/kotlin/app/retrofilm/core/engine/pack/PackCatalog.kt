@@ -71,6 +71,22 @@ object PackCatalog {
         }
     }
 
+    /** Id filmów `bundled: true` z katalogu startowego APK (`assets/luts/catalog.json`). */
+    fun bundledIds(bundledCatalogJson: String): Set<String> {
+        val arr = JSONObject(bundledCatalogJson).getJSONArray("luts")
+        return (0 until arr.length()).map { arr.getJSONObject(it) }
+            .filter { it.optBoolean("bundled", false) }
+            .map { it.getString("id") }
+            .toSet()
+    }
+
+    /**
+     * Pakiety do pobrania bez filmów startowych: catalog-144.json zostaje bajt w bajt jak w luts-v1,
+     * a filmy obecne w APK nie mogą pojawić się na liście ani zostać pobrane drugi raz.
+     */
+    fun excludeBundled(entries: List<PackEntry>, bundledIds: Set<String>): List<PackEntry> =
+        entries.filterNot { it.bundled || it.id in bundledIds }
+
     private val SAFE_ID = Regex("[a-z0-9_]+/[a-z0-9_.-]+")
     private val SAFE_PATH = Regex("luts/[a-z0-9_]+/[a-z0-9_.-]+\\.png")
 }

@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.retrofilm.core.engine.LutCatalog
 import java.io.File
 import java.util.concurrent.TimeUnit
 
@@ -86,9 +87,15 @@ class LutDownloadWorker(context: Context, params: WorkerParameters) : CoroutineW
 object LutPackFiles {
     @Volatile private var cached: List<PackEntry>? = null
 
+    /** Katalog pobierania bez filmów startowych z APK ([PackCatalog.excludeBundled]). */
     fun catalog(context: Context): List<PackEntry> = cached ?: runCatching {
-        context.assets.open(PackCatalog.ASSET).bufferedReader().use { PackCatalog.parse(it.readText()) }
+        val all = context.assets.open(PackCatalog.ASSET).bufferedReader().use { PackCatalog.parse(it.readText()) }
+        PackCatalog.excludeBundled(all, bundledIds(context))
     }.getOrDefault(emptyList()).also { cached = it }
+
+    private fun bundledIds(context: Context): Set<String> = runCatching {
+        context.assets.open(LutCatalog.CATALOG).bufferedReader().use { PackCatalog.bundledIds(it.readText()) }
+    }.getOrDefault(emptySet())
 
     fun pngDir(context: Context): File = File(context.filesDir, "luts/png")
 
