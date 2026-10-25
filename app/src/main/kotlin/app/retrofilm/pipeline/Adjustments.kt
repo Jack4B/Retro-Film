@@ -79,6 +79,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         FloatArray(CONTRAST_SIZE + 1) { contrastCurve(it.toFloat() / CONTRAST_SIZE, adj.contrast) }
 
     private val maskLut: FloatArray
+    private val shadowGain = FloatArray(BYTE_LEVELS) { toneGain(adj.shadows, SHADOW_EV, shadowWeight(it / BYTE_MAX)) }
+    private val highlightGain =
+        FloatArray(BYTE_LEVELS) { toneGain(adj.highlights, HIGHLIGHT_EV, highlightWeight(it / BYTE_MAX)) }
 
     init {
         val exposure = 2.0.pow(adj.exposure.toDouble()).toFloat()
@@ -151,25 +154,19 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         for (k in 0..2) rgb[k] = (y + (rgb[k] - y) * f).coerceIn(0f, 1f)
     }
 
-    /** Cienie i światła: wpływ maleje do zera po drugiej stronie skali jasności (kwadratowa waga). */
+    /**
+     * Cienie i światła jako lokalna ekspozycja: mnożnik 2^(siła · zakres EV · waga) liczony z jasności otoczenia
+     * (maska) i przeniesiony z liniowego na kodowanie gamma (potęga 1/2,2). Mnożnik, a nie dodawanie, zachowuje
+     * proporcje kanałów (barwy się nie wypłukują) i lokalny kontrast detali; waga to gładkie progi jasności.
+     */
     private fun toneRecovery(mask: ToneMask?, x: Int, row: Int) {
-        // Lokalna jasność otoczenia (po tej samej ekspozycji), a bez maski jasność samego piksela.
-        val y = if (mask !=
-            null
-        ) {
-            maskLut[(mask.sample(x, row) * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)]
-        } else {
-            luma()
-        }
-        val wShadow = (1f - y) * (1f - y)
-        val wHighlight = y * y
-        for (k in 0..2) {
-            rgb[k] = shift(shift(rgb[k], adj.shadows, wShadow), adj.highlights, wHighlight)
-        }
+        val y = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else luma()
+        val i = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
+        val m = shadowGain[i] * highlightGain[i]
+        for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
     }
 
-    private fun shift(v: Float, amount: Float, weight: Float): Float =
-        v + amount * TONE_GAIN * weight * (if (amount > 0f) 1f - v else v)
+    private fun maskIndex(y: Float): Int = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
 
     private fun fade() {
         val lift = FADE_LIFT * adj.fade
@@ -203,7 +200,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     companion object {
         const val KNEE = 0.8f
-        private const val TONE_GAIN = 0.5f
+        private const val SHADOW_EV = 1.5f
+        private const val HIGHLIGHT_EV = 1.2f
+        private const val GAMMA_INV = 0.4545f
+        private const val SHADOW_FROM = 0.05f
+        private const val SHADOW_TO = 0.75f
+        private const val HIGHLIGHT_FROM = 0.30f
+        private const val HIGHLIGHT_TO = 0.95f
         private const val MATRIX_SIZE = 9
         private const val IDX_00 = 0
         private const val IDX_01 = 1
@@ -259,6 +262,22 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             h = h xor (h ushr HASH_SHIFT_B)
             return (h and HASH_MASK) / HASH_HALF - 1f
         }
+
+        /** Waga cieni: 1 w czerni, gładko maleje do 0 przy jasności [SHADOW_TO]. */
+        fun shadowWeight(y: Float): Float = 1f - smoothstep(SHADOW_FROM, SHADOW_TO, y)
+
+        /** Waga świateł: 0 poniżej [HIGHLIGHT_FROM], gładko rośnie do 1 przy [HIGHLIGHT_TO]. */
+        fun highlightWeight(y: Float): Float = smoothstep(HIGHLIGHT_FROM, HIGHLIGHT_TO, y)
+
+        @Suppress("MagicNumber")
+        private fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
+            val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0f, 1f)
+            return t * t * (3f - 2f * t)
+        }
+
+        /** Mnożnik w kodowaniu gamma odpowiadający [amount]·[evRange]·[weight] EV w świetle liniowym. */
+        fun toneGain(amount: Float, evRange: Float, weight: Float): Float =
+            2.0.pow((amount * evRange * weight * GAMMA_INV).toDouble()).toFloat()
 
         fun srgbToLinear(v: Float): Float = if (v <=
             SRGB_LINEAR_CUT

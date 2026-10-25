@@ -97,7 +97,7 @@ class AdjustmentsTest {
     private fun gray(v: Int, w: Int = 9, h: Int = 9) = IntArray(w * h) { Color.rgb(v, v, v) }
 
     @Test fun shadowsLiftAndHighlightsRecover() {
-        assertTrue(Color.red(px(40, 40, 40, Adjustments(shadows = 1f))) > 40 + 8)
+        assertTrue(Color.red(px(40, 40, 40, Adjustments(shadows = 1f))) > 40 + 15)
         assertTrue(Color.red(px(40, 40, 40, Adjustments(shadows = -1f))) < 40)
         assertTrue(Color.red(px(220, 220, 220, Adjustments(highlights = -1f))) < 220 - 8)
         // cienie nie ruszają jasnych tonów i odwrotnie
@@ -181,5 +181,26 @@ class AdjustmentsTest {
         assertTrue(Color.green(magenta) < Color.red(magenta) - 5)
         val green = px(128, 128, 128, Adjustments(tint = -1f))
         assertTrue(Color.green(green) > Color.red(green) + 2)
+    }
+
+    @Test fun toneWeightsAreSmoothAndComplementary() {
+        assertEquals(1f, AdjustmentProcessor.shadowWeight(0f), 0.001f)
+        assertEquals(0f, AdjustmentProcessor.shadowWeight(0.9f), 0.001f)
+        assertEquals(0f, AdjustmentProcessor.highlightWeight(0.1f), 0.001f)
+        assertEquals(1f, AdjustmentProcessor.highlightWeight(1f), 0.001f)
+        var last = 2f
+        for (i in 0..20) {
+            val w = AdjustmentProcessor.shadowWeight(i / 20f)
+            assertTrue("waga cieni nie rośnie z jasnością", w <= last + 1e-6f)
+            last = w
+        }
+    }
+
+    @Test fun shadowLiftKeepsChannelRatiosAndStaysBelowClipping() {
+        val out = px(30, 60, 90, Adjustments(shadows = 1f))
+        val ratioBefore = 90f / 30f
+        val ratioAfter = Color.blue(out).toFloat() / Color.red(out)
+        assertEquals("proporcje kanałów zachowane", ratioBefore, ratioAfter, 0.35f)
+        assertTrue(Color.red(out) in 31..255 && Color.blue(out) <= 255)
     }
 }
