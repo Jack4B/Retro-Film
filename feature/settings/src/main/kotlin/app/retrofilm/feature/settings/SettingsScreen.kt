@@ -1,6 +1,7 @@
 package app.retrofilm.feature.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,9 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import app.retrofilm.core.ui.ThemeMode
 
 private val MinTouch = 48.dp
 
@@ -52,7 +57,8 @@ fun SettingsScreen(
     onDynamicColorChange: (Boolean) -> Unit,
     onOpenFilters: () -> Unit,
     onOpenLicense: (ThirdPartyLicense) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onThemeModeChange: (ThemeMode) -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -66,6 +72,7 @@ fun SettingsScreen(
             )
         ) {
             item { SectionHeader(stringResource(R.string.settings_section_appearance)) }
+            state.themeMode?.let { mode -> item { ThemeModeRow(mode, onThemeModeChange) } }
             if (state.dynamicColorSupported) {
                 item { DynamicColorRow(state.dynamicColor, onDynamicColorChange) }
             }
@@ -105,6 +112,28 @@ fun SettingsScreen(
                     leadingContent = { Icon(Icons.Outlined.Info, contentDescription = null) },
                     colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeModeRow(selected: ThemeMode, onChange: (ThemeMode) -> Unit) {
+    val options = listOf(
+        ThemeMode.System to R.string.settings_theme_system,
+        ThemeMode.Dark to R.string.settings_theme_dark,
+        ThemeMode.Light to R.string.settings_theme_light
+    )
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge)
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            options.forEachIndexed { index, (mode, label) ->
+                SegmentedButton(
+                    selected = mode == selected,
+                    onClick = { onChange(mode) },
+                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                    modifier = Modifier.heightIn(min = MinTouch)
+                ) { Text(stringResource(label)) }
             }
         }
     }

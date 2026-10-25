@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import app.retrofilm.core.ui.ThemeMode
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.feature.settings.LicensesScreen
 import app.retrofilm.feature.settings.SettingsRoutes
@@ -34,7 +35,12 @@ enum class Route(val path: String) {
 
 /** Minimalna nawigacja bez dodatkowych zależności: Main → Ustawienia → Licencje / Filtry. */
 @Composable
-fun RetroFilmNavHost(graph: AppGraph, dynamicColor: Boolean, main: @Composable (navigate: (Route) -> Unit) -> Unit) {
+fun RetroFilmNavHost(
+    graph: AppGraph,
+    dynamicColor: Boolean,
+    themeMode: ThemeMode,
+    main: @Composable (navigate: (Route) -> Unit) -> Unit
+) {
     var route by rememberSaveable { mutableStateOf(Route.Main) }
     var license by rememberSaveable { mutableStateOf<ThirdPartyLicense?>(null) }
     var licensesParent by rememberSaveable { mutableStateOf(Route.Settings) }
@@ -46,9 +52,10 @@ fun RetroFilmNavHost(graph: AppGraph, dynamicColor: Boolean, main: @Composable (
         Route.Main -> main { route = it }
 
         Route.Settings -> SettingsScreen(
-            state = SettingsUiState(dynamicColor = dynamicColor),
+            state = SettingsUiState(dynamicColor = dynamicColor, themeMode = themeMode),
             onBack = back,
             onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },
+            onThemeModeChange = { scope.launch { graph.appSettings.setThemeMode(it) } },
             onOpenFilters = { route = Route.Filters },
             onOpenLicense = {
                 license = it
