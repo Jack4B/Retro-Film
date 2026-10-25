@@ -112,6 +112,24 @@
     <string name="adjust_fade">Blaknięcie</string>
     <string name="adjust_grain">Ziarno</string>
     <string name="adjust_vignette">Winieta</string>
+    <string name="adjust_group_hsl">Kolory</string>
+    <string name="adjust_group_toning">Tonowanie</string>
+    <string name="hsl_red">Czerwony</string>
+    <string name="hsl_orange">Pomarańczowy</string>
+    <string name="hsl_yellow">Żółty</string>
+    <string name="hsl_green">Zielony</string>
+    <string name="hsl_aqua">Turkusowy</string>
+    <string name="hsl_blue">Niebieski</string>
+    <string name="hsl_purple">Fioletowy</string>
+    <string name="hsl_magenta">Purpurowy</string>
+    <string name="hsl_hue">Odcień</string>
+    <string name="hsl_saturation">Nasycenie</string>
+    <string name="hsl_lightness">Jasność</string>
+    <string name="toning_shadow_hue">Barwa cieni</string>
+    <string name="toning_shadow_amount">Siła w cieniach</string>
+    <string name="toning_highlight_hue">Barwa świateł</string>
+    <string name="toning_highlight_amount">Siła w światłach</string>
+    <string name="toning_balance">Balans cieni i świateł</string>
     <string name="adjust_reset">Wyzeruj korekty</string>
 
     <!-- Ramka -->

@@ -30,7 +30,17 @@ data class Adjustments(
     /** Ostrość 0..1: maska unsharp na jasności (zob. [DetailFilter]). */
     val sharpness: Float = 0f,
     /** Wyrazistość −1..1: lokalny kontrast w półtonach; minus zmiękcza. */
-    val clarity: Float = 0f
+    val clarity: Float = 0f,
+    /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
+    val hsl: HslAdjust = HslAdjust(),
+    /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */
+    val shadowHue: Float = 0f,
+    val shadowAmount: Float = 0f,
+    /** Barwa tonowania świateł (stopnie 0..360) i jego siła 0..1. */
+    val highlightHue: Float = 0f,
+    val highlightAmount: Float = 0f,
+    /** Balans tonowania −1..1: plus rozszerza zakres świateł, minus cieni. */
+    val toneBalance: Float = 0f
 ) {
     val isNeutral: Boolean get() = this == None
 
@@ -91,6 +101,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     private val rgb = FloatArray(3)
     private val hasTone = adj.shadows != 0f || adj.highlights != 0f
+    private val hsl: HslMixer? = if (adj.hsl.isNeutral) null else HslMixer(adj.hsl)
+    private val toning: SplitToning? = if (adj.shadowAmount > 0f || adj.highlightAmount > 0f) {
+        SplitToning(adj.shadowHue, adj.shadowAmount, adj.highlightHue, adj.highlightAmount, adj.toneBalance)
+    } else {
+        null
+    }
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
     /**
@@ -111,6 +127,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[1] = encodeLinear(m10 * lr + m11 * lg + m12 * lb)
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             if (adj.saturation != 0f) vibrance()
+            hsl?.apply(rgb)
             if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
             if (adj.contrast !=
                 0f
@@ -118,6 +135,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
                 for (k in 0..2) rgb[k] = contrastLut[(rgb[k].coerceIn(0f, 1f) * CONTRAST_SIZE + HALF).toInt()]
             }
             if (adj.fade > 0f) fade()
+            toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
             px[i] = (c and ALPHA_MASK) or (to8(rgb[0]) shl RED_SHIFT) or (to8(rgb[1]) shl GREEN_SHIFT) or to8(rgb[2])
         }
