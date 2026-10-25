@@ -18,9 +18,23 @@ MVVM + UDF, Hilt, Coroutines/Flow, Room (projekty, LUT-y), Coil 3 (podglądy ~10
 
 ## Silnik
 - Parser `.cube` i korekty przeniesione z oryginału (`SkiaImageProcessor`, `ImageProcessingShader`, `ImageAdjustments`).
-- LUT-y 13×13×13 → shader **musi** używać interpolacji trójliniowej lub tetraedrycznej.
+- Docelowa siatka LUT: **33³**; interpolacja trójliniowa lub tetraedryczna (zob. docs/LUTS.md).
 - Ścieżka CPU jako referencja dla testów.
 - ffmpeg-kit usunięty.
+
+## Silnik oryginału
+Na podstawie `ImageProcessingShader.kt` z Film-Simulator:
+- Jeden runtime shader SkSL.
+- LUT jako tekstura 2D: szerokość `lutSize`, wysokość `lutSize²` (y = b·size + g); ręczna interpolacja trójliniowa (8 próbek).
+- `lutIntensity` 0..2 – mieszanie z oryginałem.
+- Następnie konwersja do światła liniowego: ekspozycja (`exp2`), kontrast wokół średniej szarości, cienie/światła z maską luminancji, nasycenie (Rec.709).
+- Powrót do sRGB: temperatura (przesunięcie barw), ziarno (tani hash w podglądzie vs emulacja filmu przy eksporcie), aberracja chromatyczna.
+- Podgląd i eksport używają tego samego shadera w różnych rozdzielczościach.
+
+**U nas:** eksport używa tego samego shadera w pełnej rozdzielczości; jedynie ziarno przełącza się na ścieżkę jakości eksportowej.
+- `.cube` parsowany w `SkiaImageProcessor.parseCubeLut`.
+
+**Port:** przenosimy go do AGSL RuntimeShader (ten sam dialekt SkSL – praktycznie 1:1), z fallbackiem OpenGL ES dla Androida < 13.
 
 ## Przepływ danych
 UI (Compose) → zdarzenia → ViewModel → stan (StateFlow) → UI. Ciężka praca poza wątkiem głównym; podglądy zmniejszone, pełna rozdzielczość tylko przy eksporcie.
