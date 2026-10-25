@@ -11,6 +11,10 @@
 | D7 | Kryterium jakości LUT-ów 33³ (ΔE2000) | **Proponowane – czeka na Jack4B** |
 | D8 | Dystrybucja LUT-ów: pobieranie z Jack4B/Retro-Film-LUTs@`luts-v1` + zestaw startowy w APK | Zdecydowane (rozmiar siatki: D9) |
 | D9 | Siatka filtrów do pobrania: natywne 144³ PNG (jeden film 256³) | **Zdecydowane – Jack4B 2026-10-25** |
+| D10 | Zarządzanie barwami przy eksporcie (P3 → sRGB) | Opisane niżej; status do potwierdzenia przez Jack4B |
+| D11 | Nazwy filmów w UI: prawdziwe, jak w paczce LUT | **Zdecydowane – Jack4B 2026-10-25** |
+| D12 | Zakres v0.1 i UX (redesign v2) | **Zdecydowane – Jack4B 2026-10-25** |
+| D13 | Motyw jasny i ciemny (wybór w Ustawieniach) | **Zdecydowane – Jack4B 2026-10-25** |
 
 ## D1 – Licencje LUT-ów
 RawTherapee Film Simulation Collection (Pat David, Pavlov Dmitry, Michael Ezra), CC BY-SA 4.0, https://rawpedia.rawtherapee.com/Film_Simulation. Regenerowane do 33³ jako utwór zależny CC BY-SA 4.0; `luts/` wyłączone z MIT. Szczegóły: [LUTS.md](LUTS.md).
@@ -67,3 +71,25 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Filmy (HaldCLUT) są zbudowane i liczone w sRGB, więc zdjęcie spoza sRGB (np. Display P3) jest przed LUT-em konwertowane do sRGB.
 - Eksport zapisuje profil sRGB; przestrzeń barw bitmapy i profil ICC w pliku zawsze się zgadzają (testy `PipelineTest`).
 - Świadome ograniczenie: kolory spoza sRGB są przy filtrze obcinane; szerszy gamut P3 nie jest zachowywany.
+
+## D11 – Nazwy filmów w UI
+- Nazwy filmów zostają prawdziwe, tak jak w paczce LUT (RawTherapee Film Simulation Collection), np. „Kodak Portra 400”, „Fuji Velvia 50”. Dotyczy UI, makiet i katalogu.
+- Bez logo i grafik producentów. Zmienione zapisy: AGENTS.md („Twarde reguły”) i docs/LUTS.md.
+- Zamyka T1 z docs/OCENA-I-REDESIGN.md (decyzja Jack4B, 2026-10-25, przekazana przez Nexus w PR #26).
+- Do zatwierdzenia: informacja „niezależny projekt, bez powiązania z producentami” w „Licencje i autorzy”.
+
+## D12 – Zakres v0.1 i UX (redesign v2)
+- **Nawigacja:** Start → Edytor z zakładkami (Film / Korekty / Ramka / Więcej) → zapis; zakładki zamiast osobnych ekranów.
+- **Wybór zdjęć:** tylko systemowy Photo Picker z wyborem wielu zdjęć; `GalleryScreen` usunięty (wymagałby uprawnień do mediów).
+- **Seria:** jeden film i jedna ramka na całą serię; podpis osobno dla każdego zdjęcia; bez Room i bez zapisu projektów.
+- **Eksport:** w v0.1 tylko JPEG; PNG zostaje wyłącznie dla plików LUT.
+- **Miniatury filmów:** w APK (JPG, ok. 4 MB łącznie), także dla filmów do pobrania, żeby wybierać po wyglądzie.
+- **Biblioteka:** 260 filmów obsłużone kategoriami z licznikami, wyszukiwaniem i ulubionymi.
+- Decyzja Jack4B, 2026-10-25 (PR #26). Kod UI idzie osobnymi PR-ami po zatwierdzeniu makiet (pierwszy: „Edytor krok 1”, PR #27).
+
+## D13 – Motyw jasny i ciemny
+- Wybór w Ustawieniach → Wygląd: **Systemowy / Ciemny / Jasny**. Domyślnie **Ciemny** (D3 bez zmian).
+- Paleta jasna: tło #FBF8F3, tekst #211B13, akcent #8A5200 (kontrast AA; jasny bursztyn #F5A33B na jasnym tle ma ≈ 2:1, więc w jasnym motywie nie służy do tekstu ani przycisków).
+- Dynamic color (D3, domyślnie wył.) działa w obu motywach.
+- Nakładki na zdjęciu (np. „Przytrzymaj zdjęcie”) zawsze ciemne z białym tekstem, niezależnie od motywu.
+- Decyzja Jack4B, 2026-10-25 (czat). Kod: PR „Motyw jasny”.
