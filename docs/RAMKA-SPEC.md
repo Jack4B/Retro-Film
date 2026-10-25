@@ -36,3 +36,8 @@ Wszystkie wymiary są ułamkami krótszego boku `u = min(W, H)` płótna, więc 
 
 ## Bez parametrów zdjęcia
 - Brak paska EXIF (ISO, przysłona, ogniskowa, czas) i brak przełącznika do niego.
+
+## Układ „TightFrame” (aplikacja, od alpha.3)
+- Góra i boki: równy margines `m·u`. Z podpisem tylko dół jest szerszy o `0,07·u` (pas podpisu = `m + 0,07·u`, podpis wyśrodkowany w pasie); wcześniej pas to 20% wysokości płótna, co przy „Oryginał” dawało grube boki.
+- „Oryginał”: płótno = zdjęcie + marginesy (skalowane do dłuższego boku zdjęcia), bez pustych pól. Stałe proporcje (1:1, 4:5, 3:2) bez zmian, zdjęcie wpasowane w pole.
+- Implementacja: `core:frame` `TightFrame`; starszy `FrameGeometry.layout` zostaje dla podglądu w `feature:editor`.

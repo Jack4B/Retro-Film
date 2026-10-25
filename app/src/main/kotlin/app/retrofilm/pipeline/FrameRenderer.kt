@@ -12,10 +12,10 @@ import android.text.TextPaint
 import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.FrameGeometry
-import app.retrofilm.core.frame.SignatureFitCheck
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.core.frame.SignatureMeasurer
 import app.retrofilm.core.frame.SizeF
+import app.retrofilm.core.frame.TightFrame
 import app.retrofilm.core.frame.TextBlock
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -76,7 +76,7 @@ class PaintSignatureMeasurer(
 object FrameRenderer {
     /** Status podpisu – ten sam algorytm co podgląd i blokada w `JpegExporter`. */
     fun status(options: FrameOptions, photoW: Int, photoH: Int, typeface: Typeface): SignatureFitStatus =
-        SignatureFitCheck.check(
+        TightFrame.check(
             frameEnabled = options.enabled,
             signatureEnabled = options.signatureEnabled,
             signature = options.signature,
@@ -92,15 +92,17 @@ object FrameRenderer {
      */
     fun render(photo: Bitmap, options: FrameOptions, typeface: Typeface, colorSpaceSource: Bitmap = photo): Bitmap {
         if (!options.enabled) return copyInto(photo, photo.width, photo.height, colorSpaceSource)
-        val (cw, ch) = FrameGeometry.canvasSize(
+        val (cw, ch) = TightFrame.canvasSize(
             options.aspect,
             photo.width.toFloat(),
             photo.height.toFloat(),
+            options.margin,
+            options.drawsSignature,
             maxOf(photo.width, photo.height).toFloat()
         )
         val w = cw.roundToInt().coerceAtLeast(1)
         val h = ch.roundToInt().coerceAtLeast(1)
-        val layout = FrameGeometry.layout(
+        val layout = TightFrame.layout(
             SizeF(w.toFloat(), h.toFloat()),
             SizeF(photo.width.toFloat(), photo.height.toFloat()),
             options.margin,
