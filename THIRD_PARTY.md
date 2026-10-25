@@ -14,3 +14,34 @@
 - Szczegóły: [docs/LUTS.md](docs/LUTS.md).
 
 Lista bibliotek (AndroidX, Hilt, Coil itd.) zostanie uzupełniona i pokazana w aplikacji w sekcji „Licencje i autorzy”.
+
+## LUT-y bez źródła HaldCLUT (brak w HaldCLUT.zip, nie dołączone)
+27 pozycji katalogu Film-Luts nie ma odpowiednika w RawTherapee HaldCLUT.zip i nie jest w `catalog.json`:
+
+- `fujixtransiii/fuji_xtrans_iii_acros_g`
+- `fujixtransiii/fuji_xtrans_iii_acros_r`
+- `fujixtransiii/fuji_xtrans_iii_acros_ye`
+- `fujixtransiii/fuji_xtrans_iii_acros`
+- `fujixtransiii/fuji_xtrans_iii_astia`
+- `fujixtransiii/fuji_xtrans_iii_classic_chrome`
+- `fujixtransiii/fuji_xtrans_iii_mono_g`
+- `fujixtransiii/fuji_xtrans_iii_mono_r`
+- `fujixtransiii/fuji_xtrans_iii_mono_ye`
+- `fujixtransiii/fuji_xtrans_iii_mono`
+- `fujixtransiii/fuji_xtrans_iii_pro_neg_hi`
+- `fujixtransiii/fuji_xtrans_iii_pro_neg_std`
+- `fujixtransiii/fuji_xtrans_iii_provia`
+- `fujixtransiii/fuji_xtrans_iii_sepia`
+- `fujixtransiii/fuji_xtrans_iii_velvia`
+- `print/fuji_3510_constlclip`
+- `print/fuji_3510_constlmap`
+- `print/fuji_3510_cuspclip`
+- `print/fuji_3513_constlclip`
+- `print/fuji_3513_constlmap`
+- `print/fuji_3513_cuspclip`
+- `print/kodak_2383_constlclip`
+- `print/kodak_2383_constlmap`
+- `print/kodak_2383_cuspclip`
+- `print/kodak_2393_constlclip`
+- `print/kodak_2393_constlmap`
+- `print/kodak_2393_cuspclip`

@@ -9,6 +9,7 @@
 ## Narzędzia (`tools/`, poza APK)
 - `lutcheck.py <katalog> --out out --license CC-BY-SA-4.0` — walidacja (LUT_3D_SIZE, liczba wierszy, zakres 0..1, odrzuca 1D), normalizacja nazw i formatu, deduplikacja po zawartości, `catalog.json` + `report.json`.
 - `hald2lut.py <HaldCLUT/> <Film-Luts/> --out core/engine/src/main/assets/luts --golden tools/golden` — konwersja HaldCLUT 144³ → 33³ (próbkowanie trilinearne, RGB8 surowe `.rgb8`, format: `docs/LUT-BIN.md` z PR #5), dopasowanie do katalogu Film-Luts po nazwie, dowód ΔE2000 na wszystkich 144³ punktach (`report.json`), `catalog.json`, `SHA256SUMS`, golden PNG 17³. Wymaga numpy + Pillow.
+- `luteval.py <HaldCLUT/> core/engine/src/main/assets/luts --golden tools/golden` — ΔE2000 144³ dla 33³ (trójliniowa = metoda silnika, czworościenna dodatkowo) i 48³ (tylko statystyki), identity, kryterium D7, flaga `approx`, porównania w `tools/golden/compare/`.
 - `frame_ref.py <zdjęcie> [wyjście.png]` — render referencyjny ramki wg `docs/ramka-spec.md` (font Caveat, OFL — plik fontu dodawany osobno).
 
 ## Stan
