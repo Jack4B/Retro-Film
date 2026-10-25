@@ -15,6 +15,8 @@
 
 Lista bibliotek (AndroidX, Hilt, Coil itd.) zostanie uzupełniona i pokazana w aplikacji w sekcji „Licencje i autorzy”.
 
+Teksty licencji w aplikacji (ekran „Licencje i autorzy”): `core/ui/src/main/assets/licenses/` – `MIT-Film-Simulator.txt`, `CC-BY-SA-4.0.txt`, `OFL-Caveat.txt`.
+
 ## LUT-y bez źródła HaldCLUT (brak w HaldCLUT.zip, nie dołączone)
 27 pozycji katalogu Film-Luts nie ma odpowiednika w RawTherapee HaldCLUT.zip i nie jest w `catalog.json`:
 

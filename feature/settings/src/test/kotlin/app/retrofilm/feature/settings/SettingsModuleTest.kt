@@ -9,3 +9,10 @@ class SettingsModuleTest {
         assertEquals("feature:settings", SettingsModule.NAME)
     }
 }
+
+class ReflowLicenseTest {
+    @Test
+    fun joinsLinesKeepsParagraphs() {
+        assertEquals("a b\n\nc", reflowLicense("a\nb\n\nc\n"))
+    }
+}
