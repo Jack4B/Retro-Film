@@ -1,14 +1,15 @@
 package app.retrofilm.pipeline
 
-import android.graphics.Color
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DetailFilterTest {
+    private fun gray(v: Int) = (0xFF shl 24) or (v shl 16) or (v shl 8) or v
+
     private fun edge(w: Int, h: Int) = IntArray(w * h) { i ->
         val v = if (i % w < w / 2) 80 else 170
-        Color.rgb(v, v, v)
+        gray(v)
     }
 
     private fun red(c: Int) = (c shr 16) and 0xFF
@@ -32,7 +33,7 @@ class DetailFilterTest {
     @Test fun sharpnessIgnoresTinyNoise() {
         val px = IntArray(64 * 8) { i ->
             val v = 120 + (i % 2)
-            Color.rgb(v, v, v)
+            gray(v)
         }
         val copy = px.copyOf()
         DetailFilter.apply(px, 64, 8, 1f, 0f)
@@ -43,7 +44,7 @@ class DetailFilterTest {
         val w = 200
         val up = IntArray(w * 20) { i ->
             val v = if ((i % w) / 10 % 2 == 0) 110 else 146
-            Color.rgb(v, v, v)
+            gray(v)
         }
         val down = up.copyOf()
         DetailFilter.apply(up, w, 20, 0f, 1f)
