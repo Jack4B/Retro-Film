@@ -23,8 +23,8 @@ import kotlinx.coroutines.withContext
  * interpolacja trójliniowa liczona w shaderze (8 odczytów), identycznie jak w [CpuLut].
  */
 @TargetApi(Build.VERSION_CODES.TIRAMISU)
-class AgslLutEngine : LutEngine {
-    override val name: String = "agsl"
+class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRILINEAR) : LutEngine {
+    override val name: String = if (interpolation == Interpolation.TRILINEAR) "agsl" else "agsl-tetra"
 
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = withContext(Dispatchers.Default) {
         render(src, lut, intensity)
@@ -40,6 +40,7 @@ class AgslLutEngine : LutEngine {
             setInputShader("lut", nearest(strip))
             setFloatUniform("size", lut.size.toFloat())
             setFloatUniform("intensity", intensity.coerceIn(0f, 1f))
+            setFloatUniform("tetra", if (interpolation == Interpolation.TETRAHEDRAL) 1f else 0f)
         }
         val paint = Paint().apply {
             this.shader = shader
@@ -105,6 +106,7 @@ class AgslLutEngine : LutEngine {
             uniform shader lut;
             uniform float size;
             uniform float intensity;
+            uniform float tetra;
 
             float3 node(float r, float g, float b) {
                 return lut.eval(float2(r + b * size + 0.5, g + 0.5)).rgb;
@@ -118,11 +120,36 @@ class AgslLutEngine : LutEngine {
                 float3 i0 = min(floor(p), float3(size - 1.0));
                 float3 i1 = min(i0 + 1.0, float3(size - 1.0));
                 float3 f = p - i0;
+                float3 graded;
+                if (tetra > 0.5) {
+                    float3 c000 = node(i0.r, i0.g, i0.b);
+                    float3 c111 = node(i1.r, i1.g, i1.b);
+                    if (f.r >= f.g && f.g >= f.b) {
+                        float3 a = node(i1.r, i0.g, i0.b); float3 b = node(i1.r, i1.g, i0.b);
+                        graded = c000 + f.r * (a - c000) + f.g * (b - a) + f.b * (c111 - b);
+                    } else if (f.r >= f.b && f.b >= f.g) {
+                        float3 a = node(i1.r, i0.g, i0.b); float3 b = node(i1.r, i0.g, i1.b);
+                        graded = c000 + f.r * (a - c000) + f.b * (b - a) + f.g * (c111 - b);
+                    } else if (f.b >= f.r && f.r >= f.g) {
+                        float3 a = node(i0.r, i0.g, i1.b); float3 b = node(i1.r, i0.g, i1.b);
+                        graded = c000 + f.b * (a - c000) + f.r * (b - a) + f.g * (c111 - b);
+                    } else if (f.g >= f.r && f.r >= f.b) {
+                        float3 a = node(i0.r, i1.g, i0.b); float3 b = node(i1.r, i1.g, i0.b);
+                        graded = c000 + f.g * (a - c000) + f.r * (b - a) + f.b * (c111 - b);
+                    } else if (f.g >= f.b && f.b >= f.r) {
+                        float3 a = node(i0.r, i1.g, i0.b); float3 b = node(i0.r, i1.g, i1.b);
+                        graded = c000 + f.g * (a - c000) + f.b * (b - a) + f.r * (c111 - b);
+                    } else {
+                        float3 a = node(i0.r, i0.g, i1.b); float3 b = node(i0.r, i1.g, i1.b);
+                        graded = c000 + f.b * (a - c000) + f.g * (b - a) + f.r * (c111 - b);
+                    }
+                } else {
                 float3 c00 = mix(node(i0.r, i0.g, i0.b), node(i1.r, i0.g, i0.b), f.r);
                 float3 c10 = mix(node(i0.r, i1.g, i0.b), node(i1.r, i1.g, i0.b), f.r);
                 float3 c01 = mix(node(i0.r, i0.g, i1.b), node(i1.r, i0.g, i1.b), f.r);
                 float3 c11 = mix(node(i0.r, i1.g, i1.b), node(i1.r, i1.g, i1.b), f.r);
-                float3 graded = mix(mix(c00, c10, f.g), mix(c01, c11, f.g), f.b);
+                graded = mix(mix(c00, c10, f.g), mix(c01, c11, f.g), f.b);
+                }
                 float3 outRgb = mix(rgb, graded, intensity);
                 return half4(half3(outRgb * a), half(a));
             }

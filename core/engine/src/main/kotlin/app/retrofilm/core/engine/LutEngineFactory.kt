@@ -11,26 +11,44 @@ object LutEngineFactory {
 
     enum class Backend { AUTO, AGSL, GLES, CPU }
 
-    fun create(backend: Backend = Backend.AUTO): LutEngine = when (backend) {
-        Backend.CPU -> CpuLutEngine()
+    /**
+     * [interpolation] dotyczy AGSL i CPU; GLES zawsze używa sprzętowej trójliniowej
+     * (przy TETRAHEDRAL tryb AUTO pomija GLES i spada do CPU).
+     */
+    fun create(backend: Backend = Backend.AUTO, interpolation: Interpolation = Interpolation.TRILINEAR): LutEngine =
+        when (backend) {
+            Backend.CPU -> CpuLutEngine(interpolation)
 
-        Backend.AGSL -> withCpuFallback(createAgsl())
+            Backend.AGSL -> withCpuFallback(createAgsl(interpolation), interpolation)
 
-        Backend.GLES -> withCpuFallback(GlesLutEngine())
+            Backend.GLES -> withCpuFallback(GlesLutEngine(), interpolation)
 
-        Backend.AUTO -> when {
-            Build.VERSION.SDK_INT >= AGSL_MIN_API -> withCpuFallback(createAgsl())
-            GlesLutEngine.isSupported() -> withCpuFallback(GlesLutEngine())
-            else -> CpuLutEngine()
+            Backend.AUTO -> when {
+                Build.VERSION.SDK_INT >= AGSL_MIN_API -> withCpuFallback(createAgsl(interpolation), interpolation)
+
+                interpolation == Interpolation.TRILINEAR && GlesLutEngine.isSupported() ->
+                    withCpuFallback(GlesLutEngine(), interpolation)
+
+                else -> CpuLutEngine(interpolation)
+            }
         }
-    }
 
-    private fun createAgsl(): LutEngine {
+    /** Backend bez awaryjnego CPU – do testów porównawczych (błąd backendu nie jest maskowany). */
+    fun createStrict(backend: Backend, interpolation: Interpolation = Interpolation.TRILINEAR): LutEngine =
+        when (backend) {
+            Backend.AGSL -> createAgsl(interpolation)
+            Backend.GLES -> GlesLutEngine()
+            Backend.CPU -> CpuLutEngine(interpolation)
+            Backend.AUTO -> create(Backend.AUTO, interpolation)
+        }
+
+    private fun createAgsl(interpolation: Interpolation): LutEngine {
         check(Build.VERSION.SDK_INT >= AGSL_MIN_API) { "AGSL wymaga API $AGSL_MIN_API" }
-        return AgslLutEngine()
+        return AgslLutEngine(interpolation)
     }
 
-    private fun withCpuFallback(primary: LutEngine): LutEngine = FallbackLutEngine(primary, CpuLutEngine())
+    private fun withCpuFallback(primary: LutEngine, interpolation: Interpolation): LutEngine =
+        FallbackLutEngine(primary, CpuLutEngine(interpolation))
 }
 
 private class FallbackLutEngine(private val primary: LutEngine, private val fallback: LutEngine) : LutEngine {

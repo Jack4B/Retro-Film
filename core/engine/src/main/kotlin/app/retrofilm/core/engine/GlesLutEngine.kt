@@ -28,6 +28,14 @@ class GlesLutEngine : LutEngine {
     companion object {
         /** Sprawdza, czy urządzenie potrafi utworzyć kontekst GLES 3.0. */
         fun isSupported(): Boolean = runCatching { EglSession().close() }.isSuccess
+
+        /** Nazwa GPU (GL_VENDOR / GL_RENDERER / GL_VERSION) albo null, gdy GLES 3 niedostępny. */
+        fun gpuInfo(): String? = runCatching {
+            EglSession().use {
+                listOf(GLES30.GL_VENDOR, GLES30.GL_RENDERER, GLES30.GL_VERSION)
+                    .joinToString(" / ") { name -> GLES30.glGetString(name).orEmpty() }
+            }
+        }.getOrNull()
     }
 }
 

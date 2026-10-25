@@ -5,12 +5,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /** Backend CPU – zawsze dostępny, referencja dla testów GPU. */
-class CpuLutEngine : LutEngine {
-    override val name: String = "cpu"
+class CpuLutEngine(private val interpolation: Interpolation = Interpolation.TRILINEAR) : LutEngine {
+    override val name: String = if (interpolation == Interpolation.TRILINEAR) "cpu" else "cpu-tetra"
 
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = withContext(Dispatchers.Default) {
         val pixels = BitmapPixels.read(src)
-        BitmapPixels.write(CpuLut.applyToPixels(pixels, lut, intensity), src.width, src.height)
+        BitmapPixels.write(CpuLut.applyToPixels(pixels, lut, intensity, interpolation), src.width, src.height)
     }
 }
 

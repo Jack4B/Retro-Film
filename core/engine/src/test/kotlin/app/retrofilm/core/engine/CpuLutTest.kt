@@ -70,6 +70,38 @@ class CpuLutTest {
         assertEquals(0, lut.node(0, 1, 0, 0))
     }
 
+    @Test
+    fun tetrahedralKeepsIdentityAndZeroIntensity() {
+        assertArrayEquals(pixels, CpuLut.applyToPixels(pixels, Lut.identity(), 1f, Interpolation.TETRAHEDRAL))
+        val invert = Lut.generate(Lut.DEFAULT_SIZE) { r, g, b -> Triple(1 - r, 1 - g, 1 - b) }
+        assertArrayEquals(pixels, CpuLut.applyToPixels(pixels, invert, 0f, Interpolation.TETRAHEDRAL))
+    }
+
+    @Test
+    fun tetrahedralUsesOnlyGrayDiagonalOnGrayAxis() {
+        // LUT 2^3: tylko węzły (0,0,0) i (1,1,1) ustawione; dla szarości tetra korzysta wyłącznie z nich,
+        // trójliniowa miesza też pozostałe 6 węzłów (=0).
+        val data = ByteArray(2 * 2 * 2 * 3)
+        val lut = Lut(2, data)
+        for (c in 0 until 3) data[lut.offset(1, 1, 1) + c] = 200.toByte()
+        val out = FloatArray(3)
+        CpuLut.sample(lut, 0.5f, 0.5f, 0.5f, out, Interpolation.TETRAHEDRAL)
+        assertEquals(100f / 255f, out[0], 1e-5f)
+        CpuLut.sample(lut, 0.5f, 0.5f, 0.5f, out, Interpolation.TRILINEAR)
+        assertEquals(25f / 255f, out[0], 1e-5f)
+    }
+
+    @Test
+    fun tetrahedralMatchesTrilinearOnLinearLut() {
+        // Dla LUT liniowego obie interpolacje są dokładne – różnica ≤ 1 poziom (kwantyzacja).
+        val lut = Lut.generate(Lut.DEFAULT_SIZE) { r, g, b -> Triple(0.5f * r + 0.3f * g, 0.2f + 0.6f * b, 0.9f * g) }
+        val tri = CpuLut.applyToPixels(pixels, lut, 1f, Interpolation.TRILINEAR)
+        val tet = CpuLut.applyToPixels(pixels, lut, 1f, Interpolation.TETRAHEDRAL)
+        for (i in tri.indices) {
+            for (s in intArrayOf(0, 8, 16)) assertNear(tri[i] shr s and 0xFF, tet[i] shr s and 0xFF)
+        }
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsWrongLength() {
         Lut(33, ByteArray(10))
