@@ -1,23 +1,57 @@
 <resources>
     <string name="app_name">Retro-Film</string>
-    <string name="action_pick">Wybierz zdjęcie</string>
-    <string name="action_export">Eksportuj JPEG</string>
-    <string name="action_back">Wstecz</string>
-    <string name="no_photo">Wybierz zdjęcie, aby zacząć.</string>
-    <string name="preview_cd">Podgląd zdjęcia z filmem i ramką</string>
-    <string name="title_film">Film</string>
-    <string name="film_identity">Bez filmu (identity)</string>
-    <string name="films_missing">W tej wersji nie ma jeszcze wbudowanych filmów – dostępny jest tylko identity.</string>
-    <string name="title_frame">Ramka i podpis</string>
+    <string name="app_title">Retro Film</string>
+    <string name="cd_open_settings">Otwórz ustawienia</string>
+
+    <!-- Start -->
+    <string name="start_headline">Zdjęcia jak z kliszy.</string>
+    <string name="start_promise">Działa offline, bez konta. Lokalizacja jest usuwana z każdego zapisanego pliku.</string>
+    <string name="start_pick">Wybierz zdjęcie</string>
+    <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
+
+    <!-- Edytor -->
+    <string name="editor_back">Wróć do wyboru zdjęcia</string>
+    <string name="editor_save">Zapisz</string>
+    <string name="editor_preview_cd">Podgląd zdjęcia z filmem i ramką. Przytrzymaj, aby zobaczyć oryginał.</string>
+    <string name="editor_preview_before_cd">Oryginał bez filmu i ramki</string>
+    <string name="editor_hint_hold">Przytrzymaj zdjęcie: przed / po</string>
+    <string name="editor_badge_before">Oryginał</string>
+    <string name="editor_working">Przetwarzanie…</string>
+    <string name="tab_film">Film</string>
+    <string name="tab_frame">Ramka</string>
+
+    <!-- Film -->
+    <string name="film_none">Oryginał</string>
+    <string name="film_all">Wszystkie</string>
+    <string name="film_favorites">Ulubione</string>
+    <string name="film_favorites_empty">Brak ulubionych. Wybierz film i dotknij gwiazdki.</string>
+    <string name="film_favorite_add_cd">Dodaj film %1$s do ulubionych</string>
+    <string name="film_favorite_remove_cd">Usuń film %1$s z ulubionych</string>
+    <string name="film_selected">wybrany</string>
+    <string name="film_not_selected">niewybrany</string>
+    <string name="film_tile_cd">Film %1$s</string>
+    <string name="film_strength">Moc filmu</string>
+    <string name="film_strength_percent">%1$d%%</string>
+    <string name="film_strength_cd">Moc filmu</string>
+    <string name="film_category_other">Inne</string>
+    <string name="film_category_bw">Czarno-białe</string>
+    <string name="film_category_negative_color">Negatyw kolorowy</string>
+    <string name="film_category_negative_new">Negatyw nowoczesny</string>
+    <string name="film_category_negative_old">Negatyw dawny</string>
+    <string name="film_category_colorslide">Slajd</string>
+    <string name="film_category_instant_consumer">Błyskawiczne</string>
+    <string name="film_category_instant_pro">Błyskawiczne (pro)</string>
+    <string name="films_missing">W tej wersji dostępne są tylko filmy startowe. Więcej pobierzesz w Ustawieniach.</string>
+
+    <!-- Ramka -->
     <string name="frame_enabled">Ramka</string>
     <string name="signature_enabled">Podpis</string>
     <string name="signature_label">Tekst podpisu</string>
-    <string name="margin_label">Margines: %1$d%%</string>
-    <string name="signature_too_long">Podpis jest za długi dla tej ramki. Skróć tekst albo zmień proporcje lub margines – eksport jest zablokowany.</string>
-    <string name="working">Przetwarzanie…</string>
+    <string name="signature_counter">%1$d/%2$d</string>
+    <string name="margin_label">Grubość ramki: %1$d%%</string>
+    <string name="signature_too_long">Podpis jest za długi dla tej ramki. Skróć tekst albo zmień proporcje lub grubość ramki – zapis jest zablokowany.</string>
+
+    <!-- Zapis -->
     <string name="export_done">Zapisano w Pictures/RetroFilm</string>
-    <string name="export_failed">Eksport nie powiódł się: %1$s</string>
-    <string name="load_failed">Nie udało się wczytać zdjęcia.</string>
-    <string name="app_title">Retro Film</string>
-    <string name="cd_open_settings">Otwórz ustawienia</string>
+    <string name="export_failed">Zapis nie powiódł się: %1$s</string>
 </resources>

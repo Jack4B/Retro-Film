@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.retrofilm.core.engine.Lut
@@ -19,8 +20,10 @@ import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/** Film do wyboru; [id] = [IDENTITY_ID] to wbudowany LUT tożsamościowy. */
-data class FilmOption(val id: String, val name: String?)
+/** Film do wyboru; [id] = [IDENTITY_ID] to wbudowany LUT tożsamościowy. [category] = pierwszy człon id. */
+data class FilmOption(val id: String, val name: String?) {
+    val category: String get() = if (id == IDENTITY_ID) "" else id.substringBefore('/', missingDelimiterValue = "")
+}
 
 /** Wynik operacji pokazywany w UI (snackbar). */
 sealed interface UiMessage {
@@ -40,8 +43,22 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         private set
     var busy by mutableStateOf(false)
         private set
+
+    /** Podgląd oryginału (to samo skalowanie co [preview]) – pokazywany po przytrzymaniu zdjęcia. */
+    var before by mutableStateOf<Bitmap?>(null)
+        private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Moc filmu 0..1 (miks z oryginałem); 1 = pełny film. */
+    var intensity by mutableFloatStateOf(1f)
     var frame by mutableStateOf(FrameOptions())
+
+    /** Ulubione filmy (id z katalogu); zapisywane w DataStore, odczyt przez [observeFavorites]. */
+    var favorites by mutableStateOf<Set<String>>(emptySet())
+        private set
+
+    /** Miniatury filmów na bieżącym zdjęciu (zob. [FilmThumbnails]). */
+    val thumbnails = FilmThumbnails(graph, typeface)
 
     val films: List<FilmOption> by lazy {
         listOf(FilmOption(IDENTITY_ID, null)) +
@@ -51,6 +68,23 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     @androidx.annotation.VisibleForTesting
     internal fun setPhotoForTest(bitmap: Bitmap) {
         photo = bitmap
+    }
+
+    /** Wraca do ekranu startowego (nic nie jest zapisywane). */
+    fun closePhoto() {
+        photo = null
+        preview = null
+        before = null
+        thumbnails.reset()
+    }
+
+    /** Zbiera ulubione z DataStore; wołane z `LaunchedEffect` ekranu. */
+    suspend fun observeFavorites() {
+        graph.appSettings.favoriteFilms.collect { favorites = it }
+    }
+
+    suspend fun toggleFavorite(id: String) {
+        graph.appSettings.setFavorite(id, id !in favorites)
     }
 
     /** Status podpisu dla bieżącego zdjęcia i ramki (blokada eksportu przy TooLong). */
@@ -66,6 +100,8 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
             }
             photo = bmp
             preview = null
+            before = null
+            thumbnails.reset()
             null
         } catch (_: IOException) {
             UiMessage.LoadFailed
@@ -76,10 +112,14 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
     suspend fun refreshPreview() {
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
-        preview = withContext(Dispatchers.Default) {
+        val (orig, shown) = withContext(Dispatchers.Default) {
             val small = scaleDown(p, PREVIEW_SIDE)
-            ExportPipeline.render(small, lut(), graph.filmEngine.renderer, frame, typeface)
+            val orig = before
+                ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
+            orig to ExportPipeline.render(small, lut(), graph.filmEngine.renderer, frame, typeface, intensity)
         }
+        before = orig
+        preview = shown
     }
 
     /** Eksport; nigdy nie rzuca – błędy wracają jako [UiMessage]. */
@@ -88,7 +128,7 @@ class MainState(private val graph: AppGraph, private val typeface: Typeface) {
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val jpeg = withContext(Dispatchers.Default) {
-                val rendered = ExportPipeline.render(p, lut(), graph.filmEngine.renderer, frame, typeface)
+                val rendered = ExportPipeline.render(p, lut(), graph.filmEngine.renderer, frame, typeface, intensity)
                 ExportPipeline.encode(p, rendered, frame, typeface)
             }
             withContext(Dispatchers.IO) { save(jpeg) }

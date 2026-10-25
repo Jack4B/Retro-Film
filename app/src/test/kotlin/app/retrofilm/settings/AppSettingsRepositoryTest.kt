@@ -9,6 +9,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -41,5 +42,20 @@ class AppSettingsRepositoryTest {
         assertTrue(withRepo { it.dynamicColor.first() })
         withRepo { it.setDynamicColor(false) }
         assertFalse(withRepo { it.dynamicColor.first() })
+    }
+
+    @Test
+    fun favoritesAreEmptyByDefaultAndPersisted() {
+        assertEquals(emptySet<String>(), withRepo { it.favoriteFilms.first() })
+        withRepo {
+            it.setFavorite("bw/kodak_tri_x_400", true)
+            it.setFavorite("negative_new/kodak_portra_400", true)
+        }
+        assertEquals(
+            setOf("bw/kodak_tri_x_400", "negative_new/kodak_portra_400"),
+            withRepo { it.favoriteFilms.first() }
+        )
+        withRepo { it.setFavorite("bw/kodak_tri_x_400", false) }
+        assertEquals(setOf("negative_new/kodak_portra_400"), withRepo { it.favoriteFilms.first() })
     }
 }
