@@ -32,6 +32,13 @@ Nowe wpisy na górze. Szablon:
 - Otwarte / P2 odłożone: pomiar miniatur na emulatorze (emulator.yml), zrzuty z telefonu (390) do porównania z makietami, seria (pasek miniatur, jeden film i jedna ramka na serię, podpis per zdjęcie), Korekty, miniatury w APK dla filmów do pobrania, Biblioteka filmów, wielokrotny wybór w pickerze – kolejne PR-y.
 - Następny krok: CI → review Gauge → Critic.
 
+## 2026-10-25 – Claude (narzędzie miniatur filmów)
+- Faza: D12 – miniatury filmów do pobrania
+- Zrobione: `tools/thumbs/make_thumbs.py` (HaldCLUT PNG → JPG 160 px + `thumbs.json`, kontrola budżetu), opis w `tools/README.md`; sprawdzone na 10 filmach startowych (≈3 KB/szt. na scenie testowej).
+- PR / gałąź: `f5/miniatury-jpg`.
+- Otwarte / P2 odłożone: wygenerować komplet 260 miniatur ze zdjęciem CC0 (wymaga kopii Retro-Film-LUTs@luts-v1 i sieci; nie mam do tego dostępu), wrzucić do `app/src/main/assets/thumbs/`, a po stronie aplikacji pokazać je w Bibliotece filmów (osobny PR).
+- Następny krok: @Forge / Jack4B: uruchomić narzędzie na pełnej paczce.
+
 ## 2026-10-25 – Claude (przegląd koncepcji, makiety v2)
 - Faza: poza fazami (ocena + redesign UI/UX)
 - Zrobione: `docs/OCENA-I-REDESIGN.md` (ocena koncepcji, uwagi T1–T12), `docs/makiety/index.html` (8 makiet v2, nazwy filmów prawdziwe), decyzje D11 i D12 w `DECYZJE.md`, zmiany w `AGENTS.md`, `docs/LUTS.md` i `docs/EKRANY.md` (zgodnie z odpowiedziami Jack4B).
