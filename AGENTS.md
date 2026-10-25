@@ -25,6 +25,6 @@ Najpierw przeczytaj: docs/ARCHITEKTURA.md, docs/PLAN.md, docs/DECYZJE.md, ostatn
 - Eksport zawsze usuwa GPS.
 - UI tylko po polsku w `strings.xml`; cele ≥ 48 dp, kontrast AA, TalkBack.
 - Golden testy silnika (identity LUT dE < 1; GPU vs CPU ≤ 1–2 poziomy/kanał) – przekroczenie = P0.
-- Bez ffmpeg-kit; bez znaków towarowych firm trzecich.
+- Bez ffmpeg-kit; bez logo i znaków graficznych firm trzecich. Nazwy filmów w katalogu LUT zostają prawdziwe, jak w paczce (D11, decyzja Jack4B); poza nazwami filmów nie używamy cudzych znaków towarowych.
 - ktlint + detekt + testy przechodzą przed PR.
 - Decyzji z DECYZJE.md nie zmieniamy bez Jack4B; niepewne kwestie licencyjne → ESKALACJA.
