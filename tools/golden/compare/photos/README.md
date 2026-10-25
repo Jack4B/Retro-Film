@@ -27,3 +27,23 @@ Panele (pełna rozdzielczość każdy): **HaldCLUT 144³ (oryginał) | 33³ RGB8
 - B&W Neopan (3 warianty): max < 1,2 na wszystkich zdjęciach, zero px ΔE>2 – brak bandingu.
 - Polaroid PX-70 Cold +: max ≤ 2,2, zero px ΔE>3; na gradiencie nieba brak bandingu.
 - Superia 200 XPRO: sky 19 px ΔE>3 (0,0005%, dół kadru – ciemny stok góry), skin 0. **green: 2,84% px ΔE>3 (p99 4,29)** – 99,9% z nich to bardzo ciemne piksele wejścia (luma < 0,15; mediana 0,04: gałęzie i cienie). Siatka 33³ nie oddaje stromej krzywej XPRO w głębokich cieniach. To jest region niskiej jasności (L* wyjścia ≈ 3,5), więc różnica jest słabo widoczna, ale realna. Flaga `approx: true` już ustawiona dla tego filmu.
+
+## 33³ vs 65³ RGB8 na zdjęciach (stats-65.json; obrazy 65³ niecommitowane, 58 MB)
+
+| Film | Zdjęcie | 33³ p99 / max / px>3 | 65³ p99 / max / px>3 |
+|---|---|---|---|
+| colorslide/fuji_superia_200_xpro | sky | 0.31 / 5.175 / 19 | 0.271 / 0.829 / 0 |
+| colorslide/fuji_superia_200_xpro | skin | 0.308 / 2.631 / 0 | 0.304 / 0.613 / 0 |
+| colorslide/fuji_superia_200_xpro | green | 4.293 / 5.699 / 122890 | 0.584 / 1.06 / 0 |
+| bw/fuji_neopan_1600 | sky | 0.487 / 0.958 / 0 | 0.317 / 0.59 / 0 |
+| bw/fuji_neopan_1600 | skin | 0.389 / 0.957 / 0 | 0.285 / 0.665 / 0 |
+| bw/fuji_neopan_1600 | green | 0.532 / 1.19 / 0 | 0.352 / 0.967 / 0 |
+| negative_old/fuji_neopan_1600_p | sky | 0.484 / 0.828 / 0 | 0.322 / 0.609 / 0 |
+| negative_old/fuji_neopan_1600_p | skin | 0.38 / 0.947 / 0 | 0.272 / 0.633 / 0 |
+| negative_old/fuji_neopan_1600_p | green | 0.498 / 0.988 / 0 | 0.33 / 0.769 / 0 |
+| negative_old/fuji_neopan_1600_pp | sky | 0.451 / 0.937 / 0 | 0.284 / 0.615 / 0 |
+| negative_old/fuji_neopan_1600_pp | skin | 0.37 / 0.937 / 0 | 0.267 / 0.691 / 0 |
+| negative_old/fuji_neopan_1600_pp | green | 0.511 / 1.098 / 0 | 0.336 / 0.831 / 0 |
+| instant_consumer/polaroid_px_70_cold_p | sky | 1.169 / 1.693 / 0 | 0.637 / 0.899 / 0 |
+| instant_consumer/polaroid_px_70_cold_p | skin | 1.072 / 2.176 / 0 | 0.638 / 1.401 / 0 |
+| instant_consumer/polaroid_px_70_cold_p | green | 0.908 / 1.738 / 0 | 0.615 / 1.104 / 0 |
