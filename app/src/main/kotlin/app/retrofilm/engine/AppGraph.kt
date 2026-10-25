@@ -8,6 +8,7 @@ import app.retrofilm.core.engine.pack.LutPackFiles
 import app.retrofilm.core.engine.pack.LutRawCache
 import app.retrofilm.core.ui.photo.PhotoRenderer
 import app.retrofilm.feature.settings.lut.LutDownloadStateHolder
+import app.retrofilm.lut.PackDownloadedFiles
 import app.retrofilm.lut.PrefsLutDownloadSettings
 import app.retrofilm.lut.WorkLutPackRepository
 import app.retrofilm.settings.AppSettingsRepository
@@ -26,8 +27,13 @@ class AppGraph(context: Context) {
         EngineFilmEngine(
             LutCatalog(context.applicationContext.assets, lutRawCache),
             LutEngineFactory.create(),
-            downloaded = { lutPackRepository }
+            downloaded = { downloadedFiles }
         )
+    }
+
+    /** Pobrane filmy dla silnika: tylko pliki, bez WorkManagera (zob. [PackDownloadedFiles]). */
+    private val downloadedFiles: PackDownloadedFiles by lazy {
+        PackDownloadedFiles(context.applicationContext, lutRawCache)
     }
 
     private val lutCacheBytes = MutableStateFlow(0L)
