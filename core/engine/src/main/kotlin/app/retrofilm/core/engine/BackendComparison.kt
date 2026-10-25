@@ -26,7 +26,15 @@ object BackendComparison {
         val maxAll: Int get() = max.max()
     }
 
-    data class BackendResult(val backend: String, val error: String?, val luts: List<LutResult>) {
+    /** Czasy: render obrazu 12 MP oraz wgranie LUT-a (N → ms, render 16×16 na zimnym silniku). */
+    data class Timing(val render12MpMs: Long, val uploadMs: Map<Int, Long>)
+
+    data class BackendResult(
+        val backend: String,
+        val error: String?,
+        val luts: List<LutResult>,
+        val timing: Timing? = null
+    ) {
         val maxDiff: Int get() = luts.maxOfOrNull { it.maxAll } ?: -1
         val pass: Boolean get() = error == null && luts.isNotEmpty() && maxDiff <= TOLERANCE
     }
@@ -49,6 +57,13 @@ object BackendComparison {
                     backends.map { b ->
                         JSONObject().put("backend", b.backend).put("max_diff", b.maxDiff)
                             .put("verdict", if (b.pass) "PASS" else "FAIL").put("error", b.error ?: JSONObject.NULL)
+                            .put("render_12mp_ms", b.timing?.render12MpMs ?: JSONObject.NULL)
+                            .put(
+                                "lut_upload_ms",
+                                b.timing?.let { t ->
+                                    JSONObject().apply { t.uploadMs.forEach { (n, ms) -> put(n.toString(), ms) } }
+                                } ?: JSONObject.NULL
+                            )
                             .put(
                                 "luts",
                                 JSONArray(
@@ -72,7 +87,11 @@ object BackendComparison {
     }
 
     @Suppress("TooGenericExceptionCaught")
-    suspend fun run(backends: List<LutEngineFactory.Backend>, luts: List<Pair<String, Lut>>): Report {
+    suspend fun run(
+        backends: List<LutEngineFactory.Backend>,
+        luts: List<Pair<String, Lut>>,
+        withTiming: Boolean = false
+    ): Report {
         val src = testImage()
         val cpu = CpuLutEngine()
         val refs = luts.map { (_, lut) -> cpu.apply(src, lut, 1f) }
@@ -82,7 +101,8 @@ object BackendComparison {
                 BackendResult(
                     engine.name,
                     null,
-                    luts.mapIndexed { i, (id, lut) -> diff(id, refs[i], engine.apply(src, lut, 1f)) }
+                    luts.mapIndexed { i, (id, lut) -> diff(id, refs[i], engine.apply(src, lut, 1f)) },
+                    if (withTiming) measure(backend, luts.firstOrNull()?.second ?: Lut.identity()) else null
                 )
             } catch (e: CancellationException) {
                 throw e
@@ -91,6 +111,37 @@ object BackendComparison {
             }
         }
         return Report(GlesLutEngine.gpuInfo() ?: "GLES 3 niedostępny", results)
+    }
+
+    /** Rozmiary siatek do pomiaru czasu wgrywania LUT-a. */
+    val UPLOAD_SIZES = listOf(33, 65, 144)
+    private const val MP12_W = 4000
+    private const val MP12_H = 3000
+    private const val SMALL = 16
+
+    /** Mierzy czas renderu 12 MP i wgrania syntetycznych LUT-ów tożsamościowych 33/65/144. */
+    suspend fun measure(backend: LutEngineFactory.Backend, lut: Lut): Timing {
+        val small = Bitmap.createBitmap(SMALL, SMALL, Bitmap.Config.ARGB_8888)
+        val upload = UPLOAD_SIZES.associateWith { n ->
+            val id = Lut.identity(n)
+            val engine = LutEngineFactory.createStrict(backend)
+            timed { engine.apply(small, id, 1f) }
+        }
+        val big = Bitmap.createBitmap(MP12_W, MP12_H, Bitmap.Config.ARGB_8888).apply { eraseColor(MID_GRAY) }
+        val engine = LutEngineFactory.createStrict(backend)
+        engine.apply(small, lut, 1f) // rozgrzanie + wgranie LUT-a
+        val render = timed { engine.apply(big, lut, 1f).recycle() }
+        big.recycle()
+        return Timing(render, upload)
+    }
+
+    private const val MID_GRAY = -0x7f7f80
+    private const val NANOS_PER_MS = 1_000_000L
+
+    private inline fun timed(block: () -> Unit): Long {
+        val t0 = System.nanoTime()
+        block()
+        return (System.nanoTime() - t0) / NANOS_PER_MS
     }
 
     fun diff(id: String, a: Bitmap, b: Bitmap): LutResult {

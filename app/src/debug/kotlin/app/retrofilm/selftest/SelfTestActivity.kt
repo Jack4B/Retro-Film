@@ -60,6 +60,7 @@ class SelfTestActivity : ComponentActivity() {
 
 private enum class Choice(val label: String) { ALL("Wszystkie"), AGSL("AGSL"), GLES("GLES"), CPU("CPU") }
 
+@Suppress("LongMethod")
 @Composable
 private fun SelfTestScreen() {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -95,7 +96,7 @@ private fun SelfTestScreen() {
                 saved = null
                 scope.launch {
                     val r = withContext(Dispatchers.Default) {
-                        BackendComparison.run(backendsFor(choice), selfTestLuts(context))
+                        BackendComparison.run(backendsFor(choice), selfTestLuts(context), withTiming = true)
                     }
                     report = r
                     val json = r.toJson().toString(2)
@@ -125,11 +126,14 @@ private fun SelfTestScreen() {
     }
 }
 
+private val PassColor = Color(0xFF1B7F3A)
+private val FailColor = Color(0xFFC62828)
+
 @Composable
 private fun Verdict(label: String, pass: Boolean) {
     Text(
         "$label: ${if (pass) "PASS" else "FAIL"}",
-        color = if (pass) Color(0xFF1B7F3A) else Color(0xFFC62828),
+        color = if (pass) PassColor else FailColor,
         fontWeight = FontWeight.Bold,
         style = MaterialTheme.typography.titleLarge
     )
@@ -146,6 +150,10 @@ private fun BackendCard(b: BackendComparison.BackendResult) {
             } else {
                 Text("Maks. różnica: ${b.maxDiff}/255")
                 b.luts.forEach { Text("• ${it.lut}: ${it.maxAll}/255") }
+                b.timing?.let { t ->
+                    Text("Render 12 MP: ${t.render12MpMs} ms")
+                    Text("Wgranie LUT: " + t.uploadMs.entries.joinToString { (n, ms) -> "$n³ $ms ms" })
+                }
             }
         }
     }

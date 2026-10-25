@@ -18,9 +18,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Backend AGSL (API 33+). AGSL nie ma tekstur 3D, więc LUT jest pakowany do paska 2D
- * o szerokości size*size i wysokości size (x = r + b*size, y = g), próbkowanego bez filtrowania;
- * interpolacja trójliniowa liczona w shaderze (8 odczytów), identycznie jak w [CpuLut].
+ * Backend AGSL (API 33+). AGSL nie ma tekstur 3D, więc LUT jest pakowany do siatki kafli 2D:
+ * plaster `b` (size×size, x = r, y = g) trafia do kafla (b % tiles, b / tiles), gdzie
+ * tiles = ceil(sqrt(size)). Dla 33 → 6×6 kafli = 198×198 px, 65 → 9×9 = 585×585,
+ * 144 → 12×12 = 1728×1728 (pasek 1D miałby 20736 px szerokości – ponad typowy limit 16384).
+ * Tekstura próbkowana bez filtrowania; interpolacja trójliniowa (także między plastrami b)
+ * liczona w shaderze (8 odczytów), identycznie jak w [CpuLut]. Ostatnie 2 tekstury LUT są
+ * buforowane (LRU).
  */
 @TargetApi(Build.VERSION_CODES.TIRAMISU)
 class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRILINEAR) : LutEngine {
@@ -34,11 +38,12 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
         val w = src.width
         val h = src.height
         val input = if (src.config == Bitmap.Config.ARGB_8888) src else src.copy(Bitmap.Config.ARGB_8888, false)
-        val strip = lutStrip(lut)
+        val strip = cachedTiles(lut)
         val shader = RuntimeShader(SHADER).apply {
             setInputShader("image", nearest(input))
             setInputShader("lut", nearest(strip))
             setFloatUniform("size", lut.size.toFloat())
+            setFloatUniform("tiles", tilesPerRow(lut.size).toFloat())
             setFloatUniform("intensity", intensity.coerceIn(0f, 1f))
             setFloatUniform("tetra", if (interpolation == Interpolation.TETRAHEDRAL) 1f else 0f)
         }
@@ -69,7 +74,6 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
             renderer.destroy()
             reader.close()
             node.discardDisplayList()
-            strip.recycle()
         }
     }
 
@@ -78,38 +82,71 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
             filterMode = BitmapShader.FILTER_MODE_NEAREST
         }
 
-    private fun lutStrip(lut: Lut): Bitmap {
-        val n = lut.size
-        val pixels = IntArray(n * n * n)
-        for (b in 0 until n) {
-            for (g in 0 until n) {
-                for (r in 0 until n) {
-                    val o = lut.offset(r, g, b)
-                    val rgb = (lut.data[o].toInt() and BYTE_MASK shl SHIFT_R) or
-                        (lut.data[o + 1].toInt() and BYTE_MASK shl SHIFT_G) or
-                        (lut.data[o + 2].toInt() and BYTE_MASK)
-                    pixels[g * n * n + b * n + r] = OPAQUE or rgb
+    private fun cachedTiles(lut: Lut): Bitmap = synchronized(cache) {
+        cache.remove(lut)?.also { cache[lut] = it }
+            ?: packTiles(lut).also {
+                cache[lut] = it
+                while (cache.size > CACHE_SIZE) {
+                    val eldest = cache.keys.first()
+                    cache.remove(eldest)?.recycle()
                 }
             }
-        }
-        return Bitmap.createBitmap(pixels, n * n, n, Bitmap.Config.ARGB_8888)
     }
 
-    private companion object {
-        const val BYTE_MASK = 0xFF
-        const val SHIFT_R = 16
-        const val SHIFT_G = 8
-        const val OPAQUE = -0x1000000
+    /** Czyści bufor tekstur LUT. */
+    fun clearCache() = synchronized(cache) {
+        cache.values.forEach { it.recycle() }
+        cache.clear()
+    }
 
-        val SHADER = """
+    private val cache = LinkedHashMap<Lut, Bitmap>()
+
+    companion object {
+        /** Maksymalna liczba buforowanych tekstur LUT. */
+        const val CACHE_SIZE = 2
+
+        fun tilesPerRow(size: Int): Int = Math.ceil(Math.sqrt(size.toDouble())).toInt()
+
+        /** Wymiar boku tekstury kafli dla LUT-a [size] (px). */
+        fun atlasSide(size: Int): Int = tilesPerRow(size) * size
+
+        /** Pakuje LUT do siatki kafli (patrz opis klasy); publiczne dla pomiarów w self-teście. */
+        fun packTiles(lut: Lut): Bitmap {
+            val n = lut.size
+            val tiles = tilesPerRow(n)
+            val side = tiles * n
+            val pixels = IntArray(side * side)
+            for (b in 0 until n) {
+                val ox = (b % tiles) * n
+                val oy = (b / tiles) * n
+                for (g in 0 until n) {
+                    for (r in 0 until n) {
+                        val rgb = (lut.node8(r, g, b, 0) shl SHIFT_R) or
+                            (lut.node8(r, g, b, 1) shl SHIFT_G) or
+                            lut.node8(r, g, b, 2)
+                        pixels[(oy + g) * side + ox + r] = OPAQUE or rgb
+                    }
+                }
+            }
+            return Bitmap.createBitmap(pixels, side, side, Bitmap.Config.ARGB_8888)
+        }
+
+        private const val SHIFT_R = 16
+        private const val SHIFT_G = 8
+        private const val OPAQUE = -0x1000000
+
+        private val SHADER = """
             uniform shader image;
             uniform shader lut;
             uniform float size;
+            uniform float tiles;
             uniform float intensity;
             uniform float tetra;
 
             float3 node(float r, float g, float b) {
-                return lut.eval(float2(r + b * size + 0.5, g + 0.5)).rgb;
+                float ty = floor(b / tiles);
+                float tx = b - ty * tiles;
+                return lut.eval(float2(tx * size + r + 0.5, ty * size + g + 0.5)).rgb;
             }
 
             half4 main(float2 xy) {

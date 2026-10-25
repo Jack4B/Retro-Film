@@ -144,10 +144,13 @@ private class EglSession : AutoCloseable {
     private fun upload3d(tex: Int, lut: Lut) {
         val n = lut.size
         val buf = ByteBuffer.allocateDirect(n * n * n * RGBA).order(ByteOrder.nativeOrder())
-        var i = 0
-        while (i < lut.data.size) {
-            buf.put(lut.data[i]).put(lut.data[i + 1]).put(lut.data[i + 2]).put(OPAQUE_BYTE)
-            i += Lut.CHANNELS
+        for (b in 0 until n) {
+            for (g in 0 until n) {
+                for (r in 0 until n) {
+                    buf.put(lut.node8(r, g, b, 0).toByte()).put(lut.node8(r, g, b, 1).toByte())
+                        .put(lut.node8(r, g, b, 2).toByte()).put(OPAQUE_BYTE)
+                }
+            }
         }
         buf.position(0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, tex)

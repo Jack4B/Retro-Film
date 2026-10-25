@@ -23,7 +23,7 @@ object LutAffineFit {
                     x[3] = 1.0
                     for (i in 0 until DIM) {
                         for (j in 0 until DIM) ata[i][j] += x[i] * x[j]
-                        for (c in 0 until Lut.CHANNELS) atb[c][i] += x[i] * lut.node(r, g, b, c) / MAX_BYTE
+                        for (c in 0 until Lut.CHANNELS) atb[c][i] += x[i] * lut.nodeF(r, g, b, c) / MAX_BYTE
                     }
                 }
             }

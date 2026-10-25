@@ -62,10 +62,10 @@ object CpuLut {
         val fg = pg - g0
         val fb = pb - b0
         for (c in 0 until Lut.CHANNELS) {
-            val c00 = lerp(lut.node(r0, g0, b0, c), lut.node(r1, g0, b0, c), fr)
-            val c10 = lerp(lut.node(r0, g1, b0, c), lut.node(r1, g1, b0, c), fr)
-            val c01 = lerp(lut.node(r0, g0, b1, c), lut.node(r1, g0, b1, c), fr)
-            val c11 = lerp(lut.node(r0, g1, b1, c), lut.node(r1, g1, b1, c), fr)
+            val c00 = lerp(lut.nodeF(r0, g0, b0, c), lut.nodeF(r1, g0, b0, c), fr)
+            val c10 = lerp(lut.nodeF(r0, g1, b0, c), lut.nodeF(r1, g1, b0, c), fr)
+            val c01 = lerp(lut.nodeF(r0, g0, b1, c), lut.nodeF(r1, g0, b1, c), fr)
+            val c11 = lerp(lut.nodeF(r0, g1, b1, c), lut.nodeF(r1, g1, b1, c), fr)
             val c0 = c00 + (c10 - c00) * fg
             val c1 = c01 + (c11 - c01) * fg
             out[c] = (c0 + (c1 - c0) * fb) / MAX_BYTE
@@ -89,42 +89,42 @@ object CpuLut {
         val fg = pg - g0
         val fb = pb - b0
         for (c in 0 until Lut.CHANNELS) {
-            val c000 = lut.node(r0, g0, b0, c).toFloat()
-            val c111 = lut.node(r1, g1, b1, c).toFloat()
+            val c000 = lut.nodeF(r0, g0, b0, c)
+            val c111 = lut.nodeF(r1, g1, b1, c)
             val v = when {
                 fr >= fg && fg >= fb -> {
-                    val c100 = lut.node(r1, g0, b0, c)
-                    val c110 = lut.node(r1, g1, b0, c)
+                    val c100 = lut.nodeF(r1, g0, b0, c)
+                    val c110 = lut.nodeF(r1, g1, b0, c)
                     c000 + fr * (c100 - c000) + fg * (c110 - c100) + fb * (c111 - c110)
                 }
 
                 fr >= fb && fb >= fg -> {
-                    val c100 = lut.node(r1, g0, b0, c)
-                    val c101 = lut.node(r1, g0, b1, c)
+                    val c100 = lut.nodeF(r1, g0, b0, c)
+                    val c101 = lut.nodeF(r1, g0, b1, c)
                     c000 + fr * (c100 - c000) + fb * (c101 - c100) + fg * (c111 - c101)
                 }
 
                 fb >= fr && fr >= fg -> {
-                    val c001 = lut.node(r0, g0, b1, c)
-                    val c101 = lut.node(r1, g0, b1, c)
+                    val c001 = lut.nodeF(r0, g0, b1, c)
+                    val c101 = lut.nodeF(r1, g0, b1, c)
                     c000 + fb * (c001 - c000) + fr * (c101 - c001) + fg * (c111 - c101)
                 }
 
                 fg >= fr && fr >= fb -> {
-                    val c010 = lut.node(r0, g1, b0, c)
-                    val c110 = lut.node(r1, g1, b0, c)
+                    val c010 = lut.nodeF(r0, g1, b0, c)
+                    val c110 = lut.nodeF(r1, g1, b0, c)
                     c000 + fg * (c010 - c000) + fr * (c110 - c010) + fb * (c111 - c110)
                 }
 
                 fg >= fb && fb >= fr -> {
-                    val c010 = lut.node(r0, g1, b0, c)
-                    val c011 = lut.node(r0, g1, b1, c)
+                    val c010 = lut.nodeF(r0, g1, b0, c)
+                    val c011 = lut.nodeF(r0, g1, b1, c)
                     c000 + fg * (c010 - c000) + fb * (c011 - c010) + fr * (c111 - c011)
                 }
 
                 else -> {
-                    val c001 = lut.node(r0, g0, b1, c)
-                    val c011 = lut.node(r0, g1, b1, c)
+                    val c001 = lut.nodeF(r0, g0, b1, c)
+                    val c011 = lut.nodeF(r0, g1, b1, c)
                     c000 + fb * (c001 - c000) + fg * (c011 - c001) + fr * (c111 - c011)
                 }
             }
@@ -132,7 +132,7 @@ object CpuLut {
         }
     }
 
-    private fun lerp(a: Int, b: Int, f: Float): Float = a + (b - a) * f
+    private fun lerp(a: Float, b: Float, f: Float): Float = a + (b - a) * f
 
     private fun toByte(v: Float): Int = Math.round(v.coerceIn(0f, 1f) * MAX_BYTE)
 }

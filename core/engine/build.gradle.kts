@@ -18,6 +18,7 @@ android {
 dependencies {
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
+    testImplementation(libs.org.json)
     testImplementation(libs.kotlinx.coroutines.core)
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)

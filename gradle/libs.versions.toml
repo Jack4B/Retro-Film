@@ -14,6 +14,7 @@ androidxTestRunner = "1.6.2"
 androidxTestExtJunit = "1.2.1"
 
 [libraries]
+org-json = { group = "org.json", name = "json", version = "20250517" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
