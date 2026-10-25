@@ -68,7 +68,7 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 </head>
 <body>
 <h1>Retro-Film – makiety v2</h1>
-<p class="lead">Propozycja redesignu UI/UX (Lumen v2). Statyczne makiety 360×740 dp w palecie z <code>core/ui/Theme.kt</code> (tło #0E0E10, akcent #F5A33B). Zdjęcia i filmy są umowne; nazwy filmów opisowe, bez znaków towarowych (zob. <code>docs/OCENA-I-REDESIGN.md</code>, pkt T1). Pełne uzasadnienie i lista otwartych pytań w opisie PR.</p>
+<p class="lead">Propozycja redesignu UI/UX, wersja po decyzjach Jack4B. Statyczne makiety 360×740 dp w palecie z <code>core/ui/Theme.kt</code> (tło #0E0E10, akcent #F5A33B). Zdjęcia są umowne; nazwy filmów są prawdziwe, jak w <code>catalog.json</code> (D11). Decyzje v0.1 (D12): zakładki w Edytorze, eksport tylko JPEG, w serii jeden film i jedna ramka, podpis osobno dla każdego zdjęcia, miniatury w APK także dla filmów do pobrania, bez galerii własnej. Uzasadnienie: <code>docs/OCENA-I-REDESIGN.md</code>.</p>
 
 <h3>A. Przepływ główny: Start → Edytor (jedno miejsce pracy) → Eksport (arkusz)</h3>
 <div class="row">
@@ -84,17 +84,17 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
   </div>
   <div style="padding:0 16px;font-weight:500;margin-bottom:8px">Ostatnio użyte filmy</div>
   <div class="scroll" style="flex:none">
-    <div class="tile"><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>Kolor ciepły</div>
-    <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"></i>Chłodny 200</div>
-    <div class="tile"><i style="background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Czarno-biały</div>
-    <div class="tile"><i style="background:linear-gradient(#e9c48a,#7a5a3a)"></i>Wyblakły</div>
-    <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Błyskawiczny</div>
+    <div class="tile"><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>Kodak Portra 400</div>
+    <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"></i>Fuji Velvia 50</div>
+    <div class="tile"><i style="background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Kodak TRI-X 400</div>
+    <div class="tile"><i style="background:linear-gradient(#e9c48a,#7a5a3a)"></i>Fuji Superia 400</div>
+    <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Polaroid PX-680</div>
   </div>
   <div style="padding:22px 16px 8px;font-weight:500">Twoje ostatnie zapisy</div>
   <div class="grid3" style="padding:0 16px"><i></i><i style="filter:hue-rotate(160deg)"></i><i style="filter:grayscale(1)"></i></div>
 </div>
 <h2>1 · Start</h2><ul>
-<li>Jedno CTA zamiast dwóch przycisków – Photo Picker i tak pozwala wybrać 1…N.</li>
+<li>Jedno CTA zamiast dwóch przycisków – Photo Picker pozwala wybrać 1…N; własnej galerii nie ma (decyzja T4).</li>
 <li>Zamiast „ostatnich projektów” (URI z pickera nie da się otworzyć ponownie) – ostatnie filmy i ostatnie własne eksporty.</li>
 <li>Jedno zdanie obietnicy prywatności zamiast dwóch ekranów tekstu.</li></ul></div>
 
@@ -102,30 +102,30 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <div class="fig"><div class="phone">
   <div class="bar"><div class="ico">←</div><b style="font-size:16px">3 z 12</b><div class="ico">↶</div><div class="btn sm">Zapisz</div></div>
   <div class="photo"><div class="sun"></div><div class="m1"></div><div class="m2"></div>
-    <div class="badge">Kolor ciepły · 100%</div>
+    <div class="badge">Kodak Portra 400 · 100%</div>
     <div class="hint">Przytrzymaj zdjęcie: przed / po</div></div>
   <div class="strip"><i></i><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
   <div class="panel">
-    <div class="scroll" style="padding-bottom:8px"><span class="chip">★ Ulubione</span><span class="chip on">Kolor</span><span class="chip">Czarno-białe</span><span class="chip">Slajd</span><span class="chip">Błyskawiczne</span></div>
+    <div class="scroll" style="padding-bottom:8px"><span class="chip">⌕</span><span class="chip">★ Ulubione</span><span class="chip on">Negatyw nowoczesny 38</span><span class="chip">Negatyw dawny 39</span><span class="chip">Czarno-białe 24</span><span class="chip">Slajd 26</span></div>
     <div class="scroll" style="padding-bottom:4px">
       <div class="tile"><i style="background:linear-gradient(#ffb865,#8a5a55)"></i>Bez filtra</div>
-      <div class="tile on"><i style="background:linear-gradient(#ffa24a,#7a4a4a)"></i>Ciepły</div>
-      <div class="tile"><i style="background:linear-gradient(#e08b55,#6a4a55)"><em class="cloud">☁</em></i>Wyblakły</div>
-      <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁</em></i>Chłodny</div>
-      <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Różowy</div>
-      <div class="tile"><i style="background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Ziarnisty</div>
+      <div class="tile on"><i style="background:linear-gradient(#ffa24a,#7a4a4a)"></i>Kodak Portra 400</div>
+      <div class="tile"><i style="background:linear-gradient(#e08b55,#6a4a55)"></i>Kodak Portra 800</div>
+      <div class="tile"><i style="background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁</em></i>Fuji 400H</div>
+      <div class="tile"><i style="background:linear-gradient(#f2a0a0,#6a3a4a)"><em class="cloud">☁</em></i>Fuji 160C</div>
+      <div class="tile"><i style="background:linear-gradient(#e9c48a,#7a5a3a)"><em class="cloud">☁</em></i>Fuji 160C +</div>
     </div>
     <div class="slider">Moc <u style="--v:50%"></u><b style="color:var(--ac);width:44px;text-align:right">100%</b></div>
-    <div class="slider" style="height:40px;padding-bottom:4px"><span class="chip on">Dla: całej serii</span><span class="chip">Tylko to zdjęcie</span></div>
+    <div class="slider" style="height:40px;padding-bottom:4px"><span class="chip on">Film i ramka: cała seria</span></div>
   </div>
   <div class="tabs"><div class="on"><span>🎞</span>Film</div><div><span>☀</span>Korekty</div><div><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
 </div>
 <h2>2 · Edytor – zakładka Film</h2><ul>
 <li>Zdjęcie ma pierwszeństwo; panel ≈ 40% wysokości.</li>
-<li>Kategorie (7 w pakiecie) + ★ ulubione zamiast jednej listy 260 kafelków; miniatury renderowane na <b>zdjęciu użytkownika</b>.</li>
-<li>☁ = film do pobrania; dotknięcie pobiera i od razu stosuje (podgląd z niskiej jakości zastępczej).</li>
+<li>Kategorie z licznikami (7 w pakiecie, razem 260 filmów) + ★ ulubione + ⌕ szukaj (po nazwie) zamiast jednej listy kafelków; miniatury renderowane na <b>zdjęciu użytkownika</b>.</li>
+<li>☁ = film do pobrania; kafelek ma miniaturę z APK (D12), więc można wybrać po wyglądzie; dotknięcie pobiera i stosuje film.</li>
 <li>Przed/po: przytrzymanie zdjęcia (obietnica z EKRANY.md, której dziś brak).</li>
-<li>Pasek serii zawsze widoczny; przełącznik zakresu „cała seria / to zdjęcie” zamiast ukrytego trybu.</li>
+<li>Pasek serii zawsze widoczny; film i ramka są wspólne dla serii (D12), więc zamiast przełącznika zakresu jest etykieta „cała seria”.</li>
 <li>Nazwa „Zapisz” zamiast „Eksportuj”: jedno dotknięcie = zapis z ustawieniami domyślnymi.</li></ul></div>
 
 <!-- 3 EDYTOR RAMKA -->
@@ -138,8 +138,9 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
       <span style="width:36px;height:36px;border-radius:50%;background:#fff;outline:2px solid var(--ac);outline-offset:2px;flex:none"></span>
       <span style="width:36px;height:36px;border-radius:50%;background:#f3ead8;flex:none"></span>
       <span style="width:36px;height:36px;border-radius:50%;background:#111;border:1px solid var(--ol);flex:none"></span>
-      <span class="chip" style="margin-left:8px">Podpis ✎</span><span class="chip">Szerokość 5%</span></div>
-    <div style="margin:0 16px 8px;border:1px solid var(--ol);border-radius:12px;min-height:48px;display:flex;align-items:center;padding:0 14px;justify-content:space-between"><span>Tatry, sierpień</span><span style="color:var(--tx2);font-size:12px">15/40</span></div>
+      <span class="chip" style="margin-left:8px">Podpis ✎</span><span class="chip">Grubość 5%</span></div>
+    <div style="margin:0 16px 4px;border:1px solid var(--ol);border-radius:12px;min-height:48px;display:flex;align-items:center;padding:0 14px;justify-content:space-between"><span>Tatry, sierpień</span><span style="color:var(--tx2);font-size:12px">15/40</span></div>
+    <div style="margin:0 16px 8px;color:var(--tx2);font-size:12px">Podpis dotyczy tylko zdjęcia 3 z 12. Ramka jest wspólna dla serii.</div>
   </div>
   <div class="tabs"><div><span>🎞</span>Film</div><div><span>☀</span>Korekty</div><div class="on"><span>▢</span>Ramka</div><div><span>⋯</span>Więcej</div></div>
 </div>
@@ -147,7 +148,8 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <li>Ramka żyje <b>w edytorze</b> z podglądem na żywo na tym samym płótnie – dziś to osobny ekran i tylko mały chip „Ramka: wył.”.</li>
 <li>Domyślnie wył. (RAMKA-SPEC); stany: bez ramki / bez podpisu / z podpisem – trzy pozycje jednego przełącznika zamiast dwóch.</li>
 <li>Kolory jako próbki 48 dp z opisem dla TalkBack („Biały, wybrany”).</li>
-<li>Błąd „Podpis za długi” pod polem, nie pod podglądem.</li></ul></div>
+<li>Błąd „Podpis za długi” pod polem, nie pod podglądem.</li>
+<li>Podpis jest osobny dla każdego zdjęcia serii (D12); wszystko inne w ramce wspólne. Miniatura w pasku serii ma znaczek ✎, gdy podpis jest ustawiony.</li></ul></div>
 
 <!-- 4 EKSPORT SHEET -->
 <div class="fig"><div class="phone">
@@ -157,8 +159,8 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
   <div class="scrim"></div>
   <div class="sheet">
     <div style="font-size:18px;font-weight:500;margin-bottom:2px">Zapisz 12 zdjęć</div>
-    <div style="color:var(--tx2);font-size:13px;margin-bottom:12px">Kolor ciepły · ramka 1:1 · podpis „Tatry”</div>
-    <div class="seg" style="margin-bottom:10px"><div class="on">JPEG</div><div>PNG</div></div>
+    <div style="color:var(--tx2);font-size:13px;margin-bottom:12px">Kodak Portra 400 · ramka 1:1 · podpisy osobno</div>
+    <div style="color:var(--tx2);font-size:12px;margin-bottom:6px">Format: JPEG</div>
     <div class="seg" style="margin-bottom:10px"><div>Standard</div><div class="on">Wysoka</div><div>Maksymalna</div></div>
     <div class="seg" style="margin-bottom:14px"><div class="on">Oryginał</div><div>2048 px</div><div>1080 px</div></div>
     <div style="color:var(--tx2);font-size:12px;margin-bottom:14px">🔒 Lokalizacja i dane aparatu są usuwane. Zapis do Pictures/RetroFilm.</div>
@@ -167,7 +169,7 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 </div>
 <h2>4 · Eksport jako arkusz</h2><ul>
 <li>Zamiast osobnego ekranu: arkusz dolny z trzema decyzjami, jedną zbędną mniej (suwak 1–100% → trzy poziomy jakości; wartość liczbową zostawić w „Więcej”).</li>
-<li>PNG jest w EKRANY.md, nie ma go w kodzie (dziś tylko JPEG) – na makiecie jako opcja do decyzji.</li>
+<li>Eksport tylko JPEG w v0.1 (D12); PNG zostaje wyłącznie dla plików LUT.</li>
 <li>Seria: postęp w powiadomieniu (WorkManager) <b>i</b> w arkuszu; anulowanie i „Ponów nieudane” w tym samym miejscu.</li></ul></div>
 </div>
 
@@ -180,7 +182,7 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
   <div class="photo"><div class="sun"></div><div class="m1"></div><div class="m2"></div>
     <div style="position:absolute;top:0;bottom:0;left:0;width:48%;background:linear-gradient(#cfc2b2,#9a8a85 55%,#4a4048);overflow:hidden"></div>
     <div style="position:absolute;top:0;bottom:0;left:48%;width:2px;background:#fff"></div>
-    <div class="badge">Oryginał</div><div class="badge" style="left:auto;right:10px">Kolor ciepły</div></div>
+    <div class="badge">Oryginał</div><div class="badge" style="left:auto;right:10px">Kodak Portra 400</div></div>
   <div class="panel">
     <div class="slider">Moc filmu <u style="--v:50%"></u><b style="color:var(--ac);width:44px;text-align:right">100%</b></div>
     <div class="slider">Ekspozycja <u style="--v:55%"></u><b style="width:44px;text-align:right">+0,2</b></div>
@@ -198,21 +200,24 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <!-- 6 BIBLIOTEKA -->
 <div class="fig"><div class="phone">
   <div class="bar"><div class="ico">←</div><b>Filmy</b><div class="ico">⌕</div></div>
-  <div class="scroll" style="flex:none;padding-bottom:10px"><span class="chip on">Wszystkie</span><span class="chip">★ Ulubione</span><span class="chip">Pobrane</span><span class="chip">Kolor</span><span class="chip">Czarno-białe</span></div>
-  <div class="card" style="display:flex;gap:12px;align-items:center"><div style="flex:1"><b>Pobierz więcej filmów</b><div style="color:var(--tx2);font-size:12px">252 filmy · tylko Wi-Fi · ok. 360 MB</div></div><div class="btn sm o">Pobierz</div></div>
+  <div style="margin:0 16px 10px;border:1px solid var(--ol);border-radius:24px;min-height:48px;display:flex;align-items:center;padding:0 16px;color:var(--tx2)">⌕ &nbsp;Szukaj wśród 260 filmów</div>
+  <div class="scroll" style="flex:none;padding-bottom:10px"><span class="chip on">Wszystkie</span><span class="chip">★ Ulubione</span><span class="chip">Pobrane</span><span class="chip">Negatyw nowoczesny 38</span><span class="chip">Czarno-białe 24</span></div>
+  <div class="card" style="display:flex;gap:12px;align-items:center"><div style="flex:1"><b>Pobierz więcej filmów</b><div style="color:var(--tx2);font-size:12px">250 filmów · tylko Wi-Fi · ok. 360 MB</div></div><div class="btn sm o">Pobierz</div></div>
+  <div style="padding:0 16px 6px;color:var(--tx2);font-size:12px;letter-spacing:.08em">NEGATYW NOWOCZESNY · 38</div>
   <div class="grid3" style="padding:0 16px;gap:10px">
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#ffa24a,#7a4a4a)"><span class="pill">★</span></i>Ciepły</div>
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e08b55,#6a4a55)"></i>Wyblakły</div>
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁ 9 MB</em></i>Chłodny</div>
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#f2a0a0,#6a3a4a)"></i>Różowy</div>
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#c9c9c9,#4a4a4a)"></i>Ziarnisty</div>
-    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e9c48a,#7a5a3a)"><em class="cloud">☁ 9 MB</em></i>Piaskowy</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#ffa24a,#7a4a4a)"><span class="pill">★</span></i>Kodak Portra 400</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e08b55,#6a4a55)"></i>Kodak Portra 800</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#9fb7c9,#4d6070)"><em class="cloud">☁ 9 MB</em></i>Fuji 400H</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#f2a0a0,#6a3a4a)"><em class="cloud">☁ 9 MB</em></i>Fuji 160C</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#c9c9c9,#8a6a5a)"><em class="cloud">☁ 9 MB</em></i>Fuji 160C +</div>
+    <div class="tile" style="width:auto"><i style="width:auto;aspect-ratio:1;background:linear-gradient(#e9c48a,#7a5a3a)"><em class="cloud">☁ 9 MB</em></i>Fuji 160C −</div>
   </div>
   <div style="color:var(--tx2);font-size:12px;padding:14px 16px">Źródło i licencja: dotknij i przytrzymaj film → „Informacje”.</div>
 </div>
 <h2>6 · Biblioteka filmów</h2><ul>
 <li>Połączenie dzisiejszego „Filtry (LUT)” (zarządzanie pobraniami) z wyborem filmu. Jeden ekran zamiast dwóch światów.</li>
-<li>Nazwa „Filmy”, nie „LUT” – żargon zostaje tylko w „Dodaj własny LUT”.</li>
+<li>Nazwa „Filmy”, nie „LUT” – żargon zostaje tylko w „Dodaj własny LUT”; nazwy filmów prawdziwe (D11).</li>
+<li>Obsługa 260 filmów: szukaj, kategorie z licznikami, ★ ulubione, filtr „Pobrane”; filmy do pobrania mają miniaturę z APK.</li>
 <li>Wiersze 4 MB-statystyk → jedna karta; cache i usuwanie przeniesione do Ustawień → Pamięć.</li>
 <li>Licencja przy każdym filmie (wymóg EKRANY.md) w menu „Informacje”.</li></ul></div>
 
@@ -254,6 +259,6 @@ h3{font-size:20px;margin:6px 0 16px;color:var(--ac)}
 <li>Błąd zawsze z przyczyną i akcją; reszta wyników zachowana (EKRANY.md §6).</li></ul></div>
 </div>
 
-<p class="note">Nawigacja: Start → Edytor (zakładki Film / Korekty / Ramka / Więcej) → arkusz Zapisz. Ustawienia i Filmy z ikon na Starcie i w „Więcej”. Wszystkie cele ≥ 48 dp, kontrast AA, każdy element z opisem dla TalkBack; panele przewijalne przy powiększonej czcionce (200%).</p>
+<p class="note">Nawigacja (D12): Start (Photo Picker, 1…N zdjęć) → Edytor (zakładki Film / Korekty / Ramka / Więcej) → arkusz Zapisz. Ustawienia i Filmy z ikon na Starcie i w „Więcej”. Wszystkie cele ≥ 48 dp, kontrast AA, każdy element z opisem dla TalkBack; panele przewijalne przy powiększonej czcionce (200%).</p>
 </body>
 </html>

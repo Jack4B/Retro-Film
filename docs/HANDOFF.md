@@ -11,19 +11,12 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
-## 2026-10-25 – Forge/Lumen (redesign, krok 1)
-- Faza: redesign UI/UX wg docs/OCENA-I-REDESIGN.md
-- Zrobione: `app` – Start (jedno CTA), Edytor z zakładkami Film / Ramka, przytrzymanie zdjęcia = oryginał, moc filmu (suwak 0–100%, zatwierdzana po puszczeniu), kategorie filmów z id katalogu, zapis jednym dotknięciem; `ExportPipeline.render` przyjmuje `intensity`. Teksty w `strings.xml`.
-- PR / gałąź: #26 (`ccr-0dd79b3e-ffwulp`).
-- Otwarte / P2 odłożone: kod nie był budowany lokalnie (brak Android SDK i dostępu do Google Maven w środowisku) – weryfikuje CI; zakładka Korekty, seria (pasek miniatur, WorkManager), miniatury filmów, Biblioteka filmów, arkusz Zapisz, PNG – czekają na odpowiedzi Jack4B (pytania 1–5 w ocenie); `GalleryScreen` i osobne ekrany Edytor/Ramka/Eksport z feature:* zostają nieużywane do decyzji; zrzuty Roborazzi nie zmienione (nie ruszano feature:*).
-- Następny krok: CI zielone → review Gauge → Critic.
-
-## 2026-10-25 – Lumen (przegląd koncepcji)
+## 2026-10-25 – Claude (przegląd koncepcji, makiety v2)
 - Faza: poza fazami (ocena + redesign UI/UX)
-- Zrobione: `docs/OCENA-I-REDESIGN.md` (ocena koncepcji, uwagi T1–T12, pytania do Jack4B) i `docs/makiety/index.html` (8 makiet v2).
+- Zrobione: `docs/OCENA-I-REDESIGN.md` (ocena koncepcji, uwagi T1–T12), `docs/makiety/index.html` (8 makiet v2, nazwy filmów prawdziwe), decyzje D11 i D12 w `DECYZJE.md`, zmiany w `AGENTS.md`, `docs/LUTS.md` i `docs/EKRANY.md` (zgodnie z odpowiedziami Jack4B).
 - PR / gałąź: `ccr-0dd79b3e-ffwulp`.
-- Otwarte / P2 odłożone: T1 nazwy producentów w katalogu (P0, ESKALACJA); rozjazd README/PLAN/EKRANY z kodem – poprawić po decyzjach Jack4B.
-- Następny krok: decyzje Jack4B (pytania 1–5 w ocenie), potem review Gauge → Critic.
+- Otwarte / P2 odłożone: README i PLAN nadal opisują stan sprzed kodu (T2); EKRANY.md ma notę o v2, ale treść sprzed v2; informacja o braku powiązania z producentami w „Licencje i autorzy” (do zatwierdzenia); kod UI w #27 („Edytor krok 1”), potem seria, Korekty, miniatury, Biblioteka filmów.
+- Następny krok: review Gauge → Critic.
 
 ## 2026-10-25 – Forge
 - Faza: F3 (spięcie aplikacji)

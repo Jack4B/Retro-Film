@@ -16,7 +16,7 @@ Stan zbadany: `main` @ 68aa9bf (docs, kod `app/` + `feature/*` + `core/*`, zrzut
 
 | ID | Pri | Uwaga |
 |---|---|---|
-| T1 | **P0 / ESKALACJA** | **Znaki towarowe w katalogu.** AGENTS.md: „bez znaków towarowych firm trzecich”; LUTS.md: „nazwy filmów tylko opisowe”. Tymczasem `catalog.json` ma `displayName` „Ilford HP5 Plus 400”, ścieżki `kodak_*`, `fuji_*`, `agfa_*`, a makiety/fake’i pokazują „Portra 400”, „Ektar 100”, „Superia”. Nazwa producenta lub linii produktowej widoczna w UI i w Releases to ryzyko prawne i sklepowe (Obtainium/F-Droid-like jest łagodniejsze, ale reguła zespołu jest jednoznaczna). Propozycja: nazwy własne/opisowe w UI („Ciepły negatyw 400”, „Czarno-biały ziarnisty 400”), nazwę źródłową tylko w ekranie licencji/„Informacje” jako atrybucja pochodzenia plików; do sprawdzenia, co dokładnie wymaga CC BY-SA (atrybucja autorów kolekcji – tak; nazwy producentów – nie). Niepewne kwestie licencyjne → eskalacja, więc tu je zgłaszam. |
+| T1 | ~~P0 / ESKALACJA~~ **Zamknięte (D11)** | **Znaki towarowe w katalogu.** Decyzja Jack4B 2026-10-25: nazwy filmów zostają prawdziwe; AGENTS.md i LUTS.md zaktualizowane. Pierwotna uwaga: AGENTS.md: „bez znaków towarowych firm trzecich”; LUTS.md: „nazwy filmów tylko opisowe”. Tymczasem `catalog.json` ma `displayName` „Ilford HP5 Plus 400”, ścieżki `kodak_*`, `fuji_*`, `agfa_*`, a makiety/fake’i pokazują „Portra 400”, „Ektar 100”, „Superia”. Nazwa producenta lub linii produktowej widoczna w UI i w Releases to ryzyko prawne i sklepowe (Obtainium/F-Droid-like jest łagodniejsze, ale reguła zespołu jest jednoznaczna). Propozycja: nazwy własne/opisowe w UI („Ciepły negatyw 400”, „Czarno-biały ziarnisty 400”), nazwę źródłową tylko w ekranie licencji/„Informacje” jako atrybucja pochodzenia plików; do sprawdzenia, co dokładnie wymaga CC BY-SA (atrybucja autorów kolekcji – tak; nazwy producentów – nie). Niepewne kwestie licencyjne → eskalacja, więc tu je zgłaszam. |
 | T2 | P1 | **Rozjazd dokumentów z kodem.** README: „Brak kodu, żadna funkcja nie jest gotowa”; PLAN: F2 Seria / F4 Eksport jako „do zrobienia”, a HANDOFF ma 2 wpisy z F1/F3 i nic o F4 (PR #17–#25 bez wpisu). Zespół i nowy kontrybutor dostają fałszywy obraz stanu. |
 | T3 | P1 | **Aplikacja ≠ ekrany Lumena.** Działa jeden przewijany ekran testowy (`MainScreen`: przycisk wyboru, lista `FilterChip`, przełączniki). `EditorScreen`, `GalleryScreen`, `FrameScreen`, `ExportScreen` są bezstanowe, ale **nie są podpięte**; `core:batch`, `core:data` (Room), `feature:luts` to puste placeholdery. Seria – główny wyróżnik – nie istnieje w produkcie. |
 | T4 | P1 | **`GalleryScreen` sprzeczny z zasadami.** Własna siatka zdjęć wymaga uprawnienia do mediów; reguły i PR #18 wymagają Photo Pickera bez uprawnień (a Photo Picker ma wielokrotny wybór: `PickMultipleVisualMedia`). Własna galeria też dubluje funkcję systemu. Rekomendacja: usunąć `GalleryScreen`, Start = jeden przycisk. |
@@ -29,7 +29,10 @@ Stan zbadany: `main` @ 68aa9bf (docs, kod `app/` + `feature/*` + `core/*`, zrzut
 | T11 | P2 | **Rozmiary:** APK debug 33,8 MB (10 PNG 144³ w APK), pobranie 360 MB, cache LRU 180 MB, pierwsze otwarcie filmu = dekodowanie PNG ~9 MB. Wymaga stanu „ładowanie filmu” na miniaturach i w podglądzie (jest wymóg stanów w EKRANY.md, brak w kodzie edytora). |
 | T12 | P2 | **Proces.** Trzystopniowe review (Gauge → Critic → Jack4B) przy jednym właścicielu jest ciężkie, ale tu zostawiam bez zmian – to decyzja zespołu. |
 
-### Pytania do Jack4B (decyzje)
+### Pytania do Jack4B – odpowiedzi (D11, D12)
+Odpowiedzi Jack4B (2026-10-25): 1) nazwy prawdziwe; 2) miniatury w APK – tak; 3) eksport tylko JPEG; 4) seria: jeden film i jedna ramka, podpis osobno dla każdego zdjęcia, bez Room; 5) zakładki w Edytorze – tak; do tego `GalleryScreen` usuwamy (T4). Treść pytań poniżej zostaje jako zapis kontekstu.
+
+### Pytania (kontekst)
 1. **T1:** nazwy filmów w UI – opisowe/własne (rekomendacja), czy zostają z nazwami producentów? Czy zlecić Forge/Python Programista Master mapowanie `id → displayName` (plik, nie zmiana LUT-ów)?
 2. **Podgląd filmów do pobrania:** wbudować miniatury JPG (~15 KB × 260 ≈ 4 MB w APK), żeby można było wybierać przed pobraniem, czy pokazywać tylko nazwy? (Rekomendacja: miniatury; użytkownik wybiera filmy po wyglądzie.)
 3. **PNG w eksporcie:** potrzebny (EKRANY.md), czy tylko JPEG? (Rekomendacja: tylko JPEG w v0.1; PNG po feedbacku.)
@@ -57,8 +60,8 @@ Ekrany `GalleryScreen` i osobny `ExportScreen` znikają; `FrameScreen` staje si�
 ### Mapowanie na kod (propozycja kolejności – bez zmian w tym PR)
 | Krok | Zakres | Moduł |
 |---|---|---|
-| 1 | Nazwy filmów (T1) + docs (T2) | docs, `tools/`, `catalog` |
-| 2 | Edytor ze stanem (ViewModel) w `app`, podpięty do `MainState`; zakładka Film z kategoriami | `feature:editor`, `app` |
+| 1 | Decyzje (D11, D12) i docs (T2) – ten PR | docs |
+| 2 | **PR #27 „Edytor krok 1”:** Start, Edytor z zakładkami Film / Ramka, przed/po, moc filmu, usunięty `GalleryScreen` | `app`, `feature:start` |
 | 3 | Przed/po (przytrzymanie), korekty | `feature:editor` + silnik |
 | 4 | Ramka jako zakładka, usunięcie osobnego ekranu | `feature:editor` |
 | 5 | Seria: pasek miniatur, zakres zmian, WorkManager | `core:batch`, `feature:batch` |
@@ -66,7 +69,7 @@ Ekrany `GalleryScreen` i osobny `ExportScreen` znikają; `FrameScreen` staje si�
 | 7 | Biblioteka filmów (scalone ze „Filtry”), ulubione | `feature:luts` |
 
 ## 3. Makiety
-[makiety/index.html](makiety/index.html): 1 Start · 2 Edytor/Film · 3 Edytor/Ramka · 4 Arkusz Zapisz · 5 Korekty + przed/po · 6 Biblioteka filmów · 7 Ustawienia · 8 Postęp serii i błędy. Makiety są statycznym HTML (bez zależności, bez sieci), w palecie z `core/ui/Theme.kt`.
+[makiety/index.html](makiety/index.html) (nazwy filmów prawdziwe wg D11; 260 filmów: szukaj, kategorie z licznikami, ★): 1 Start · 2 Edytor/Film · 3 Edytor/Ramka · 4 Arkusz Zapisz · 5 Korekty + przed/po · 6 Biblioteka filmów · 7 Ustawienia · 8 Postęp serii i błędy. Makiety są statycznym HTML (bez zależności, bez sieci), w palecie z `core/ui/Theme.kt`.
 
-## 4. Czego ten PR nie zmienia
-Żaden kod aplikacji, żaden `versionCode`, żadne LUT-y, żadna decyzja z DECYZJE.md. Dokumenty (README, PLAN, EKRANY, HANDOFF) poprawię po decyzjach Jack4B, żeby nie utrwalać rozstrzygnięć, które są Twoje.
+## 4. Zakres tego PR
+Tylko dokumenty: ocena, makiety, decyzje D11/D12 (DECYZJE.md), zmiany w AGENTS.md, LUTS.md i EKRANY.md, wpis w HANDOFF. Kod idzie osobnymi PR-ami (pierwszy: #27). README i PLAN pozostają do aktualizacji (T2).
