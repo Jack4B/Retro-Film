@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Walidacja i normalizacja LUT-ow .cube dla FilmSim (Jack4B)."""
+"""Walidacja i normalizacja LUT-ow .cube dla Retro-Film (Jack4B)."""
 import argparse, hashlib, json, re, sys
 from pathlib import Path
 
@@ -9,12 +9,19 @@ def parse_cube(p):
         s = raw.strip()
         if not s or s.startswith("#"): continue
         k = s.split()[0].upper()
-        if k == "TITLE": title = s[5:].strip().strip('"')
-        elif k == "LUT_3D_SIZE": size = int(s.split()[1])
-        elif k == "LUT_1D_SIZE": errs.append("LUT 1D nieobslugiwany")
-        elif k == "DOMAIN_MIN": dmin = list(map(float, s.split()[1:4]))
-        elif k == "DOMAIN_MAX": dmax = list(map(float, s.split()[1:4]))
-        else:
+        try:
+            if k == "TITLE": title = s[5:].strip().strip('"'); continue
+            if k == "LUT_3D_SIZE": size = int(s.split()[1]); continue
+            if k == "LUT_1D_SIZE": errs.append("LUT 1D nieobslugiwany"); break
+            if k in ("DOMAIN_MIN", "DOMAIN_MAX"):
+                v = list(map(float, s.split()[1:4]))
+                if len(v) != 3: raise ValueError
+                if k == "DOMAIN_MIN": dmin = v
+                else: dmax = v
+                continue
+        except (ValueError, IndexError):
+            errs.append(f"linia {ln}: niepoprawny naglowek {k}"); break
+        if True:
             try:
                 v = list(map(float, s.split()))
                 if len(v) != 3: raise ValueError
@@ -24,6 +31,8 @@ def parse_cube(p):
     if size is None: errs.append("brak LUT_3D_SIZE")
     elif not 2 <= size <= 128: errs.append(f"rozmiar siatki {size} poza 2..128")
     elif len(data) != size ** 3: errs.append(f"{len(data)} wierszy, oczekiwano {size**3}")
+    if dmin != [0, 0, 0] or dmax != [1, 1, 1]:
+        errs.append(f"domena {dmin}..{dmax} inna niz 0..1 (nieobslugiwana)")
     if data:
         lo = min(min(r) for r in data); hi = max(max(r) for r in data)
         if lo < -0.01 or hi > 1.01: errs.append(f"wartosci poza 0..1 ({lo:.3f}..{hi:.3f})")
@@ -42,7 +51,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src", type=Path, help="katalog repo Film-Luts")
     ap.add_argument("--out", type=Path, default=Path("out"))
-    ap.add_argument("--license", default="UNVERIFIED", help="licencja zrodla")
+    ap.add_argument("--license", default="CC BY-SA 4.0", help="licencja zrodla")
     ap.add_argument("--source", default="https://github.com/YahiaAngelo/Film-Luts")
     a = ap.parse_args()
     idx = {}
