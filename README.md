@@ -24,4 +24,4 @@ Planowane: podpisane APK w GitHub Releases (Obtainium). Na razie brak wydań.
 RawTherapee Film Simulation Collection, CC BY-SA 4.0 – jeszcze nie dołączone. Zob. [docs/LUTS.md](docs/LUTS.md).
 
 ## Licencja
-MIT – zob. [LICENSE](LICENSE) i [THIRD_PARTY.md](THIRD_PARTY.md).
+MIT (z wyjątkiem `luts/`: CC BY-SA 4.0) – zob. [LICENSE](LICENSE) i [THIRD_PARTY.md](THIRD_PARTY.md).

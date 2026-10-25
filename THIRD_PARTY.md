@@ -3,7 +3,7 @@
 | Komponent | Źródło | Licencja | Status |
 |---|---|---|---|
 | Film-Simulator | github.com/YahiaAngelo/Film-Simulator (fork: Jack4B/Film-Simulator) | MIT | Inspiracja; parser `.cube` i silnik przenoszone z oryginału |
-| LUT-y filmowe – RawTherapee Film Simulation Collection | https://rawpedia.rawtherapee.com/Film_Simulation (przepakowane w YahiaAngelo/Film-Luts) | CC BY-SA 4.0 | jeszcze nie dołączone do repo |
+| LUT-y filmowe – RawTherapee Film Simulation Collection (autorzy: Pat David, Pavlov Dmitry, Michael Ezra) | https://rawpedia.rawtherapee.com/Film_Simulation (przepakowane w YahiaAngelo/Film-Luts) | CC BY-SA 4.0 | jeszcze nie dołączone do repo |
 | Font Caveat (podpis) | Google Fonts | SIL OFL 1.1 | planowany |
 
 ## LUT-y
