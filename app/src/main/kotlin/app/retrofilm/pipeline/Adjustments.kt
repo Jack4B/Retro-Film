@@ -46,6 +46,8 @@ data class Adjustments(
     val dehaze: Float = 0f,
     /** Odszumianie kolorów 0..1 (zob. [ChromaDenoise]). */
     val denoise: Float = 0f,
+    /** Odszumianie jasności 0..1 (zob. [LumaDenoise]). */
+    val lumaDenoise: Float = 0f,
     /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
     val hsl: HslAdjust = HslAdjust(),
     /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */
@@ -66,7 +68,7 @@ data class Adjustments(
         get() = SharpenParams(sharpness, sharpRadius, sharpDetail, sharpMasking, sharpMode)
 
     /** Czy potrzebny jest przebieg po całym obrazie przed korektami tonalnymi (dehaze, odszumianie). */
-    val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f
+    val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f || lumaDenoise > 0f
 
     companion object {
         val None = Adjustments()
@@ -368,6 +370,7 @@ object AdjustmentsApplier {
         val all = IntArray(w * h)
         src.getPixels(all, 0, w, 0, 0, w, h)
         ChromaDenoise.apply(all, w, h, adj.denoise)
+        LumaDenoise.apply(all, w, h, adj.lumaDenoise)
         Dehaze.apply(all, w, h, adj.dehaze)
         val work = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         work.setPixels(all, 0, w, 0, 0, w, h)

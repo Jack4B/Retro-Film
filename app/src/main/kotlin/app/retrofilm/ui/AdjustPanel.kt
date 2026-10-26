@@ -128,6 +128,9 @@ private fun DetailSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_denoise), a.denoise, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(denoise = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_luma_denoise), a.lumaDenoise, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(lumaDenoise = it)
+    }
 }
 
 @Composable
