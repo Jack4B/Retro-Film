@@ -18,9 +18,9 @@
     <string name="editor_save_all">Zapisz wszystkie (%1$d)</string>
     <string name="photos_position">Zdjęcie %1$d z %2$d</string>
     <string name="photos_saving">Zapisywanie %1$d z %2$d</string>
-    <string name="photos_pick_cd">Zdjęcie numer %1$d</string>
-    <string name="photos_pick_own_cd">Zdjęcie numer %1$d, edytowane osobno</string>
-    <string name="scope_one">Tylko to zdjęcie</string>
+    <string name="photos_pick_cd">Zdjęcie %1$d z %2$d</string>
+    <string name="photos_pick_own_cd">Zdjęcie %1$d z %2$d, edytowane osobno</string>
+    <string name="scope_one">✎ Osobno</string>
     <string name="scope_apply_all">Do wszystkich</string>
     <string name="scope_state_one_cd">Edycja tylko tego zdjęcia: własny film, korekty i kadr; pozostałe mają ustawienia wspólne</string>
     <string name="scope_state_all_cd">Edycja wspólna dla wszystkich zdjęć</string>

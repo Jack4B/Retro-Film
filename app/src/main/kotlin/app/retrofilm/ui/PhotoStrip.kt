@@ -30,47 +30,48 @@ import app.retrofilm.R
 private val StripGap = 8.dp
 private val StripPad = 16.dp
 
-/** Pasek serii zdjęć: numer bieżącego, postęp zapisu i przełączanie między zdjęciami. */
+/**
+ * Pasek serii zdjęć w jednym wierszu (żeby podgląd miał jak najwięcej miejsca): numery zdjęć do przełączania
+ * (przewijane), a z prawej zakres edycji ([EditScopeControls]). Podczas zapisu zamiast tego pokazuje postęp.
+ */
 @Composable
 fun PhotoStrip(state: MainState, onSelect: (Int) -> Unit) {
     val total = state.uris.size
-    val label = if (state.exportProgress > 0) {
-        stringResource(R.string.photos_saving, state.exportProgress, total)
-    } else {
-        stringResource(R.string.photos_position, state.index + 1, total)
-    }
-    Column(
+    Row(
         Modifier.fillMaxWidth().padding(top = StripGap),
-        verticalArrangement = Arrangement.spacedBy(StripGap)
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = StripPad),
-            horizontalArrangement = Arrangement.spacedBy(StripGap),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        if (state.exportProgress > 0) {
             Text(
-                label,
+                stringResource(R.string.photos_saving, state.exportProgress, total),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.padding(horizontal = StripPad)
             )
-            EditScopeControls(state)
-        }
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = StripPad),
-            horizontalArrangement = Arrangement.spacedBy(StripGap)
-        ) {
-            itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
-                val own = state.edits.isIndividual(i)
-                val cd = stringResource(if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd, i + 1)
-                FilterChip(
-                    selected = i == state.index,
-                    enabled = !state.busy,
-                    onClick = { onSelect(i) },
-                    label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
-                    modifier = Modifier.semantics { contentDescription = cd }
-                )
+        } else {
+            LazyRow(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(start = StripPad, end = StripGap),
+                horizontalArrangement = Arrangement.spacedBy(StripGap)
+            ) {
+                itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
+                    val own = state.edits.isIndividual(i)
+                    val cd = stringResource(
+                        if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd,
+                        i + 1,
+                        total
+                    )
+                    FilterChip(
+                        selected = i == state.index,
+                        enabled = !state.busy,
+                        onClick = { onSelect(i) },
+                        label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
+                        modifier = Modifier.semantics { contentDescription = cd }
+                    )
+                }
+            }
+            Row(Modifier.padding(end = StripPad), verticalAlignment = Alignment.CenterVertically) {
+                EditScopeControls(state)
             }
         }
     }
