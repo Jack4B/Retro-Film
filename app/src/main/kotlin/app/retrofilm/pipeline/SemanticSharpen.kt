@@ -8,10 +8,11 @@ import kotlin.math.sqrt
  * Wyostrzanie świadome treści: mapa mnożnika siły wyostrzania w niskiej rozdzielczości. Włosy i inne struktury
  * kierunkowe (równoległe pasma o umiarkowanym kontraście) wykrywane są koherencją tensora struktury (Bigün i in.
  * 1991; Weickert 1999): λ1 − λ2 względem λ1 + λ2 dla uśrednionych gradientów jasności, więc kierunkowa tekstura
- * dostaje silniejsze wyostrzanie, a szum o losowej orientacji nie. Bardzo silne krawędzie (energia powyżej progu)
- * są pomijane, żeby proste linie nie dostawały aureoli. Oczy (miejsce wyliczone z ramki twarzy, [FaceBox] z
- * wykrywacza systemowego) dostają dodatkową siłę, a gładka skóra twarzy mniej (wyostrzanie wydobywałoby tylko
- * pory i szum). Mnożnik zawsze w [MIN_GAIN, MAX_GAIN], żeby żadna decyzja heurystyki nie zepsuła zdjęcia.
+ * dostaje silniejsze wyostrzanie, a szum o losowej orientacji nie. Silne krawędzie (skok jasności powyżej ok. 50
+ * poziomów, energia powyżej [STRONG_FROM]) są pomijane, żeby proste linie nie dostawały aureoli. Oczy (miejsce
+ * wyliczone z ramki twarzy, [FaceBox] z wykrywacza systemowego) dostają dodatkową siłę, a gładka skóra twarzy mniej
+ * (wyostrzanie wydobywałoby tylko pory i szum). Mnożnik zawsze w [MIN_GAIN, MAX_GAIN], żeby żadna decyzja
+ * heurystyki nie zepsuła zdjęcia.
  */
 internal object SemanticSharpen {
     const val TARGET = 1024
@@ -26,8 +27,8 @@ internal object SemanticSharpen {
     private const val COH_TO = 0.9f
     private const val ENERGY_FROM = 150f
     private const val ENERGY_TO = 500f
-    private const val STRONG_FROM = 2500f
-    private const val STRONG_TO = 6000f
+    private const val STRONG_FROM = 12000f
+    private const val STRONG_TO = 40000f
     private const val SKIN_FLAT_FROM = 60f
     private const val SKIN_FLAT_TO = 350f
     private const val EPS = 1e-3f
@@ -123,8 +124,8 @@ internal object SemanticSharpen {
                 val ny = (y - cy) / (boxH * HALF)
                 val inside = 1f - smoothstep(FACE_INNER, FACE_OUTER, sqrt(nx * nx + ny * ny))
                 val flat = 1f - smoothstep(SKIN_FLAT_FROM, SKIN_FLAT_TO, energy[i])
-                gain[i] -= SKIN_CUT * inside * flat
-                gain[i] += EYE_BOOST * eyeWeight(x.toFloat(), y.toFloat(), cx, eyeY, eyes, reach)
+                val eye = eyeWeight(x.toFloat(), y.toFloat(), cx, eyeY, eyes, reach)
+                gain[i] += EYE_BOOST * eye - SKIN_CUT * inside * flat * (1f - eye)
             }
         }
     }
