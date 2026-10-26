@@ -76,6 +76,8 @@ class StockPhotoQualityTest {
         }
         tiles += listOf(bitmap(hazy, src.width, src.height), bitmap(dehazed, src.width, src.height))
 
+        reportPipelineMatch(src)
+
         val noisy = addColourNoise(px)
         val denoised = noisy.copyOf().also { ChromaDenoise.apply(it, src.width, src.height, 1f) }
         val chromaBefore = chromaError(px, noisy)
@@ -275,6 +277,48 @@ class StockPhotoQualityTest {
             }
         }
         return lo to hi
+    }
+
+    /** Zgodność potoku pasmowego z dawnym na prawdziwym zdjęciu: średnia i 99. percentyl różnicy kanałów. */
+    private fun reportPipelineMatch(src: Bitmap) {
+        val sets = linkedMapOf(
+            "odszumianie + dehaze" to Adjustments(dehaze = 0.5f, denoise = 0.6f, lumaDenoise = 0.4f),
+            "wszystko (bez ziarna)" to Adjustments(
+                shadows = 0.4f,
+                clarity = 0.4f,
+                sharpness = 0.3f,
+                dehaze = 0.4f,
+                denoise = 0.4f,
+                lumaDenoise = 0.3f,
+                vignette = 0.3f
+            )
+        )
+        val line = sets.map { (label, adj) ->
+            val d = channelDiff(
+                pixels(AdjustmentsApplier.apply(src, adj)),
+                pixels(AdjustmentsApplier.applyLegacy(src, adj))
+            )
+            if (d.first > MAX_PIPELINE_DIFF) failures += "potok pasmowy różni się od dawnego ($label): ${f2(d.first)}"
+            "$label: średnia ${f2(d.first)}, p99 ${d.second}"
+        }.joinToString("; ")
+        report.appendLine("- Potok pasmowy vs dawny: $line")
+    }
+
+    private fun channelDiff(a: IntArray, b: IntArray): Pair<Double, Int> {
+        val hist = IntArray(BYTE_LEVELS)
+        var sum = 0L
+        for (i in a.indices) {
+            for (shift in CHANNEL_SHIFTS) {
+                val d = abs(((a[i] shr shift) and MASK_BYTE) - ((b[i] shr shift) and MASK_BYTE))
+                hist[d]++
+                sum += d
+            }
+        }
+        val total = a.size * CHANNEL_SHIFTS.size
+        var seen = 0
+        var p99 = 0
+        while (seen < total * P99_PERCENT / PERCENT_100) seen += hist[p99++]
+        return sum.toDouble() / total to p99
     }
 
     private fun checkColour(name: String, src: Bitmap, saturated: Bitmap, warm: Bitmap, look: Bitmap) {
@@ -500,6 +544,12 @@ class StockPhotoQualityTest {
         const val MAX_TONE_LEAK = 10.0
         const val REAL_HIGHLIGHT = 165.0
         const val PERF_RUNS = 3
+        const val MAX_PIPELINE_DIFF = 6.0
+        const val BYTE_LEVELS = 256
+        const val MASK_BYTE = 0xFF
+        const val P99_PERCENT = 99
+        const val PERCENT_100 = 100
+        val CHANNEL_SHIFTS = intArrayOf(16, 8, 0)
         const val HALO_R = 2
         const val HALO_STEP = 2
         const val HALO_STRONG = 12.0

@@ -18,7 +18,7 @@ internal object Parallel {
 
     val workers: Int = Runtime.getRuntime().availableProcessors().coerceIn(1, MAX_WORKERS)
 
-    private val insideWorker = ThreadLocal.withInitial { false }
+    private val insideWorker: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
 
     private val pool: ExecutorService by lazy {
         Executors.newFixedThreadPool(workers - 1) { task ->
