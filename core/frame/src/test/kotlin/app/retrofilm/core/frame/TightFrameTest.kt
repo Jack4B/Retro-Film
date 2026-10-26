@@ -60,4 +60,45 @@ class TightFrameTest {
         assertTrue(bottom(1.0f) > bottom(0.8f))
         assertTrue(bottom(0.8f) > bottom(0.4f))
     }
+
+    private fun wide(chars: Int) = SignatureMeasurer { size, wrap ->
+        val full = chars * size * 0.5f
+        if (wrap == null || full <= wrap) {
+            TextBlock(full, size * 1.2f, 1)
+        } else {
+            val n = kotlin.math.ceil(full / wrap).toInt()
+            TextBlock(wrap, size * 1.2f * n, n)
+        }
+    }
+
+    @Test fun sliderAlwaysChangesSignatureSizeEvenForLongText() {
+        fun size(scale: Float): Float {
+            val m = wide(30)
+            val lines = TightFrame.signatureLines(FrameAspect.Original, 4000f, 3000f, 0.03f, scale, m)
+            val (w, h) = TightFrame.canvasSize(FrameAspect.Original, 4000f, 3000f, 0.03f, true, 2000f, scale, lines)
+            val l = TightFrame.layout(SizeF(w, h), photo, 0.03f, true, scale, lines)
+            val band = requireNotNull(l.signatureBand)
+            return TightFrame.fitSignature(l.signatureBaseSize * scale, l.signatureMaxWidth, band.height, m).sizePx /
+                minOf(w, h)
+        }
+        assertTrue(size(0.6f) < size(0.8f))
+        assertTrue(size(0.8f) < size(1.0f))
+        assertTrue(size(1.0f) < size(1.4f))
+    }
+
+    @Test fun longTextWrapsAndTallerBandKeepsRequestedSize() {
+        val m = wide(60)
+        val lines = TightFrame.signatureLines(FrameAspect.Original, 4000f, 3000f, 0.03f, 1.0f, m)
+        assertTrue(lines >= 2)
+        val (w, h) = TightFrame.canvasSize(FrameAspect.Original, 4000f, 3000f, 0.03f, true, 2000f, 1.0f, lines)
+        val l = TightFrame.layout(SizeF(w, h), photo, 0.03f, true, 1.0f, lines)
+        val fit = TightFrame.fitSignature(
+            l.signatureBaseSize,
+            l.signatureMaxWidth,
+            requireNotNull(l.signatureBand).height,
+            m
+        )
+        assertTrue(fit.fits)
+        assertEquals(l.signatureBaseSize, fit.sizePx, 0.01f)
+    }
 }

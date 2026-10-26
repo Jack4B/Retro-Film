@@ -93,6 +93,18 @@ object FrameRenderer {
      */
     fun render(photo: Bitmap, options: FrameOptions, typeface: Typeface, colorSpaceSource: Bitmap = photo): Bitmap {
         if (!options.enabled) return copyInto(photo, photo.width, photo.height, colorSpaceSource)
+        val lines = if (options.drawsSignature) {
+            TightFrame.signatureLines(
+                options.aspect,
+                photo.width.toFloat(),
+                photo.height.toFloat(),
+                options.margin,
+                options.signatureScale,
+                PaintSignatureMeasurer(options.signature, typeface)
+            )
+        } else {
+            1
+        }
         val (cw, ch) = TightFrame.canvasSize(
             options.aspect,
             photo.width.toFloat(),
@@ -100,7 +112,8 @@ object FrameRenderer {
             options.margin,
             options.drawsSignature,
             maxOf(photo.width, photo.height).toFloat(),
-            options.signatureScale
+            options.signatureScale,
+            lines
         )
         val w = cw.roundToInt().coerceAtLeast(1)
         val h = ch.roundToInt().coerceAtLeast(1)
@@ -109,7 +122,8 @@ object FrameRenderer {
             SizeF(photo.width.toFloat(), photo.height.toFloat()),
             options.margin,
             options.drawsSignature,
-            options.signatureScale
+            options.signatureScale,
+            lines
         )
         val out = blank(w, h, colorSpaceSource)
         val canvas = Canvas(out)
@@ -129,7 +143,7 @@ object FrameRenderer {
         val band = layout.signatureBand ?: return
         val measurer = PaintSignatureMeasurer(options.signature, typeface, options.inkColor)
         val baseSize = layout.signatureBaseSize * options.signatureScale
-        val fit = FrameGeometry.fitSignature(baseSize, layout.signatureMaxWidth, band.height, measurer)
+        val fit = TightFrame.fitSignature(baseSize, layout.signatureMaxWidth, band.height, measurer)
         if (!fit.fits) throw SignatureTooLongException()
         val bounds = FrameGeometry.signatureBounds(layout, fit.width, fit.height) ?: return
         val static = measurer.layout(fit.sizePx, layout.signatureMaxWidth)

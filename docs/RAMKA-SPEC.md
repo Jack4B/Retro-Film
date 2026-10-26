@@ -41,3 +41,6 @@ Wszystkie wymiary są ułamkami krótszego boku `u = min(W, H)` płótna, więc 
 - Góra i boki: równy margines `m·u`. Z podpisem tylko dół jest szerszy o `0,07·u` (pas podpisu = `m + 0,07·u`, podpis wyśrodkowany w pasie); wcześniej pas to 20% wysokości płótna, co przy „Oryginał” dawało grube boki.
 - „Oryginał”: płótno = zdjęcie + marginesy (skalowane do dłuższego boku zdjęcia), bez pustych pól. Stałe proporcje (1:1, 4:5, 3:2) bez zmian, zdjęcie wpasowane w pole.
 - Implementacja: `core:frame` `TightFrame`; starszy `FrameGeometry.layout` zostaje dla podglądu w `feature:editor`.
+
+## Podpis w układzie TightFrame (od alpha.11)
+Wielkość z suwaka jest święta: `TightFrame.fitSignature` zachowuje rozmiar bazowy, o ile blok zawinięty do 90% szerokości pola zdjęcia mieści się w pasie. Zbyt długi tekst jest zawijany (do 3 linii), a pas podpisu rośnie proporcjonalnie do liczby linii (`TightFrame.signatureLines`) — zamiast zmniejszania napisu. Dopiero gdy blok mimo to nie mieści się, rozmiar maleje krokami ×0,9 do progu 40%. Zakres suwaka: 32–140% wartości bazowej.
