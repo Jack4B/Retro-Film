@@ -94,8 +94,6 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val m22: Float
     private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(it / BYTE_MAX) }
     private val encode: FloatArray
-    private val contrastLut =
-        FloatArray(CONTRAST_SIZE + 1) { contrastCurve(it.toFloat() / CONTRAST_SIZE, adj.contrast) }
 
     private val maskLut: FloatArray
     private val shadowGain = FloatArray(BYTE_LEVELS) { toneGain(adj.shadows, SHADOW_EV, shadowWeight(it / BYTE_MAX)) }
@@ -129,6 +127,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     } else {
         null
     }
+    private val chroma: ChromaScaler? = if (adj.saturation != 0f) ChromaScaler(adj.saturation) else null
+    private val contrast: LuminanceContrast? = if (adj.contrast != 0f) LuminanceContrast(adj.contrast) else null
+    private val vignette: VignetteLut? = if (adj.vignette > 0f) VignetteLut(adj.vignette) else null
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
     /**
@@ -148,14 +149,10 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[0] = encodeLinear(m00 * lr + m01 * lg + m02 * lb)
             rgb[1] = encodeLinear(m10 * lr + m11 * lg + m12 * lb)
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
-            if (adj.saturation != 0f) vibrance()
+            chroma?.apply(rgb)
             hsl?.apply(rgb)
             if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
-            if (adj.contrast !=
-                0f
-            ) {
-                for (k in 0..2) rgb[k] = contrastLut[(rgb[k].coerceIn(0f, 1f) * CONTRAST_SIZE + HALF).toInt()]
-            }
+            contrast?.apply(rgb)
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
@@ -166,25 +163,6 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     private fun luma() = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]
-
-    private fun vibrance() {
-        val mx = maxOf(rgb[0], rgb[1], rgb[2])
-        val chroma = if (mx > EPS) (mx - minOf(rgb[0], rgb[1], rgb[2])) / mx else 0f
-        val f = if (adj.saturation < 0f) 1f + adj.saturation else 1f + adj.saturation * (1f - chroma) * skinGuard()
-        val y = luma()
-        for (k in 0..2) rgb[k] = (y + (rgb[k] - y) * f).coerceIn(0f, 1f)
-    }
-
-    /** 1 poza odcieniami skóry, w pomarańczowo-różowym zakresie mniej o [SKIN_GUARD]. */
-    private fun skinGuard(): Float {
-        val r = rgb[0]
-        val g = rgb[1]
-        val b = rgb[2]
-        if (r < g || g < b || r - b < EPS) return 1f
-        val hue = (g - b) / (r - b)
-        val d = (hue - SKIN_HUE) / SKIN_WIDTH
-        return 1f - SKIN_GUARD * maxOf(0f, 1f - d * d)
-    }
 
     /**
      * Cienie i światła jako ekspozycja warstwy bazowej: rozkład na bazę (jasność wygładzona filtrem prowadzonym,
@@ -214,9 +192,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
             val ny = (y + HALF) / rows * 2f - 1f
-            val r = kotlin.math.sqrt((nx * nx + ny * ny) / 2f)
-            val t = ((r - VIGNETTE_START) / (1f - VIGNETTE_START)).coerceIn(0f, 1f)
-            val f = 1f - adj.vignette * VIGNETTE_MAX * t * t * (VIGNETTE_A - VIGNETTE_B * t)
+            val f = vignette?.gain((nx * nx + ny * ny) / 2f) ?: 1f
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
@@ -257,14 +233,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val IDX_22 = 8
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
-        private const val VIGNETTE_MAX = 0.65f
         private const val GRAIN_MAX = 0.12f
-        private const val SKIN_HUE = 0.5f
-        private const val SKIN_WIDTH = 0.4f
-        private const val SKIN_GUARD = 0.55f
-        private const val VIGNETTE_START = 0.35f
-        private const val VIGNETTE_A = 3f
-        private const val VIGNETTE_B = 2f
         private const val GRAIN_SHARED = 0.8f
         private const val GRAIN_CELL_DIVISOR = 1200
         private const val HASH_X = 374761393
@@ -284,9 +253,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val ENCODE_SCALE = 4096f
         private const val ENCODE_MAX_LINEAR = 4.5f
         private const val ENCODE_SIZE = (ENCODE_MAX_LINEAR * ENCODE_SCALE).toInt()
-        private const val CONTRAST_SIZE = 1023
         private const val HALF = 0.5f
-        private const val EPS = 1e-6f
         private const val LUM_R = 0.2126f
         private const val LUM_G = 0.7152f
         private const val LUM_B = 0.0722f
