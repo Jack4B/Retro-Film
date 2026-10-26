@@ -134,6 +134,7 @@ fun EditorScreen(
     ) { inner ->
         BoxWithConstraints(Modifier.fillMaxSize().padding(inner)) {
             val sideBySide = maxWidth > maxHeight && maxWidth >= SIDE_BY_SIDE_MIN_WIDTH
+            val panelWidth = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
             if (sideBySide) {
                 // poziomo: podgląd z paskiem zdjęć po lewej na całą wysokość, panel zakładek po prawej
                 Row(Modifier.fillMaxSize()) {
@@ -142,8 +143,9 @@ fun EditorScreen(
                         if (state.preview != null) FilmCaption(state)
                         if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
                     }
-                    val width = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
-                    EditorPanel(state, tab, { tab = it }, onOpenLibrary, Modifier.width(width).fillMaxHeight(), true)
+                    EditorPanel(state, tab, {
+                        tab = it
+                    }, onOpenLibrary, Modifier.width(panelWidth).fillMaxHeight(), true)
                 }
             } else {
                 // pionowo: podgląd u góry, panel zakładek u dołu (do ~42% wysokości)
