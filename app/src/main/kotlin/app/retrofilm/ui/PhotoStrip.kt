@@ -1,14 +1,16 @@
 package app.retrofilm.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -30,72 +31,92 @@ import app.retrofilm.R
 private val StripGap = 8.dp
 private val StripPad = 16.dp
 
-/**
- * Pasek serii zdjęć w jednym wierszu (żeby podgląd miał jak najwięcej miejsca): numery zdjęć do przełączania
- * (przewijane), a z prawej zakres edycji ([EditScopeControls]). Podczas zapisu zamiast tego pokazuje postęp.
- */
+/** Pasek serii zdjęć: numer bieżącego, postęp zapisu i przełączanie między zdjęciami. */
 @Composable
 fun PhotoStrip(state: MainState, onSelect: (Int) -> Unit) {
     val total = state.uris.size
-    Row(
+    val label = if (state.exportProgress > 0) {
+        stringResource(R.string.photos_saving, state.exportProgress, total)
+    } else {
+        stringResource(R.string.photos_position, state.index + 1, total)
+    }
+    Column(
         Modifier.fillMaxWidth().padding(top = StripGap),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(StripGap)
     ) {
-        if (state.exportProgress > 0) {
-            Text(
-                stringResource(R.string.photos_saving, state.exportProgress, total),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = StripPad)
-            )
-        } else {
-            LazyRow(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(start = StripPad, end = StripGap),
-                horizontalArrangement = Arrangement.spacedBy(StripGap)
-            ) {
-                itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
-                    val own = state.edits.isIndividual(i)
-                    val cd = stringResource(
-                        if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd,
-                        i + 1,
-                        total
-                    )
-                    FilterChip(
-                        selected = i == state.index,
-                        enabled = !state.busy,
-                        onClick = { onSelect(i) },
-                        label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
-                        modifier = Modifier.semantics { contentDescription = cd }
-                    )
-                }
-            }
-            Row(Modifier.padding(end = StripPad), verticalAlignment = Alignment.CenterVertically) {
-                EditScopeControls(state)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = StripPad)
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = StripPad),
+            horizontalArrangement = Arrangement.spacedBy(StripGap)
+        ) {
+            item(key = "scope") { EditScopeChip(state) }
+            itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
+                val own = state.edits.isIndividual(i)
+                val cd = stringResource(
+                    if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd,
+                    i + 1,
+                    total
+                )
+                FilterChip(
+                    selected = i == state.index,
+                    enabled = !state.busy,
+                    onClick = { onSelect(i) },
+                    label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
+                    modifier = Modifier.semantics { contentDescription = cd }
+                )
             }
         }
     }
 }
 
 /**
- * Zakres edycji w jednym wierszu z numerem zdjęcia: przełącznik „Tylko to zdjęcie” (własny film, korekty i kadr) i,
- * gdy jest włączony, „Do wszystkich” (z potwierdzeniem). Teksty są jednowierszowe, żeby nic się nie zawijało.
+ * Zakres edycji bez zajmowania miejsca: pierwszy chip w wierszu zdjęć otwiera menu („Edytuj tylko to zdjęcie”,
+ * „Wróć do wspólnych”, „Zastosuj do wszystkich”). Wygląd edytora zostaje taki sam jak przy edycji wspólnej.
  */
 @Composable
-private fun EditScopeControls(state: MainState) {
+private fun EditScopeChip(state: MainState) {
+    var open by remember { mutableStateOf(false) }
     var confirm by remember { mutableStateOf(false) }
     val own = state.individual
     val stateCd = stringResource(if (own) R.string.scope_state_one_cd else R.string.scope_state_all_cd)
-    FilterChip(
-        selected = own,
-        enabled = !state.busy,
-        onClick = { state.setIndividual(!own) },
-        label = { Text(stringResource(R.string.scope_one), maxLines = 1, softWrap = false) },
-        modifier = Modifier.semantics { stateDescription = stateCd }
-    )
-    if (own) {
-        TextButton(onClick = { confirm = true }, enabled = !state.busy) {
-            Text(stringResource(R.string.scope_apply_all), maxLines = 1, softWrap = false)
+    Box {
+        FilterChip(
+            selected = own,
+            enabled = !state.busy,
+            onClick = { open = true },
+            label = { Text(stringResource(if (own) R.string.scope_chip_own else R.string.scope_chip_shared)) },
+            modifier = Modifier.semantics { stateDescription = stateCd }
+        )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            if (own) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.scope_menu_shared)) },
+                    onClick = {
+                        open = false
+                        state.setIndividual(false)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.scope_apply_all)) },
+                    onClick = {
+                        open = false
+                        confirm = true
+                    }
+                )
+            } else {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.scope_menu_own)) },
+                    onClick = {
+                        open = false
+                        state.setIndividual(true)
+                    }
+                )
+            }
         }
     }
     if (confirm) {

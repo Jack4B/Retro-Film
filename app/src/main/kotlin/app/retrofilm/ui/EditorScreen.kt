@@ -66,7 +66,7 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 private val MinTouch = 48.dp
-private const val PANEL_SCREEN_FRACTION = 0.36f
+private const val PANEL_SCREEN_FRACTION = 0.42f
 private const val PERCENT = 100
 private val CaptionPad = 6.dp
 private const val BADGE_ALPHA = 0.72f
@@ -134,7 +134,7 @@ fun EditorScreen(
     }
 }
 
-/** Dolny panel: zawartość wybranej zakładki (przewijana, do ~36% wysokości ekranu) i pasek zakładek. */
+/** Dolny panel: zawartość wybranej zakładki (przewijana, do ~42% wysokości ekranu) i pasek zakładek. */
 @Composable
 private fun EditorPanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, onOpenLibrary: () -> Unit) {
     val maxHeight = (LocalConfiguration.current.screenHeightDp * PANEL_SCREEN_FRACTION).dp
