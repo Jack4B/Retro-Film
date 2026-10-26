@@ -49,7 +49,7 @@ internal object Sharpener {
     private const val LUMA_MAX = 255f
     private const val MASK_LOW = 0.06f
     private const val MASK_BAND = 0.05f
-    private const val STRIP_ROWS = 512
+    private const val STRIP_ROWS = 192
     private const val MIN_DECONV_WEIGHT = 0.02f
     private const val MARGIN_EXTRA = 2
 
@@ -62,15 +62,12 @@ internal object Sharpener {
         val sigma = sigmaFor(p.radius, max(w, h))
         val iterations = if (p.mode == SharpenMode.Deconvolution) ITER_DECONV else ITER_STANDARD
         val margin = kotlin.math.ceil(KERNEL_SPAN * sigma * (iterations * 2 + MARGIN_EXTRA)).toInt() + 2
-        var y0 = 0
-        while (y0 < h) {
-            val y1 = min(h, y0 + stripRows)
+        Parallel.rows(h, stripRows) { y0, y1 ->
             val a = max(0, y0 - margin)
             val b = min(h, y1 + margin)
             val sub = luma.copyOfRange(a * w, b * w)
             val d = strip(sub, w, b - a, p, sigma, iterations)
             System.arraycopy(d, (y0 - a) * w, out, y0 * w, (y1 - y0) * w)
-            y0 = y1
         }
         return out
     }
@@ -81,16 +78,13 @@ internal object Sharpener {
         val out = FloatArray(luma.size)
         val sigma = sigmaFor(p.radius, max(w, h))
         val margin = kotlin.math.ceil(KERNEL_SPAN * sigma).toInt() + MARGIN_EXTRA + 1
-        var y0 = 0
-        while (y0 < h) {
-            val y1 = min(h, y0 + STRIP_ROWS)
+        Parallel.rows(h, STRIP_ROWS) { y0, y1 ->
             val a = max(0, y0 - margin)
             val b = min(h, y1 + margin)
             val sub = luma.copyOfRange(a * w, b * w)
             val blur = gauss(sub, w, b - a, sigma)
             val m = edgeMask(blur, w, b - a, p.masking, sigma)
             System.arraycopy(m, (y0 - a) * w, out, y0 * w, (y1 - y0) * w)
-            y0 = y1
         }
         return out
     }

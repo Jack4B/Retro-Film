@@ -13,7 +13,7 @@ import kotlin.math.min
 internal object LumaDenoise {
     private const val RADIUS_DIV = 1500
     private const val MIN_RADIUS = 2
-    private const val STRIP_ROWS = 512
+    private const val STRIP_ROWS = 192
     private const val K_MIN = 0.7f
     private const val K_SPAN = 2.8f
     private const val MIN_SIGMA = 1f
@@ -33,9 +33,7 @@ internal object LumaDenoise {
         val eps = (noise * k) * (noise * k)
         val radius = max(MIN_RADIUS, max(width, height) / RADIUS_DIV)
         val margin = radius * 2 + 1
-        var y0 = 0
-        while (y0 < height) {
-            val y1 = min(height, y0 + stripRows)
+        Parallel.rows(height, stripRows) { y0, y1 ->
             val a = max(0, y0 - margin)
             val b = min(height, y1 + margin)
             val sub = luma.copyOfRange(a * width, b * width)
@@ -47,7 +45,6 @@ internal object LumaDenoise {
                     px[i] = shifted(px[i], d)
                 }
             }
-            y0 = y1
         }
     }
 

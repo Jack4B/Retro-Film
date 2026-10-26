@@ -403,17 +403,18 @@ object AdjustmentsApplier {
         val w = src.width
         val h = src.height
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val processor = AdjustmentProcessor(adj)
         val blender = MaskBlender(adj.masks, w, h).takeUnless { it.isEmpty }
         val mask = if (adj.shadows != 0f || adj.highlights != 0f) buildMask(src) else null
-        val buf = IntArray(w * ROWS_PER_CHUNK)
-        var y = 0
-        while (y < h) {
+        // kawałki po ROWS_PER_CHUNK wierszy są niezależne; każdy wątek ma własny procesor i bufor (stan roboczy)
+        Parallel.forEach(
+            (h + ROWS_PER_CHUNK - 1) / ROWS_PER_CHUNK,
+            { AdjustmentProcessor(adj) to IntArray(w * ROWS_PER_CHUNK) }
+        ) { (processor, buf), chunk ->
+            val y = chunk * ROWS_PER_CHUNK
             val rows = minOf(ROWS_PER_CHUNK, h - y)
-            src.getPixels(buf, 0, w, 0, y, w, rows)
+            synchronized(src) { src.getPixels(buf, 0, w, 0, y, w, rows) }
             processor.process(buf, w * rows, PixelSpan(w, y, h), mask)
-            out.setPixels(buf, 0, w, 0, y, w, rows)
-            y += rows
+            synchronized(out) { out.setPixels(buf, 0, w, 0, y, w, rows) }
         }
         if (blender != null) blendMasks(out, blender, adj.masks.any { it.hasEffect && it.usesTone })
         if (adj.hasDetail) {
