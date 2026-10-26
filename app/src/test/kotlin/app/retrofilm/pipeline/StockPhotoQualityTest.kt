@@ -382,21 +382,63 @@ class StockPhotoQualityTest {
                 }.sorted()
                 report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
             }
-            val legacy = List(PERF_RUNS) {
-                val t0 = System.nanoTime()
-                AdjustmentsApplier.applyLegacy(bmp, cases.getValue("wszystko naraz"))
-                (System.nanoTime() - t0) / NANOS_PER_MS
-            }.sorted()
-            report.appendLine("- wszystko naraz, dawny potok (ten sam przebieg): ${legacy[PERF_RUNS / 2]} ms")
-            AdjustmentsApplier.apply(bmp, cases.getValue("wszystko naraz"))
-            report.appendLine(
-                "- nowy potok, ostatni przebieg: analiza ${PipelineStats.analysisMs} ms, " +
-                    "pasy ${PipelineStats.stripsMs} ms"
-            )
+            compareWithLegacy(bmp, cases.getValue("wszystko naraz"))
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
             failures += "12 Mpx: OutOfMemoryError (pamięć na telefonie będzie jeszcze ciaśniejsza)"
         }
+    }
+
+    /** Nowy potok kontra dawny w tym samym przebiegu: czas (mediana), szczyt sterty i podział czasu nowego. */
+    private fun compareWithLegacy(bmp: Bitmap, all: Adjustments) {
+        val legacy = List(PERF_RUNS) {
+            val t0 = System.nanoTime()
+            AdjustmentsApplier.applyLegacy(bmp, all)
+            (System.nanoTime() - t0) / NANOS_PER_MS
+        }.sorted()
+        report.appendLine("- wszystko naraz, dawny potok (ten sam przebieg): ${legacy[PERF_RUNS / 2]} ms")
+        val newMb = minOf(
+            peakHeapMb { AdjustmentsApplier.apply(bmp, all) },
+            peakHeapMb { AdjustmentsApplier.apply(bmp, all) }
+        )
+        val oldMb = minOf(
+            peakHeapMb { AdjustmentsApplier.applyLegacy(bmp, all) },
+            peakHeapMb { AdjustmentsApplier.applyLegacy(bmp, all) }
+        )
+        report.appendLine(
+            "- szczyt sterty ponad stan wyjściowy (przybliżony, ze śmieciami przed GC): " +
+                "nowy $newMb MB, dawny $oldMb MB"
+        )
+        AdjustmentsApplier.apply(bmp, all)
+        report.appendLine(
+            "- nowy potok, ostatni przebieg: analiza ${PipelineStats.analysisMs} ms, " +
+                "pasy ${PipelineStats.stripsMs} ms"
+        )
+    }
+
+    /** Szczyt zajętej sterty (MB) ponad stan po GC sprzed [block], próbkowany co 2 ms; zawiera śmieci przed GC. */
+    @Suppress("ExplicitGarbageCollectionCall") // pomiar pamięci wymaga stanu po GC jako punktu odniesienia
+    private fun peakHeapMb(block: () -> Unit): Long {
+        System.gc()
+        val rt = Runtime.getRuntime()
+        val base = rt.totalMemory() - rt.freeMemory()
+        val peak = java.util.concurrent.atomic.AtomicLong(base)
+        val running = java.util.concurrent.atomic.AtomicBoolean(true)
+        val sampler = Thread {
+            while (running.get()) {
+                peak.accumulateAndGet(rt.totalMemory() - rt.freeMemory(), Math::max)
+                Thread.sleep(SAMPLE_MS)
+            }
+        }
+        sampler.isDaemon = true
+        sampler.start()
+        try {
+            block()
+        } finally {
+            running.set(false)
+            sampler.join()
+        }
+        return (peak.get() - base) / BYTES_PER_MB
     }
 
     // --- narzędzia ---
@@ -549,6 +591,8 @@ class StockPhotoQualityTest {
         const val MAX_TONE_LEAK = 10.0
         const val REAL_HIGHLIGHT = 165.0
         const val PERF_RUNS = 3
+        const val SAMPLE_MS = 2L
+        const val BYTES_PER_MB = 1024L * 1024L
         const val MAX_PIPELINE_DIFF = 6.0
         const val BYTE_LEVELS = 256
         const val MASK_BYTE = 0xFF
