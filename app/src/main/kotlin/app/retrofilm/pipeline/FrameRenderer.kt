@@ -31,7 +31,9 @@ data class FrameOptions(
     /** Kolor atramentu (ARGB). */
     val inkColor: Int = PaintSignatureMeasurer.SIGNATURE_COLOR,
     /** Wielkość podpisu jako ułamek bazowej; domyślnie 0,8 (suwak 100%), do 1,0 (suwak 125%). */
-    val signatureScale: Float = TightFrame.DEFAULT_SIGNATURE_SCALE
+    val signatureScale: Float = TightFrame.DEFAULT_SIGNATURE_SCALE,
+    /** Znak wodny: kod QR z linkiem do aplikacji w rogu zdjęcia. */
+    val watermark: Boolean = false
 ) {
     val drawsSignature get() = enabled && signatureEnabled && signature.isNotBlank()
 }
@@ -92,7 +94,7 @@ object FrameRenderer {
      * `Bitmap.compress` zapisze odpowiedni profil ICC. Bez ramki – samo zdjęcie.
      */
     fun render(photo: Bitmap, options: FrameOptions, typeface: Typeface, colorSpaceSource: Bitmap = photo): Bitmap {
-        if (!options.enabled) return copyInto(photo, photo.width, photo.height, colorSpaceSource)
+        if (!options.enabled) return plain(photo, options, colorSpaceSource)
         val lines = if (options.drawsSignature) {
             TightFrame.signatureLines(
                 options.aspect,
@@ -131,6 +133,7 @@ object FrameRenderer {
         val p = layout.photo
         canvas.drawBitmap(photo, null, AndroidRectF(p.left, p.top, p.right, p.bottom), Paint(Paint.FILTER_BITMAP_FLAG))
         if (options.drawsSignature) drawSignature(canvas, layout, options, typeface)
+        if (options.watermark) Watermark.draw(canvas, AndroidRectF(p.left, p.top, p.right, p.bottom))
         return out
     }
 
@@ -151,6 +154,15 @@ object FrameRenderer {
         canvas.translate((layout.canvasWidth - layout.signatureMaxWidth) / 2f, bounds.top)
         static.draw(canvas)
         canvas.restore()
+    }
+
+    /** Bez ramki: samo zdjęcie, ewentualnie ze znakiem wodnym (na kopii, oryginał zostaje nietknięty). */
+    private fun plain(photo: Bitmap, options: FrameOptions, colorSpaceSource: Bitmap): Bitmap {
+        val base = copyInto(photo, photo.width, photo.height, colorSpaceSource)
+        if (!options.watermark) return base
+        val out = if (base === photo || !base.isMutable) base.copy(Bitmap.Config.ARGB_8888, true) else base
+        Watermark.draw(Canvas(out), AndroidRectF(0f, 0f, out.width.toFloat(), out.height.toFloat()))
+        return out
     }
 
     private fun blank(w: Int, h: Int, csSource: Bitmap): Bitmap {
