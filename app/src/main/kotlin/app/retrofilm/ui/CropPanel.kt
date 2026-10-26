@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
@@ -35,18 +36,18 @@ fun CropPanel(state: MainState) {
                 onClick = {
                     state.updateGeometry(g.copy(quarterTurns = Math.floorMod(g.quarterTurns - 1, Geometry.FULL_TURN)))
                 },
-                modifier = Modifier.heightIn(min = MinTouch)
-            ) { Text(stringResource(R.string.crop_rotate_left)) }
+                modifier = Modifier.weight(1f).heightIn(min = MinTouch)
+            ) { Text(stringResource(R.string.crop_rotate_left), maxLines = 1) }
             OutlinedButton(
                 onClick = { state.updateGeometry(g.copy(quarterTurns = (g.quarterTurns + 1) % Geometry.FULL_TURN)) },
-                modifier = Modifier.heightIn(min = MinTouch)
-            ) { Text(stringResource(R.string.crop_rotate_right)) }
-            OutlinedButton(
-                onClick = { state.updateGeometry(g.copy(flip = !g.flip)) },
-                enabled = g.aspect != CropAspect.Original,
-                modifier = Modifier.heightIn(min = MinTouch)
-            ) { Text(stringResource(R.string.crop_flip)) }
+                modifier = Modifier.weight(1f).heightIn(min = MinTouch)
+            ) { Text(stringResource(R.string.crop_rotate_right), maxLines = 1) }
         }
+        OutlinedButton(
+            onClick = { state.updateGeometry(g.copy(flip = !g.flip)) },
+            enabled = g.aspect != CropAspect.Original,
+            modifier = Modifier.padding(horizontal = Pad).fillMaxWidth().heightIn(min = MinTouch)
+        ) { Text(stringResource(R.string.crop_flip), maxLines = 1) }
         LazyRow(contentPadding = PaddingValues(horizontal = Pad), horizontalArrangement = Arrangement.spacedBy(Gap)) {
             items(CropAspect.entries, key = { it.name }) { a ->
                 FilterChip(
