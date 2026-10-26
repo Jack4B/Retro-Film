@@ -70,7 +70,11 @@ class MainState(
     /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
     private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
 
-    val canUndoAuto: Boolean get() = autoPair?.second == adjustments
+    private var autoKind by mutableStateOf(AutoKind.None)
+
+    val canUndoAuto: Boolean get() = autoKind == AutoKind.Auto && autoPair?.second == adjustments
+
+    val canUndoPrep: Boolean get() = autoKind == AutoKind.Prep && autoPair?.second == adjustments
 
     /** Scena rozpoznana przy ostatnim auto-ulepszeniu (do podpisu przycisku). */
     var autoScene by mutableStateOf(AutoScene.General)
@@ -284,32 +288,35 @@ class MainState(
      * Auto-ulepszenie: analizuje podgląd po filmie i kadrze (bez korekt), ustawia suwaki Światło i Kolor i zapamiętuje
      * poprzednie ustawienia do cofnięcia ([undoAuto]).
      */
-    suspend fun autoEnhance() {
+    suspend fun autoEnhance() = runAuto(AutoKind.Auto)
+
+    /** „Przygotuj pod film”: balans bieli, ekspozycja i delikatne zdjęcie krzywej telefonu przed nałożeniem filmu. */
+    suspend fun prepareForFilm() = runAuto(AutoKind.Prep)
+
+    /** Analiza zdjęcia przed filmem (korekty są przed filmem, D15), więc ocena nie zależy od wybranego looku. */
+    private suspend fun runAuto(kind: AutoKind) {
         val p = photo ?: return
         val result = withContext(Dispatchers.Default) {
             val small = GeometryApplier.apply(previewBase(p), geometry)
-            val graded = ExportPipeline.render(
-                small,
-                lut(),
-                graph.filmEngine.renderer,
-                FrameOptions(),
-                typeface,
-                intensity
-            )
-            val px = IntArray(graded.width * graded.height)
-            graded.getPixels(px, 0, graded.width, 0, 0, graded.width, graded.height)
-            AutoEnhance.suggest(px, graded.width, graded.height, FaceFinder.find(graded))
+            val px = IntArray(small.width * small.height)
+            small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
+            val suggestion = AutoEnhance.suggest(px, small.width, small.height, FaceFinder.find(small))
+            if (kind == AutoKind.Prep) suggestion.forFilm() else suggestion
         }
         val before = adjustments
         adjustments = result.applyTo(before)
         autoPair = before to adjustments
+        autoKind = kind
         autoScene = result.scene
     }
 
     fun undoAuto() {
         autoPair?.let { adjustments = it.first }
         autoPair = null
+        autoKind = AutoKind.None
     }
+
+    private enum class AutoKind { None, Auto, Prep }
 
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
     private fun previewBase(p: Bitmap): Bitmap {

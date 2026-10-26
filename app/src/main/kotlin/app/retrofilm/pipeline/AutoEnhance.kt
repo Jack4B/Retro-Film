@@ -15,6 +15,17 @@ data class AutoResult(
     val tint: Float,
     val scene: AutoScene = AutoScene.General
 ) {
+    /**
+     * Wariant „przygotuj pod film”: tylko balans bieli i ekspozycja oraz delikatne zdjęcie kontrastu i nasycenia
+     * (krzywa telefonu), bez ruszania świateł i cieni; film (LUT) ma dostać neutralne wejście, a nie ugrading.
+     */
+    fun forFilm(): AutoResult = copy(
+        contrast = contrast.coerceAtMost(0f),
+        highlights = 0f,
+        shadows = 0f,
+        saturation = saturation.coerceAtMost(0f)
+    )
+
     /** Nakłada propozycję na [base] (pozostałe korekty zostają). */
     fun applyTo(base: Adjustments): Adjustments = base.copy(
         exposure = exposure,
