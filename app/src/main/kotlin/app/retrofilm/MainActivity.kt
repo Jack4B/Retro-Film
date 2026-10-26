@@ -32,7 +32,7 @@ import app.retrofilm.ui.Route
 
 class MainActivity : ComponentActivity() {
     /** Stan edycji przeżywa odtworzenie aktywności (obrót ekranu); tworzony raz, bez referencji do aktywności. */
-    private val holder: MainStateHolder by viewModels {
+    private val holder by viewModels<MainStateHolder> {
         viewModelFactory {
             initializer {
                 val app = applicationContext
