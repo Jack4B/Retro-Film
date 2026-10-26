@@ -8,6 +8,7 @@ import kotlin.math.min
 @Suppress("LongParameterList") // zbiór niezależnych planów etapów, bez sensownego podziału
 internal class StripPlans(
     val chroma: ChromaDenoise.Plan?,
+    val chromaEdge: ChromaEdge.Plan?,
     val luma: LumaDenoise.Plan?,
     val dehaze: Dehaze.Plan?,
     val tone: ToneMask?,
@@ -84,6 +85,7 @@ internal class StripWorker(
         }
         val span = PixelSpan(w, a, h)
         plans.chroma?.let { ChromaDenoise.applyPlanes(it, planes, count, span) }
+        plans.chromaEdge?.let { ChromaEdge.applyPlanes(it, planes, count, w) }
         plans.luma?.let { LumaDenoise.applyPlanes(it, planes, count, w) }
         plans.dehaze?.let { Dehaze.restorePlanes(it, planes, count, span) }
         if (!neutral) processor.processPlanes(planes, count, span, plans.tone)

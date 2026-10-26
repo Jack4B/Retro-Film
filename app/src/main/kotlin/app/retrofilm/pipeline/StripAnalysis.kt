@@ -74,8 +74,9 @@ internal class StripAnalysis(
         val clarity = if (adj.clarity != 0f) clarityMap(chroma, dehaze, tone) else null
         val sharpMargin = if (adj.sharpness > 0f) Sharpener.marginFor(adj.sharpenParams, max(w, h)) else 0
         val debandRadius = if (deband) Deband.radiusFor(max(w, h)) else 0
-        val halo = sharpMargin + (luma?.margin ?: 0) + debandRadius
-        return StripPlans(chroma, luma, dehaze, tone, clarity, halo, max(w, h), debandRadius)
+        val edge = ChromaEdge.plan(w, h, adj.chromaEdges)
+        val halo = sharpMargin + max(luma?.margin ?: 0, edge?.margin ?: 0) + debandRadius
+        return StripPlans(chroma, edge, luma, dehaze, tone, clarity, halo, max(w, h), debandRadius)
     }
 
     /** Sumy w komórkach dla odszumiania koloru i dehaze z całego obrazu (bez podpróbkowania); null = niepotrzebne. */

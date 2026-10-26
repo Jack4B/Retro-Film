@@ -55,6 +55,8 @@ data class Adjustments(
     val denoise: Float = 0f,
     /** Odszumianie jasności 0..1 (zob. [LumaDenoise]). */
     val lumaDenoise: Float = 0f,
+    /** Ostrość koloru 0..1: krawędzie koloru dopasowane do jasności po podpróbkowaniu chromy JPEG ([ChromaEdge]). */
+    val chromaEdges: Float = 0f,
     /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
     val hsl: HslAdjust = HslAdjust(),
     /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */

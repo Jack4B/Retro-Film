@@ -54,7 +54,7 @@ object PresetCodec {
             "vignette" to a.vignette,
             "sharpness" to a.sharpness, "sharpRadius" to a.sharpRadius, "sharpDetail" to a.sharpDetail,
             "sharpMasking" to a.sharpMasking, "clarity" to a.clarity, "dehaze" to a.dehaze, "denoise" to a.denoise,
-            "lumaDenoise" to a.lumaDenoise,
+            "lumaDenoise" to a.lumaDenoise, "chromaEdges" to a.chromaEdges,
             "shadowHue" to a.shadowHue, "shadowAmount" to a.shadowAmount,
             "highlightHue" to a.highlightHue, "highlightAmount" to a.highlightAmount,
             "toneBalance" to a.toneBalance
@@ -132,6 +132,7 @@ object PresetCodec {
             sharpDetail = f("sharpDetail", SharpenParams.DEFAULT_DETAIL), sharpMasking = f("sharpMasking"),
             sharpMode = SharpenMode.entries.firstOrNull { it.name == o.optString("sharpMode") } ?: SharpenMode.Standard,
             clarity = f("clarity"), dehaze = f("dehaze"), denoise = f("denoise"), lumaDenoise = f("lumaDenoise"),
+            chromaEdges = f("chromaEdges"),
             hsl = hsl, shadowHue = f("shadowHue"), shadowAmount = f("shadowAmount"),
             highlightHue = f("highlightHue"), highlightAmount = f("highlightAmount"), toneBalance = f("toneBalance"),
             curves = curvesFromJson(o.optJSONObject("curves"))
