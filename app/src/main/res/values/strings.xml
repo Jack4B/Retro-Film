@@ -31,6 +31,17 @@
     <string name="tab_crop">Kadr</string>
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
+    <string name="adjust_group_curves">Krzywe</string>
+    <string name="curve_rgb">RGB</string>
+    <string name="curve_red">Czerwony</string>
+    <string name="curve_green">Zielony</string>
+    <string name="curve_blue">Niebieski</string>
+    <string name="curve_hint">Dotknij wykresu, żeby dodać punkt, przeciągnij punkt, żeby zmienić krzywą, dotknij punktu dwa razy, żeby go usunąć.</string>
+    <string name="curve_cd">Wykres krzywej tonalnej, punktów: %1$d</string>
+    <string name="curve_reset">Wyzeruj krzywą</string>
+    <string name="curve_darks">Ciemne tony</string>
+    <string name="curve_mids">Półtony</string>
+    <string name="curve_lights">Jasne tony</string>
     <string name="crop_straighten">Prostowanie</string>
     <string name="crop_persp_v">Perspektywa pionowa</string>
     <string name="crop_persp_h">Perspektywa pozioma</string>

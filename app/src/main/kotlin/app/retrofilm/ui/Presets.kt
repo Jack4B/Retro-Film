@@ -5,9 +5,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.CurvePoint
 import app.retrofilm.pipeline.HslAdjust
 import app.retrofilm.pipeline.SharpenMode
 import app.retrofilm.pipeline.SharpenParams
+import app.retrofilm.pipeline.ToneCurve
+import app.retrofilm.pipeline.ToneCurves
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -57,7 +60,35 @@ object PresetCodec {
         ).forEach { (k, v) -> put(k, v.toDouble()) }
         put("hsl", JSONArray(a.hsl.values.map { it.toDouble() }))
         put("sharpMode", a.sharpMode.name)
+        if (!a.curves.isNeutral) put("curves", curvesToJson(a.curves))
     }
+
+    private fun curvesToJson(c: ToneCurves): JSONObject = JSONObject().apply {
+        CURVE_KEYS.forEachIndexed { i, key ->
+            put(key, JSONArray(c.channel(i).points.flatMap { listOf(it.x.toDouble(), it.y.toDouble()) }))
+        }
+    }
+
+    private fun curvesFromJson(o: JSONObject?): ToneCurves {
+        var curves = ToneCurves()
+        if (o == null) return curves
+        CURVE_KEYS.forEachIndexed { i, key ->
+            val arr = o.optJSONArray(key) ?: return@forEachIndexed
+            val pts =
+                List(arr.length() / 2) {
+                    CurvePoint(arr.optDouble(2 * it).toFloat(), arr.optDouble(2 * it + 1).toFloat())
+                }
+            if (validCurve(pts)) curves = curves.with(i, ToneCurve(pts))
+        }
+        return curves
+    }
+
+    /** Krzywa z pliku musi zaczynać się w x = 0, kończyć w x = 1 i rosnąć po x (uszkodzony zapis jest pomijany). */
+    private fun validCurve(p: List<CurvePoint>): Boolean = p.size in 2..ToneCurve.MAX_POINTS &&
+        p.first().x == 0f && p.last().x == 1f &&
+        p.zipWithNext().all { (a, b) -> b.x > a.x } && p.all { it.y in 0f..1f }
+
+    private val CURVE_KEYS = listOf("master", "red", "green", "blue")
 
     private fun fromJson(o: JSONObject?): Preset? {
         val name = o?.optString("name").orEmpty()
@@ -100,7 +131,8 @@ object PresetCodec {
             sharpMode = SharpenMode.entries.firstOrNull { it.name == o.optString("sharpMode") } ?: SharpenMode.Standard,
             clarity = f("clarity"), dehaze = f("dehaze"), denoise = f("denoise"), lumaDenoise = f("lumaDenoise"),
             hsl = hsl, shadowHue = f("shadowHue"), shadowAmount = f("shadowAmount"),
-            highlightHue = f("highlightHue"), highlightAmount = f("highlightAmount"), toneBalance = f("toneBalance")
+            highlightHue = f("highlightHue"), highlightAmount = f("highlightAmount"), toneBalance = f("toneBalance"),
+            curves = curvesFromJson(o.optJSONObject("curves"))
         )
     }
 }
