@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -14,10 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,6 +52,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,6 +72,12 @@ private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
 private val TabHeight = 56.dp
+private val InfoDot = 28.dp
+private val InfoPad = 4.dp
+private const val ZOOM_READOUT_MIN = 1.01f
+private const val INFO_IDLE_ALPHA = 0.28f
+private const val INFO_ACTIVE_ALPHA = 0.5f
+private const val INFO_ICON_ALPHA = 0.85f
 private val PanelCorner = 20.dp
 private val PanelElevation = 8.dp
 
@@ -195,6 +206,7 @@ private fun RowScope.EditorActions(
 @Composable
 private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifier) {
     val zoom = remember { ZoomState() }
+    var showInfo by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.photo) { zoom.reset() }
     LaunchedEffect(zoom.isDetailed) { state.updateDetail(zoom.isDetailed) }
     val shown = if (showBefore) state.before else state.preview
@@ -220,7 +232,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
                 }
             )
         }
-        if (shown != null) PreviewReadout(state, shown.width, shown.height, zoom, Modifier.align(Alignment.TopCenter))
+        if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
         if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.TopStart))
         if (state.signatureStatus() == SignatureFitStatus.TooLong) {
@@ -233,20 +245,61 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
     }
 }
 
-/** Skala i rozmiar zdjęcia u góry podglądu, żeby było widać, ile pikseli ma zapisywany obraz. */
+/**
+ * Nakładki podglądu: skala pośrodku (tylko przy powiększeniu, ledwo widoczna) oraz mała ikona „i” w rogu,
+ * która pokazuje albo chowa rozmiar zdjęcia (piksele i megapiksele zapisywanego obrazu).
+ */
+@Suppress("LongParameterList") // stan podglądu i zdarzenie przełączenia przekazywane jawnie
 @Composable
-private fun PreviewReadout(state: MainState, shownW: Int, shownH: Int, zoom: ZoomState, modifier: Modifier) {
+private fun BoxScope.PreviewInfo(
+    state: MainState,
+    shownW: Int,
+    shownH: Int,
+    zoom: ZoomState,
+    showInfo: Boolean,
+    onToggleInfo: () -> Unit
+) {
     val photo = state.photo ?: return
     val (outW, outH) = GeometryMath.outputSize(photo.width, photo.height, state.geometry)
     val exportLong = maxOf(outW, outH)
     val (w, h) = ZoomMath.exportSize(shownW, shownH, exportLong)
     val percent = ZoomMath.percent(Dim(zoom.size.width, zoom.size.height), Dim(shownW, shownH), exportLong, zoom.scale)
     val mp = String.format(Locale.forLanguageTag("pl"), "%.1f", ZoomMath.megapixels(w, h))
-    ZoomReadout(
-        text = stringResource(R.string.zoom_readout, percent, w, h, mp),
-        description = stringResource(R.string.zoom_readout_cd, percent, w, h, mp),
-        modifier = modifier.padding(top = EdgePad)
-    )
+    if (zoom.scale > ZOOM_READOUT_MIN) {
+        ZoomReadout(
+            text = "$percent%",
+            description = stringResource(R.string.zoom_percent_cd, percent),
+            modifier = Modifier.align(Alignment.Center),
+            subtle = true
+        )
+    }
+    if (showInfo) {
+        ZoomReadout(
+            text = stringResource(R.string.info_size, w, h, mp),
+            description = stringResource(R.string.info_size_cd, w, h, mp),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = EdgePad, end = MinTouch)
+        )
+    }
+    InfoButton(showInfo, onToggleInfo, Modifier.align(Alignment.TopEnd))
+}
+
+@Composable
+private fun InfoButton(active: Boolean, onClick: () -> Unit, modifier: Modifier) {
+    val cd = stringResource(if (active) R.string.info_hide_cd else R.string.info_show_cd)
+    IconButton(onClick = onClick, modifier = modifier.size(MinTouch).semantics { contentDescription = cd }) {
+        Surface(
+            color = Color.Black.copy(alpha = if (active) INFO_ACTIVE_ALPHA else INFO_IDLE_ALPHA),
+            shape = CircleShape,
+            modifier = Modifier.size(InfoDot)
+        ) {
+            Icon(
+                Icons.Filled.Info,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = INFO_ICON_ALPHA),
+                modifier = Modifier.padding(InfoPad)
+            )
+        }
+    }
 }
 
 @Composable

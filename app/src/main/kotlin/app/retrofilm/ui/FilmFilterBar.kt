@@ -34,17 +34,26 @@ fun FilmFilterBar(
     brand: String,
     type: String?,
     onlyFavorites: Boolean,
+    showPresets: Boolean,
     onBrand: (String) -> Unit,
     onType: (String?) -> Unit,
-    onFavorites: () -> Unit
+    onFavorites: () -> Unit,
+    onPresets: () -> Unit
 ) {
     val brands = FilmGroups.brandsPresent(films)
     val types = FilmGroups.typesIn(films, brand)
     Column(verticalArrangement = Arrangement.spacedBy(ChipGap)) {
         LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
+            item(key = "presets") {
+                FilterChip(
+                    selected = showPresets,
+                    onClick = onPresets,
+                    label = { Text(stringResource(R.string.film_presets)) }
+                )
+            }
             item(key = "favorites") {
                 FilterChip(
-                    selected = onlyFavorites,
+                    selected = onlyFavorites && !showPresets,
                     onClick = onFavorites,
                     leadingIcon = { Icon(Icons.Filled.Star, contentDescription = null) },
                     label = { Text(stringResource(R.string.film_favorites)) }
@@ -52,13 +61,13 @@ fun FilmFilterBar(
             }
             items(brands, key = { it }) { b ->
                 FilterChip(
-                    selected = !onlyFavorites && b == brand,
+                    selected = !onlyFavorites && !showPresets && b == brand,
                     onClick = { onBrand(b) },
                     label = { Text(stringResource(brandLabel(b))) }
                 )
             }
         }
-        if (!onlyFavorites && types.size > 1) {
+        if (!onlyFavorites && !showPresets && types.size > 1) {
             LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
                 item(key = "all") {
                     FilterChip(

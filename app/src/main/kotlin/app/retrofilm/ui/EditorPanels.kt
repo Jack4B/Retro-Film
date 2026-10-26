@@ -98,6 +98,7 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
     var brand by rememberSaveable { mutableStateOf<String?>(null) }
     var type by rememberSaveable { mutableStateOf<String?>(null) }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
+    var showPresets by rememberSaveable { mutableStateOf(false) }
     val real = state.library.films.filter { it.id != IDENTITY_ID }
     val current = brand
         ?: real.firstOrNull { it.id == state.film }?.let { FilmGroups.brandOf(it.id) }
@@ -111,37 +112,31 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
                     brand = current,
                     type = type,
                     onlyFavorites = onlyFavorites,
+                    showPresets = showPresets,
                     onBrand = {
                         brand = it
                         type = null
                         onlyFavorites = false
+                        showPresets = false
                     },
                     onType = { type = it },
-                    onFavorites = { onlyFavorites = true }
+                    onFavorites = {
+                        onlyFavorites = true
+                        showPresets = false
+                    },
+                    onPresets = { showPresets = true }
                 )
             }
+            PresetAddButton(state)
             LibraryButton(onOpenLibrary)
         }
-        LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
-            item(key = IDENTITY_ID) {
-                FilmTile(
-                    name = stringResource(R.string.film_none),
-                    thumbnail = state.thumbnails.bitmaps[IDENTITY_ID],
-                    selected = state.film == IDENTITY_ID,
-                    favorite = false,
-                    onVisible = { state.thumbnails.ensure(IDENTITY_ID, state.photo) }
-                ) { state.film = IDENTITY_ID }
-            }
-            items(shown, key = { it.id }) { f ->
-                FilmTile(
-                    name = f.name.orEmpty(),
-                    thumbnail = state.thumbnails.bitmaps[f.id],
-                    selected = state.film == f.id,
-                    favorite = f.id in state.library.favorites,
-                    onVisible = { state.thumbnails.ensure(f.id, state.photo) }
-                ) { state.film = f.id }
-            }
+        if (showPresets) {
+            PresetTiles(state)
+            FavoriteToggle(state, real)
+            StrengthSlider(state)
+            return@Column
         }
+        FilmTiles(state, shown)
         if (real.isEmpty()) {
             Hint(stringResource(R.string.films_missing))
         } else if (onlyFavorites && shown.isEmpty()) {
@@ -153,7 +148,31 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
 }
 
 @Composable
-private fun Hint(text: String) {
+private fun FilmTiles(state: MainState, shown: List<FilmOption>) {
+    LazyRow(contentPadding = RowPadding, horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
+        item(key = IDENTITY_ID) {
+            FilmTile(
+                name = stringResource(R.string.film_none),
+                thumbnail = state.thumbnails.bitmaps[IDENTITY_ID],
+                selected = state.film == IDENTITY_ID,
+                favorite = false,
+                onVisible = { state.thumbnails.ensure(IDENTITY_ID, state.photo) }
+            ) { state.film = IDENTITY_ID }
+        }
+        items(shown, key = { it.id }) { f ->
+            FilmTile(
+                name = f.name.orEmpty(),
+                thumbnail = state.thumbnails.bitmaps[f.id],
+                selected = state.film == f.id,
+                favorite = f.id in state.library.favorites,
+                onVisible = { state.thumbnails.ensure(f.id, state.photo) }
+            ) { state.film = f.id }
+        }
+    }
+}
+
+@Composable
+internal fun Hint(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = SidePad))
 }
 
@@ -203,7 +222,7 @@ private fun FavoriteToggle(state: MainState, films: List<FilmOption>) {
 
 @Suppress("LongParameterList") // kafelek: nazwa, miniatura i dwa znaczniki stanu + dwa zdarzenia
 @Composable
-private fun FilmTile(
+internal fun FilmTile(
     name: String,
     thumbnail: Bitmap?,
     selected: Boolean,
