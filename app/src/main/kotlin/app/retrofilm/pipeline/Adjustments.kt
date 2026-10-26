@@ -500,9 +500,13 @@ data class PixelSpan(val width: Int, val firstRow: Int = 0, val totalRows: Int =
 object AdjustmentsApplier {
     private const val ROWS_PER_CHUNK = 64
 
-    fun apply(src: Bitmap, adj: Adjustments): Bitmap {
-        if (adj.isNeutral || adj.sharpMaskPreview) return applyLegacy(src, adj)
-        val out = StripPipeline.run(src, adj)
+    /**
+     * [deband] = true dodaje na końcu odbandowanie wejścia filmu ([Deband]) i wymusza przebieg także przy neutralnych
+     * korektach (zdjęcie wychodzi z ditheringiem, a wartości w płaskich gradientach są podpoziomowe).
+     */
+    fun apply(src: Bitmap, adj: Adjustments, deband: Boolean = false): Bitmap {
+        if ((adj.isNeutral && !deband) || adj.sharpMaskPreview) return applyLegacy(src, adj)
+        val out = StripPipeline.run(src, adj, deband)
         val blender = MaskBlender(adj.masks, out.width, out.height).takeUnless { it.isEmpty }
         if (blender != null) blendMasks(out, blender, adj.masks.any { it.hasEffect && it.usesTone })
         return out

@@ -93,6 +93,7 @@ fun AdjustPanel(state: MainState) {
 private fun LightSliders(state: MainState) {
     val a = state.adjustments
     AutoButton(state)
+    PrepButton(state)
     AdjustSlider(
         label = stringResource(R.string.adjust_exposure),
         value = a.exposure / Adjustments.EXPOSURE_MAX_EV,
@@ -110,26 +111,6 @@ private fun LightSliders(state: MainState) {
 }
 
 /** „Auto” ustawia światło i kolor z analizy zdjęcia; po użyciu ten sam przycisk cofa zmianę. */
-@Composable
-private fun AutoButton(state: MainState) {
-    val scope = rememberCoroutineScope()
-    val undo = state.canUndoAuto
-    OutlinedButton(
-        onClick = { if (undo) state.undoAuto() else scope.launch { state.autoEnhance() } },
-        modifier = Modifier.padding(horizontal = SidePad).fillMaxWidth().heightIn(min = MinTouch)
-    ) {
-        val scene = stringResource(
-            when (state.autoScene) {
-                AutoScene.Portrait -> R.string.scene_portrait
-                AutoScene.Landscape -> R.string.scene_landscape
-                AutoScene.Dominant -> R.string.scene_dominant
-                AutoScene.General -> R.string.scene_general
-            }
-        )
-        Text(if (undo) stringResource(R.string.adjust_auto_undo, scene) else stringResource(R.string.adjust_auto))
-    }
-}
-
 @Composable
 private fun ColorSliders(state: MainState) {
     val a = state.adjustments

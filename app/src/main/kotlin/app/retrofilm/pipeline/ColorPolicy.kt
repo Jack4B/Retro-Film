@@ -16,9 +16,17 @@ object ColorPolicy {
 
     val SRGB: ColorSpace = ColorSpace.get(ColorSpace.Named.SRGB)
 
-    /** Zwraca bitmapę w sRGB (z konwersją kolorów przez Skia) lub oryginał, gdy już jest sRGB. */
+    /**
+     * Zwraca bitmapę w sRGB lub oryginał, gdy już jest sRGB. Display P3 przechodzi przez mapowanie gamutowe w OKLab
+     * ([GamutMapper]), inne przestrzenie przez konwersję Skia ([toSrgbClipped]).
+     */
     fun toSrgb(photo: Bitmap): Bitmap {
         if (!needsSrgbConversion(photo.colorSpace?.let { it == SRGB })) return photo
+        return if (GamutMapper.supports(photo)) GamutMapper.toSrgb(photo) else toSrgbClipped(photo)
+    }
+
+    /** Konwersja Skia (kolory spoza sRGB są przycinane kanałami); ścieżka zapasowa i wzorzec w testach. */
+    internal fun toSrgbClipped(photo: Bitmap): Bitmap {
         val out = Bitmap.createBitmap(photo.width, photo.height, Bitmap.Config.ARGB_8888, photo.hasAlpha(), SRGB)
         Canvas(out).drawBitmap(photo, 0f, 0f, Paint(Paint.FILTER_BITMAP_FLAG))
         return out

@@ -13,7 +13,8 @@ internal class StripPlans(
     val tone: ToneMask?,
     val clarity: DetailFilter.ClarityMap?,
     val halo: Int,
-    val longSide: Int
+    val longSide: Int,
+    val debandRadius: Int = 0
 )
 
 /**
@@ -30,11 +31,11 @@ internal object StripPipeline {
     private const val HALO_FACTOR = 6
     private const val NANOS_PER_MS = 1_000_000L
 
-    fun run(src: Bitmap, adj: Adjustments): Bitmap {
+    fun run(src: Bitmap, adj: Adjustments, deband: Boolean = false): Bitmap {
         val w = src.width
         val h = src.height
         val t0 = System.nanoTime()
-        val plans = StripAnalysis(src, adj).plans()
+        val plans = StripAnalysis(src, adj, deband).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
@@ -65,6 +66,7 @@ internal class StripWorker(
     capRows: Int
 ) {
     private val processor = AdjustmentProcessor(adj)
+    private val neutral = adj.isNeutral
     private val ints = IntArray(w * capRows)
     private val planes = Planes.of(w * capRows)
 
@@ -84,7 +86,8 @@ internal class StripWorker(
         plans.chroma?.let { ChromaDenoise.applyPlanes(it, planes, count, span) }
         plans.luma?.let { LumaDenoise.applyPlanes(it, planes, count, w) }
         plans.dehaze?.let { Dehaze.restorePlanes(it, planes, count, span) }
-        processor.processPlanes(planes, count, span, plans.tone)
+        if (!neutral) processor.processPlanes(planes, count, span, plans.tone)
+        if (plans.debandRadius > 0) Deband.applyPlanes(planes, count, w, plans.debandRadius)
         val core = (y0 - a) * w
         val coreCount = (y1 - y0) * w
         if (adj.hasDetail) sharpen(count, a, core, coreCount)
