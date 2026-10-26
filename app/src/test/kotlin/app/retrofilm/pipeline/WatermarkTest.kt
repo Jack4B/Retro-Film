@@ -58,8 +58,8 @@ class WatermarkTest {
                 FrameOptions(watermark = true),
                 android.graphics.Typeface.DEFAULT
             )
-            assertTrue("ikona jest widoczna na karcie", count(out, 500 until 522, 700 until 800, ::isRed) > 20)
-            assertTrue("nazwa jest widoczna na karcie", count(out, 500 until 522, 700 until 800, ::isInk) > 10)
+            assertTrue("ikona jest widoczna na karcie", count(out, 506 until 521, 724 until 786, ::isRed) > 20)
+            assertTrue("nazwa jest widoczna na karcie", count(out, 506 until 521, 724 until 786, ::isInk) > 10)
         } finally {
             Watermark.icon = null
         }
