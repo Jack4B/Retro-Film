@@ -4,9 +4,10 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * Lokalna jasność obrazu (rozmyta siatka niskiej rozdzielczości) do cieni i świateł: wpływ zależy od jasności
- * otoczenia, nie samego piksela, więc detale w cieniu nie spłaszczają się, a krawędzie nie dostają aureoli
- * (zasada znana z narzędzi „Shadow/Highlight”). Siatka ma ok. [GRID_LONG] komórek po dłuższym boku.
+ * Warstwa bazowa jasności (siatka niskiej rozdzielczości wygładzona filtrem prowadzonym, He i in.) do cieni i
+ * świateł: rozkład obrazu na bazę (duże, gładkie obszary tonalne) i detal. Wpływ zależy od bazy, więc detale nie
+ * spłaszczają się, a filtr zachowujący krawędzie nie przenosi jasności przez kontrastowe granice (brak aureoli
+ * i „przecieku” cienia na jasny obiekt na ciemnym tle). Siatka ma ok. [GRID_LONG] komórek po dłuższym boku.
  */
 class ToneMask private constructor(
     private val gridW: Int,
@@ -50,8 +51,9 @@ class ToneMask private constructor(
 
         fun build(): ToneMask {
             val avg = FloatArray(sums.size) { if (counts[it] > 0) sums[it] / counts[it] else 0f }
-            val blurred = DetailFilter.boxBlur(avg, gridW, gridH, max(2, GRID_LONG / BLUR_DIV))
-            return ToneMask(gridW, gridH, cell, blurred)
+            val unit = FloatArray(avg.size) { avg[it] / BYTE_MAX }
+            val base = GuidedFilter.filter(unit, unit, gridW, gridH, max(2, GRID_LONG / RADIUS_DIV), EDGE_EPS)
+            return ToneMask(gridW, gridH, cell, FloatArray(base.size) { base[it].coerceIn(0f, 1f) * BYTE_MAX })
         }
     }
 
@@ -59,7 +61,10 @@ class ToneMask private constructor(
         const val HALF = 0.5f
         const val BYTE_MAX = 255f
         const val GRID_LONG = 512
-        const val BLUR_DIV = 40
+        const val RADIUS_DIV = 25
+
+        /** Próg wariancji filtra: różnice jasności większe niż ok. 0,1 są traktowane jako krawędź. */
+        const val EDGE_EPS = 0.012f
         const val RED_SHIFT = 16
         const val GREEN_SHIFT = 8
         const val MASK = 0xFF

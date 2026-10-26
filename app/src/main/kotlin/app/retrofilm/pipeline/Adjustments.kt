@@ -175,16 +175,18 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     /**
-     * Cienie i światła jako lokalna ekspozycja: mnożnik 2^(siła · zakres EV · waga), przeniesiony z liniowego na
-     * kodowanie gamma (potęga 1/2,2). Waga zależy od średniej jasności własnej piksela i jego otoczenia (maska):
-     * sama maska zamieniała całe jasne zdjęcie w szarość, a sam piksel gubił lokalność. Mnożnik, a nie dodawanie,
-     * zachowuje proporcje kanałów (barwy się nie wypłukują) i lokalny kontrast detali.
+     * Cienie i światła jako ekspozycja warstwy bazowej: rozkład na bazę (jasność wygładzona filtrem prowadzonym,
+     * [ToneMask]) i detal; mnożnik 2^(siła · zakres EV · waga(baza)) przeniesiony z liniowego na kodowanie gamma
+     * przesuwa tony, a ten sam mnożnik na wszystkich kanałach zachowuje barwę i lokalny kontrast detalu.
+     * Piksel jaśniejszy od bazy (iskra światła) nie jest traktowany jak cień, a ciemniejszy od bazy (detal w jasnym
+     * obszarze) nie jest traktowany jak światło.
      */
     private fun toneRecovery(mask: ToneMask?, x: Int, row: Int) {
         val own = luma()
-        val y = if (mask != null) (own + maskLut[maskIndex(mask.sample(x, row))]) * HALF else own
-        val i = maskIndex(y)
-        val m = shadowGain[i] * highlightGain[i]
+        val base = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else own
+        val shadowY = (base + maxOf(base, own)) * HALF
+        val highlightY = (base + minOf(base, own)) * HALF
+        val m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
         for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
     }
 
@@ -226,10 +228,11 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val SHADOW_EV = 2.0f
         private const val HIGHLIGHT_EV = 1.2f
         private const val GAMMA_INV = 0.4545f
-        private const val SHADOW_FROM = 0.02f
-        private const val SHADOW_TO = 0.65f
+        private const val SHADOW_FROM = 0.15f
+        private const val SHADOW_TO = 0.55f
         private const val HIGHLIGHT_FROM = 0.40f
-        private const val HIGHLIGHT_TO = 1.0f
+        private const val HIGHLIGHT_TO = 0.90f
+        private const val BLACK_GUARD = 0.06f
         private const val MATRIX_SIZE = 9
         private const val IDX_00 = 0
         private const val IDX_01 = 1
@@ -291,8 +294,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             return (h and HASH_MASK) / HASH_HALF - 1f
         }
 
-        /** Waga cieni: 1 w czerni, gładko maleje do 0 przy jasności [SHADOW_TO]. */
-        fun shadowWeight(y: Float): Float = 1f - smoothstep(SHADOW_FROM, SHADOW_TO, y)
+        /**
+         * Waga cieni: 0 w samej czerni (punkt czerni i szum nie są podbijane), pełna w ciemnych tonach,
+         * gładko maleje do 0 przy jasności [SHADOW_TO] (okolice szarości 18%).
+         */
+        fun shadowWeight(y: Float): Float =
+            smoothstep(0f, BLACK_GUARD, y) * (1f - smoothstep(SHADOW_FROM, SHADOW_TO, y))
 
         /** Waga świateł: 0 poniżej [HIGHLIGHT_FROM], gładko rośnie do 1 przy [HIGHLIGHT_TO]. */
         fun highlightWeight(y: Float): Float = smoothstep(HIGHLIGHT_FROM, HIGHLIGHT_TO, y)
