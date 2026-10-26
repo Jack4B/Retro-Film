@@ -8,15 +8,21 @@ import kotlin.math.min
  * filtrem prowadzonym ([GuidedFilter]): w obszarach bez mgły co najmniej jeden kanał koloru jest w pobliżu
  * czarny, więc jego jasność wskazuje grubość mgły. Model: I = J·t + A·(1−t); odzyskujemy J = (I−A)/t + A.
  * Mapa t liczona w zmniejszonej skali; sam obraz jest przetwarzany w pełnej rozdzielczości.
+ *
+ * Założenie „w każdej łatce jest czarny piksel” nie zachodzi na jasnych, szarych scenach (pochmurna plaża, śnieg):
+ * zawyża wtedy grubość mgły i przyciemnia półtony. Dlatego łatka jest duża (więcej szans na prawdziwy cień; krawędzie
+ * ratuje filtr prowadzony), ω < 1 zostawia odrobinę mgły (naturalna głębia), a transmisja nie spada poniżej [T_MIN].
+ * Dobrane na zdjęciach stockowych z syntetyczną mgłą o znanej transmisji (StockPhotoQualityTest): PSNR rośnie na
+ * każdym zdjęciu, także na pochmurnym.
  */
 @Suppress("TooManyFunctions")
 internal object Dehaze {
     private const val TARGET = 640
     private const val CHANNELS = 3
-    private const val PATCH_DIV = 90
+    private const val PATCH_DIV = 25
     private const val GUIDE_DIV = 40
-    private const val OMEGA = 0.92f
-    private const val T_MIN = 0.28f
+    private const val OMEGA = 0.85f
+    private const val T_MIN = 0.35f
     private const val EPS = 0.0012f
     private const val TOP_FRACTION = 0.001f
     private const val A_MIN = 150f
