@@ -1,6 +1,7 @@
 package app.retrofilm.pipeline
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.ColorSpace
 import java.nio.ByteBuffer
 import kotlin.math.cbrt
@@ -66,6 +67,18 @@ internal object GamutMapper {
     private val toLinear = FloatArray(LEVELS) { AdjustmentProcessor.srgbToLinear(it / BYTE_MAX) }
     private val encode = FloatArray(ENCODE_SIZE + 1) { AdjustmentProcessor.linearToSrgb(it.toFloat() / ENCODE_SIZE) }
 
+    /**
+     * Czy bajty ARGB_8888 leżą w pamięci jako R, G, B, A (urządzenia z Androidem) czy B, G, R, A (Skia hosta w
+     * testach Robolectric); sprawdzone na jednym pikselu zamiast zakładać kolejność.
+     */
+    internal val redFirst: Boolean by lazy {
+        val probe = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        probe.setPixel(0, 0, Color.RED)
+        val buf = ByteBuffer.allocate(BYTES_PER_PIXEL)
+        probe.copyPixelsToBuffer(buf)
+        buf.array()[0] == BYTE_MASK.toByte()
+    }
+
     /** Czy [photo] da się przekonwertować tą ścieżką (Display P3, 8 bitów na kanał). */
     fun supports(photo: Bitmap): Boolean =
         photo.config == Bitmap.Config.ARGB_8888 && photo.colorSpace == ColorSpace.get(ColorSpace.Named.DISPLAY_P3)
@@ -88,11 +101,13 @@ internal object GamutMapper {
 
     private fun convert(raw: ByteArray, count: Int, ok: OkLab): IntArray {
         val rgb = FloatArray(CHANNELS)
+        val ro = if (redFirst) 0 else OFFSET_B
+        val bo = OFFSET_B - ro
         return IntArray(count) { i ->
             val o = i * BYTES_PER_PIXEL
-            val lr = toLinear[raw[o].toInt() and BYTE_MASK]
+            val lr = toLinear[raw[o + ro].toInt() and BYTE_MASK]
             val lg = toLinear[raw[o + OFFSET_G].toInt() and BYTE_MASK]
-            val lb = toLinear[raw[o + OFFSET_B].toInt() and BYTE_MASK]
+            val lb = toLinear[raw[o + bo].toInt() and BYTE_MASK]
             val r = M00 * lr + M01 * lg + M02 * lb
             val g = M10 * lr + M11 * lg + M12 * lb
             val b = M20 * lr + M21 * lg + M22 * lb

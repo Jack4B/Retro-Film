@@ -21,7 +21,9 @@ class GamutMapperTest {
         val bmp = Bitmap.createBitmap(px.size, 1, Bitmap.Config.ARGB_8888, true, p3)
         val buf = ByteBuffer.allocate(px.size * 4)
         for ((r, g, b) in px) {
-            buf.put(r.toByte()).put(g.toByte()).put(b.toByte()).put(0xFF.toByte())
+            val bytes = if (GamutMapper.redFirst) listOf(r, g, b) else listOf(b, g, r)
+            bytes.forEach { buf.put(it.toByte()) }
+            buf.put(0xFF.toByte())
         }
         buf.rewind()
         bmp.copyPixelsFromBuffer(buf)
