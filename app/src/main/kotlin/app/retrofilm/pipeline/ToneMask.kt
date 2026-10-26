@@ -38,6 +38,22 @@ class ToneMask private constructor(
         private val sums = FloatArray(gridW * gridH)
         private val counts = IntArray(gridW * gridH)
 
+        /** Rozmiar komórki siatki w pikselach obrazu. */
+        val cellSize: Int get() = cell
+
+        /** Dodaje pojedynczą próbkę jasności (0..255) z piksela ([x], [y]) – do zbierania z podpróbkowania. */
+        fun addSample(x: Int, y: Int, luma: Float) {
+            val idx = (y / cell) * gridW + x / cell
+            sums[idx] += luma
+            counts[idx]++
+        }
+
+        /** Dodaje sumy z [other] (budowniczy innego wątku dla tego samego obrazu). */
+        fun merge(other: Builder) {
+            for (i in sums.indices) sums[i] += other.sums[i]
+            for (i in counts.indices) counts[i] += other.counts[i]
+        }
+
         fun add(px: IntArray, count: Int, rowWidth: Int, firstRow: Int) {
             for (i in 0 until count) {
                 val c = px[i]
@@ -50,7 +66,15 @@ class ToneMask private constructor(
         }
 
         fun build(): ToneMask {
-            val avg = FloatArray(sums.size) { if (counts[it] > 0) sums[it] / counts[it] else 0f }
+            // komórka bez próbek (podpróbkowanie) bierze wartość poprzedniej
+            val avg = FloatArray(sums.size)
+            for (i in avg.indices) {
+                avg[i] = when {
+                    counts[i] > 0 -> sums[i] / counts[i]
+                    i > 0 -> avg[i - 1]
+                    else -> 0f
+                }
+            }
             val unit = FloatArray(avg.size) { avg[it] / BYTE_MAX }
             val base = GuidedFilter.filter(unit, unit, gridW, gridH, max(2, GRID_LONG / RADIUS_DIV), EDGE_EPS)
             return ToneMask(gridW, gridH, cell, FloatArray(base.size) { base[it].coerceIn(0f, 1f) * BYTE_MAX })

@@ -110,8 +110,45 @@ internal class Lowres(val width: Int, val height: Int, val factor: Int) {
         return top * (1 - ty) + bottom * ty
     }
 
+    /**
+     * Sumy do trzech kanałów w komórkach zmniejszonego obrazu, zbierane punktowo (próbki z dowolnych pikseli). Wątki
+     * mają własne instancje, które łączy [merge]; [mean] daje średnią kanału jak [down].
+     */
+    class Accumulator(val low: Lowres) {
+        private val sums = FloatArray(ACC_CHANNELS * low.w * low.h)
+        private val counts = IntArray(low.w * low.h)
+
+        fun add(x: Int, y: Int, a: Float, b: Float = 0f, c: Float = 0f) {
+            val cell = (y / low.factor) * low.w + x / low.factor
+            val s = ACC_CHANNELS * cell
+            sums[s] += a
+            sums[s + 1] += b
+            sums[s + 2] += c
+            counts[cell]++
+        }
+
+        fun merge(other: Accumulator) {
+            for (i in sums.indices) sums[i] += other.sums[i]
+            for (i in counts.indices) counts[i] += other.counts[i]
+        }
+
+        /** Średnia kanału [k] (0..2) w komórkach; komórka bez próbek (podpróbkowanie) bierze wartość poprzedniej. */
+        fun mean(k: Int): FloatArray {
+            val out = FloatArray(counts.size)
+            for (i in out.indices) {
+                out[i] = when {
+                    counts[i] > 0 -> sums[ACC_CHANNELS * i + k] / counts[i]
+                    i > 0 -> out[i - 1]
+                    else -> 0f
+                }
+            }
+            return out
+        }
+    }
+
     companion object {
         private const val HALF = 0.5f
+        private const val ACC_CHANNELS = 3
         private const val RGB_CHANNELS = 3
         private const val RED_SHIFT = 16
         private const val GREEN_SHIFT = 8

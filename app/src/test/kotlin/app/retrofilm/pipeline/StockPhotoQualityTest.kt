@@ -76,6 +76,8 @@ class StockPhotoQualityTest {
         }
         tiles += listOf(bitmap(hazy, src.width, src.height), bitmap(dehazed, src.width, src.height))
 
+        reportPipelineMatch(src)
+
         val noisy = addColourNoise(px)
         val denoised = noisy.copyOf().also { ChromaDenoise.apply(it, src.width, src.height, 1f) }
         val chromaBefore = chromaError(px, noisy)
@@ -277,6 +279,48 @@ class StockPhotoQualityTest {
         return lo to hi
     }
 
+    /** Zgodność potoku pasmowego z dawnym na prawdziwym zdjęciu: średnia i 99. percentyl różnicy kanałów. */
+    private fun reportPipelineMatch(src: Bitmap) {
+        val sets = linkedMapOf(
+            "odszumianie + dehaze" to Adjustments(dehaze = 0.5f, denoise = 0.6f, lumaDenoise = 0.4f),
+            "wszystko (bez ziarna)" to Adjustments(
+                shadows = 0.4f,
+                clarity = 0.4f,
+                sharpness = 0.3f,
+                dehaze = 0.4f,
+                denoise = 0.4f,
+                lumaDenoise = 0.3f,
+                vignette = 0.3f
+            )
+        )
+        val line = sets.map { (label, adj) ->
+            val d = channelDiff(
+                pixels(AdjustmentsApplier.apply(src, adj)),
+                pixels(AdjustmentsApplier.applyLegacy(src, adj))
+            )
+            if (d.first > MAX_PIPELINE_DIFF) failures += "potok pasmowy różni się od dawnego ($label): ${f2(d.first)}"
+            "$label: średnia ${f2(d.first)}, p99 ${d.second}"
+        }.joinToString("; ")
+        report.appendLine("- Potok pasmowy vs dawny: $line")
+    }
+
+    private fun channelDiff(a: IntArray, b: IntArray): Pair<Double, Int> {
+        val hist = IntArray(BYTE_LEVELS)
+        var sum = 0L
+        for (i in a.indices) {
+            for (shift in CHANNEL_SHIFTS) {
+                val d = abs(((a[i] shr shift) and MASK_BYTE) - ((b[i] shr shift) and MASK_BYTE))
+                hist[d]++
+                sum += d
+            }
+        }
+        val total = a.size * CHANNEL_SHIFTS.size
+        var seen = 0
+        var p99 = 0
+        while (seen < total * P99_PERCENT / PERCENT_100) seen += hist[p99++]
+        return sum.toDouble() / total to p99
+    }
+
     private fun checkColour(name: String, src: Bitmap, saturated: Bitmap, warm: Bitmap, look: Bitmap) {
         val c0 = colourfulness(pixels(src))
         val cSat = colourfulness(pixels(saturated))
@@ -338,10 +382,63 @@ class StockPhotoQualityTest {
                 }.sorted()
                 report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
             }
+            compareWithLegacy(bmp, cases.getValue("wszystko naraz"))
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
             failures += "12 Mpx: OutOfMemoryError (pamięć na telefonie będzie jeszcze ciaśniejsza)"
         }
+    }
+
+    /** Nowy potok kontra dawny w tym samym przebiegu: czas (mediana), szczyt sterty i podział czasu nowego. */
+    private fun compareWithLegacy(bmp: Bitmap, all: Adjustments) {
+        val legacy = List(PERF_RUNS) {
+            val t0 = System.nanoTime()
+            AdjustmentsApplier.applyLegacy(bmp, all)
+            (System.nanoTime() - t0) / NANOS_PER_MS
+        }.sorted()
+        report.appendLine("- wszystko naraz, dawny potok (ten sam przebieg): ${legacy[PERF_RUNS / 2]} ms")
+        val newMb = minOf(
+            peakHeapMb { AdjustmentsApplier.apply(bmp, all) },
+            peakHeapMb { AdjustmentsApplier.apply(bmp, all) }
+        )
+        val oldMb = minOf(
+            peakHeapMb { AdjustmentsApplier.applyLegacy(bmp, all) },
+            peakHeapMb { AdjustmentsApplier.applyLegacy(bmp, all) }
+        )
+        report.appendLine(
+            "- szczyt sterty ponad stan wyjściowy (przybliżony, ze śmieciami przed GC): " +
+                "nowy $newMb MB, dawny $oldMb MB"
+        )
+        AdjustmentsApplier.apply(bmp, all)
+        report.appendLine(
+            "- nowy potok, ostatni przebieg: analiza ${PipelineStats.analysisMs} ms, " +
+                "pasy ${PipelineStats.stripsMs} ms"
+        )
+    }
+
+    /** Szczyt zajętej sterty (MB) ponad stan po GC sprzed [block], próbkowany co 2 ms; zawiera śmieci przed GC. */
+    @Suppress("ExplicitGarbageCollectionCall") // pomiar pamięci wymaga stanu po GC jako punktu odniesienia
+    private fun peakHeapMb(block: () -> Unit): Long {
+        System.gc()
+        val rt = Runtime.getRuntime()
+        val base = rt.totalMemory() - rt.freeMemory()
+        val peak = java.util.concurrent.atomic.AtomicLong(base)
+        val running = java.util.concurrent.atomic.AtomicBoolean(true)
+        val sampler = Thread {
+            while (running.get()) {
+                peak.accumulateAndGet(rt.totalMemory() - rt.freeMemory(), Math::max)
+                Thread.sleep(SAMPLE_MS)
+            }
+        }
+        sampler.isDaemon = true
+        sampler.start()
+        try {
+            block()
+        } finally {
+            running.set(false)
+            sampler.join()
+        }
+        return (peak.get() - base) / BYTES_PER_MB
     }
 
     // --- narzędzia ---
@@ -494,6 +591,14 @@ class StockPhotoQualityTest {
         const val MAX_TONE_LEAK = 10.0
         const val REAL_HIGHLIGHT = 165.0
         const val PERF_RUNS = 3
+        const val SAMPLE_MS = 2L
+        const val BYTES_PER_MB = 1024L * 1024L
+        const val MAX_PIPELINE_DIFF = 6.0
+        const val BYTE_LEVELS = 256
+        const val MASK_BYTE = 0xFF
+        const val P99_PERCENT = 99
+        const val PERCENT_100 = 100
+        val CHANNEL_SHIFTS = intArrayOf(16, 8, 0)
         const val HALO_R = 2
         const val HALO_STEP = 2
         const val HALO_STRONG = 12.0

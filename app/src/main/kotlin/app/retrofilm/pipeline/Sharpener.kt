@@ -55,13 +55,31 @@ internal object Sharpener {
 
     fun sigmaFor(radius: Float, longSide: Int): Float = (radius * longSide / REF_SIDE).coerceIn(MIN_SIGMA, MAX_SIGMA)
 
-    /** Różnica jasności do dodania (0..255) dla każdego piksela; [stripRows] tylko do testów. */
-    fun delta(luma: FloatArray, w: Int, h: Int, p: SharpenParams, stripRows: Int = STRIP_ROWS): FloatArray {
+    /** Zapas wierszy wokół paska, w którym wynik [delta] jest już poprawny (wpływ sąsiedztwa rozmyć i dekonwolucji). */
+    fun marginFor(p: SharpenParams, longSide: Int): Int {
+        val iterations = if (p.mode == SharpenMode.Deconvolution) ITER_DECONV else ITER_STANDARD
+        val reach = KERNEL_SPAN * sigmaFor(p.radius, longSide) * (iterations * 2 + MARGIN_EXTRA)
+        return kotlin.math.ceil(reach).toInt() + 2
+    }
+
+    /**
+     * Różnica jasności do dodania (0..255) dla każdego piksela; [stripRows] tylko do testów. [longSide] to dłuższy
+     * bok całego obrazu, gdy [luma] jest tylko jego fragmentem (promień zależy od rozmiaru całości).
+     */
+    @Suppress("LongParameterList") // stripRows i longSide to parametry strojenia, nie dane
+    fun delta(
+        luma: FloatArray,
+        w: Int,
+        h: Int,
+        p: SharpenParams,
+        stripRows: Int = STRIP_ROWS,
+        longSide: Int = max(w, h)
+    ): FloatArray {
         val out = FloatArray(luma.size)
         if (p.amount <= 0f) return out
-        val sigma = sigmaFor(p.radius, max(w, h))
+        val sigma = sigmaFor(p.radius, longSide)
         val iterations = if (p.mode == SharpenMode.Deconvolution) ITER_DECONV else ITER_STANDARD
-        val margin = kotlin.math.ceil(KERNEL_SPAN * sigma * (iterations * 2 + MARGIN_EXTRA)).toInt() + 2
+        val margin = marginFor(p, longSide)
         Parallel.rows(h, stripRows) { y0, y1 ->
             val a = max(0, y0 - margin)
             val b = min(h, y1 + margin)

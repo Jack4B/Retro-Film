@@ -10,7 +10,7 @@ import kotlin.math.max
  */
 object DetailFilter {
     private const val CLARITY_RADIUS_DIV = 25
-    private const val CLARITY_TARGET = 600
+    internal const val CLARITY_TARGET = 600
     private const val CLARITY_EPS = 0.0036f
     private const val CLARITY_GAIN = 0.9f
     private const val BOX_PASSES = 3
@@ -59,6 +59,50 @@ object DetailFilter {
             }
         }
         Parallel.range(px.size) { from, to -> for (i in from until to) px[i] = shifted(px[i], delta[i]) }
+    }
+
+    /** Mapa bazowa jasności dla wyrazistości (filtr prowadzony w skali [low]); [base] daje jasność bazy w pikselu. */
+    internal class ClarityMap(private val low: Lowres, private val filtered: FloatArray) {
+        fun base(x: Int, y: Int): Float = low.sample(filtered, x, y) * BYTE_MAX
+    }
+
+    /** Mapa z uśrednionej jasności 0..1 ([lumaUnit]) obrazu zmniejszonego do [low]; ta sama matematyka co w [apply]. */
+    internal fun clarityMap(low: Lowres, lumaUnit: FloatArray): ClarityMap {
+        val radius = max(2, max(low.w, low.h) / CLARITY_RADIUS_DIV)
+        return ClarityMap(low, GuidedFilter.filter(lumaUnit, lumaUnit, low.w, low.h, radius, CLARITY_EPS))
+    }
+
+    /**
+     * Zmiana jasności (wyostrzanie + wyrazistość) dla pasa [luma] o szerokości [w], zaczynającego się w wierszu
+     * [firstRow] obrazu o dłuższym boku [longSide]. Poprawna w wierszach oddalonych od brzegów pasa o co najmniej
+     * [Sharpener.marginFor]. [map] to wynik [clarityMap] (wymagany przy [clarity] ≠ 0).
+     */
+    @Suppress("LongParameterList") // pas, położenie w obrazie i oba ustawienia
+    internal fun planeDelta(
+        luma: FloatArray,
+        w: Int,
+        firstRow: Int,
+        longSide: Int,
+        sharp: SharpenParams,
+        clarity: Float,
+        map: ClarityMap?
+    ): FloatArray {
+        val rows = luma.size / w
+        val delta = if (sharp.amount > 0f) {
+            Sharpener.delta(luma, w, rows, sharp, longSide = longSide)
+        } else {
+            FloatArray(luma.size)
+        }
+        if (clarity != 0f && map != null) {
+            for (y in 0 until rows) {
+                for (x in 0 until w) {
+                    val i = y * w + x
+                    val mid = 1f - abs(2f * luma[i] / BYTE_MAX - 1f)
+                    delta[i] += (luma[i] - map.base(x, firstRow + y)) * clarity * CLARITY_GAIN * mid
+                }
+            }
+        }
+        return delta
     }
 
     /**
