@@ -43,6 +43,31 @@ class WatermarkTest {
         assertEquals(Color.rgb(128, 128, 128), out.getPixel(10, 10))
     }
 
+    @Test fun iconAndNameSitAboveTheQrCode() {
+        val icon = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(255, 0, 0)) }
+        Watermark.icon = icon
+        try {
+            val out = FrameRenderer.render(
+                gray(800, 600),
+                FrameOptions(watermark = true),
+                android.graphics.Typeface.DEFAULT
+            )
+            var red = 0
+            var nameInk = 0
+            for (y in 380 until 520) {
+                for (x in 600 until 800) {
+                    val c = out.getPixel(x, y)
+                    if (Color.red(c) > 200 && Color.green(c) < 60) red++
+                    if (Color.red(c) < 80 && Color.green(c) < 80 && Color.blue(c) < 80 && y < 440) nameInk++
+                }
+            }
+            assertTrue("ikona jest widoczna na karcie", red > 20)
+            assertTrue("nazwa jest widoczna na karcie", nameInk > 20)
+        } finally {
+            Watermark.icon = null
+        }
+    }
+
     @Test fun matrixIsSquareQrVersion3() {
         val urlLen = Watermark.URL.length
         assertTrue(urlLen in 15..42)

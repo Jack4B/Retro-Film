@@ -21,6 +21,7 @@ import app.retrofilm.core.ui.ThemeMode
 import app.retrofilm.core.ui.photo.LocalPhotoRenderer
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.SignatureFont
+import app.retrofilm.pipeline.Watermark
 import app.retrofilm.ui.MainScreen
 import app.retrofilm.ui.MainState
 import app.retrofilm.ui.RetroFilmNavHost
@@ -30,6 +31,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val graph = AppGraph.get(this)
+        Watermark.installIcon(this)
         val typeface = signatureTypeface()
         val fonts = signatureFonts()
         setContent {

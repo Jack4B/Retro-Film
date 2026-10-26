@@ -55,6 +55,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
+import app.retrofilm.pipeline.GeometryMath
+import java.util.Locale
 import kotlin.math.roundToInt
 
 private val MinTouch = 48.dp
@@ -218,6 +220,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
                 }
             )
         }
+        if (shown != null) PreviewReadout(state, shown.width, shown.height, zoom, Modifier.align(Alignment.TopCenter))
         if (shown == null || state.busy) CircularProgressIndicator()
         if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.TopStart))
         if (state.signatureStatus() == SignatureFitStatus.TooLong) {
@@ -228,6 +231,22 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
             )
         }
     }
+}
+
+/** Skala i rozmiar zdjęcia u góry podglądu, żeby było widać, ile pikseli ma zapisywany obraz. */
+@Composable
+private fun PreviewReadout(state: MainState, shownW: Int, shownH: Int, zoom: ZoomState, modifier: Modifier) {
+    val photo = state.photo ?: return
+    val (outW, outH) = GeometryMath.outputSize(photo.width, photo.height, state.geometry)
+    val exportLong = maxOf(outW, outH)
+    val (w, h) = ZoomMath.exportSize(shownW, shownH, exportLong)
+    val percent = ZoomMath.percent(Dim(zoom.size.width, zoom.size.height), Dim(shownW, shownH), exportLong, zoom.scale)
+    val mp = String.format(Locale.forLanguageTag("pl"), "%.1f", ZoomMath.megapixels(w, h))
+    ZoomReadout(
+        text = stringResource(R.string.zoom_readout, percent, w, h, mp),
+        description = stringResource(R.string.zoom_readout_cd, percent, w, h, mp),
+        modifier = modifier.padding(top = EdgePad)
+    )
 }
 
 @Composable
