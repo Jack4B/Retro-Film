@@ -17,7 +17,7 @@ import kotlin.math.min
  */
 @Suppress("TooManyFunctions")
 internal object Dehaze {
-    private const val TARGET = 640
+    internal const val TARGET = 640
     private const val CHANNELS = 3
     private const val PATCH_DIV = 25
     private const val GUIDE_DIV = 40
@@ -43,6 +43,54 @@ internal object Dehaze {
     private const val MAX_GAIN = 1.5f
     private const val ROWS = 64
     private const val SUM_CHUNK = 1 shl 20
+
+    /** Wynik analizy obrazu: światło atmosferyczne, mapa transmisji (w [low]) i kompensacja jasności. */
+    class Plan(val low: Lowres, val airlight: FloatArray, val t: FloatArray, var gain: Float = 1f)
+
+    /** Plan z uśrednionych kanałów [chan] (R, G, B w skali 0..255) obrazu zmniejszonego do [low]. */
+    fun plan(chan: Array<FloatArray>, low: Lowres, amount: Float): Plan {
+        val airlight = airlight(chan, low)
+        val t = transmission(chan, airlight, low, amount.coerceAtMost(1f))
+        protectSky(chan, airlight, t)
+        return Plan(low, airlight, t)
+    }
+
+    /** Dodaje do [sums] (przed, po, liczba) jasność próbki ([x], [y]) o kanałach [rgb] przed i po usunięciu mgły. */
+    fun accumulateGain(plan: Plan, sums: DoubleArray, x: Int, y: Int, rgb: FloatArray) {
+        val tt = max(T_MIN, plan.low.sample(plan.t, x, y))
+        val a = plan.airlight
+        sums[0] += (LUMA_R * rgb[0] + LUMA_G * rgb[1] + LUMA_B * rgb[2]).toDouble()
+        sums[1] += (
+            LUMA_R * restoreF(rgb[0], a[0], tt) + LUMA_G * restoreF(rgb[1], a[1], tt) +
+                LUMA_B * restoreF(rgb[2], a[2], tt)
+            ).toDouble()
+        sums[2] += 1.0
+    }
+
+    /** Kompensacja jasności z sum [accumulateGain]: przywraca połowę utraconej średniej (do +25%). */
+    fun gainOf(sums: DoubleArray): Float {
+        val before = (sums[0] / maxOf(sums[2], 1.0)).toFloat()
+        val after = (sums[1] / maxOf(sums[2], 1.0)).toFloat()
+        return if (after < 1f) 1f else maxOf(1f, 1f + COMPENSATE * ((before / after).coerceIn(1f, MAX_GAIN) - 1f))
+    }
+
+    /** To samo co [apply] na pasie pikseli (skala 0..255, bez zaokrągleń); [xStep] > 1 dla podpróbkowanych wierszy. */
+    fun restorePlanes(plan: Plan, planes: Planes, count: Int, span: PixelSpan, xStep: Int = 1) {
+        var x = 0
+        var row = span.firstRow
+        for (i in 0 until count) {
+            val tt = max(T_MIN, plan.low.sample(plan.t, x * xStep, row))
+            planes.r[i] = (restoreF(planes.r[i], plan.airlight[0], tt) * plan.gain).coerceAtMost(BYTE_MAX)
+            planes.g[i] = (restoreF(planes.g[i], plan.airlight[1], tt) * plan.gain).coerceAtMost(BYTE_MAX)
+            planes.b[i] = (restoreF(planes.b[i], plan.airlight[2], tt) * plan.gain).coerceAtMost(BYTE_MAX)
+            if (++x == span.width) {
+                x = 0
+                row++
+            }
+        }
+    }
+
+    private fun restoreF(v: Float, a: Float, t: Float): Float = ((v - a) / t + a).coerceIn(0f, BYTE_MAX)
 
     /** [amount] 0..1 (0 = bez zmian). Modyfikuje [px] w miejscu. */
     fun apply(px: IntArray, width: Int, height: Int, amount: Float) {

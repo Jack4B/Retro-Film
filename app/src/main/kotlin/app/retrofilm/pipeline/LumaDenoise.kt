@@ -22,6 +22,10 @@ internal object LumaDenoise {
     private const val GREEN_SHIFT = 8
     private const val ALPHA_MASK = 0xFF000000.toInt()
     private const val HALF = 0.5f
+    private const val MAX = 255f
+    private const val LUMA_R = 0.299f
+    private const val LUMA_G = 0.587f
+    private const val LUMA_B = 0.114f
 
     /** [amount] 0..1 (0 = bez zmian). [sigma] < 0 = zmierz szum na obrazie. Modyfikuje [px] w miejscu. */
     @Suppress("LongParameterList") // sigma i stripRows tylko dla testów
@@ -45,6 +49,31 @@ internal object LumaDenoise {
                     px[i] = shifted(px[i], d)
                 }
             }
+        }
+    }
+
+    /** Parametry filtra z miary szumu całego obrazu: promień okna i próg wariancji; [margin] to zapas wierszy pasa. */
+    class Plan(val radius: Int, val eps: Float) {
+        val margin: Int get() = radius * 2 + 1
+    }
+
+    /** Plan odszumiania jasności dla obrazu [width]×[height] i szumu [sigma] (zmierzonego na całości); null przy 0. */
+    fun plan(width: Int, height: Int, amount: Float, sigma: Float): Plan? {
+        if (amount <= 0f) return null
+        val noise = max(MIN_SIGMA, sigma)
+        val k = K_MIN + K_SPAN * amount.coerceAtMost(1f)
+        return Plan(max(MIN_RADIUS, max(width, height) / RADIUS_DIV), (noise * k) * (noise * k))
+    }
+
+    /** To samo co [apply] na pasie [count] pikseli (całe wiersze o szerokości [width]), skala 0..255. */
+    fun applyPlanes(plan: Plan, planes: Planes, count: Int, width: Int) {
+        val luma = FloatArray(count) { LUMA_R * planes.r[it] + LUMA_G * planes.g[it] + LUMA_B * planes.b[it] }
+        val smooth = GuidedFilter.filter(luma, luma, width, count / width, plan.radius, plan.eps)
+        for (i in 0 until count) {
+            val d = smooth[i] - luma[i]
+            planes.r[i] = (planes.r[i] + d).coerceIn(0f, MAX)
+            planes.g[i] = (planes.g[i] + d).coerceIn(0f, MAX)
+            planes.b[i] = (planes.b[i] + d).coerceIn(0f, MAX)
         }
     }
 

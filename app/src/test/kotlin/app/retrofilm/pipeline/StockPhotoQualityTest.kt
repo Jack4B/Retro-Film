@@ -338,6 +338,12 @@ class StockPhotoQualityTest {
                 }.sorted()
                 report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
             }
+            val legacy = List(PERF_RUNS) {
+                val t0 = System.nanoTime()
+                AdjustmentsApplier.applyLegacy(bmp, cases.getValue("wszystko naraz"))
+                (System.nanoTime() - t0) / NANOS_PER_MS
+            }.sorted()
+            report.appendLine("- wszystko naraz, dawny potok (ten sam przebieg): ${legacy[PERF_RUNS / 2]} ms")
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
             failures += "12 Mpx: OutOfMemoryError (pamięć na telefonie będzie jeszcze ciaśniejsza)"

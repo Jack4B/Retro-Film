@@ -92,6 +92,7 @@ data class Adjustments(
  * 4. kontrast krzywą sigmoidalną wokół szarości 0,5 (czernie i biele nieruchome, bez przycięć);
  *    wartości ujemne spłaszczają obraz ku szarości.
  */
+@Suppress("TooManyFunctions") // jeden model korekt: wersje na bajtach i na float oraz etapy pomocnicze
 class AdjustmentProcessor(private val adj: Adjustments) {
     private val m00: Float
     private val m01: Float
@@ -151,10 +152,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val width = span.width
         val firstRow = span.firstRow
         val totalRows = span.totalRows
-        val cell = maxOf(
-            GRAIN_CELL_MIN,
-            maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
-        )
+        val cell = grainCell(width, totalRows)
         var x = 0
         var row = firstRow
         for (i in 0 until count) {
@@ -182,6 +180,72 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             }
         }
     }
+
+    /**
+     * Wersja [process] dla kanałów float (skala 0..255, bez zaokrągleń; [count] pikseli, rzędy szerokości
+     * [PixelSpan.width] od wiersza [PixelSpan.firstRow]): korekty bez efektów (ziarno i winieta idą osobno, po
+     * wyostrzaniu: [effectsPlanes]) i bez kwantyzacji. [xStep] > 1 dla podpróbkowanego wiersza (x = indeks · krok).
+     */
+    internal fun processPlanes(planes: Planes, count: Int, span: PixelSpan, mask: ToneMask?, xStep: Int = 1) {
+        var x = 0
+        var row = span.firstRow
+        for (i in 0 until count) {
+            val lr = linearOf(planes.r[i])
+            val lg = linearOf(planes.g[i])
+            val lb = linearOf(planes.b[i])
+            rgb[0] = encodeLinear(m00 * lr + m01 * lg + m02 * lb)
+            rgb[1] = encodeLinear(m10 * lr + m11 * lg + m12 * lb)
+            rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
+            chroma?.apply(rgb)
+            hsl?.apply(rgb)
+            if (hasTone) toneRecovery(mask, x * xStep, row)
+            contrast?.apply(rgb)
+            curves?.apply(rgb)
+            if (adj.fade > 0f) fade()
+            toning?.apply(rgb, luma())
+            store(planes, i)
+            if (++x == span.width) {
+                x = 0
+                row++
+            }
+        }
+    }
+
+    /** Winieta i ziarno na kanałach float: [count] pikseli od indeksu [from] (początek wiersza), położenie [span]. */
+    internal fun effectsPlanes(planes: Planes, from: Int, count: Int, span: PixelSpan) {
+        if (!hasEffects) return
+        val cell = grainCell(span.width, span.totalRows)
+        var x = 0
+        var row = span.firstRow
+        for (i in from until from + count) {
+            rgb[0] = planes.r[i] / BYTE_MAX
+            rgb[1] = planes.g[i] / BYTE_MAX
+            rgb[2] = planes.b[i] / BYTE_MAX
+            effects(x, row, span.width, span.totalRows, cell)
+            store(planes, i)
+            if (++x == span.width) {
+                x = 0
+                row++
+            }
+        }
+    }
+
+    private fun store(planes: Planes, i: Int) {
+        planes.r[i] = rgb[0].coerceIn(0f, 1f) * BYTE_MAX
+        planes.g[i] = rgb[1].coerceIn(0f, 1f) * BYTE_MAX
+        planes.b[i] = rgb[2].coerceIn(0f, 1f) * BYTE_MAX
+    }
+
+    /** sRGB → światło liniowe dla wartości 0..255 (interpolacja między poziomami, dla całkowitych dokładnie). */
+    private fun linearOf(v: Float): Float {
+        val i = v.toInt().coerceIn(0, BYTE_LEVELS - 2)
+        return toLinear[i] + (toLinear[i + 1] - toLinear[i]) * (v - i).coerceIn(0f, 1f)
+    }
+
+    private fun grainCell(width: Int, totalRows: Int): Float = maxOf(
+        GRAIN_CELL_MIN,
+        maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
+    )
 
     private fun luma() = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]
 
@@ -390,6 +454,18 @@ object AdjustmentsApplier {
     private const val ROWS_PER_CHUNK = 64
 
     fun apply(src: Bitmap, adj: Adjustments): Bitmap {
+        if (adj.isNeutral || adj.sharpMaskPreview) return applyLegacy(src, adj)
+        val out = StripPipeline.run(src, adj)
+        val blender = MaskBlender(adj.masks, out.width, out.height).takeUnless { it.isEmpty }
+        if (blender != null) blendMasks(out, blender, adj.masks.any { it.hasEffect && it.usesTone })
+        return out
+    }
+
+    /**
+     * Dawny potok: kilka przebiegów na pełnych tablicach 8-bitowych (odszumianie, dehaze, korekty, maski, ostrość).
+     * Zostaje do podglądu maski ostrości i jako wzorzec w testach równoważności z [StripPipeline].
+     */
+    internal fun applyLegacy(src: Bitmap, adj: Adjustments): Bitmap {
         if (adj.isNeutral) return src
         return applyTo(if (adj.hasRestoration) restore(src, adj) else src, adj)
     }
