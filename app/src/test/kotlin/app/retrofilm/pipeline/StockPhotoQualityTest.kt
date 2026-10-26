@@ -60,6 +60,7 @@ class StockPhotoQualityTest {
         tiles += listOf(shadows, highlights, clarity)
         checkTone(name, px, pixels(shadows), pixels(highlights))
         checkBrightRegion(name, px, pixels(highlights), src.width, src.height)
+        checkDarkRegion(name, px, pixels(shadows), src.width, src.height)
         checkClarity(name, px, pixels(clarity), src.width, src.height)
 
         val (clean, hazy) = synthHaze(px, src.width, src.height)
@@ -148,6 +149,50 @@ class StockPhotoQualityTest {
             failures += "$name: światła spłaszczają jasny obszar (×${f2(contrastRatio)})"
         }
         if (chromaRatio < MIN_BRIGHT_RATIO) failures += "$name: światła szarzeją jasny obszar (×${f2(chromaRatio)})"
+    }
+
+    /**
+     * Ciemny obszar (dolna ćwiartka jasności) po cieniach +100%: faktura nie może się spłaszczyć (kontrast lokalny ≥ 0,9),
+     * a szum nie może wybuchnąć (energia drobnego detalu najwyżej 3×); barwność ma nie spaść.
+     */
+    private fun checkDarkRegion(name: String, orig: IntArray, shadows: IntArray, w: Int, h: Int) {
+        val dark = orig.indices.sortedBy { luma(orig[it]) }.take(orig.size / 4)
+        val mask = BooleanArray(orig.size).also { m -> dark.forEach { m[it] = true } }
+        val c0 = localContrast(orig, mask, w, h)
+        val c1 = localContrast(shadows, mask, w, h)
+        val n0 = fineDetail(orig, mask, w, h)
+        val n1 = fineDetail(shadows, mask, w, h)
+        val k0 = dark.map { chromaOf(orig[it]) }.average()
+        val k1 = dark.map { chromaOf(shadows[it]) }.average()
+        val contrastRatio = if (c0 > 0.0) c1 / c0 else 1.0
+        val noiseRatio = if (n0 > 0.0) n1 / n0 else 1.0
+        val chromaRatio = if (k0 > 0.0) k1 / k0 else 1.0
+        report.appendLine(
+            "- Ciemny obszar po cieniach +100%: lokalny kontrast ${f1(c0)} → ${f1(c1)} (×${f2(contrastRatio)}), " +
+                "drobny detal/szum ×${f2(noiseRatio)}, barwność ${f1(k0)} → ${f1(k1)} (×${f2(chromaRatio)})"
+        )
+        if (contrastRatio <
+            MIN_BRIGHT_RATIO
+        ) {
+            failures += "$name: cienie spłaszczają ciemny obszar (×${f2(contrastRatio)})"
+        }
+        if (noiseRatio > MAX_NOISE_RATIO) failures += "$name: cienie wzmacniają szum (×${f2(noiseRatio)})"
+        if (chromaRatio < MIN_BRIGHT_RATIO) failures += "$name: cienie odbarwiają ciemny obszar (×${f2(chromaRatio)})"
+    }
+
+    /** Energia drobnego detalu (laplasjan 3×3) w [mask]; przy rozjaśnianiu cieni rośnie głównie szum. */
+    private fun fineDetail(px: IntArray, mask: BooleanArray, w: Int, h: Int): Double {
+        var sum = 0.0
+        var n = 0
+        for (y in 1 until h - 1) {
+            for (x in 1 until w - 1) {
+                val i = y * w + x
+                if (!mask[i]) continue
+                sum += abs(4 * luma(px[i]) - luma(px[i - 1]) - luma(px[i + 1]) - luma(px[i - w]) - luma(px[i + w]))
+                n++
+            }
+        }
+        return if (n == 0) 0.0 else sum / n
     }
 
     private fun chromaOf(c: Int): Double {
@@ -392,6 +437,7 @@ class StockPhotoQualityTest {
         const val MAX_LUMA_DRIFT = 4.0
         const val MIN_TONE_GAIN = 5.0
         const val MIN_BRIGHT_RATIO = 0.9
+        const val MAX_NOISE_RATIO = 3.0
         const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
         const val MAX_HUE_SHIFT = 4.0
