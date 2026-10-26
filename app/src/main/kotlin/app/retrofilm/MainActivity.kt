@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
             initializer {
                 val app = applicationContext
                 val res = app.resources
-                MainState(AppGraph.get(app), signatureTypeface(res), signatureFonts(res))
+                MainStateHolder(MainState(AppGraph.get(app), signatureTypeface(res), signatureFonts(res)))
             }
         }
     }
