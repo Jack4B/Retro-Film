@@ -46,14 +46,16 @@ class GamutMapperTest {
         assertEquals(ColorPolicy.SRGB, out.colorSpace)
     }
 
-    @Test fun inGamutColoursMatchSkiaWithinTwoLevels() {
-        val src = p3Bitmap(Triple(128, 128, 128), Triple(120, 90, 70), Triple(90, 110, 130), Triple(180, 170, 150))
-        val mapped = GamutMapper.toSrgb(src)
-        val skia = ColorPolicy.toSrgbClipped(src)
-        for (x in 0 until 4) {
-            val a = channels(mapped, x)
-            val b = channels(skia, x)
-            for (k in 0..2) assertTrue("piksel $x kanał $k: ${a[k]} vs ${b[k]}", abs(a[k] - b[k]) <= 2)
+    @Test fun inGamutColoursMatchColorSpaceConnectorWithinOneLevel() {
+        val colours = listOf(Triple(128, 128, 128), Triple(120, 90, 70), Triple(90, 110, 130), Triple(180, 170, 150))
+        val mapped = GamutMapper.toSrgb(p3Bitmap(*colours.toTypedArray()))
+        val connector = ColorSpace.connect(p3, ColorSpace.get(ColorSpace.Named.SRGB))
+        colours.forEachIndexed { x, (r, g, b) ->
+            val expected = connector.transform(r / 255f, g / 255f, b / 255f).map { Math.round(it * 255f) }
+            val actual = channels(mapped, x)
+            for (k in 0..2) {
+                assertTrue("piksel $x kanał $k: ${actual[k]} vs ${expected[k]}", abs(actual[k] - expected[k]) <= 1)
+            }
         }
     }
 
