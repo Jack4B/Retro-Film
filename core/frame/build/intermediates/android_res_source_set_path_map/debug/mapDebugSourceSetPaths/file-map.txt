@@ -1,0 +1,9 @@
+app.retrofilm.core.frame-pngs-0 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/generated/res/pngs/debug
+app.retrofilm.core.frame-updated_navigation_xml-1 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/generated/updated_navigation_xml/debug
+app.retrofilm.core.frame-mergeDebugResources-2 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/intermediates/incremental/debug/mergeDebugResources/merged.dir
+app.retrofilm.core.frame-mergeDebugResources-3 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/intermediates/incremental/debug/mergeDebugResources/stripped.dir
+app.retrofilm.core.frame-debug-4 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/intermediates/merged_res/debug/mergeDebugResources
+app.retrofilm.core.frame-debug-5 /home/runner/work/Retro-Film/Retro-Film/core/frame/build/intermediates/packaged_res/debug/packageDebugResources
+app.retrofilm.core.frame-debug-6 /home/runner/work/Retro-Film/Retro-Film/core/frame/src/debug/res
+app.retrofilm.core.frame-main-7 /home/runner/work/Retro-Film/Retro-Film/core/frame/src/main/res
+gradleHome-0 /home/runner/.gradle

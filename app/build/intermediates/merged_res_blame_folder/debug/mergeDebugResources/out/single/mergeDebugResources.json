@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "app.retrofilm.app-debug-50:/drawable_ic_launcher_monochrome.xml.flat",
+        "source": "app.retrofilm.app-main-52:/drawable/ic_launcher_monochrome.xml"
+    },
+    {
+        "merged": "app.retrofilm.app-debug-50:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "app.retrofilm.app-main-52:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "app.retrofilm.app-debug-50:/mipmap-anydpi_ic_launcher.xml.flat",
+        "source": "app.retrofilm.app-main-52:/mipmap-anydpi/ic_launcher.xml"
+    },
+    {
+        "merged": "app.retrofilm.app-debug-50:/xml_selftest_paths.xml.flat",
+        "source": "app.retrofilm.app-debug-51:/xml/selftest_paths.xml"
+    },
+    {
+        "merged": "app.retrofilm.app-debug-50:/mipmap-anydpi_ic_launcher_round.xml.flat",
+        "source": "app.retrofilm.app-main-52:/mipmap-anydpi/ic_launcher_round.xml"
+    }
+]

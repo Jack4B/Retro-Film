@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="export_back">Wstecz</string>
+    <string name="export_frame_cd">Ramka i podpis: %1$s</string>
+    <string name="export_frame_click_label">Otwórz ustawienia ramki</string>
+    <string name="export_frame_none">Bez ramki (domyślnie) · dotknij, aby dodać</string>
+    <string name="export_frame_none_cd">bez ramki, dotknij, aby dodać</string>
+    <string name="export_frame_title">Ramka i podpis</string>
+    <string name="export_percent">%1$d%%</string>
+    <string name="export_percent_state">%1$d procent</string>
+    <string name="export_privacy_body">Zapisywany jest tylko obraz: metadane aparatu i lokalizacja są usuwane. Zdjęcia przetwarzane lokalnie. Internet służy tylko do pobierania filtrów. Zdjęcia nie opuszczają telefonu.</string>
+    <string name="export_privacy_title">Prywatność</string>
+    <string name="export_progress">Eksport %1$d/%2$d</string>
+    <string name="export_progress_cd">Postęp eksportu %1$d z %2$d</string>
+    <string name="export_quality">Jakość JPEG</string>
+    <string name="export_save">Zapisz do galerii</string>
+    <string name="export_save_series">Zapisz serię do galerii</string>
+    <string name="export_size">Rozmiar</string>
+    <string name="export_size_cd">Rozmiar %1$s</string>
+    <string name="export_size_large">2048 px</string>
+    <string name="export_size_original">Oryginał</string>
+    <string name="export_size_social">1080 px</string>
+    <string name="export_title">Eksport</string>
+    <string name="export_title_series">Eksport serii (%1$d)</string>
+</resources>

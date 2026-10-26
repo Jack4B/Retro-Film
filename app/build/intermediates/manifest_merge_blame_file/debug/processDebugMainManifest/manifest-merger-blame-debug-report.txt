@@ -1,0 +1,295 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="app.retrofilm"
+4    android:versionCode="10005020"
+5    android:versionName="1.0.5" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="26"
+8-->INJECTED
+9        android:targetSdkVersion="37" />
+9-->INJECTED
+10    <!-- D8: sieć wyłącznie do pobierania filtrów (raw.githubusercontent.com, tag luts-v1). -->
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:4:5-67
+11-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:5:5-79
+12-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.WAKE_LOCK" />
+13-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:23:5-68
+13-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:23:22-65
+14    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+14-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:25:5-81
+14-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:25:22-78
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+15-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:26:5-77
+15-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:26:22-74
+16
+17    <permission
+17-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:22:5-24:47
+18        android:name="app.retrofilm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+18-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:23:9-81
+19        android:protectionLevel="signature" />
+19-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:24:9-44
+20
+21    <uses-permission android:name="app.retrofilm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+21-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:26:5-97
+21-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:26:22-94
+22
+23    <application
+23-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:7:5-21:19
+24        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+24-->[androidx.core:core:1.19.1] /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1/AndroidManifest.xml:28:18-86
+25        android:debuggable="true"
+26        android:extractNativeLibs="false"
+26-->INJECTED
+27        android:icon="@mipmap/ic_launcher"
+27-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:8:9-43
+28        android:label="@string/app_name"
+28-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:9:9-41
+29        android:roundIcon="@mipmap/ic_launcher_round"
+29-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:10:9-54
+30        android:theme="@android:style/Theme.Material.NoActionBar" >
+30-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:11:9-66
+31        <activity
+31-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:4:9-13:20
+32            android:name="app.retrofilm.selftest.SelfTestActivity"
+32-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:5:13-54
+33            android:exported="true"
+33-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:6:13-36
+34            android:label="RF Test GPU vs CPU"
+34-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:7:13-47
+35            android:taskAffinity="app.retrofilm.selftest" >
+35-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:8:13-58
+36            <intent-filter>
+36-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:16:13-19:29
+37                <action android:name="android.intent.action.MAIN" />
+37-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:17:17-69
+37-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:17:25-66
+38
+39                <category android:name="android.intent.category.LAUNCHER" />
+39-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:18:17-77
+39-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:18:27-74
+40            </intent-filter>
+41        </activity>
+42
+43        <provider
+43-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:14:9-22:20
+44            android:name="androidx.core.content.FileProvider"
+44-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:15:13-62
+45            android:authorities="app.retrofilm.selftest.files"
+45-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:16:13-66
+46            android:exported="false"
+46-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:17:13-37
+47            android:grantUriPermissions="true" >
+47-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:18:13-47
+48            <meta-data
+48-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:19:13-21:58
+49                android:name="android.support.FILE_PROVIDER_PATHS"
+49-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:20:17-67
+50                android:resource="@xml/selftest_paths" />
+50-->/home/runner/work/Retro-Film/Retro-Film/app/src/debug/AndroidManifest.xml:21:17-55
+51        </provider>
+52
+53        <activity
+53-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:12:9-20:20
+54            android:name="app.retrofilm.MainActivity"
+54-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:13:13-41
+55            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden|density"
+55-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:14:13-114
+56            android:exported="true" >
+56-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:15:13-36
+57            <intent-filter>
+57-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:16:13-19:29
+58                <action android:name="android.intent.action.MAIN" />
+58-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:17:17-69
+58-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:17:25-66
+59
+60                <category android:name="android.intent.category.LAUNCHER" />
+60-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:18:17-77
+60-->/home/runner/work/Retro-Film/Retro-Film/app/src/main/AndroidManifest.xml:18:27-74
+61            </intent-filter>
+62        </activity>
+63        <activity
+63-->[androidx.compose.ui:ui-tooling-android:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/7eb22f431500f5139327e3123c5f87ce/transformed/ui-tooling/AndroidManifest.xml:23:9-25:39
+64            android:name="androidx.compose.ui.tooling.PreviewActivity"
+64-->[androidx.compose.ui:ui-tooling-android:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/7eb22f431500f5139327e3123c5f87ce/transformed/ui-tooling/AndroidManifest.xml:24:13-71
+65            android:exported="true" />
+65-->[androidx.compose.ui:ui-tooling-android:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/7eb22f431500f5139327e3123c5f87ce/transformed/ui-tooling/AndroidManifest.xml:25:13-36
+66        <activity
+66-->[androidx.compose.ui:ui-test-manifest:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/bef90af1bf366f28b13326ba37a6ec1a/transformed/ui-test-manifest-1.12.1/AndroidManifest.xml:23:9-26:79
+67            android:name="androidx.activity.ComponentActivity"
+67-->[androidx.compose.ui:ui-test-manifest:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/bef90af1bf366f28b13326ba37a6ec1a/transformed/ui-test-manifest-1.12.1/AndroidManifest.xml:24:13-63
+68            android:exported="true"
+68-->[androidx.compose.ui:ui-test-manifest:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/bef90af1bf366f28b13326ba37a6ec1a/transformed/ui-test-manifest-1.12.1/AndroidManifest.xml:25:13-36
+69            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+69-->[androidx.compose.ui:ui-test-manifest:1.12.1] /home/runner/.gradle/caches/9.8.2/transforms/bef90af1bf366f28b13326ba37a6ec1a/transformed/ui-test-manifest-1.12.1/AndroidManifest.xml:26:13-76
+70
+71        <provider
+71-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:29:9-37:20
+72            android:name="androidx.startup.InitializationProvider"
+72-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:30:13-67
+73            android:authorities="app.retrofilm.androidx-startup"
+73-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:31:13-68
+74            android:exported="false" >
+74-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:32:13-37
+75            <meta-data
+75-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:34:13-36:52
+76                android:name="androidx.work.WorkManagerInitializer"
+76-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:35:17-68
+77                android:value="androidx.startup" />
+77-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:36:17-49
+78            <meta-data
+78-->[androidx.emoji2:emoji2:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ed05748edad5cc670865b758376e5acf/transformed/emoji2-1.4.0/AndroidManifest.xml:29:13-31:52
+79                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+79-->[androidx.emoji2:emoji2:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ed05748edad5cc670865b758376e5acf/transformed/emoji2-1.4.0/AndroidManifest.xml:30:17-75
+80                android:value="androidx.startup" />
+80-->[androidx.emoji2:emoji2:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ed05748edad5cc670865b758376e5acf/transformed/emoji2-1.4.0/AndroidManifest.xml:31:17-49
+81            <meta-data
+81-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/runner/.gradle/caches/9.8.2/transforms/2b39e43aa01b355327ad9611284a0e25/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:29:13-31:52
+82                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+82-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/runner/.gradle/caches/9.8.2/transforms/2b39e43aa01b355327ad9611284a0e25/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:30:17-78
+83                android:value="androidx.startup" />
+83-->[androidx.lifecycle:lifecycle-process:2.10.0] /home/runner/.gradle/caches/9.8.2/transforms/2b39e43aa01b355327ad9611284a0e25/transformed/lifecycle-process-2.10.0/AndroidManifest.xml:31:17-49
+84            <meta-data
+84-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
+85                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+85-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
+86                android:value="androidx.startup" />
+86-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
+87        </provider>
+88
+89        <service
+89-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:39:9-45:35
+90            android:name="androidx.work.impl.background.systemjob.SystemJobService"
+90-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:40:13-84
+91            android:directBootAware="false"
+91-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:41:13-44
+92            android:enabled="@bool/enable_system_job_service_default"
+92-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:42:13-70
+93            android:exported="true"
+93-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:43:13-36
+94            android:permission="android.permission.BIND_JOB_SERVICE" />
+94-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:44:13-69
+95        <service
+95-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:46:9-52:35
+96            android:name="androidx.work.impl.foreground.SystemForegroundService"
+96-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:47:13-81
+97            android:directBootAware="false"
+97-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:48:13-44
+98            android:enabled="@bool/enable_system_foreground_service_default"
+98-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:49:13-77
+99            android:exported="false" />
+99-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:50:13-37
+100
+101        <receiver
+101-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:54:9-59:35
+102            android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"
+102-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:55:13-88
+103            android:directBootAware="false"
+103-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:56:13-44
+104            android:enabled="true"
+104-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:57:13-35
+105            android:exported="false" />
+105-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:58:13-37
+106        <receiver
+106-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:60:9-69:20
+107            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
+107-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:61:13-88
+108            android:directBootAware="false"
+108-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:62:13-44
+109            android:enabled="false"
+109-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:63:13-36
+110            android:exported="false" >
+110-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:64:13-37
+111            <intent-filter>
+111-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:66:13-68:29
+112                <action android:name="android.intent.action.BOOT_COMPLETED" />
+112-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:67:17-79
+112-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:67:25-76
+113            </intent-filter>
+114        </receiver>
+115        <receiver
+115-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:70:9-80:20
+116            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+116-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:71:13-78
+117            android:directBootAware="false"
+117-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:72:13-44
+118            android:enabled="true"
+118-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:73:13-35
+119            android:exported="true"
+119-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:74:13-36
+120            android:permission="android.permission.DUMP" >
+120-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:75:13-57
+121            <intent-filter>
+121-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:77:13-79:29
+122                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS" />
+122-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:78:17-88
+122-->[androidx.work:work-runtime:2.12.0] /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0/AndroidManifest.xml:78:25-85
+123            </intent-filter>
+124        </receiver>
+125
+126        <uses-library
+126-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:23:9-25:40
+127            android:name="androidx.window.extensions"
+127-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:24:13-54
+128            android:required="false" />
+128-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:25:13-37
+129        <uses-library
+129-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:26:9-28:40
+130            android:name="androidx.window.sidecar"
+130-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:27:13-51
+131            android:required="false" />
+131-->[androidx.window:window:1.5.0] /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0/AndroidManifest.xml:28:13-37
+132
+133        <service
+133-->[androidx.room:room-runtime-android:2.7.0] /home/runner/.gradle/caches/9.8.2/transforms/ba171997ef7e8601433a8036664974e7/transformed/room-runtime-release/AndroidManifest.xml:24:9-28:63
+134            android:name="androidx.room.MultiInstanceInvalidationService"
+134-->[androidx.room:room-runtime-android:2.7.0] /home/runner/.gradle/caches/9.8.2/transforms/ba171997ef7e8601433a8036664974e7/transformed/room-runtime-release/AndroidManifest.xml:25:13-74
+135            android:directBootAware="true"
+135-->[androidx.room:room-runtime-android:2.7.0] /home/runner/.gradle/caches/9.8.2/transforms/ba171997ef7e8601433a8036664974e7/transformed/room-runtime-release/AndroidManifest.xml:26:13-43
+136            android:exported="false" />
+136-->[androidx.room:room-runtime-android:2.7.0] /home/runner/.gradle/caches/9.8.2/transforms/ba171997ef7e8601433a8036664974e7/transformed/room-runtime-release/AndroidManifest.xml:27:13-37
+137
+138        <receiver
+138-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
+139            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+139-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
+140            android:directBootAware="false"
+140-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
+141            android:enabled="true"
+141-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
+142            android:exported="true"
+142-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
+143            android:permission="android.permission.DUMP" >
+143-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
+144            <intent-filter>
+144-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
+145                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+145-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
+145-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
+146            </intent-filter>
+147            <intent-filter>
+147-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
+148                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+148-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
+148-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
+149            </intent-filter>
+150            <intent-filter>
+150-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
+151                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+151-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
+151-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
+152            </intent-filter>
+153            <intent-filter>
+153-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
+154                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+154-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
+154-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
+155            </intent-filter>
+156        </receiver>
+157    </application>
+158
+159</manifest>

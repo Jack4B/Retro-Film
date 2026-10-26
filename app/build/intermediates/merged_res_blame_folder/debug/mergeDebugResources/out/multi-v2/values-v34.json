@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "app.retrofilm.app-mergeDebugResources-48:/values-v34/values-v34.xml",
+            "map": [
+                {
+                    "source": "/home/runner/.gradle/caches/9.8.2/transforms/514b1bdbe1f1ad8fac0068d5551fc9c2/transformed/material3/res/values-v34/values-v34.xml",
+                    "from": {
+                        "startLines": "2,47",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,4020",
+                        "endLines": "46,91",
+                        "endColumns": "12,12",
+                        "endOffsets": "4015,8006"
+                    }
+                }
+            ]
+        }
+    ]
+}

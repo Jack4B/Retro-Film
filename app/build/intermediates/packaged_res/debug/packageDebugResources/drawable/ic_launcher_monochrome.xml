@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wersja jednokolorowa (ikony motywowane, Android 13+): sylwetka aparatu z otworami (even-odd). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="1.0"
+        android:scaleY="1.0"
+        android:translateY="1.5">
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M28,36 H80 A4,4 0 0 1 84,40 V70 A4,4 0 0 1 80,74 H28 A4,4 0 0 1 24,70 V40 A4,4 0 0 1 28,36 Z M29.5,39 H38 A1.5,1.5 0 0 1 39.5,40.5 V43 A1.5,1.5 0 0 1 38,44.5 H29.5 A1.5,1.5 0 0 1 28,43 V40.5 A1.5,1.5 0 0 1 29.5,39 Z M75.4,41.5 a2.6,2.6 0 1,0 5.2,0 a2.6,2.6 0 1,0 -5.2,0 Z M42,60.5 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z M44.4,60.5 a9.6,9.6 0 1,0 19.2,0 a9.6,9.6 0 1,0 -19.2,0 Z M48,60.5 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 Z M50.6,60.5 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 Z M40,36 L42.5,30.5 H57.5 L60,36 Z" />
+    </group>
+</vector>

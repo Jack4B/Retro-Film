@@ -1,0 +1,125 @@
+# Raport jakości algorytmów
+
+## aloe (1282×1110)
+
+- Cienie +100%: ciemna ćwiartka +6.9, prawdziwe światła -0.0; światła −100%: jasna ćwiartka −56.4, prawdziwe cienie -0.2; przesunięcie barwy 0.1°
+- Jasny obszar po światłach −100%: lokalny kontrast 11.8 → 14.8 (×1.26), barwność 35.4 → 40.3 (×1.14)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 9.6 → 9.0 (×0.94), drobny detal/szum ×0.98, barwność 60.3 → 62.3 (×1.03)
+- Wyrazistość 80%: energia detalu 13.8 → 18.7, zmiana średniej jasności 1.0
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.27, > 12 w 0.1% pikseli
+- Dehaze: PSNR zamglonego 18.1 dB → po dehaze 23.4 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.68, p99 4; wszystko (bez ziarna): średnia 1.09, p99 5
+- Odszumianie: błąd chrominancji 19.7 → 9.8, dryf jasności 1.6
+- Kolor: barwność 40.0 → nasycenie +60% 56.4, zestaw „look” 38.5; ciepło +40%: R−B +19.7
+
+## beach_overcast (1352×900)
+
+- Cienie +100%: ciemna ćwiartka +3.8, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −63.2, prawdziwe cienie -0.7; przesunięcie barwy 0.0°
+- Jasny obszar po światłach −100%: lokalny kontrast 2.2 → 3.2 (×1.45), barwność 3.7 → 4.3 (×1.15)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 9.6 → 9.1 (×0.95), drobny detal/szum ×0.98, barwność 64.7 → 65.9 (×1.02)
+- Wyrazistość 80%: energia detalu 11.5 → 15.4, zmiana średniej jasności 0.5
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.19, > 12 w 0.1% pikseli
+- Dehaze: PSNR zamglonego 23.6 dB → po dehaze 27.4 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 1.24, p99 7; wszystko (bez ziarna): średnia 1.07, p99 6
+- Odszumianie: błąd chrominancji 19.4 → 6.4, dryf jasności 1.5
+- Kolor: barwność 37.6 → nasycenie +60% 47.5, zestaw „look” 34.9; ciepło +40%: R−B +22.9
+
+## beagles (1024×636)
+
+- Cienie +100%: ciemna ćwiartka +30.9, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −24.6, prawdziwe cienie -0.0; przesunięcie barwy 0.2°
+- Jasny obszar po światłach −100%: lokalny kontrast 6.8 → 6.5 (×0.97), barwność 55.7 → 58.4 (×1.05)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 5.4 → 5.3 (×0.99), drobny detal/szum ×1.08, barwność 27.6 → 36.6 (×1.33)
+- Wyrazistość 80%: energia detalu 7.4 → 8.3, zmiana średniej jasności 0.3
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.08, > 12 w 0.0% pikseli
+- Dehaze: PSNR zamglonego 12.6 dB → po dehaze 18.0 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.60, p99 3; wszystko (bez ziarna): średnia 0.67, p99 3
+- Odszumianie: błąd chrominancji 19.6 → 6.3, dryf jasności 1.5
+- Kolor: barwność 55.5 → nasycenie +60% 70.8, zestaw „look” 48.8; ciepło +40%: R−B +11.9
+
+## boat_clouds (1600×1066)
+
+- Cienie +100%: ciemna ćwiartka +36.5, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −14.1, prawdziwe cienie -0.0; przesunięcie barwy 0.3°
+- Jasny obszar po światłach −100%: lokalny kontrast 3.5 → 3.9 (×1.10), barwność 21.7 → 22.6 (×1.04)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 5.3 → 5.2 (×0.98), drobny detal/szum ×1.00, barwność 17.6 → 22.1 (×1.25)
+- Wyrazistość 80%: energia detalu 8.4 → 12.4, zmiana średniej jasności 0.2
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.14, > 12 w 0.1% pikseli
+- Dehaze: PSNR zamglonego 15.2 dB → po dehaze 20.1 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.56, p99 3; wszystko (bez ziarna): średnia 0.86, p99 6
+- Odszumianie: błąd chrominancji 19.7 → 4.1, dryf jasności 1.5
+- Kolor: barwność 28.8 → nasycenie +60% 39.7, zestaw „look” 26.5; ciepło +40%: R−B +13.7
+
+## boat_ice (1600×1066)
+
+- Cienie +100%: ciemna ćwiartka +36.3, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −11.2, prawdziwe cienie -0.2; przesunięcie barwy 0.4°
+- Jasny obszar po światłach −100%: lokalny kontrast 6.0 → 6.4 (×1.07), barwność 16.3 → 16.8 (×1.03)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 4.2 → 4.0 (×0.95), drobny detal/szum ×1.02, barwność 17.3 → 22.1 (×1.28)
+- Wyrazistość 80%: energia detalu 9.5 → 14.1, zmiana średniej jasności 0.2
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.18, > 12 w 0.3% pikseli
+- Dehaze: PSNR zamglonego 14.9 dB → po dehaze 16.2 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.51, p99 3; wszystko (bez ziarna): średnia 0.93, p99 8
+- Odszumianie: błąd chrominancji 19.7 → 3.4, dryf jasności 1.5
+- Kolor: barwność 30.3 → nasycenie +60% 45.7, zestaw „look” 28.1; ciepło +40%: R−B +14.5
+
+## boat_reflections (1600×1066)
+
+- Cienie +100%: ciemna ćwiartka +37.8, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −8.9, prawdziwe cienie -0.1; przesunięcie barwy 0.3°
+- Jasny obszar po światłach −100%: lokalny kontrast 4.3 → 4.7 (×1.09), barwność 19.4 → 20.0 (×1.03)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 3.3 → 3.1 (×0.96), drobny detal/szum ×1.03, barwność 23.5 → 30.3 (×1.29)
+- Wyrazistość 80%: energia detalu 8.0 → 12.1, zmiana średniej jasności 0.2
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.13, > 12 w 0.1% pikseli
+- Dehaze: PSNR zamglonego 14.7 dB → po dehaze 15.8 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.59, p99 3; wszystko (bez ziarna): średnia 0.83, p99 6
+- Odszumianie: błąd chrominancji 19.7 → 3.4, dryf jasności 1.5
+- Kolor: barwność 33.5 → nasycenie +60% 51.9, zestaw „look” 30.5; ciepło +40%: R−B +14.1
+
+## portrait_stadium (1280×720)
+
+- Cienie +100%: ciemna ćwiartka +6.9, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −5.5, prawdziwe cienie -0.0; przesunięcie barwy 0.3°
+- Jasny obszar po światłach −100%: lokalny kontrast 6.8 → 6.7 (×0.98), barwność 37.1 → 37.8 (×1.02)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 2.0 → 2.5 (×1.23), drobny detal/szum ×1.30, barwność 4.3 → 5.7 (×1.33)
+- Wyrazistość 80%: energia detalu 5.3 → 7.2, zmiana średniej jasności 0.6
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.04, > 12 w 0.0% pikseli
+- Dehaze: PSNR zamglonego 11.8 dB → po dehaze 15.9 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.47, p99 3; wszystko (bez ziarna): średnia 0.70, p99 5
+- Odszumianie: błąd chrominancji 18.4 → 3.7, dryf jasności 1.4
+- Kolor: barwność 34.2 → nasycenie +60% 44.9, zestaw „look” 29.2; ciepło +40%: R−B +7.7
+
+## street_bus (810×1080)
+
+- Cienie +100%: ciemna ćwiartka +25.7, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −38.6, prawdziwe cienie -0.3; przesunięcie barwy 0.2°
+- Jasny obszar po światłach −100%: lokalny kontrast 18.6 → 21.0 (×1.13), barwność 29.0 → 32.0 (×1.10)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 14.1 → 13.5 (×0.96), drobny detal/szum ×0.99, barwność 27.2 → 35.8 (×1.32)
+- Wyrazistość 80%: energia detalu 35.6 → 36.8, zmiana średniej jasności 0.1
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.71, > 12 w 1.4% pikseli
+- Dehaze: PSNR zamglonego 13.9 dB → po dehaze 18.2 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.53, p99 4; wszystko (bez ziarna): średnia 0.89, p99 6
+- Odszumianie: błąd chrominancji 19.1 → 6.7, dryf jasności 1.5
+- Kolor: barwność 45.2 → nasycenie +60% 54.9, zestaw „look” 39.3; ciepło +40%: R−B +15.6
+
+## white_dog (1546×1213)
+
+- Cienie +100%: ciemna ćwiartka +23.1, prawdziwe światła 0.0; światła −100%: jasna ćwiartka −56.2, prawdziwe cienie -0.0; przesunięcie barwy 0.4°
+- Jasny obszar po światłach −100%: lokalny kontrast 2.5 → 3.7 (×1.50), barwność 6.5 → 7.3 (×1.13)
+- Ciemny obszar po cieniach +100%: lokalny kontrast 5.0 → 5.5 (×1.09), drobny detal/szum ×1.10, barwność 14.7 → 19.5 (×1.33)
+- Wyrazistość 80%: energia detalu 9.5 → 12.9, zmiana średniej jasności 0.4
+- Ostrość 100%: przestrzelenie na krawędziach średnio 0.10, > 12 w 0.0% pikseli
+- Dehaze: PSNR zamglonego 11.7 dB → po dehaze 20.2 dB
+- Potok pasmowy vs dawny: odszumianie + dehaze: średnia 0.55, p99 3; wszystko (bez ziarna): średnia 0.75, p99 5
+- Odszumianie: błąd chrominancji 19.1 → 8.0, dryf jasności 1.6
+- Kolor: barwność 27.3 → nasycenie +60% 42.1, zestaw „look” 25.1; ciepło +40%: R−B +13.2
+
+## Wydajność (runner CI, 12 Mpx = 4000×3000, 4 rdzenie, wątki robocze: 4, mediana z 3 po rozgrzewce)
+
+- korekty podstawowe: 757 ms
+- cienie i światła: 519 ms
+- wyrazistość + ostrość: 1204 ms
+- dehaze: 508 ms
+- odszumianie kolorów: 422 ms
+- wszystko naraz: 2886 ms
+- wszystko naraz, dawny potok (ten sam przebieg): 2501 ms
+- szczyt sterty ponad stan wyjściowy (przybliżony, ze śmieciami przed GC): nowy 430 MB, dawny 435 MB
+- nowy potok, ostatni przebieg: analiza 565 ms, pasy 2331 ms
+
+## Niezgodności
+
+Brak.

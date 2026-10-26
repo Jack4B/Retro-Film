@@ -1,0 +1,23 @@
+app.retrofilm.feature.batch
+string export_back
+string export_frame_cd
+string export_frame_click_label
+string export_frame_none
+string export_frame_none_cd
+string export_frame_title
+string export_percent
+string export_percent_state
+string export_privacy_body
+string export_privacy_title
+string export_progress
+string export_progress_cd
+string export_quality
+string export_save
+string export_save_series
+string export_size
+string export_size_cd
+string export_size_large
+string export_size_original
+string export_size_social
+string export_title
+string export_title_series
