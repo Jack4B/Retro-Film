@@ -150,32 +150,40 @@ class SliderRegressionTest {
         return if (n == 0) 0.0 else sum / n
     }
 
-    /** Udział próbek, w których wynik wychodzi o ponad [HALO_STRONG] poziomów poza zakres jasności oryginału 5×5. */
+    /**
+     * Udział próbek, w których wynik wychodzi o ponad [HALO_STRONG] poziomów poza zakres jasności oryginału 5×5, po
+     * odjęciu lokalnego przesunięcia tonalnego (średnia wyniku − średnia oryginału w oknie). Zwykłe przyciemnienie
+     * czy rozjaśnienie nie jest halo; liczy się przestrzelenie na krawędziach.
+     */
     private fun haloShare(ref: IntArray, out: IntArray, w: Int, h: Int): Double {
         var strong = 0
         var n = 0
         for (y in HALO_R until h - HALO_R step HALO_STEP) {
             for (x in HALO_R until w - HALO_R step HALO_STEP) {
-                val (lo, hi) = range(ref, w, x, y)
+                val (lo, hi, meanRef) = range(ref, w, x, y)
+                val shift = range(out, w, x, y).third - meanRef
                 val v = luma(out[y * w + x])
-                if (max(0.0, v - hi) + max(0.0, lo - v) > HALO_STRONG) strong++
+                if (max(0.0, v - (hi + shift)) + max(0.0, lo + shift - v) > HALO_STRONG) strong++
                 n++
             }
         }
         return 100.0 * strong / n
     }
 
-    private fun range(px: IntArray, w: Int, x: Int, y: Int): Pair<Double, Double> {
+    /** Minimum, maksimum i średnia jasności w oknie 5×5 wokół ([x], [y]). */
+    private fun range(px: IntArray, w: Int, x: Int, y: Int): Triple<Double, Double, Double> {
         var lo = Double.MAX_VALUE
         var hi = -Double.MAX_VALUE
+        var sum = 0.0
         for (dy in -HALO_R..HALO_R) {
             for (dx in -HALO_R..HALO_R) {
                 val l = luma(px[(y + dy) * w + x + dx])
                 lo = min(lo, l)
                 hi = max(hi, l)
+                sum += l
             }
         }
-        return lo to hi
+        return Triple(lo, hi, sum / WINDOW)
     }
 
     private fun f2(v: Double) = "%.2f".format(java.util.Locale.ROOT, v)
@@ -188,5 +196,6 @@ class SliderRegressionTest {
         const val HALO_R = 2
         const val HALO_STEP = 2
         const val HALO_STRONG = 12.0
+        const val WINDOW = 25.0
     }
 }
