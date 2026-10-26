@@ -94,8 +94,8 @@
     <string name="zoom_percent_cd">Powiększenie %1$d procent</string>
     <string name="info_size">%1$d×%2$d · %3$s Mpx</string>
     <string name="info_size_cd">Rozmiar zdjęcia %1$d na %2$d pikseli, %3$s megapiksela</string>
-    <string name="info_show_cd">Pokaż rozmiar zdjęcia</string>
-    <string name="info_hide_cd">Ukryj rozmiar zdjęcia</string>
+    <string name="info_show_cd">Pokaż rozmiar zdjęcia i nazwę filmu</string>
+    <string name="info_hide_cd">Ukryj rozmiar zdjęcia i nazwę filmu</string>
     <string name="crop_flip">Zamień poziom/pion</string>
     <string name="crop_zoom">Docięcie (przybliżenie)</string>
     <string name="crop_pan_x">Przesuń kadr poziomo</string>

@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.1.3: nazwa filmu pod „i”)
+- Faza: poprawka po zgłoszeniu (nazwa filmu zasłaniała podpis w ramce), wydanie 1.1.3
+- Zrobione: plakietka z nazwą filmu i intensywnością („Kodak Ektachrome 100 VS Generic · 100%”) nie wisi już na dole podglądu; pokazuje się po dotknięciu ikony „i” pod rozmiarem zdjęcia (górny środek), tak jak rozdzielczość. Opis dostępności ikony: „Pokaż/Ukryj rozmiar zdjęcia i nazwę filmu”.
+- PR / gałąź: `f34/plakietka-info`; wersja 1.1.3 z taga `v1.1.3`.
+- Otwarte / P2 odłożone: bez zmian względem 1.1.2; po zmianie nazwa filmu nie jest widoczna, dopóki nie dotknie się „i” (do rozważenia: krótkie pokazanie po zmianie filmu).
+- Następny krok: ocena 1.1.3 na telefonie.
+
 ## 2026-10-26 – Claude (wydanie 1.1.2: podgląd maski krawędzi)
 - Faza: poprawka po zgłoszeniu „podgląd krawędzi przy wyostrzaniu nie działa” (fałszywy alarm: Ilość = 0), wydanie 1.1.2
 - Zrobione: podgląd maski pokazuje obraz maski także przy suwaku Ilość = 0 (wcześniej wymagał Ilość > 0, więc przełącznik wyglądał na martwy); przełącznik stoi pod Maskowaniem krawędzi; przy Maskowaniu = 0 podpowiedź („maska jest cała biała”, bo bez maskowania wyostrzane jest wszędzie); `SharpenMaskPreviewTest`. Przyczyna potwierdzona przez użytkownika: podgląd działał, tylko przy Ilość = 0 nic nie pokazywał (zachowanie starsze niż 1.1.0); 1.1.2 ułatwia to zauważyć.

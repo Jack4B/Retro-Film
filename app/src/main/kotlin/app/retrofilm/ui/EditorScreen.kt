@@ -307,7 +307,7 @@ private fun PreviewPane(
 /** Tryb podglądu zależny od zakładki: kadrowanie gestem i przyciski filmu (biblioteka, preset) na zdjęciu. */
 private class PreviewMode(val crop: Boolean, val filmActions: Boolean, val onOpenLibrary: () -> Unit)
 
-/** Nakładki na zdjęciu: pasek zdjęć serii, podpis filmu, znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
+/** Nakładki na zdjęciu: pasek zdjęć serii, znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
 @Composable
 private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean, onSelectPhoto: (Int) -> Unit) {
     if (state.uris.size > 1) {
@@ -317,7 +317,6 @@ private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean, onSele
             Modifier.align(Alignment.TopStart).padding(start = EdgePad, top = EdgePad, end = StripEndGap)
         )
     }
-    if (state.preview != null) FilmCaption(state, Modifier.align(Alignment.BottomCenter))
     if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.BottomStart))
     if (state.signatureStatus() == SignatureFitStatus.TooLong) {
         Badge(
@@ -330,7 +329,8 @@ private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean, onSele
 
 /**
  * Nakładki podglądu: skala pośrodku (tylko przy powiększeniu, ledwo widoczna) oraz mała ikona „i” w rogu,
- * która pokazuje albo chowa rozmiar zdjęcia (piksele i megapiksele zapisywanego obrazu).
+ * która pokazuje albo chowa rozmiar zdjęcia (piksele i megapiksele zapisywanego obrazu) i nazwę wybranego filmu z
+ * intensywnością (nazwa nie zasłania podpisu w ramce, dopóki nie dotkniesz „i”).
  */
 @Suppress("LongParameterList") // stan podglądu i zdarzenie przełączenia przekazywane jawnie
 @Composable
@@ -357,11 +357,16 @@ private fun BoxScope.PreviewInfo(
         )
     }
     if (showInfo) {
-        ZoomReadout(
-            text = stringResource(R.string.info_size, w, h, mp),
-            description = stringResource(R.string.info_size_cd, w, h, mp),
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = EdgePad, end = MinTouch)
-        )
+        Column(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = EdgePad, end = MinTouch),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ZoomReadout(
+                text = stringResource(R.string.info_size, w, h, mp),
+                description = stringResource(R.string.info_size_cd, w, h, mp)
+            )
+            if (state.preview != null) FilmCaption(state, Modifier)
+        }
     }
     InfoButton(showInfo, onToggleInfo, Modifier.align(Alignment.TopEnd))
 }
