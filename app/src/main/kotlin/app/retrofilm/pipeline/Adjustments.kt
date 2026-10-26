@@ -155,6 +155,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             GRAIN_CELL_MIN,
             maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
         )
+        var x = 0
+        var row = firstRow
         for (i in 0 until count) {
             val c = px[i]
             val lr = toLinear[(c shr RED_SHIFT) and BYTE_MASK]
@@ -165,15 +167,19 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             chroma?.apply(rgb)
             hsl?.apply(rgb)
-            if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
+            if (hasTone) toneRecovery(mask, x, row)
             contrast?.apply(rgb)
             curves?.apply(rgb)
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
-            if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
-            val d = Dither.at(i % width, firstRow + i / width)
+            if (hasEffects) effects(x, row, width, totalRows, cell)
+            val d = Dither.at(x, row)
             px[i] = (c and ALPHA_MASK) or (to8(rgb[0] + d) shl RED_SHIFT) or (to8(rgb[1] + d) shl GREEN_SHIFT) or
                 to8(rgb[2] + d)
+            if (++x == width) {
+                x = 0
+                row++
+            }
         }
     }
 
@@ -229,7 +235,10 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         }
         if (adj.grain > 0f) {
             val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
-            for (k in 0..2) rgb[k] *= FilmGrain.gain(stops, FilmGrain.channel(x, y, cell, k))
+            val common = FilmGrain.luma(x, y, cell)
+            for (k in 0..2) {
+                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(common, FilmGrain.chroma(x, y, cell, k)))
+            }
         }
     }
 

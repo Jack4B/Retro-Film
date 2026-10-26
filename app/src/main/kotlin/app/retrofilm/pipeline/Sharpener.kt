@@ -159,22 +159,9 @@ internal object Sharpener {
         val sum = kernel.sum()
         for (i in kernel.indices) kernel[i] /= sum
         val tmp = FloatArray(src.size)
-        for (y in 0 until h) {
-            val row = y * w
-            for (x in 0 until w) {
-                var acc = 0f
-                for (k in -radius..radius) acc += src[row + (x + k).coerceIn(0, w - 1)] * kernel[k + radius]
-                tmp[row + x] = acc
-            }
-        }
+        Convolution.rows(src, tmp, w, h, kernel)
         val out = FloatArray(src.size)
-        for (y in 0 until h) {
-            for (x in 0 until w) {
-                var acc = 0f
-                for (k in -radius..radius) acc += tmp[(y + k).coerceIn(0, h - 1) * w + x] * kernel[k + radius]
-                out[y * w + x] = acc
-            }
-        }
+        Convolution.columns(tmp, out, w, h, kernel)
         return out
     }
 
