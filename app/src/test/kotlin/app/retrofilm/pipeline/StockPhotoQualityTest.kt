@@ -338,9 +338,35 @@ class StockPhotoQualityTest {
                 }.sorted()
                 report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
             }
+            stageBreakdown(bmp)
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
             failures += "12 Mpx: OutOfMemoryError (pamięć na telefonie będzie jeszcze ciaśniejsza)"
+        }
+    }
+
+    /** Rozbicie czasu etapów „wszystko naraz” (pojedynczo, na kopii pikseli): pokazuje, co jeszcze jest sekwencyjne. */
+    private fun stageBreakdown(bmp: Bitmap) {
+        val w = bmp.width
+        val h = bmp.height
+        val px = IntArray(w * h).also { bmp.getPixels(it, 0, w, 0, 0, w, h) }
+        val stages = linkedMapOf<String, () -> Unit>(
+            "kopia pikseli" to { px.copyOf() },
+            "odszumianie kolorów" to { ChromaDenoise.apply(px.copyOf(), w, h, 0.4f) },
+            "dehaze" to { Dehaze.apply(px.copyOf(), w, h, 0.4f) },
+            "wyostrzanie + wyrazistość" to { DetailFilter.apply(px.copyOf(), w, h, 0.3f, 0.4f) },
+            "przebieg pikseli (cienie, ziarno)" to {
+                AdjustmentsApplier.apply(bmp, Adjustments(shadows = 0.4f, grain = 0.3f))
+            }
+        )
+        report.appendLine("\nRozbicie „wszystko naraz” na etapy:")
+        for ((label, block) in stages) {
+            val times = List(PERF_RUNS) {
+                val t0 = System.nanoTime()
+                block()
+                (System.nanoTime() - t0) / NANOS_PER_MS
+            }.sorted()
+            report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
         }
     }
 
