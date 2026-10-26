@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.0.2)
+- Faza: poprawki po testach na telefonie i wydajność, wydanie 1.0.2
+- Zrobione: obrót ekranu nie kasuje edycji (`MainStateHolder` w ViewModelu, `configChanges` aktywności; #91), lupa i „+” zakładki Film jako przezroczyste przyciski na zdjęciu zamiast kolumny zasłaniającej przewijanie kategorii (#92), równoległe przetwarzanie obrazu (`Parallel`, do 4 wątków, wynik niezależny od liczby wątków; #90), szybsze ziarno, splot Gaussa i dehaze bez pełnowymiarowych tablic (#93), raport wydajności z rozgrzewką, medianą i rozbiciem na etapy (`quality-report.yml`).
+- PR / gałąź: #90–#93 (`f14/wydajnosc`, `f15/obrot`, `f16/film-przyciski`, `f18/szybciej`); wersja 1.0.2 z taga `v1.0.2`.
+- Otwarte / P2 odłożone: jeden bufor float zamiast kilku przebiegów 8-bit i mniejsze zużycie pamięci przy 12 Mpx; podział `AdjustmentProcessor` na etapy; halo wyostrzania na drobnym tekście (`street_bus`: 1,2% pikseli z przestrzeleniem > 12); zrzuty Roborazzi panelu Film i szuflady; job „compile only” na PR-ach; wybór narzędzia w zakładce Korekty; test obrotu na urządzeniu (czeka na opinię Jack4B).
+- Następny krok: opinie z testów 1.0.2 na telefonie.
+
 ## 2026-10-26 – Claude (wydanie 1.0.1)
 - Faza: jakość algorytmów i UI, wydanie 1.0.1
 - Zrobione: edytor z szufladą (3 stany, uchwyt, podgląd zdjęcia na całą dostępną wysokość, pasek zdjęć i chip zakresu edycji jako półprzezroczysty overlay; poziomo panel boczny), edycja indywidualna zdjęcia w serii (EditBook), światła i cienie z zachowaniem detalu i barwy (pochmurne niebo nie szarzeje), dehaze bezpieczny na jasnych, szarych scenach (większa łatka, ω 0,85, T_MIN 0,35), raport jakości na 9 zdjęciach stockowych dobrej jakości (`quality-report.yml`, w tym metryka halo wyostrzania).
