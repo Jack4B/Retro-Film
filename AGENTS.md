@@ -19,6 +19,16 @@ Najpierw przeczytaj: docs/ARCHITEKTURA.md, docs/PLAN.md, docs/DECYZJE.md, ostatn
 4. Commity `[Jack4B] Opis po polsku`, autor Jack4B, **bez** `Co-Authored-By`.
 5. Po sesji wpis w docs/HANDOFF.md.
 
+## Zasady kluczowe (Jack4B, 2026-10-26; mają pierwszeństwo przy każdej pracy nad kodem)
+1. **Wyróżnik aplikacji: maksimum z JPEG.** Algorytmy mają dawać fantastyczną barwę, nie niszczyć detalu i wyostrzać
+   to, co ważne (włosy, oczy, krawędzie) odpowiednimi metodami, w tym świadomymi treści (twarz, włosy, niebo).
+   Każdą zmianę kodu obrazu oceniamy pod tym kątem i opieramy na aktualnej literaturze i dobrych praktykach
+   (przegląd: docs/PRZEGLAD-ALGORYTMOW.md); kodu copyleft nie kopiujemy.
+2. **Efektywna praca, szanujemy limit abonamentu.** Nie subskrybujemy PR-ów (powiadomienia są drogie): `send_later`
+   + jeden odczyt `get_check_runs`; logi tylko ogon (nie 400 wierszy, gdy wystarczy lista testów); mało większych
+   PR-ów zamiast wielu małych; pomiary i testy na CI, lokalnie tylko ktlint i detekt; nie czytamy dużych plików w
+   całości; podsumowania krótkie. Gdy pomiar jest zaszumiony, porównujemy A/B w jednym przebiegu zamiast powtarzać.
+
 ## Twarde reguły
 - `versionCode` zawsze rośnie (zob. D5).
 - LUT-y tylko zgodnie z docs/LUTS.md (CC BY-SA 4.0, `luts/` poza MIT).

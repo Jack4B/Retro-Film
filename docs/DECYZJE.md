@@ -93,3 +93,13 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - Dynamic color (D3, domyślnie wył.) działa w obu motywach.
 - Nakładki na zdjęciu (np. „Przytrzymaj zdjęcie”) zawsze ciemne z białym tekstem, niezależnie od motywu.
 - Decyzja Jack4B, 2026-10-25 (czat). Kod: PR „Motyw jasny”.
+
+## D14 – Zasady kluczowe: jakość obrazu i efektywna praca
+- **Maksimum z JPEG** jest wyróżnikiem aplikacji (barwa, zachowanie detalu, wyostrzanie włosów i oczu odpowiednimi, także semantycznymi metodami); wszystkie zmiany algorytmów oceniamy pod tym kątem, na podstawie aktualnej literatury.
+- **Efektywna praca**: oszczędność tokenów (abonament Pro); reguły w AGENTS.md.
+- Decyzja Jack4B, 2026-10-26 (czat).
+
+## D15 – Kolejność pracy: najpierw korekty, potem film (kierunek, wymaga projektu UX)
+- Docelowy przepływ: **Kadr → Korekty** (balans bieli, ekspozycja, zdejmowanie przebarwień, odszumianie, dehaze) → **Film** (LUT jako „look”) → **Wykończenie** (ziarno, winieta, blaknięcie, tonowanie, ostrość wyjściowa) → Ramka. Filmy są projektowane dla zdjęcia po korektach, więc stosowanie ich na nieskorygowanym obrazie daje gorszy i mniej przewidywalny wynik.
+- Dziś eksport robi odwrotnie (film, potem korekty); zmiana wymaga przeprojektowania zakładek edytora i kolejności w potoku (film w potoku float między korektami a wykończeniem, zob. PRZEGLAD-ALGORYTMOW.md, pozycja 4).
+- Kierunek zgłoszony przez Jack4B, 2026-10-26 (czat); szczegóły UX do zatwierdzenia (makiety Lumen).
