@@ -1,6 +1,7 @@
 package app.retrofilm.pipeline
 
 import android.graphics.Bitmap
+import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.pow
 
@@ -190,8 +191,18 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val base = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else own
         val shadowY = (base + maxOf(base, own)) * HALF
         val highlightY = (base + minOf(base, own)) * HALF
-        val m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
-        for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
+        var m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
+        // Detal ponad bazą rośnie proporcjonalnie do zmiany bazy (jak w local Laplacian / Durand–Dorsey): przy
+        // przyciemnianiu nieba chmury zostają wyraźne, a przy rozjaśnianiu cieni faktura nie znika.
+        val baseGain = shadowGain[maskIndex(base)] * highlightGain[maskIndex(base)]
+        val boost = TONE_DETAIL * abs(1f - baseGain)
+        if (boost > 0f && base > TONE_MIN_BASE) {
+            val ratio = (own / base).coerceIn(TONE_RATIO_MIN, TONE_RATIO_MAX)
+            m *= (1f + boost * (ratio - 1f)).coerceIn(TONE_BOOST_MIN, TONE_BOOST_MAX)
+        }
+        // Chromę skalujemy słabiej niż jasność (przy przyciemnianiu nie szarzeje, przy rozjaśnianiu nie wybucha szum).
+        val s = 1f + (1f - TONE_CHROMA_KEEP) * (m - 1f)
+        for (k in 0..2) rgb[k] = (own * m + (rgb[k] - own) * s).coerceIn(0f, 1f)
     }
 
     private fun maskIndex(y: Float): Int = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
@@ -236,6 +247,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val HIGHLIGHT_FROM = 0.40f
         private const val HIGHLIGHT_TO = 0.90f
         private const val BLACK_GUARD = 0.06f
+        private const val TONE_DETAIL = 1.0f
+        private const val TONE_CHROMA_KEEP = 0.6f
+        private const val TONE_MIN_BASE = 0.02f
+        private const val TONE_RATIO_MIN = 0.25f
+        private const val TONE_RATIO_MAX = 4f
+        private const val TONE_BOOST_MIN = 0.5f
+        private const val TONE_BOOST_MAX = 1.6f
         private const val MATRIX_SIZE = 9
         private const val IDX_00 = 0
         private const val IDX_01 = 1
