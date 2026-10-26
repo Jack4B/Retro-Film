@@ -80,6 +80,12 @@ class MainState(
     /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
     var exportMaxSide by mutableIntStateOf(0)
 
+    /** Edycje serii: wspólne ustawienia i zdjęcia edytowane osobno (zob. [EditBook]). */
+    val edits = EditBook()
+
+    /** Czy bieżące zdjęcie ma osobne ustawienia (film, korekty, kadr). */
+    val individual: Boolean get() = edits.isIndividual(index)
+
     /** Presety użytkownika (film, moc i korekty) zapisywane w pamięci aplikacji. */
     val presetBook = PresetBook()
 
@@ -132,8 +138,31 @@ class MainState(
         photo = bitmap
     }
 
+    private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry)
+
+    private fun restore(e: PhotoEdit) {
+        film = e.film
+        intensity = e.intensity
+        adjustments = e.adjustments
+        updateGeometry(e.geometry)
+        autoPair = null
+    }
+
+    /**
+     * Przełącza bieżące zdjęcie między wspólnymi ustawieniami serii a osobnymi (własny film, korekty, kadr).
+     * Włączenie kopiuje bieżące ustawienia; wyłączenie porzuca osobne i wraca do wspólnych.
+     */
+    fun setIndividual(on: Boolean) {
+        if (on == individual) return
+        if (on) edits.makeIndividual(index, snapshot()) else restore(edits.makeShared(index))
+    }
+
+    /** Bieżące ustawienia stają się wspólne dla całej serii (osobne edycje innych zdjęć są kasowane). */
+    fun applyCurrentToAll() = edits.applyToAll(snapshot())
+
     /** Wraca do ekranu startowego (nic nie jest zapisywane). */
     fun closePhoto() {
+        edits.reset(snapshot().copy(geometry = Geometry()))
         geometry = Geometry()
         uris = emptyList()
         index = 0
@@ -172,34 +201,42 @@ class MainState(
         if (picked.isEmpty()) return null
         uris = picked
         index = 0
+        edits.reset(snapshot())
         return load(context, picked.first()).also { if (it != null) uris = emptyList() }
     }
 
     /** Przełącza Edytor na inne zdjęcie z serii, zachowując film, korekty i ramkę. */
     suspend fun select(context: Context, i: Int): UiMessage? {
         if (i == index || i !in uris.indices) return null
+        edits.commit(index, snapshot())
         index = i
+        restore(edits.editFor(i))
         return load(context, uris[i])
     }
 
     /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
     suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
-        val lutNow = lut()
+        edits.commit(index, snapshot())
         val face = signatureTypeface()
-        val result = exportBatch(uris, { exportProgress = it + 1 }) { uri ->
+        var current = 0
+        val result = exportBatch(uris, {
+            current = it
+            exportProgress = it + 1
+        }) { uri ->
+            val edit = edits.editFor(current)
             val bmp = withContext(Dispatchers.IO) {
                 PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
             }
             val jpeg = withContext(Dispatchers.Default) {
-                val cropped = GeometryApplier.apply(bmp, geometry)
+                val cropped = GeometryApplier.apply(bmp, edit.geometry)
                 val rendered = ExportPipeline.render(
                     cropped,
-                    lutNow,
+                    lutFor(edit.film),
                     graph.filmEngine.renderer,
                     frame,
                     face,
-                    intensity,
-                    adjustments
+                    edit.intensity,
+                    edit.adjustments
                 )
                 ExportPipeline.encode(
                     cropped,
@@ -316,7 +353,9 @@ class MainState(
     private fun signatureTypeface(): Typeface = fonts(frame.font)
 
     /** Identity = brak zmian pikseli, więc pomijamy render (zachowuje dokładnie kolory i przestrzeń barw). */
-    private fun lut(): Lut? = if (film == IDENTITY_ID) null else graph.filmEngine.load(film)
+    private fun lut(): Lut? = lutFor(film)
+
+    private fun lutFor(id: String): Lut? = if (id == IDENTITY_ID) null else graph.filmEngine.load(id)
 
     private suspend fun <T> withBusy(block: suspend () -> T): T {
         busy = true
