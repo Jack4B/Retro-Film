@@ -152,8 +152,8 @@ class StockPhotoQualityTest {
     }
 
     /**
-     * Ciemny obszar (dolna ćwiartka jasności) po cieniach +100%: faktura nie może się spłaszczyć (kontrast lokalny ≥ 0,9),
-     * a szum nie może wybuchnąć (energia drobnego detalu najwyżej 3×); barwność ma nie spaść.
+     * Ciemny obszar (dolna ćwiartka jasności) po cieniach +100%: faktura nie może się spłaszczyć (kontrast lokalny
+     * ≥ 0,9), szum nie może wybuchnąć (drobny detal najwyżej 3×), a barwność ma nie spaść.
      */
     private fun checkDarkRegion(name: String, orig: IntArray, shadows: IntArray, w: Int, h: Int) {
         val dark = orig.indices.sortedBy { luma(orig[it]) }.take(orig.size / 4)
