@@ -30,8 +30,8 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
 | Eksport | ExportPipeline.kt | ✅ | jakość JPEG, maks. rozmiar, wyostrzanie wyjściowe; GPS usuwany |
 | Krzywe tonalne | ToneCurve.kt | ✅ | RGB + R/G/B, PCHIP, edytor z punktami |
+| Maski lokalne | LocalMask.kt | ✅ | liniowa i radialna, własne korekty; brak malowania pędzlem i masek luminancji |
 | Auto-ulepszenie | AutoEnhance.kt | ✅ | histogram + balans bieli; bez rozpoznawania scen (twarze, niebo) |
-| Maski lokalne | — | ❌ | do zrobienia (PR maski) |
 
 ## Raport końcowy (alpha.16, CI, 5 zdjęć testowych)
 

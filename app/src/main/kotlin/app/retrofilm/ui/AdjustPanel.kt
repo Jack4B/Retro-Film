@@ -49,7 +49,8 @@ private enum class AdjustGroup(val label: Int) {
     Detail(R.string.adjust_group_detail),
     Hsl(R.string.adjust_group_hsl),
     Toning(R.string.adjust_group_toning),
-    Curves(R.string.adjust_group_curves)
+    Curves(R.string.adjust_group_curves),
+    Masks(R.string.adjust_group_masks)
 }
 
 /** Zakładka Korekty: trzy grupy (Światło, Kolor, Klisza); zmiana zatwierdzana po puszczeniu suwaka. */
@@ -77,6 +78,7 @@ fun AdjustPanel(state: MainState) {
             AdjustGroup.Hsl -> HslSliders(state)
             AdjustGroup.Toning -> ToningSliders(state)
             AdjustGroup.Curves -> CurveControls(state)
+            AdjustGroup.Masks -> MaskControls(state)
         }
         OutlinedButton(
             onClick = { state.adjustments = Adjustments.None },

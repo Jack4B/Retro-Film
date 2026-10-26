@@ -22,6 +22,7 @@ import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
+import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
@@ -69,6 +70,9 @@ class MainState(
     private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
 
     val canUndoAuto: Boolean get() = autoPair?.second == adjustments
+
+    /** Maska pokazywana jako czerwona nakładka na podglądzie, gdy ją ustawiamy (nie wpływa na zapis). */
+    var maskOverlay by mutableStateOf<LocalMask?>(null)
 
     /** Jakość JPEG przy zapisie (70..100). */
     var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)
