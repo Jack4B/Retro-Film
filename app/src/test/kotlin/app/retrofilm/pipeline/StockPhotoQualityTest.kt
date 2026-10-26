@@ -388,6 +388,11 @@ class StockPhotoQualityTest {
                 (System.nanoTime() - t0) / NANOS_PER_MS
             }.sorted()
             report.appendLine("- wszystko naraz, dawny potok (ten sam przebieg): ${legacy[PERF_RUNS / 2]} ms")
+            AdjustmentsApplier.apply(bmp, cases.getValue("wszystko naraz"))
+            report.appendLine(
+                "- nowy potok, ostatni przebieg: analiza ${PipelineStats.analysisMs} ms, " +
+                    "pasy ${PipelineStats.stripsMs} ms"
+            )
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
             failures += "12 Mpx: OutOfMemoryError (pamięć na telefonie będzie jeszcze ciaśniejsza)"

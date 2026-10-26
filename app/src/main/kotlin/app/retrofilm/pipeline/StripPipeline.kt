@@ -26,13 +26,16 @@ internal class StripPlans(
  * (pełne tablice ARGB i float zastępują bufory pasów po jednym na wątek). Wynik nie zależy od liczby wątków.
  */
 internal object StripPipeline {
-    private const val MIN_CORE = 64
-    private const val HALO_FACTOR = 3
+    private const val MIN_CORE = 128
+    private const val HALO_FACTOR = 6
+    private const val NANOS_PER_MS = 1_000_000L
 
     fun run(src: Bitmap, adj: Adjustments): Bitmap {
         val w = src.width
         val h = src.height
+        val t0 = System.nanoTime()
         val plans = StripAnalysis(src, adj).plans()
+        val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
         val core = max(MIN_CORE, HALO_FACTOR * plans.halo)
@@ -40,8 +43,17 @@ internal object StripPipeline {
             (h + core - 1) / core,
             { StripWorker(adj, plans, w, h, min(h, core + 2 * plans.halo)) }
         ) { worker, chunk -> worker.run(src, out, chunk * core, min(h, (chunk + 1) * core)) }
+        PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
+        PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS
         return out
     }
+}
+
+/** Czasy ostatniego przebiegu [StripPipeline] (analiza i pasy) – do raportu wydajności. */
+internal object PipelineStats {
+    @Volatile var analysisMs = 0L
+
+    @Volatile var stripsMs = 0L
 }
 
 /** Przetwarza pasy jednego wątku: własny procesor i bufory (nie są bezpieczne wątkowo). */

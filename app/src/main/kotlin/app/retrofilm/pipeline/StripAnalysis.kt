@@ -6,7 +6,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 private const val SAMPLE_ROWS = 16
-private const val SAMPLE_STRIDE = 2
+private const val SAMPLE_STRIDE = 3
 private const val GAIN_STRIDE = 4
 private const val NOISE_BANDS = 8
 private const val NOISE_BAND_ROWS = 48
@@ -139,7 +139,7 @@ internal class StripAnalysis(private val src: Bitmap, private val adj: Adjustmen
         dehaze?.let { Dehaze.restorePlanes(it, p, p.size, span, stride) }
     }
 
-    /** Maska tonalna z jasności obrazu po odszumianiu koloru i dehaze (podpróbkowanie co 2 piksele). */
+    /** Maska tonalna z jasności obrazu po odszumianiu koloru i dehaze (podpróbkowanie co 3 piksele). */
     private fun toneMask(chroma: ChromaDenoise.Plan?, dehaze: Dehaze.Plan?): ToneMask {
         val stride = min(SAMPLE_STRIDE, ToneMask.Builder(w, h).cellSize)
         val sampler = Sampler(src, stride)
