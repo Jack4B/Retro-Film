@@ -23,12 +23,18 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/stock"
           base=https://raw.githubusercontent.com
-          for u in scikit-learn/scikit-learn/main/sklearn/datasets/images/china.jpg \
-                   scikit-learn/scikit-learn/main/sklearn/datasets/images/flower.jpg \
-                   opencv/opencv/4.x/samples/data/fruits.jpg \
-                   opencv/opencv/4.x/samples/data/building.jpg \
-                   opencv/opencv/4.x/samples/data/aloeL.jpg; do
-            curl -fsSL -o "$RUNNER_TEMP/stock/$(basename "$u")" "$base/$u"
+          # name=ścieżka (nazwy opisowe w raporcie); pochmurne niebo, kontrast, biały pies, wnętrza itp.
+          for e in china=scikit-learn/scikit-learn/main/sklearn/datasets/images/china.jpg \
+                   flower=scikit-learn/scikit-learn/main/sklearn/datasets/images/flower.jpg \
+                   fruits=opencv/opencv/4.x/samples/data/fruits.jpg \
+                   building=opencv/opencv/4.x/samples/data/building.jpg \
+                   aloe=opencv/opencv/4.x/samples/data/aloeL.jpg \
+                   beach_overcast=tensorflow/models/master/research/object_detection/test_images/image2.jpg \
+                   aerial_overcast=opencv/opencv/4.x/samples/data/aero3.jpg \
+                   white_dog=pytorch/hub/master/images/dog.jpg \
+                   street_bus=ultralytics/yolov5/master/data/images/bus.jpg \
+                   stadium=opencv/opencv/4.x/samples/data/messi5.jpg; do
+            curl -fsSL -o "$RUNNER_TEMP/stock/${e%%=*}.jpg" "$base/${e#*=}"
           done
           ls -l "$RUNNER_TEMP/stock"
       - name: Run quality test

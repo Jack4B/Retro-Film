@@ -59,6 +59,7 @@ class StockPhotoQualityTest {
         val clarity = AdjustmentsApplier.apply(src, Adjustments(clarity = 0.8f))
         tiles += listOf(shadows, highlights, clarity)
         checkTone(name, px, pixels(shadows), pixels(highlights))
+        checkBrightRegion(name, px, pixels(highlights), src.width, src.height)
         checkClarity(name, px, pixels(clarity), src.width, src.height)
 
         val (clean, hazy) = synthHaze(px, src.width, src.height)
@@ -122,6 +123,57 @@ class StockPhotoQualityTest {
         if (cutBright < MIN_TONE_GAIN / 2) failures += "$name: światła za słabo przyciemniają (${f1(cutBright)})"
         if (abs(driftDark) > MAX_TONE_LEAK) failures += "$name: światła ruszają ciemne partie (${f1(driftDark)})"
         if (hue > MAX_HUE_SHIFT) failures += "$name: cienie przesuwają barwy o ${f1(hue)}°"
+    }
+
+    /**
+     * Jasny obszar (górna ćwiartka jasności, np. pochmurne niebo) po światłach −100%: lokalny kontrast i barwność
+     * mają się zachować (stosunek ≥ 0,9), bo samo przyciemnienie robi z nieba płaską szarość.
+     */
+    private fun checkBrightRegion(name: String, orig: IntArray, highlights: IntArray, w: Int, h: Int) {
+        val bright = orig.indices.sortedBy { luma(orig[it]) }.takeLast(orig.size / 4)
+        val mask = BooleanArray(orig.size).also { m -> bright.forEach { m[it] = true } }
+        val c0 = localContrast(orig, mask, w, h)
+        val c1 = localContrast(highlights, mask, w, h)
+        val k0 = bright.map { chromaOf(orig[it]) }.average()
+        val k1 = bright.map { chromaOf(highlights[it]) }.average()
+        val contrastRatio = if (c0 > 0.0) c1 / c0 else 1.0
+        val chromaRatio = if (k0 > 0.0) k1 / k0 else 1.0
+        report.appendLine(
+            "- Jasny obszar po światłach −100%: lokalny kontrast ${f1(c0)} → ${f1(c1)} (×${f2(contrastRatio)}), " +
+                "barwność ${f1(k0)} → ${f1(k1)} (×${f2(chromaRatio)})"
+        )
+        if (contrastRatio <
+            MIN_BRIGHT_RATIO
+        ) {
+            failures += "$name: światła spłaszczają jasny obszar (×${f2(contrastRatio)})"
+        }
+        if (chromaRatio < MIN_BRIGHT_RATIO) failures += "$name: światła szarzeją jasny obszar (×${f2(chromaRatio)})"
+    }
+
+    private fun chromaOf(c: Int): Double {
+        val r = Color.red(c)
+        val g = Color.green(c)
+        val b = Color.blue(c)
+        return (max(r, max(g, b)) - min(r, min(g, b))).toDouble()
+    }
+
+    /** Średnia różnica jasności piksela od czterech sąsiadów oddalonych o [LOCAL_STEP] px, tylko w [mask]. */
+    private fun localContrast(px: IntArray, mask: BooleanArray, w: Int, h: Int): Double {
+        var sum = 0.0
+        var n = 0
+        for (y in LOCAL_STEP until h - LOCAL_STEP) {
+            for (x in LOCAL_STEP until w - LOCAL_STEP) {
+                val i = y * w + x
+                if (!mask[i]) continue
+                val mean = (
+                    luma(px[i - LOCAL_STEP]) + luma(px[i + LOCAL_STEP]) +
+                        luma(px[i - LOCAL_STEP * w]) + luma(px[i + LOCAL_STEP * w])
+                    ) / 4.0
+                sum += abs(luma(px[i]) - mean)
+                n++
+            }
+        }
+        return if (n == 0) 0.0 else sum / n
     }
 
     private fun checkClarity(name: String, orig: IntArray, clarity: IntArray, w: Int, h: Int) {
@@ -325,6 +377,8 @@ class StockPhotoQualityTest {
 
     private fun f1(v: Double) = "%.1f".format(java.util.Locale.ROOT, v)
 
+    private fun f2(v: Double) = "%.2f".format(java.util.Locale.ROOT, v)
+
     private companion object {
         const val MAX_SIDE = 1600
         const val SEED = 42L
@@ -337,6 +391,8 @@ class StockPhotoQualityTest {
         const val CHROMA_GAIN = 0.7
         const val MAX_LUMA_DRIFT = 4.0
         const val MIN_TONE_GAIN = 5.0
+        const val MIN_BRIGHT_RATIO = 0.9
+        const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
         const val MAX_HUE_SHIFT = 4.0
         const val MAX_MEAN_SHIFT = 5.0
