@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -53,7 +54,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -69,7 +70,9 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 private val MinTouch = 48.dp
-private const val PANEL_SCREEN_FRACTION = 0.42f
+private const val CAPTION_ALPHA = 0.55f
+private val CaptionCorner = 16.dp
+private val StripEndGap = 56.dp
 private val SIDE_BY_SIDE_MIN_WIDTH = 560.dp
 private const val SIDE_PANEL_FRACTION = 0.42f
 private val SIDE_PANEL_MIN = 320.dp
@@ -89,7 +92,7 @@ private const val INFO_ICON_ALPHA = 0.85f
 private val PanelCorner = 20.dp
 private val PanelElevation = 8.dp
 
-private enum class EditorTab(val label: Int) {
+internal enum class EditorTab(val label: Int) {
     Film(R.string.tab_film),
     Adjust(R.string.tab_adjust),
     Crop(R.string.tab_crop),
@@ -97,7 +100,8 @@ private enum class EditorTab(val label: Int) {
 }
 
 /**
- * Edytor: zdjęcie na pierwszym planie, pod nim panel z zakładkami Film / Ramka.
+ * Edytor: zdjęcie na pierwszym planie (cały obszar), narzędzia w szufladzie na dole (zakładki Film / Korekty / Kadr /
+ * Ramka; poziomo panel z boku).
  * Przycisk „Przed” pokazuje oryginał, szczypanie i dwukrotne dotknięcie przybliżają podgląd; „Zapisz” zapisuje od razu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -113,6 +117,7 @@ fun EditorScreen(
 ) {
     var tab by rememberSaveable { mutableStateOf(EditorTab.Film) }
     var showBefore by rememberSaveable { mutableStateOf(false) }
+    var sheet by rememberSaveable { mutableStateOf(SheetMode.Compact) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -135,90 +140,81 @@ fun EditorScreen(
         BoxWithConstraints(Modifier.fillMaxSize().padding(inner)) {
             val sideBySide = maxWidth > maxHeight && maxWidth >= SIDE_BY_SIDE_MIN_WIDTH
             val panelWidth = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
+            val crop = tab == EditorTab.Crop
             if (sideBySide) {
-                // poziomo: podgląd z paskiem zdjęć po lewej na całą wysokość, panel zakładek po prawej
+                // poziomo: podgląd na całą wysokość po lewej, panel zakładek po prawej
                 Row(Modifier.fillMaxSize()) {
-                    Column(Modifier.weight(1f).fillMaxHeight()) {
-                        PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
-                        if (state.preview != null) FilmCaption(state)
-                        if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
-                    }
-                    EditorPanel(state, tab, {
-                        tab = it
-                    }, onOpenLibrary, Modifier.width(panelWidth).fillMaxHeight(), true)
+                    PreviewPane(state, showBefore, crop, onSelectPhoto, Modifier.weight(1f).fillMaxHeight())
+                    SidePanel(state, tab, { tab = it }, onOpenLibrary, Modifier.width(panelWidth).fillMaxHeight())
                 }
             } else {
-                // pionowo: podgląd u góry, panel zakładek u dołu (do ~42% wysokości)
-                Column(Modifier.fillMaxSize()) {
-                    PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
-                    if (state.preview != null) FilmCaption(state)
-                    if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
-                    EditorPanel(state, tab, { tab = it }, onOpenLibrary, Modifier, false)
+                // pionowo: podgląd na cały obszar, panel to szuflada na dole; zdjęcie dopasowuje się nad szufladą
+                var sheetPx by remember { mutableIntStateOf(0) }
+                val bottom = with(LocalDensity.current) { sheetPx.toDp() }
+                Box(Modifier.fillMaxSize()) {
+                    PreviewPane(state, showBefore, crop, onSelectPhoto, Modifier.fillMaxSize().padding(bottom = bottom))
+                    EditorSheet(
+                        state,
+                        tab,
+                        { tab = it },
+                        onOpenLibrary,
+                        SheetControl(sheet, { sheet = it }, { sheetPx = it }),
+                        Modifier.align(Alignment.BottomCenter)
+                    )
                 }
             }
         }
     }
 }
 
-/**
- * Panel zakładek: zawartość wybranej zakładki (przewijana) i pasek zakładek. Pionowo to dolny panel do ~42% wysokości
- * ekranu, poziomo ([sideBySide]) panel boczny na całą wysokość, żeby podgląd dostał całą resztę szerokości.
- */
-@Suppress("LongParameterList") // zdarzenia ekranu i układ przekazywane jawnie
+/** Panel boczny (układ poziomy): zawartość zakładki z przewijaniem na całą wysokość i pasek zakładek na dole. */
 @Composable
-private fun EditorPanel(
+private fun SidePanel(
     state: MainState,
     tab: EditorTab,
     onTab: (EditorTab) -> Unit,
     onOpenLibrary: () -> Unit,
-    modifier: Modifier,
-    sideBySide: Boolean
+    modifier: Modifier
 ) {
-    val maxHeight = (LocalConfiguration.current.screenHeightDp * PANEL_SCREEN_FRACTION).dp
-    val shape = if (sideBySide) {
-        RoundedCornerShape(topStart = PanelCorner, bottomStart = PanelCorner)
-    } else {
-        RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner)
-    }
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = shape,
+        shape = RoundedCornerShape(topStart = PanelCorner, bottomStart = PanelCorner),
         shadowElevation = PanelElevation
     ) {
-        Column(if (sideBySide) Modifier.fillMaxHeight() else Modifier) {
-            val content = if (sideBySide) Modifier.weight(1f) else Modifier.heightIn(max = maxHeight)
-            Column(content.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                when (tab) {
-                    EditorTab.Film -> FilmPanel(state, onOpenLibrary)
-                    EditorTab.Adjust -> AdjustPanel(state)
-                    EditorTab.Crop -> CropPanel(state)
-                    EditorTab.Frame -> FramePanel(state)
-                }
+        Column(Modifier.fillMaxHeight()) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                TabContent(state, tab, onOpenLibrary)
             }
             TabBar(tab, onTab)
         }
     }
 }
 
-/** Jedna linia pod zdjęciem: nazwa wybranego filmu i jego moc, żeby zawsze było widać, co jest nałożone. */
+/** Nazwa wybranego filmu i jego moc jako półprzezroczysta nakładka na dole zdjęcia: zawsze widać, co jest nałożone. */
 @Composable
-private fun FilmCaption(state: MainState) {
+private fun FilmCaption(state: MainState, modifier: Modifier) {
     val text = if (state.film == IDENTITY_ID) {
         stringResource(R.string.film_none)
     } else {
         val name = state.library.films.firstOrNull { it.id == state.film }?.name.orEmpty()
         stringResource(R.string.film_caption, name, (state.intensity * PERCENT).roundToInt())
     }
-    Text(
-        text,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = EdgePad, vertical = CaptionPad)
-    )
+    Surface(
+        color = Color.Black.copy(alpha = CAPTION_ALPHA),
+        shape = RoundedCornerShape(CaptionCorner),
+        modifier = modifier.padding(EdgePad)
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = BadgePad, vertical = CaptionPad)
+        )
+    }
 }
 
 @Composable
@@ -249,7 +245,13 @@ private fun RowScope.EditorActions(
 }
 
 @Composable
-private fun PreviewPane(state: MainState, showBefore: Boolean, cropMode: Boolean, modifier: Modifier) {
+private fun PreviewPane(
+    state: MainState,
+    showBefore: Boolean,
+    cropMode: Boolean,
+    onSelectPhoto: (Int) -> Unit,
+    modifier: Modifier
+) {
     val zoom = remember { ZoomState() }
     var showInfo by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.photo, cropMode) { zoom.reset() }
@@ -297,14 +299,28 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, cropMode: Boolean
         if (shown != null && cropMode) ThirdsGrid(shown.width, shown.height)
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
-        if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.TopStart))
-        if (state.signatureStatus() == SignatureFitStatus.TooLong) {
-            Badge(
-                stringResource(R.string.signature_too_long),
-                Modifier.align(Alignment.BottomCenter),
-                color = MaterialTheme.colorScheme.error
-            )
-        }
+        PreviewBadges(state, showBefore, onSelectPhoto)
+    }
+}
+
+/** Nakładki na zdjęciu: pasek zdjęć serii, podpis filmu, znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
+@Composable
+private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean, onSelectPhoto: (Int) -> Unit) {
+    if (state.uris.size > 1) {
+        PhotoStrip(
+            state,
+            onSelectPhoto,
+            Modifier.align(Alignment.TopStart).padding(start = EdgePad, top = EdgePad, end = StripEndGap)
+        )
+    }
+    if (state.preview != null) FilmCaption(state, Modifier.align(Alignment.BottomCenter))
+    if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.BottomStart))
+    if (state.signatureStatus() == SignatureFitStatus.TooLong) {
+        Badge(
+            stringResource(R.string.signature_too_long),
+            Modifier.align(Alignment.BottomCenter),
+            color = MaterialTheme.colorScheme.error
+        )
     }
 }
 
@@ -377,7 +393,7 @@ private fun Badge(text: String, modifier: Modifier, color: Color = Color.White) 
 }
 
 @Composable
-private fun TabBar(selected: EditorTab, onSelect: (EditorTab) -> Unit) {
+internal fun TabBar(selected: EditorTab, onSelect: (EditorTab) -> Unit) {
     Row(Modifier.fillMaxWidth()) {
         EditorTab.entries.forEach { t ->
             val on = t == selected
