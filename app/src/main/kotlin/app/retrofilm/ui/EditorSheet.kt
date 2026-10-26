@@ -54,9 +54,10 @@ private const val DRAG_THRESHOLD = 24f
 @Composable
 internal fun TabContent(state: MainState, tab: EditorTab) {
     when (tab) {
-        EditorTab.Film -> FilmPanel(state)
-        EditorTab.Adjust -> AdjustPanel(state)
         EditorTab.Crop -> CropPanel(state)
+        EditorTab.Adjust -> AdjustPanel(state)
+        EditorTab.Film -> FilmPanel(state)
+        EditorTab.Finish -> FinishPanel(state)
         EditorTab.Frame -> FramePanel(state)
     }
 }
