@@ -1,5 +1,6 @@
 package app.retrofilm.pipeline
 
+import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
@@ -61,12 +62,13 @@ internal class OkLab {
      * najbardziej stroma; kilka razy szybszy niż [Math.cbrt] na milionach pikseli.
      */
     private fun cbrt(x: Float): Float {
-        if (x <= 0f) return 0f
-        val u = sqrt(x) * CBRT_SCALE
+        val u = sqrt(max(x, 0f)) * CBRT_SCALE
         val i = u.toInt()
-        if (i >= CBRT_SIZE) return Math.cbrt(x.toDouble()).toFloat()
-        val t = u - i
-        return cbrtLut[i] + (cbrtLut[i + 1] - cbrtLut[i]) * t
+        return if (i >= CBRT_SIZE) {
+            Math.cbrt(x.toDouble()).toFloat()
+        } else {
+            cbrtLut[i] + (cbrtLut[i + 1] - cbrtLut[i]) * (u - i)
+        }
     }
 
     private fun lin(v: Float): Float = toLinear[(v.coerceIn(0f, 1f) * LUT + HALF).toInt()]
