@@ -18,7 +18,9 @@ Apache 2.0) można by przenieść z zachowaniem noty autorskiej w `THIRD_PARTY.m
 | Ziarno | szum wartościowy z gładką interpolacją w dwóch oktawach (gruba + drobna) plus drobny szum barwny, deterministyczny, skalowany z rozmiarem, najsilniejszy w półtonach | własne |
 | Winieta | naturalny spadek cos⁴θ (połowa pola widzenia 45° → −2 EV w rogu), siła = wykładnik; przeliczone na gamma i zapisane w tablicy po d² | prawo cosinusów (optyka obiektywu), własna implementacja |
 | Wyostrzanie | jasność: maska nieostra (gaussowski rozmyty obraz, miękki próg szumu, miękkie ograniczenie x·clip/(clip+|x|) przeciw aureolom) ↔ dekonwolucja Richardsona–Lucy'ego (PSF gaussowski, 2–4 iteracje) wg „Detalu”, tryby Standardowe / Maska nieostra / Dekonwolucja; maska krawędzi z gradientu rozmytej jasności (jak „Masking” w Lightroomie) z podglądem; promień skaluje się z rozmiarem obrazu; liczone paskami wierszy (stała pamięć); zestawy Uniwersalne/Krajobraz/Portret i Auto (udział skóry YCbCr wg Chai i Ngan, gęstość krawędzi, szum metodą Immerkaera 1996) | publikacje naukowe, własna implementacja |
-| Kadr, obrót, prostowanie | największy prostokąt o zadanych proporcjach wpisany w obrócone zdjęcie (`GeometryMath`) | geometria |
+| Kadr, obrót, prostowanie | największy prostokąt o zadanych proporcjach wpisany w obrócone zdjęcie (`GeometryMath`); obrót i perspektywa interpolacją bikubiczną Catmull–Rom | geometria |
+| Perspektywa (keystone) | homografia kamery otworkowej H = K·R·K⁻¹ (ogniskowa = przekątna), pochylenie i obrót ±25°; auto-kadr = największe okno w wypukłym czworokącie (wspinaczka po wklęsłej funkcji środka, `CropFit`) | geometria rzutowa (Hartley, Zisserman) |
+| Zmiana rozmiaru | filtr Lanczosa 3, rozdzielny, jądro rozciągane przy zmniejszaniu (bez aliasingu), wagi znormalizowane (`Resampler`) | Turkowski 1990 |
 
 ## Przegląd projektów (licencje sprawdzone w plikach LICENSE repozytoriów)
 

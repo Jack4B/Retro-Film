@@ -16,6 +16,10 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class GeometryTest {
+    private companion object {
+        const val MARGIN_DIV = 12
+    }
+
     @Test fun neutralKeepsSizeAndBitmap() {
         assertTrue(Geometry().isNeutral)
         assertTrue(Geometry(quarterTurns = 4).isNeutral)
@@ -100,5 +104,32 @@ class GeometryTest {
         assertEquals(4f / 3f, w.toFloat() / h, 0.01f)
         val (fw, fh) = GeometryMath.outputSize(4000, 3000, Geometry(aspect = CropAspect.Standard43, flip = true))
         assertEquals(3f / 4f, fw.toFloat() / fh, 0.01f)
+    }
+
+    @Test fun perspectiveWarpNeverShowsTheBorderOutsideTheImage() {
+        val w = 240
+        val h = 160
+        val src = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        src.eraseColor(Color.WHITE)
+        for (x in 0 until w) {
+            for (y in 0 until h) {
+                if (minOf(x, y, w - 1 - x, h - 1 - y) < 3) src.setPixel(x, y, Color.BLACK)
+            }
+        }
+        val g = Geometry(perspV = 0.6f, perspH = -0.3f, straighten = 2f)
+        val out = GeometryApplier.apply(src, g)
+        val (ow, oh) = GeometryMath.outputSize(w, h, g)
+        assertEquals(ow, out.width)
+        assertEquals(oh, out.height)
+        assertTrue(out.width < w && out.height < h)
+        val mx = out.width / MARGIN_DIV
+        val my = out.height / MARGIN_DIV
+        var dark = 0
+        for (x in mx until out.width - mx) {
+            for (y in my until out.height - my) {
+                if (Color.red(out.getPixel(x, y)) < 200) dark++
+            }
+        }
+        assertEquals("brak czarnej ramki i pustych pól wewnątrz kadru", 0, dark)
     }
 }

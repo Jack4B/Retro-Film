@@ -32,6 +32,9 @@
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
     <string name="crop_straighten">Prostowanie</string>
+    <string name="crop_persp_v">Perspektywa pionowa</string>
+    <string name="crop_persp_h">Perspektywa pozioma</string>
+    <string name="crop_gesture_hint">Przeciągnij zdjęcie, żeby przesunąć kadr, ściśnij palcami, żeby go przybliżyć. Dwa dotknięcia przywracają cały kadr.</string>
     <string name="watermark_enabled">Znak wodny: kod QR z linkiem do Retro-Film</string>
     <string name="zoom_percent_cd">Powiększenie %1$d procent</string>
     <string name="info_size">%1$d×%2$d · %3$s Mpx</string>
