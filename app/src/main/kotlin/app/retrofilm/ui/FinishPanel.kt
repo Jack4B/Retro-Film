@@ -17,7 +17,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+import java.util.Locale
+import kotlin.math.roundToInt
+
+private val MinTouch = 48.dp
+private val SidePad = 16.dp
+private val Gap = 4.dp
+private const val PERCENT = 100
+private const val RANGE = 1f
 
 private enum class FinishGroup(val label: Int) {
     Film(R.string.adjust_group_film),
@@ -76,3 +85,5 @@ private fun KlisaSliders(state: MainState) {
         state.adjustments = a.copy(vignette = it)
     }
 }
+
+private fun plainPercent(v: Float): String = "%d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())

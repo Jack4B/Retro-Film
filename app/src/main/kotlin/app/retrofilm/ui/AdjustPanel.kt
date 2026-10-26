@@ -37,11 +37,11 @@ import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-internal val MinTouch = 48.dp
-internal val SidePad = 16.dp
-internal val Gap = 4.dp
+private val MinTouch = 48.dp
+private val SidePad = 16.dp
+private val Gap = 4.dp
 private const val PERCENT = 100
-internal const val RANGE = 1f
+private const val RANGE = 1f
 
 private enum class AdjustGroup(val label: Int) {
     Light(R.string.adjust_group_light),
@@ -180,8 +180,8 @@ internal fun AdjustSlider(
     }
 }
 
-internal fun percentText(v: Float): String = "%+d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
+private fun percentText(v: Float): String = "%+d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
 
-internal fun plainPercent(v: Float): String = "%d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
+private fun plainPercent(v: Float): String = "%d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())
 
 private fun evText(ev: Float): String = "%+.1f EV".format(Locale.forLanguageTag("pl"), ev)
