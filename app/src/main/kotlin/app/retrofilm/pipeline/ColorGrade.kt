@@ -53,8 +53,12 @@ internal class ChromaScaler(private val saturation: Float) {
  * tym samym stosunkiem Y'/Y, więc odcień i proporcje kolorów zostają (krzywa na każdym kanale osobno podbijałaby
  * nasycenie w cieniach i światłach). Nadmiar powyżej bieli cofa kolor ku szarości o tej samej jasności.
  */
-internal class LuminanceContrast(contrast: Float) {
-    private val lut = FloatArray(SIZE + 1) { AdjustmentProcessor.contrastCurve(it.toFloat() / SIZE, contrast) }
+internal class LuminanceContrast(contrast: Float) :
+    LuminanceCurve({ AdjustmentProcessor.contrastCurve(it, contrast) })
+
+/** Dowolna krzywa tonalna 0..1 → 0..1 stosowana do jasności z zachowaniem barwy (jak [LuminanceContrast]). */
+internal open class LuminanceCurve(curve: (Float) -> Float) {
+    private val lut = FloatArray(SIZE + 1) { curve(it.toFloat() / SIZE) }
 
     fun apply(rgb: FloatArray) {
         val y = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]

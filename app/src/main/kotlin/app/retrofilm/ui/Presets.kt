@@ -49,7 +49,8 @@ object PresetCodec {
         mapOf(
             "exposure" to a.exposure, "contrast" to a.contrast, "saturation" to a.saturation,
             "temperature" to a.temperature, "tint" to a.tint, "highlights" to a.highlights,
-            "shadows" to a.shadows, "fade" to a.fade, "grain" to a.grain, "grainSize" to a.grainSize,
+            "shadows" to a.shadows, "whites" to a.whites, "blacks" to a.blacks, "texture" to a.texture,
+            "fade" to a.fade, "grain" to a.grain, "grainSize" to a.grainSize,
             "vignette" to a.vignette,
             "sharpness" to a.sharpness, "sharpRadius" to a.sharpRadius, "sharpDetail" to a.sharpDetail,
             "sharpMasking" to a.sharpMasking, "clarity" to a.clarity, "dehaze" to a.dehaze, "denoise" to a.denoise,
@@ -119,6 +120,7 @@ object PresetCodec {
             shadows = f(
                 "shadows"
             ),
+            whites = f("whites"), blacks = f("blacks"), texture = f("texture"),
             fade = f(
                 "fade"
             ),
