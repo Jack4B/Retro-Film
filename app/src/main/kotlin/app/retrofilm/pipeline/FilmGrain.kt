@@ -53,8 +53,10 @@ internal object FilmGrain {
         layers(x.toFloat(), y.toFloat(), cell, (channel + 1) * CHANNEL_SHIFT_X, (channel + 1) * CHANNEL_SHIFT_Y)
 
     /** Ziarno kanału [channel]: wspólna jasność i niezależny barwnik, wariancja nadal jednostkowa. */
-    fun channel(x: Int, y: Int, cell: Float, channel: Int): Float =
-        LUMA_SHARE * luma(x, y, cell) + CHROMA_SHARE * chroma(x, y, cell, channel)
+    fun channel(x: Int, y: Int, cell: Float, channel: Int): Float = mix(luma(x, y, cell), chroma(x, y, cell, channel))
+
+    /** Składa ziarno kanału ze wspólnej [luma] i szumu barwnego [chroma] (wspólna część liczona raz na piksel). */
+    fun mix(luma: Float, chroma: Float): Float = LUMA_SHARE * luma + CHROMA_SHARE * chroma
 
     /** Odchylenie ziarna w stopniach ekspozycji dla jasności [luma] 0..1 (kodowanej) i siły [amount] 0..1. */
     fun stops(luma: Float, amount: Float): Float {

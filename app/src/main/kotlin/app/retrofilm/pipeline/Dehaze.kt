@@ -42,12 +42,13 @@ internal object Dehaze {
     private const val COMPENSATE = 0.25f
     private const val MAX_GAIN = 1.5f
     private const val ROWS = 64
+    private const val SUM_CHUNK = 1 shl 20
 
     /** [amount] 0..1 (0 = bez zmian). Modyfikuje [px] w miejscu. */
     fun apply(px: IntArray, width: Int, height: Int, amount: Float) {
         if (amount <= 0f) return
         val low = Lowres.forSize(width, height, TARGET)
-        val chan = Array(CHANNELS) { c -> low.down(FloatArray(px.size) { channel(px[it], c) }) }
+        val chan = low.downRgb(px)
         val airlight = airlight(chan, low)
         val t = transmission(chan, airlight, low, amount.coerceAtMost(1f))
         protectSky(chan, airlight, t)
@@ -81,9 +82,17 @@ internal object Dehaze {
     }
 
     private fun meanLuma(px: IntArray): Float {
-        var sum = 0.0
-        for (c in px) sum += LUMA_R * channel(c, 0) + LUMA_G * channel(c, 1) + LUMA_B * channel(c, 2)
-        return (sum / px.size).toFloat()
+        val chunks = (px.size + SUM_CHUNK - 1) / SUM_CHUNK
+        val partial = DoubleArray(chunks)
+        Parallel.forEach(chunks) { c ->
+            var sum = 0.0
+            for (i in c * SUM_CHUNK until minOf(px.size, (c + 1) * SUM_CHUNK)) {
+                val p = px[i]
+                sum += LUMA_R * channel(p, 0) + LUMA_G * channel(p, 1) + LUMA_B * channel(p, 2)
+            }
+            partial[c] = sum
+        }
+        return (partial.sum() / px.size).toFloat()
     }
 
     /** Usuwanie mgły ciemni obraz; przywraca połowę utraconej średniej jasności (do +25%). */
@@ -92,12 +101,14 @@ internal object Dehaze {
         if (after < 1f) return
         val gain = 1f + COMPENSATE * ((before / after).coerceIn(1f, MAX_GAIN) - 1f)
         if (gain <= 1f) return
-        for (i in px.indices) {
-            val c = px[i]
-            px[i] = (c and ALPHA_MASK) or
-                (scale(channel(c, 0), gain) shl RED_SHIFT) or
-                (scale(channel(c, 1), gain) shl GREEN_SHIFT) or
-                scale(channel(c, 2), gain)
+        Parallel.range(px.size) { from, to ->
+            for (i in from until to) {
+                val c = px[i]
+                px[i] = (c and ALPHA_MASK) or
+                    (scale(channel(c, 0), gain) shl RED_SHIFT) or
+                    (scale(channel(c, 1), gain) shl GREEN_SHIFT) or
+                    scale(channel(c, 2), gain)
+            }
         }
     }
 
@@ -112,8 +123,21 @@ internal object Dehaze {
         val n = low.w * low.h
         val dark = darkChannel(chan, low, FloatArray(CHANNELS) { BYTE_MAX })
         val take = max(1, (n * TOP_FRACTION).toInt())
-        val order = (0 until n).sortedByDescending { dark[it] }.take(take)
+        val order = brightest(dark, take)
         return FloatArray(CHANNELS) { k -> max(A_MIN, order.map { chan[k][it] }.average().toFloat()) }
+    }
+
+    /** Indeksy [take] największych wartości [v] (remisy: mniejszy indeks pierwszy), bez sortowania wszystkich. */
+    private fun brightest(v: FloatArray, take: Int): List<Int> {
+        val threshold = v.sortedArray()[v.size - take]
+        val picked = ArrayList<Int>(take)
+        for (i in v.indices) if (v[i] > threshold) picked.add(i)
+        var i = 0
+        while (picked.size < take && i < v.size) {
+            if (v[i] == threshold) picked.add(i)
+            i++
+        }
+        return picked.sortedByDescending { v[it] }
     }
 
     /** Ciemny kanał: minimum po kanałach (znormalizowanych przez [a]) i po łatce (2r+1)². */
