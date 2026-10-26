@@ -14,8 +14,9 @@ Nowe wpisy na górze. Szablon:
 ## 2026-10-26 – Claude (wydanie 1.1.1: poprawka zakładek)
 - Faza: poprawka po ocenie 1.1.0 na telefonie, wydanie 1.1.1
 - Zrobione: szerokość zakładek proporcjonalna do długości etykiety (pięć zakładek; „Wykończenie” przycinało się do „Wykończ…” na Realme GT7T). Podgląd maski krawędzi wyostrzania nie zniknął, tylko przeniósł się razem z wyostrzaniem do Wykończenie → Wyostrzanie (na dole panelu, pod przełącznikiem „Włosy i oczy mocniej, skóra słabiej”).
-- PR / gałąź: `f32/poprawki-ui`; wersja 1.1.1 z taga `v1.1.1`.
-- Otwarte / P2 odłożone: bez zmian względem 1.1.0; zrzuty Roborazzi nowych paneli (wyłapałyby ucięty napis zakładki); szukanie funkcji po przeniesieniu (podgląd maski był w Korekty → Detal).
+- Uwagi użytkownika (MyNameisMrBullet): (1) błąd – po włączeniu „Popraw światło i kolor” i „Przygotuj pod film” wyłączenie i ponowne włączenie pierwszej opcji nie wracało do oryginału (jedna kopia „przed” nadpisywana przez drugi przycisk); teraz to dwa niezależne przełączniki na wspólnej podstawie (ustawienia sprzed pierwszego włączenia), kolejność nakładania stała (Auto, potem Przygotuj), ręczna zmiana suwaka robi nową podstawę (`AutoToggleTest`); (2) ostrzeżenie „Zakończyć edycję?” przy wyjściu (przycisk wstecz i strzałka), tylko gdy są niezapisane zmiany (film, intensywność, korekty, kadr, ramka względem stanu z wczytania albo ostatniego zapisu); (3) Photo Picker nie otwiera się już sam przy starcie – widać ekran Start z przyciskami (pomysł „ekran główny”: rozbudowa o ostatnie zapisy i ostatnio użyte filmy w osobnym wydaniu).
+- PR / gałąź: #111 (`f32/poprawki-ui`); wersja 1.1.1 z taga `v1.1.1`.
+- Otwarte / P2 odłożone: rozbudowa ekranu Start (ostatnie zapisy, ostatnio użyte filmy); ostrzeżenie przy wyjściu nie obejmuje osobnych edycji innych zdjęć serii; bez zmian względem 1.1.0: zrzuty Roborazzi nowych paneli (wyłapałyby ucięty napis zakładki); szukanie funkcji po przeniesieniu (podgląd maski był w Korekty → Detal).
 - Następny krok: ocena 1.1.1 na telefonie.
 
 ## 2026-10-26 – Claude (wydanie 1.1.0: faza C)

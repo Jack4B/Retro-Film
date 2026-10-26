@@ -37,6 +37,8 @@ internal object FaceFinder {
             emptyList()
         } catch (_: OutOfMemoryError) {
             emptyList()
+        } catch (_: UnsatisfiedLinkError) {
+            emptyList()
         }
     }
 
