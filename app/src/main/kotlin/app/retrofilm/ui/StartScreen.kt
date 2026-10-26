@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,12 +37,14 @@ private val BlockGap = 16.dp
 
 /** Start: obietnica i dwa wejścia: galeria (Photo Picker, otwiera się sama) oraz pliki z dowolnego folderu. */
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LongParameterList") // zdarzenia ekranu przekazywane jawnie
 @Composable
 fun StartScreen(
     state: MainState,
     onPick: () -> Unit,
     onPickFiles: () -> Unit,
     onSettings: () -> Unit,
+    onDownloadFilms: () -> Unit,
     snackbar: @Composable () -> Unit
 ) {
     Scaffold(
@@ -80,6 +83,10 @@ fun StartScreen(
                 enabled = !state.busy,
                 modifier = Modifier.fillMaxWidth().height(CtaHeight)
             ) { Text(stringResource(R.string.start_pick_files)) }
+            FilledTonalButton(
+                onClick = onDownloadFilms,
+                modifier = Modifier.fillMaxWidth().height(CtaHeight)
+            ) { Text(stringResource(R.string.start_download_films)) }
             Text(
                 stringResource(R.string.start_multi_hint),
                 style = MaterialTheme.typography.bodyMedium,

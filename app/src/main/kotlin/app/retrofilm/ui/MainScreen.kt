@@ -27,7 +27,7 @@ private const val MAX_PICKED = 30
  * Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
  */
 @Composable
-fun MainScreen(state: MainState, onSettings: () -> Unit) {
+fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
@@ -81,6 +81,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit) {
             onPick = onPick,
             onPickFiles = onPickFiles,
             onSettings = onSettings,
+            onDownloadFilms = onDownloadFilms,
             snackbar = { SnackbarHost(snackbar) }
         )
     }

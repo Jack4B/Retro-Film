@@ -44,19 +44,30 @@ fun RetroFilmNavHost(
     var route by rememberSaveable { mutableStateOf(Route.Main) }
     var license by rememberSaveable { mutableStateOf<ThirdPartyLicense?>(null) }
     var licensesParent by rememberSaveable { mutableStateOf(Route.Settings) }
+    var filtersParent by rememberSaveable { mutableStateOf(Route.Settings) }
     val scope = rememberCoroutineScope()
-    val parent = if (route == Route.Licenses) licensesParent else route.parent
+    val parent = when (route) {
+        Route.Licenses -> licensesParent
+        Route.Filters -> filtersParent
+        else -> route.parent
+    }
     val back: () -> Unit = { parent?.let { route = it } }
     parent?.let { BackHandler(onBack = back) }
     when (route) {
-        Route.Main -> main { route = it }
+        Route.Main -> main {
+            if (it == Route.Filters) filtersParent = Route.Main
+            route = it
+        }
 
         Route.Settings -> SettingsScreen(
             state = SettingsUiState(dynamicColor = dynamicColor, themeMode = themeMode),
             onBack = back,
             onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },
             onThemeModeChange = { scope.launch { graph.appSettings.setThemeMode(it) } },
-            onOpenFilters = { route = Route.Filters },
+            onOpenFilters = {
+                filtersParent = Route.Settings
+                route = Route.Filters
+            },
             onOpenLicense = {
                 license = it
                 licensesParent = Route.Settings
