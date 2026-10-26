@@ -50,8 +50,9 @@ class EditBookTest {
     @Test fun returningToSharedDropsTheIndividualEdit() {
         val book = EditBook()
         book.reset(warm)
-        book.makeIndividual(2, bw)
+        book.makeIndividual(2, warm)
         book.commit(2, bw)
+        assertEquals(bw, book.editFor(2))
         val back = book.makeShared(2)
         assertEquals(warm, back)
         assertFalse(book.isIndividual(2))
