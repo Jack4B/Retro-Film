@@ -33,7 +33,7 @@ internal object Dehaze {
     private const val SKY_TO = 1.0f
     private const val SKY_MIX_A = 3f
     private const val SKY_MIX_B = 2f
-    private const val COMPENSATE = 0.5f
+    private const val COMPENSATE = 0.25f
     private const val MAX_GAIN = 1.5f
 
     /** [amount] 0..1 (0 = bez zmian). Modyfikuje [px] w miejscu. */

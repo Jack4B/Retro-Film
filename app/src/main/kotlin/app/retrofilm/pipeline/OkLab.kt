@@ -1,6 +1,6 @@
 package app.retrofilm.pipeline
 
-import kotlin.math.cbrt
+import kotlin.math.sqrt
 
 /**
  * Konwersja sRGB (kodowanie gamma 0..1) ↔ OKLab (Ottosson 2020) z tablicami dla gammy, wspólna dla nasycenia,
@@ -13,6 +13,7 @@ internal class OkLab {
     private val lin = FloatArray(3)
     private val toLinear = FloatArray(LUT + 1) { AdjustmentProcessor.srgbToLinear(it.toFloat() / LUT) }
     private val toGamma = FloatArray(LUT + 1) { AdjustmentProcessor.linearToSrgb(it.toFloat() / LUT) }
+    private val cbrtLut = FloatArray(CBRT_SIZE + 2) { Math.cbrt(Math.pow(it.toDouble() / CBRT_SCALE, 2.0)).toFloat() }
 
     /** Ustawia [lab] dla koloru [rgb] (gamma, 0..1). */
     fun fromRgb(rgb: FloatArray) {
@@ -55,6 +56,19 @@ internal class OkLab {
         lin[2] = I2_20 * l3 + I2_21 * m3 + I2_22 * s3
     }
 
+    /**
+     * Pierwiastek sześcienny z tablicy indeksowanej √x (x^(1/3) = (√x)^(2/3)): gęstsza przy zerze, gdzie funkcja jest
+     * najbardziej stroma; kilka razy szybszy niż [Math.cbrt] na milionach pikseli.
+     */
+    private fun cbrt(x: Float): Float {
+        if (x <= 0f) return 0f
+        val u = sqrt(x) * CBRT_SCALE
+        val i = u.toInt()
+        if (i >= CBRT_SIZE) return Math.cbrt(x.toDouble()).toFloat()
+        val t = u - i
+        return cbrtLut[i] + (cbrtLut[i + 1] - cbrtLut[i]) * t
+    }
+
     private fun lin(v: Float): Float = toLinear[(v.coerceIn(0f, 1f) * LUT + HALF).toInt()]
 
     private fun gamma(v: Float): Float = toGamma[(v.coerceIn(0f, 1f) * LUT + HALF).toInt()]
@@ -64,6 +78,8 @@ internal class OkLab {
     @Suppress("MagicNumber")
     companion object {
         private const val LUT = 8192
+        private const val CBRT_SIZE = 4096
+        private const val CBRT_SCALE = 3500f
         private const val HALF = 0.5f
         private const val BISECTIONS = 8
         private const val GAMUT_EPS = 1e-3f
