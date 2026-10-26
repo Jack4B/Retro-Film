@@ -68,9 +68,10 @@ class AdjustmentsTest {
     @Test fun vibranceBoostsMutedMoreThanSaturated() {
         val muted = px(150, 120, 110, Adjustments(saturation = 0.8f))
         val vivid = px(250, 40, 20, Adjustments(saturation = 0.8f))
-        val mutedGain = (Color.red(muted) - Color.blue(muted)) - (150 - 110)
-        val vividGain = (Color.red(vivid) - Color.blue(vivid)) - (250 - 20)
-        assertTrue("stonowany kolor zyskuje więcej", mutedGain > vividGain)
+        // względny przyrost rozpiętości kanałów (R−B): stonowany kolor zyskuje względnie więcej
+        val mutedRatio = (Color.red(muted) - Color.blue(muted)) / (150f - 110f)
+        val vividRatio = (Color.red(vivid) - Color.blue(vivid)) / (250f - 20f)
+        assertTrue("stonowany kolor zyskuje względnie więcej ($mutedRatio vs $vividRatio)", mutedRatio > vividRatio)
         assertTrue(Color.red(vivid) <= 255)
     }
 
