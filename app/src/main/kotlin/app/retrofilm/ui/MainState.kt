@@ -15,6 +15,7 @@ import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
@@ -61,6 +62,11 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
+    private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
+
+    val canUndoAuto: Boolean get() = autoPair?.second == adjustments
 
     /** Jakość JPEG przy zapisie (70..100). */
     var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)
@@ -128,6 +134,7 @@ class MainState(
         photo = null
         preview = null
         before = null
+        autoPair = null
         thumbnails.reset()
     }
 

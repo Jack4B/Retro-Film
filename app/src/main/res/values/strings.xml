@@ -31,6 +31,8 @@
     <string name="tab_crop">Kadr</string>
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
+    <string name="adjust_auto">Auto: popraw światło i kolor</string>
+    <string name="adjust_auto_undo">Cofnij auto</string>
     <string name="crop_straighten">Prostowanie</string>
     <string name="watermark_enabled">Znak wodny: kod QR z linkiem do Retro-Film</string>
     <string name="zoom_percent_cd">Powiększenie %1$d procent</string>
