@@ -3,7 +3,7 @@
 Priorytety: **(1) wierna barwa filmów z LUT-ów**, **(2) korekty bez niszczenia pikseli** (suwak świateł nie robi obrazu
 płaskiego i szarego), (3) przepływ UX (faza C = 1.1.0). Zasady kluczowe: AGENTS.md, D14 i D15 w DECYZJE.md.
 Zatwierdzone: kolejność A → B → C; zakładki **Kadr · Korekty · Film · Wykończenie · Ramka**; „Przygotuj pod film” tylko
-jako przycisk; 1.0.4 = fazy A i B, faza C jako **1.1.0**. Bramki oceny na telefonie: po fazie A i po B1+B6.
+jako przycisk; 1.0.4 = fazy A i B, faza C jako **1.1.0**. Zmiana (2026-10-26, na prośbę Jack4B o build do oceny): 1.0.4 wydane po samej fazie A, faza B w kolejnym wydaniu. Bramki oceny na telefonie: po fazie A i po B1+B6.
 
 ## Wyniki pomiaru A0 (`tools/fidelity/a0_fidelity.py`, 8 filmów, 144³ i 256³)
 

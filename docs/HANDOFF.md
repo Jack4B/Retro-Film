@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.0.4: faza A)
+- Faza: wierność barwy filmów (faza A planu), wydanie 1.0.4
+- Zrobione: A0 pomiar wierności (`tools/fidelity/a0_fidelity.py`, #99); A1 kolejność korekty → film → wykończenie (D15; #100); A2 odbandowanie wejścia filmu (`Deband`, poprawka ≤ ±3 poziomy tylko na płaskich gradientach; #101); A3 przycisk „Przygotuj pod film” (balans bieli, ekspozycja, zdjęcie krzywej telefonu; tylko na żądanie; #101); A4 Display P3 → sRGB z mapowaniem gamutowym w OKLab zamiast przycinania kanałów (`GamutMapper`; #101).
+- Decyzja: wydanie 1.0.4 zawiera tylko fazę A, bo Jack4B ocenia wierność filmów na telefonie (bramka po fazie A). Faza B (korekty bez niszczenia pikseli) idzie w kolejnym wydaniu, DNG po niej.
+- PR / gałąź: #99, #100, #101; wersja 1.0.4 z taga `v1.0.4`.
+- Otwarte / P2 odłożone: film w pełnej precyzji float odłożony (A0 pokazał małą wartość numeryczną: odchylenie od planu); faza B (B1 światła v5 … B6 straż regresji); DNG; pomiar pamięci z wymuszonym GC; halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; zrzuty Roborazzi panelu Film; faza C (redesign UX).
+- Następny krok: ocena filmów na telefonie (kolor, bandy na niebie, odcień nasyconych kolorów), potem B1.
+
 ## 2026-10-26 – Claude (wydanie 1.0.3)
 - Faza: potok pasmowy (jeden bufor float), wydanie 1.0.3
 - Zrobione: `StripPipeline` + `StripAnalysis` (#95): obraz przetwarzany pasami wierszy na kanałach float (`Planes`), jedna kwantyzacja z ditheringiem na końcu (koniec zaokrągleń po każdym etapie); mapy globalne w niskiej rozdzielczości (odszumianie koloru i dehaze ze źródła, maska tonalna i baza wyrazistości z podpróbkowania); ziarno i winieta po wyostrzaniu; maski lokalne po wyostrzaniu. Dawny potok zostaje jako `AdjustmentsApplier.applyLegacy` (podgląd maski ostrości, wzorzec w testach). Zgodność z dawnym na 9 zdjęciach stockowych: średnia różnica 0,5–1,2 poziomu, p99 ≤ 7.
