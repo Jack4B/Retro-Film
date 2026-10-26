@@ -94,7 +94,7 @@ internal fun categoryLabel(category: String): String = stringResource(
 
 /** Zakładka Film: ulubione, kategorie, miniatury filmów i moc. Zmiana mocy zatwierdzana po puszczeniu suwaka. */
 @Composable
-fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
+fun FilmPanel(state: MainState) {
     var brand by rememberSaveable { mutableStateOf<String?>(null) }
     var type by rememberSaveable { mutableStateOf<String?>(null) }
     var onlyFavorites by rememberSaveable { mutableStateOf(false) }
@@ -105,31 +105,25 @@ fun FilmPanel(state: MainState, onOpenLibrary: () -> Unit) {
         ?: FilmGroups.brandsPresent(real).firstOrNull().orEmpty()
     val shown = FilmGroups.filter(real, current, type, onlyFavorites, state.library.favorites)
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f)) {
-                FilmFilterBar(
-                    films = real,
-                    brand = current,
-                    type = type,
-                    onlyFavorites = onlyFavorites,
-                    showPresets = showPresets,
-                    onBrand = {
-                        brand = it
-                        type = null
-                        onlyFavorites = false
-                        showPresets = false
-                    },
-                    onType = { type = it },
-                    onFavorites = {
-                        onlyFavorites = true
-                        showPresets = false
-                    },
-                    onPresets = { showPresets = true }
-                )
-            }
-            PresetAddButton(state)
-            LibraryButton(onOpenLibrary)
-        }
+        FilmFilterBar(
+            films = real,
+            brand = current,
+            type = type,
+            onlyFavorites = onlyFavorites,
+            showPresets = showPresets,
+            onBrand = {
+                brand = it
+                type = null
+                onlyFavorites = false
+                showPresets = false
+            },
+            onType = { type = it },
+            onFavorites = {
+                onlyFavorites = true
+                showPresets = false
+            },
+            onPresets = { showPresets = true }
+        )
         if (showPresets) {
             PresetTiles(state)
             FavoriteToggle(state, real)
@@ -174,14 +168,6 @@ private fun FilmTiles(state: MainState, shown: List<FilmOption>) {
 @Composable
 internal fun Hint(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = SidePad))
-}
-
-@Composable
-private fun LibraryButton(onClick: () -> Unit) {
-    val cd = stringResource(R.string.library_open_cd)
-    IconButton(onClick = onClick, modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }) {
-        Icon(Icons.Filled.Search, contentDescription = null)
-    }
 }
 
 /** Gwiazdka przy wybranym filmie: dodaje go do ulubionych albo usuwa. */

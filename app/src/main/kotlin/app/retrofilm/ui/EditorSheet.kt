@@ -52,9 +52,9 @@ private const val DRAG_THRESHOLD = 24f
 
 /** Zawartość wybranej zakładki (do przewijania w szufladzie albo w panelu bocznym). */
 @Composable
-internal fun TabContent(state: MainState, tab: EditorTab, onOpenLibrary: () -> Unit) {
+internal fun TabContent(state: MainState, tab: EditorTab) {
     when (tab) {
-        EditorTab.Film -> FilmPanel(state, onOpenLibrary)
+        EditorTab.Film -> FilmPanel(state)
         EditorTab.Adjust -> AdjustPanel(state)
         EditorTab.Crop -> CropPanel(state)
         EditorTab.Frame -> FramePanel(state)
@@ -72,7 +72,6 @@ internal fun EditorSheet(
     state: MainState,
     tab: EditorTab,
     onTab: (EditorTab) -> Unit,
-    onOpenLibrary: () -> Unit,
     control: SheetControl,
     modifier: Modifier = Modifier
 ) {
@@ -104,7 +103,7 @@ internal fun EditorSheet(
             SheetHandle(control.mode, control.onMode)
             if (control.mode != SheetMode.Collapsed) {
                 Column(Modifier.fillMaxWidth().heightIn(max = contentMax).verticalScroll(rememberScrollState())) {
-                    TabContent(state, tab, onOpenLibrary)
+                    TabContent(state, tab)
                 }
             }
             TabBar(tab, pick)

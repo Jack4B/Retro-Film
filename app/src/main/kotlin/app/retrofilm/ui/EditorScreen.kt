@@ -140,24 +140,24 @@ fun EditorScreen(
         BoxWithConstraints(Modifier.fillMaxSize().padding(inner)) {
             val sideBySide = maxWidth > maxHeight && maxWidth >= SIDE_BY_SIDE_MIN_WIDTH
             val panelWidth = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
-            val crop = tab == EditorTab.Crop
+            val preview = PreviewMode(crop = tab == EditorTab.Crop, filmActions = tab == EditorTab.Film, onOpenLibrary)
             if (sideBySide) {
                 // poziomo: podgląd na całą wysokość po lewej, panel zakładek po prawej
                 Row(Modifier.fillMaxSize()) {
-                    PreviewPane(state, showBefore, crop, onSelectPhoto, Modifier.weight(1f).fillMaxHeight())
-                    SidePanel(state, tab, { tab = it }, onOpenLibrary, Modifier.width(panelWidth).fillMaxHeight())
+                    PreviewPane(state, showBefore, preview, onSelectPhoto, Modifier.weight(1f).fillMaxHeight())
+                    SidePanel(state, tab, { tab = it }, Modifier.width(panelWidth).fillMaxHeight())
                 }
             } else {
                 // pionowo: podgląd na cały obszar, panel to szuflada na dole; zdjęcie dopasowuje się nad szufladą
                 var sheetPx by remember { mutableIntStateOf(0) }
                 val bottom = with(LocalDensity.current) { sheetPx.toDp() }
                 Box(Modifier.fillMaxSize()) {
-                    PreviewPane(state, showBefore, crop, onSelectPhoto, Modifier.fillMaxSize().padding(bottom = bottom))
+                    val previewModifier = Modifier.fillMaxSize().padding(bottom = bottom)
+                    PreviewPane(state, showBefore, preview, onSelectPhoto, previewModifier)
                     EditorSheet(
                         state,
                         tab,
                         { tab = it },
-                        onOpenLibrary,
                         SheetControl(sheet, { sheet = it }, { sheetPx = it }),
                         Modifier.align(Alignment.BottomCenter)
                     )
@@ -169,13 +169,7 @@ fun EditorScreen(
 
 /** Panel boczny (układ poziomy): zawartość zakładki z przewijaniem na całą wysokość i pasek zakładek na dole. */
 @Composable
-private fun SidePanel(
-    state: MainState,
-    tab: EditorTab,
-    onTab: (EditorTab) -> Unit,
-    onOpenLibrary: () -> Unit,
-    modifier: Modifier
-) {
+private fun SidePanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, modifier: Modifier) {
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -184,7 +178,7 @@ private fun SidePanel(
     ) {
         Column(Modifier.fillMaxHeight()) {
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                TabContent(state, tab, onOpenLibrary)
+                TabContent(state, tab)
             }
             TabBar(tab, onTab)
         }
@@ -248,10 +242,11 @@ private fun RowScope.EditorActions(
 private fun PreviewPane(
     state: MainState,
     showBefore: Boolean,
-    cropMode: Boolean,
+    mode: PreviewMode,
     onSelectPhoto: (Int) -> Unit,
     modifier: Modifier
 ) {
+    val cropMode = mode.crop
     val zoom = remember { ZoomState() }
     var showInfo by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.photo, cropMode) { zoom.reset() }
@@ -300,8 +295,14 @@ private fun PreviewPane(
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
         PreviewBadges(state, showBefore, onSelectPhoto)
+        if (mode.filmActions && shown != null) {
+            FilmActions(state, mode.onOpenLibrary, Modifier.align(Alignment.TopEnd).padding(top = MinTouch))
+        }
     }
 }
+
+/** Tryb podglądu zależny od zakładki: kadrowanie gestem i przyciski filmu (biblioteka, preset) na zdjęciu. */
+private class PreviewMode(val crop: Boolean, val filmActions: Boolean, val onOpenLibrary: () -> Unit)
 
 /** Nakładki na zdjęciu: pasek zdjęć serii, podpis filmu, znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
 @Composable
