@@ -2,6 +2,13 @@
 
 > **Zmiany v2 (D12, redesign – makiety w [makiety/index.html](makiety/index.html), uzasadnienie w [OCENA-I-REDESIGN.md](OCENA-I-REDESIGN.md)):** nawigacja Start → Edytor (zakładki Film / Korekty / Ramka / Więcej) → zapis; osobne ekrany Seria, Biblioteka LUT i Eksport zastępuje pasek miniatur w Edytorze, „Biblioteka filmów” i arkusz „Zapisz”. „Ostatnie projekty” zastąpione ostatnio użytymi filmami i ostatnimi zapisami. Eksport tylko JPEG. W serii jeden film i jedna ramka, podpis osobno dla każdego zdjęcia. Własna galeria usunięta – tylko Photo Picker. Opis poniżej to stan sprzed v2 (do dalszej aktualizacji wraz z kodem).
 
+> **Zmiany v3 (1.1.0, faza C, D15):** edytor ma pięć zakładek w kolejności pracy: **Kadr · Korekty · Film · Wykończenie · Ramka** (otwiera się na Korektach).
+> - **Korekty** (przed filmem): Światło (ekspozycja, kontrast, światła, cienie, biele, czernie, tekstura, „Auto” i „Przygotuj pod film” jako przyciski), Kolor, Kolory (HSL), Detal (wyrazistość, dehaze, odszumianie koloru i jasności, ostrość koloru), Maski. „Wyzeruj korekty” nie rusza filmu ani wykończenia.
+> - **Film**: wybór looku i intensywność (bez zmian).
+> - **Wykończenie** (po filmie): Klisza (blaknięcie, ziarno, winieta), Wyostrzanie (w tym „Włosy i oczy mocniej, skóra słabiej”), Tonowanie, Krzywe. „Wyzeruj wykończenie” osobno.
+> - **Ramka**: bez zmian.
+> Opis ekranów poniżej jest starszy (do aktualizacji z kodem).
+
 Każdy ekran ma stany: pusty, ładowanie, błąd. UI po polsku, cele ≥ 48 dp, kontrast AA, TalkBack.
 
 ## 1. Start

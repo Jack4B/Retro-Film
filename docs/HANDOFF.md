@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.1.0: faza C)
+- Faza: redesign UX (faza C planu), wydanie 1.1.0
+- Zrobione: pięć zakładek w kolejności pracy (Kadr · Korekty · Film · Wykończenie · Ramka; edytor otwiera się na Korektach), `FinishPanel` (klisza, wyostrzanie, tonowanie, krzywe), `AdjustPanel` tylko z korektami (Światło, Kolor, Kolory, Detal, Maski), osobne „Wyzeruj korekty” i „Wyzeruj wykończenie” (`corrections()` / `finishing()`), test kolejności zakładek (#109). Domknięcie P2 z 1.0.5: `DETAIL_MID` 1,6 / `DETAIL_FINE` 3,0 (kontrast w jasnych obszarach) i `SHADOW_DETAIL` 0,1 (szum w cieniach), dobrane offline w numpy (#108); wynik na prawdziwych zdjęciach w raporcie jakości.
+- Decyzje: makiet osobno nie robiono (Jack4B: „rób C”; układ wynika z zatwierdzonych zakładek); DNG zawieszone.
+- PR / gałąź: #108, #109; wersja 1.1.0 z taga `v1.1.0`.
+- Otwarte / P2 odłożone: brak makiet i zrzutów Roborazzi nowych paneli; `docs/EKRANY.md` opisuje ekrany sprzed v2 (dopisana nota o v3); pomiar pamięci z wymuszonym GC; halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; B3 (odszumianie z DQT/NLM) odłożone; DNG zawieszone.
+- Następny krok: ocena 1.1.0 na telefonie (układ zakładek, czy Korekty/Wykończenie są tam, gdzie się ich szuka).
+
 ## 2026-10-26 – Claude (wydanie 1.0.5: faza B)
 - Faza: korekty bez niszczenia pikseli (faza B planu), wydanie 1.0.5
 - Zrobione: B1 światła v5 (kompresja bazy w logarytmie, detal w dwóch skalach z `ToneMask`, chroma, ochrona wypaleń; stałe dobrane offline w numpy na 9 zdjęciach stockowych: kontrast w jasnych obszarach ×0,90–1,26; #103, #104, #106); B2 Biele, Czernie (krzywa ze stałymi 0 i 1) i Tekstura z bramką szumu (#104); B4 Ostrość koloru (`ChromaEdge`: chroma z jednolitej jasnościowo strony krawędzi po 4:2:0; #105); B5 wyostrzanie świadome treści (`SemanticSharpen`: włosy przez koherencję tensora struktury, oczy i skóra twarzy z `FaceBox`; przełącznik, domyślnie włączony; #105); B6 straż regresji suwaków (`SliderRegressionTest`, `sliders.md` w raporcie jakości) i cienie bez wzmacniania szumu (szum w ciemnej ćwiartce ×0,98–1,42; #106).
