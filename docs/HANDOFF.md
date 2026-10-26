@@ -12,11 +12,11 @@ Nowe wpisy na górze. Szablon:
 ```
 
 ## 2026-10-26 – Claude (wydanie 1.1.2: podgląd maski krawędzi)
-- Faza: poprawka po zgłoszeniu „podgląd krawędzi przy wyostrzaniu nie działa”, wydanie 1.1.2
-- Zrobione: podgląd maski pokazuje obraz maski także przy suwaku Ilość = 0 (wcześniej wymagał Ilość > 0, więc przełącznik wyglądał na martwy); przełącznik stoi pod Maskowaniem krawędzi; przy Maskowaniu = 0 podpowiedź („maska jest cała biała”, bo bez maskowania wyostrzane jest wszędzie); `SharpenMaskPreviewTest`. Przyczyny nie udało się odtworzyć na urządzeniu – jeśli w 1.1.2 przy Ilość i Maskowanie > 0 podgląd nadal nie pokazuje krawędzi, szukać dalej w ścieżce `AdjustmentsApplier.applyLegacy` / `DetailFilter.apply` (podgląd idzie ścieżką legacy, po filmie).
+- Faza: poprawka po zgłoszeniu „podgląd krawędzi przy wyostrzaniu nie działa” (fałszywy alarm: Ilość = 0), wydanie 1.1.2
+- Zrobione: podgląd maski pokazuje obraz maski także przy suwaku Ilość = 0 (wcześniej wymagał Ilość > 0, więc przełącznik wyglądał na martwy); przełącznik stoi pod Maskowaniem krawędzi; przy Maskowaniu = 0 podpowiedź („maska jest cała biała”, bo bez maskowania wyostrzane jest wszędzie); `SharpenMaskPreviewTest`. Przyczyna potwierdzona przez użytkownika: podgląd działał, tylko przy Ilość = 0 nic nie pokazywał (zachowanie starsze niż 1.1.0); 1.1.2 ułatwia to zauważyć.
 - PR / gałąź: #112 (`f33/podglad-maski`); wersja 1.1.2 z taga `v1.1.2`.
 - Otwarte / P2 odłożone: bez zmian względem 1.1.1.
-- Następny krok: ocena 1.1.2 na telefonie (podgląd maski).
+- Następny krok: ocena 1.1.2 (układ zakładek, przełączniki Auto/Przygotuj, ostrzeżenie przy wyjściu).
 
 ## 2026-10-26 – Claude (wydanie 1.1.1: poprawka zakładek)
 - Faza: poprawka po ocenie 1.1.0 na telefonie, wydanie 1.1.1
