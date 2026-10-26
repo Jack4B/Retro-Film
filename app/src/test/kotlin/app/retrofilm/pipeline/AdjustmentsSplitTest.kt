@@ -9,7 +9,7 @@ import org.junit.Test
 class AdjustmentsSplitTest {
     private val corrections = setOf(
         "exposure", "contrast", "saturation", "temperature", "tint", "highlights", "shadows", "clarity", "dehaze",
-        "whites", "blacks", "texture", "denoise", "lumaDenoise", "hsl", "masks"
+        "whites", "blacks", "texture", "denoise", "lumaDenoise", "chromaEdges", "hsl", "masks"
     )
     private val finishing = setOf(
         "fade", "grain", "grainSize", "vignette", "sharpness", "sharpRadius", "sharpDetail", "sharpMasking",
