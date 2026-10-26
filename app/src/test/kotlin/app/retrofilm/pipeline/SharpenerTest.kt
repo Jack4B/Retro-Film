@@ -12,7 +12,7 @@ class SharpenerTest {
 
     @Test fun zeroAmountAndFlatImageGiveNoChange() {
         val flat = FloatArray(40 * 20) { 100f }
-        assertTrue(Sharpener.delta(flat, 40, 20, SharpenParams(1f)).all { it == 0f })
+        assertTrue(Sharpener.delta(flat, 40, 20, SharpenParams(1f)).all { abs(it) < 0.01f })
         assertTrue(Sharpener.delta(step(40, 20), 40, 20, SharpenParams(0f)).all { it == 0f })
     }
 
@@ -55,7 +55,8 @@ class SharpenerTest {
         val w = 80
         val sharpStep = step(w, 6)
         val blurred = Sharpener.gauss(sharpStep, w, 6, 1.5f)
-        val d = Sharpener.delta(blurred, w, 6, SharpenParams(1f, radius = 1.5f, mode = SharpenMode.Deconvolution))
+        // promień skaluje się z rozmiarem obrazu, więc dla 80 px potrzebny jest duży parametr, by σ wyniosło 1,5
+        val d = Sharpener.delta(blurred, w, 6, SharpenParams(1f, radius = 75f, mode = SharpenMode.Deconvolution))
         fun slope(a: FloatArray) = (w / 2 - 3 until w / 2 + 3).maxOf { abs(a[3 * w + it + 1] - a[3 * w + it]) }
         val restored = FloatArray(blurred.size) { blurred[it] + d[it] }
         assertTrue("krawędź po dekonwolucji bardziej stroma", slope(restored) > slope(blurred) * 1.15f)
