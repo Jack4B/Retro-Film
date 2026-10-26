@@ -92,16 +92,18 @@ private const val INFO_ICON_ALPHA = 0.85f
 private val PanelCorner = 20.dp
 private val PanelElevation = 8.dp
 
+/** Kolejność zakładek jest kolejnością pracy (D15): kadr, korekty, film, wykończenie, ramka. */
 internal enum class EditorTab(val label: Int) {
-    Film(R.string.tab_film),
-    Adjust(R.string.tab_adjust),
     Crop(R.string.tab_crop),
+    Adjust(R.string.tab_adjust),
+    Film(R.string.tab_film),
+    Finish(R.string.tab_finish),
     Frame(R.string.tab_frame)
 }
 
 /**
- * Edytor: zdjęcie na pierwszym planie (cały obszar), narzędzia w szufladzie na dole (zakładki Film / Korekty / Kadr /
- * Ramka; poziomo panel z boku).
+ * Edytor: zdjęcie na pierwszym planie (cały obszar), narzędzia w szufladzie na dole (zakładki Kadr / Korekty / Film /
+ * Wykończenie / Ramka; poziomo panel z boku).
  * Przycisk „Przed” pokazuje oryginał, szczypanie i dwukrotne dotknięcie przybliżają podgląd; „Zapisz” zapisuje od razu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,7 +117,7 @@ fun EditorScreen(
     onSelectPhoto: (Int) -> Unit,
     snackbar: @Composable () -> Unit
 ) {
-    var tab by rememberSaveable { mutableStateOf(EditorTab.Film) }
+    var tab by rememberSaveable { mutableStateOf(EditorTab.Adjust) }
     var showBefore by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf(SheetMode.Compact) }
     Scaffold(
@@ -406,7 +408,10 @@ internal fun TabBar(selected: EditorTab, onSelect: (EditorTab) -> Unit) {
                 Text(
                     stringResource(t.label),
                     color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal
+                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

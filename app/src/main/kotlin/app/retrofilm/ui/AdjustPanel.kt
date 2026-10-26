@@ -46,15 +46,15 @@ private const val RANGE = 1f
 private enum class AdjustGroup(val label: Int) {
     Light(R.string.adjust_group_light),
     Color(R.string.adjust_group_color),
-    Film(R.string.adjust_group_film),
-    Detail(R.string.adjust_group_detail),
     Hsl(R.string.adjust_group_hsl),
-    Toning(R.string.adjust_group_toning),
-    Curves(R.string.adjust_group_curves),
+    Detail(R.string.adjust_group_detail),
     Masks(R.string.adjust_group_masks)
 }
 
-/** Zakładka Korekty: trzy grupy (Światło, Kolor, Klisza); zmiana zatwierdzana po puszczeniu suwaka. */
+/**
+ * Zakładka Korekty (przed filmem, D15): Światło, Kolor, Kolory (HSL), Detal i Maski; zmiana zatwierdzana po puszczeniu
+ * suwaka. Wykończenie (klisza, wyostrzanie, tonowanie, krzywe) jest w osobnej zakładce ([FinishPanel]).
+ */
 @Composable
 fun AdjustPanel(state: MainState) {
     var group by rememberSaveable { mutableStateOf(AdjustGroup.Light) }
@@ -74,16 +74,13 @@ fun AdjustPanel(state: MainState) {
         when (group) {
             AdjustGroup.Light -> LightSliders(state)
             AdjustGroup.Color -> ColorSliders(state)
-            AdjustGroup.Film -> FilmSliders(state)
-            AdjustGroup.Detail -> DetailSliders(state)
             AdjustGroup.Hsl -> HslSliders(state)
-            AdjustGroup.Toning -> ToningSliders(state)
-            AdjustGroup.Curves -> CurveControls(state)
+            AdjustGroup.Detail -> DetailSliders(state)
             AdjustGroup.Masks -> MaskControls(state)
         }
         OutlinedButton(
-            onClick = { state.adjustments = Adjustments.None },
-            enabled = !state.adjustments.isNeutral,
+            onClick = { state.adjustments = state.adjustments.finishing() },
+            enabled = !state.adjustments.corrections().isNeutral,
             modifier = Modifier.padding(horizontal = SidePad).heightIn(min = MinTouch)
         ) { Text(stringResource(R.string.adjust_reset)) }
     }
@@ -137,7 +134,6 @@ private fun ColorSliders(state: MainState) {
 @Composable
 private fun DetailSliders(state: MainState) {
     val a = state.adjustments
-    SharpenControls(state)
     AdjustSlider(stringResource(R.string.adjust_clarity), a.clarity, { percentText(it) }) {
         state.adjustments = a.copy(clarity = it)
     }
@@ -152,23 +148,6 @@ private fun DetailSliders(state: MainState) {
     }
     AdjustSlider(stringResource(R.string.adjust_chroma_edges), a.chromaEdges, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(chromaEdges = it)
-    }
-}
-
-@Composable
-private fun FilmSliders(state: MainState) {
-    val a = state.adjustments
-    AdjustSlider(stringResource(R.string.adjust_fade), a.fade, { plainPercent(it) }, range = 0f..RANGE) {
-        state.adjustments = a.copy(fade = it)
-    }
-    AdjustSlider(stringResource(R.string.adjust_grain), a.grain, { plainPercent(it) }, range = 0f..RANGE) {
-        state.adjustments = a.copy(grain = it)
-    }
-    AdjustSlider(stringResource(R.string.adjust_grain_size), a.grainSize, { plainPercent(it) }, range = 0f..RANGE) {
-        state.adjustments = a.copy(grainSize = it)
-    }
-    AdjustSlider(stringResource(R.string.adjust_vignette), a.vignette, { plainPercent(it) }, range = 0f..RANGE) {
-        state.adjustments = a.copy(vignette = it)
     }
 }
 

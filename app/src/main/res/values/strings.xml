@@ -39,6 +39,8 @@
     <string name="editor_working">Przetwarzanie…</string>
     <string name="tab_film">Film</string>
     <string name="tab_adjust">Korekty</string>
+    <string name="tab_finish">Wykończenie</string>
+    <string name="finish_reset">Wyzeruj wykończenie</string>
     <string name="tab_crop">Kadr</string>
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
