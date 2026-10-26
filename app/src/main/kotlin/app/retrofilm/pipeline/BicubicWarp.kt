@@ -6,9 +6,9 @@ import kotlin.math.floor
 
 /**
  * Obrót z interpolacją bikubiczną Catmull–Rom (16 próbek na piksel, ostrzejsza od dwuliniowej i bez jej
- * rozmycia; lekki nadstrzał przycinany do 0..255). Odwzorowanie odwrotne wyjście → źródło z macierzy afinicznej
- * [forward] (źródło → wyjście), brzegi źródła przedłużane. Używane tylko przy prostowaniu, bo obrót o wielokrotność
- * 90° i przesunięcie o całkowite piksele są dokładne bez interpolacji.
+ * rozmycia; lekki nadstrzał przycinany do 0..255). Odwzorowanie odwrotne wyjście → źródło z macierzy rzutowej
+ * [forward] (źródło → wyjście; afinicznej albo z perspektywą), brzegi źródła przedłużane. Używane przy prostowaniu
+ * i korekcie perspektywy, bo obrót o wielokrotność 90° i przesunięcie o całkowite piksele są dokładne bez interpolacji.
  */
 internal object BicubicWarp {
     private const val HALF = 0.5f
@@ -32,8 +32,9 @@ internal object BicubicWarp {
             val py = y + HALF
             for (x in 0 until outW) {
                 val px = x + HALF
-                val sx = v[Matrix.MSCALE_X] * px + v[Matrix.MSKEW_X] * py + v[Matrix.MTRANS_X] - HALF
-                val sy = v[Matrix.MSKEW_Y] * px + v[Matrix.MSCALE_Y] * py + v[Matrix.MTRANS_Y] - HALF
+                val d = v[Matrix.MPERSP_0] * px + v[Matrix.MPERSP_1] * py + v[Matrix.MPERSP_2]
+                val sx = (v[Matrix.MSCALE_X] * px + v[Matrix.MSKEW_X] * py + v[Matrix.MTRANS_X]) / d - HALF
+                val sy = (v[Matrix.MSKEW_Y] * px + v[Matrix.MSCALE_Y] * py + v[Matrix.MTRANS_Y]) / d - HALF
                 out[y * outW + x] = sample(pixels, sw, sh, sx, sy, wx, wy)
             }
         }

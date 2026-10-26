@@ -22,6 +22,7 @@ import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +62,7 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+    private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
 
     /** Jakość JPEG przy zapisie (70..100). */
     var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)
@@ -128,6 +130,7 @@ class MainState(
         photo = null
         preview = null
         before = null
+        previewCache = null
         thumbnails.reset()
     }
 
@@ -206,10 +209,7 @@ class MainState(
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
         val (orig, shown) = withContext(Dispatchers.Default) {
-            val small = GeometryApplier.apply(
-                scaleDown(p, if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE),
-                geometry
-            )
+            val small = GeometryApplier.apply(previewBase(p), geometry)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
             orig to
@@ -225,6 +225,14 @@ class MainState(
         }
         before = orig
         preview = shown
+    }
+
+    /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
+    private fun previewBase(p: Bitmap): Bitmap {
+        val side = if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
+        val cached = previewCache
+        if (cached != null && cached.first === p && cached.second == side) return cached.third
+        return scaleDown(p, side).also { previewCache = Triple(p, side, it) }
     }
 
     /** Eksport; nigdy nie rzuca – błędy wracają jako [UiMessage]. */
@@ -286,12 +294,18 @@ class MainState(
             val long = maxOf(src.width, src.height)
             if (long <= maxSide) return src
             val s = maxSide.toFloat() / long
-            return Bitmap.createScaledBitmap(
-                src,
-                (src.width * s).toInt().coerceAtLeast(1),
-                (src.height * s).toInt().coerceAtLeast(1),
-                true
-            )
+            val w = (src.width * s).toInt().coerceAtLeast(1)
+            val h = (src.height * s).toInt().coerceAtLeast(1)
+            val px = IntArray(src.width * src.height)
+            src.getPixels(px, 0, src.width, 0, 0, src.width, src.height)
+            val cs = src.colorSpace
+            val out = if (cs != null) {
+                Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, false, cs)
+            } else {
+                Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            }
+            out.setPixels(Resampler.resize(px, src.width, src.height, w, h), 0, w, 0, 0, w, h)
+            return out
         }
     }
 }

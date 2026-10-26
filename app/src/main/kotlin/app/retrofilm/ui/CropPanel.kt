@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.pipeline.CropAspect
 import app.retrofilm.pipeline.Geometry
+import app.retrofilm.pipeline.Perspective
 import java.util.Locale
 
 private val Pad = 16.dp
@@ -31,6 +33,12 @@ private const val PERCENT = 100
 fun CropPanel(state: MainState) {
     val g = state.geometry
     Column(Modifier.padding(vertical = Gap), verticalArrangement = Arrangement.spacedBy(Gap)) {
+        Text(
+            stringResource(R.string.crop_gesture_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Pad)
+        )
         Row(Modifier.padding(horizontal = Pad), horizontalArrangement = Arrangement.spacedBy(Gap)) {
             OutlinedButton(
                 onClick = {
@@ -63,6 +71,7 @@ fun CropPanel(state: MainState) {
             display = { "%+.1f°".format(Locale.forLanguageTag("pl"), it) },
             range = -Geometry.MAX_STRAIGHTEN..Geometry.MAX_STRAIGHTEN
         ) { state.updateGeometry(g.copy(straighten = it)) }
+        PerspectiveSliders(state)
         WindowSliders(state)
         OutlinedButton(
             onClick = { state.updateGeometry(Geometry()) },
@@ -70,6 +79,24 @@ fun CropPanel(state: MainState) {
             modifier = Modifier.padding(horizontal = Pad).heightIn(min = MinTouch)
         ) { Text(stringResource(R.string.crop_reset)) }
     }
+}
+
+/** Korekta perspektywy: pion (zbiegające się pionowe linie) i poziom, w stopniach pochylenia kamery. */
+@Composable
+private fun PerspectiveSliders(state: MainState) {
+    val g = state.geometry
+    AdjustSlider(
+        label = stringResource(R.string.crop_persp_v),
+        value = g.perspV,
+        display = { "%+.0f°".format(Locale.forLanguageTag("pl"), it * Perspective.MAX_DEGREES) },
+        range = -1f..1f
+    ) { state.updateGeometry(g.copy(perspV = it)) }
+    AdjustSlider(
+        label = stringResource(R.string.crop_persp_h),
+        value = g.perspH,
+        display = { "%+.0f°".format(Locale.forLanguageTag("pl"), it * Perspective.MAX_DEGREES) },
+        range = -1f..1f
+    ) { state.updateGeometry(g.copy(perspH = it)) }
 }
 
 /** Docięcie: przybliżenie okna kadru i jego przesunięcie po zdjęciu. */

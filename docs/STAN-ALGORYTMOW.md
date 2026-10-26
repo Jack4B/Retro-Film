@@ -23,7 +23,8 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Ziarno | FilmGrain.kt | ✅ | model kryształów srebra, mnożnik w świetle liniowym, tekstura Gaussa |
 | Blaknięcie | Adjustments.kt | ✅ | podniesiona czerń, przytłumiona biel, odbarwienie |
 | Dithering 8 bit | Dither.kt | ✅ | TPDF ±0,5 |
-| Geometria: obrót, kadr | Geometry.kt, BicubicWarp.kt | 🟡 | bikubiczny obrót ✅; brak korekty perspektywy i przesuwania ramki kadru palcem |
+| Geometria: obrót, kadr, perspektywa | Geometry.kt, Perspective.kt, CropFit.kt, BicubicWarp.kt | ✅ | perspektywa pion/poziom z auto-kadrem, kadr gestem (przeciągnięcie, szczypnięcie), siatka trójpodziału |
+| Zmiana rozmiaru | Resampler.kt | ✅ | Lanczos 3 w eksporcie i podglądzie |
 | Ramka i podpis | core/frame, FrameRenderer.kt | ✅ | podpis zachowuje rozmiar z suwaka, zawijanie |
 | Znak wodny QR | Watermark.kt | ✅ | ikona + nazwa + QR |
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
