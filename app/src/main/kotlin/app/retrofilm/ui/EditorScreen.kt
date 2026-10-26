@@ -5,14 +5,17 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -67,6 +70,10 @@ import kotlin.math.roundToInt
 
 private val MinTouch = 48.dp
 private const val PANEL_SCREEN_FRACTION = 0.42f
+private val SIDE_BY_SIDE_MIN_WIDTH = 560.dp
+private const val SIDE_PANEL_FRACTION = 0.42f
+private val SIDE_PANEL_MIN = 320.dp
+private val SIDE_PANEL_MAX = 460.dp
 private const val PERCENT = 100
 private val CaptionPad = 6.dp
 private const val BADGE_ALPHA = 0.72f
@@ -125,26 +132,63 @@ fun EditorScreen(
         containerColor = MaterialTheme.colorScheme.surfaceDim,
         snackbarHost = snackbar
     ) { inner ->
-        Column(Modifier.fillMaxSize().padding(inner)) {
-            PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
-            if (state.preview != null) FilmCaption(state)
-            if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
-            EditorPanel(state, tab, { tab = it }, onOpenLibrary)
+        BoxWithConstraints(Modifier.fillMaxSize().padding(inner)) {
+            val sideBySide = maxWidth > maxHeight && maxWidth >= SIDE_BY_SIDE_MIN_WIDTH
+            val panelWidth = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
+            if (sideBySide) {
+                // poziomo: podgląd z paskiem zdjęć po lewej na całą wysokość, panel zakładek po prawej
+                Row(Modifier.fillMaxSize()) {
+                    Column(Modifier.weight(1f).fillMaxHeight()) {
+                        PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
+                        if (state.preview != null) FilmCaption(state)
+                        if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
+                    }
+                    EditorPanel(state, tab, {
+                        tab = it
+                    }, onOpenLibrary, Modifier.width(panelWidth).fillMaxHeight(), true)
+                }
+            } else {
+                // pionowo: podgląd u góry, panel zakładek u dołu (do ~42% wysokości)
+                Column(Modifier.fillMaxSize()) {
+                    PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
+                    if (state.preview != null) FilmCaption(state)
+                    if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
+                    EditorPanel(state, tab, { tab = it }, onOpenLibrary, Modifier, false)
+                }
+            }
         }
     }
 }
 
-/** Dolny panel: zawartość wybranej zakładki (przewijana, do ~42% wysokości ekranu) i pasek zakładek. */
+/**
+ * Panel zakładek: zawartość wybranej zakładki (przewijana) i pasek zakładek. Pionowo to dolny panel do ~42% wysokości
+ * ekranu, poziomo ([sideBySide]) panel boczny na całą wysokość, żeby podgląd dostał całą resztę szerokości.
+ */
+@Suppress("LongParameterList") // zdarzenia ekranu i układ przekazywane jawnie
 @Composable
-private fun EditorPanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, onOpenLibrary: () -> Unit) {
+private fun EditorPanel(
+    state: MainState,
+    tab: EditorTab,
+    onTab: (EditorTab) -> Unit,
+    onOpenLibrary: () -> Unit,
+    modifier: Modifier,
+    sideBySide: Boolean
+) {
     val maxHeight = (LocalConfiguration.current.screenHeightDp * PANEL_SCREEN_FRACTION).dp
+    val shape = if (sideBySide) {
+        RoundedCornerShape(topStart = PanelCorner, bottomStart = PanelCorner)
+    } else {
+        RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner)
+    }
     Surface(
+        modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner),
+        shape = shape,
         shadowElevation = PanelElevation
     ) {
-        Column {
-            Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).verticalScroll(rememberScrollState())) {
+        Column(if (sideBySide) Modifier.fillMaxHeight() else Modifier) {
+            val content = if (sideBySide) Modifier.weight(1f) else Modifier.heightIn(max = maxHeight)
+            Column(content.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 when (tab) {
                     EditorTab.Film -> FilmPanel(state, onOpenLibrary)
                     EditorTab.Adjust -> AdjustPanel(state)
