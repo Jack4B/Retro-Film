@@ -27,6 +27,7 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Zmiana rozmiaru | Resampler.kt | ✅ | Lanczos 3 w eksporcie i podglądzie |
 | Ramka i podpis | core/frame, FrameRenderer.kt | ✅ | podpis zachowuje rozmiar z suwaka, zawijanie |
 | Znak wodny QR | Watermark.kt | ✅ | ikona + nazwa + QR |
+| Edycja serii zdjęć | EditBook.kt | ✅ | wspólne ustawienia albo osobne dla zdjęcia (film, moc, korekty, maski, kadr); ramka i podpis wspólne |
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
 | Eksport | ExportPipeline.kt | ✅ | jakość JPEG, maks. rozmiar, wyostrzanie wyjściowe; GPS usuwany |
 | Krzywe tonalne | ToneCurve.kt | ✅ | RGB + R/G/B, PCHIP, edytor z punktami |

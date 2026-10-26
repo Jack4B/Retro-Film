@@ -19,6 +19,15 @@
     <string name="photos_position">Zdjęcie %1$d z %2$d</string>
     <string name="photos_saving">Zapisywanie %1$d z %2$d</string>
     <string name="photos_pick_cd">Zdjęcie numer %1$d</string>
+    <string name="photos_pick_own_cd">Zdjęcie numer %1$d, edytowane osobno</string>
+    <string name="scope_all">Wszystkie zdjęcia</string>
+    <string name="scope_one">Tylko to zdjęcie</string>
+    <string name="scope_apply_all">Zastosuj do wszystkich</string>
+    <string name="scope_hint_all">Zmiany dotyczą wszystkich zdjęć. Wybierz „Tylko to zdjęcie”, żeby edytować zdjęcie %1$d osobno.</string>
+    <string name="scope_hint_one">Zdjęcie %1$d ma własny film, korekty i kadr. Pozostałe mają ustawienia wspólne.</string>
+    <string name="scope_apply_all_title">Zastosować do wszystkich?</string>
+    <string name="scope_apply_all_text">Film, korekty i kadr tego zdjęcia zostaną ustawione dla całej serii. Osobne edycje pozostałych zdjęć zostaną zastąpione.</string>
+    <string name="scope_apply_all_ok">Zastosuj</string>
     <string name="export_many_done">Zapisano zdjęcia: %1$d</string>
     <string name="export_many_partial">Zapisano zdjęcia: %1$d, nie udało się: %2$d</string>
     <string name="editor_preview_cd">Podgląd zdjęcia z filmem i ramką. Przytrzymaj, aby zobaczyć oryginał.</string>
