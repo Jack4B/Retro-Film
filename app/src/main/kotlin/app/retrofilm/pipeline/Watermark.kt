@@ -1,23 +1,42 @@
 package app.retrofilm.pipeline
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.RectF
+import android.graphics.Typeface
+import androidx.core.content.ContextCompat
+import app.retrofilm.R
 import kotlin.math.min
 
 /**
- * Znak wodny aplikacji: kod QR z linkiem do repozytorium ([URL]) w prawym dolnym rogu zdjęcia, na białym tle
- * z ciszą wokół kodu (wymóg czytników QR). Macierz modułów (QR wersja 3, korekcja M, 29×29) jest wygenerowana
+ * Znak wodny aplikacji w prawym dolnym rogu zdjęcia, na białej karcie: u góry ikona aplikacji z nazwą [NAME],
+ * pod nią kod QR z linkiem do repozytorium ([URL]) z ciszą wokół kodu (wymóg czytników QR).
+ * Macierz modułów (QR wersja 3, korekcja M, 29×29) jest wygenerowana
  * z góry dla stałego adresu i sprawdzona dekoderem, więc nie ma zależności od biblioteki kodów kreskowych.
  */
 internal object Watermark {
     const val URL = "https://github.com/Jack4B/Retro-Film"
+    const val NAME = "Retro-Film"
 
     private const val SIZE_FRACTION = 0.11f
     private const val INSET_FRACTION = 0.02f
     private const val QUIET_MODULES = 2
     private const val CORNER_FRACTION = 0.12f
+    private const val HEADER_FRACTION = 0.26f
+    private const val HEADER_PAD = 0.07f
+    private const val ICON_FRACTION = 0.8f
+    private const val ICON_CORNER = 0.22f
+    private const val ICON_PX = 128
+    private const val TEXT_GAP = 0.25f
+    private const val NAME_COLOR = 0xFF2B2B2B.toInt()
+
+    /** Ikona aplikacji (ustawiana raz przy starcie przez [installIcon]); bez niej karta ma tylko nazwę. */
+    @Volatile
+    var icon: Bitmap? = null
     private val MODULES = listOf(
         "11111110001001111010001111111",
         "10000010111010001110101000001",
@@ -50,7 +69,16 @@ internal object Watermark {
         "11111110110001111101001110100"
     )
 
-    /** Rysuje kod w prawym dolnym rogu prostokąta [area] (obszar zdjęcia). */
+    /** Renderuje ikonę launchera aplikacji do bitmapy używanej w znaku wodnym. */
+    fun installIcon(context: Context) {
+        val d = ContextCompat.getDrawable(context, R.mipmap.ic_launcher) ?: return
+        val bmp = Bitmap.createBitmap(ICON_PX, ICON_PX, Bitmap.Config.ARGB_8888)
+        d.setBounds(0, 0, ICON_PX, ICON_PX)
+        d.draw(Canvas(bmp))
+        icon = bmp
+    }
+
+    /** Rysuje kartę w prawym dolnym rogu prostokąta [area] (obszar zdjęcia). */
     fun draw(canvas: Canvas, area: RectF) {
         val n = MODULES.size
         val unit = min(area.width(), area.height())
@@ -60,12 +88,15 @@ internal object Watermark {
         val right = area.right - inset
         val bottom = area.bottom - inset
         val left = right - side
-        val top = bottom - side
+        val qrTop = bottom - side
+        val headerH = side * HEADER_FRACTION
+        val card = RectF(left, qrTop - headerH, right, bottom)
         val white = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
-        canvas.drawRoundRect(RectF(left, top, right, bottom), side * CORNER_FRACTION, side * CORNER_FRACTION, white)
+        canvas.drawRoundRect(card, side * CORNER_FRACTION, side * CORNER_FRACTION, white)
+        drawHeader(canvas, RectF(left, card.top, right, qrTop))
         val ink = Paint().apply { color = Color.BLACK }
         val originX = left + QUIET_MODULES * cell
-        val originY = top + QUIET_MODULES * cell
+        val originY = qrTop + QUIET_MODULES * cell
         for (y in 0 until n) {
             for (x in 0 until n) {
                 if (MODULES[y][x] == '1') {
@@ -79,5 +110,34 @@ internal object Watermark {
                 }
             }
         }
+    }
+
+    /** Nagłówek karty: ikona i nazwa aplikacji w jednym wierszu, wyśrodkowane. */
+    private fun drawHeader(canvas: Canvas, box: RectF) {
+        val pad = box.width() * HEADER_PAD
+        val iconSize = if (icon != null) box.height() * ICON_FRACTION else 0f
+        val gap = if (icon != null) iconSize * TEXT_GAP else 0f
+        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = NAME_COLOR
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textSize = box.height() * ICON_FRACTION
+        }
+        val room = box.width() - 2 * pad - iconSize - gap
+        val measured = text.measureText(NAME)
+        if (measured > room) text.textSize *= room / measured
+        val total = iconSize + gap + text.measureText(NAME)
+        var x = box.left + (box.width() - total) / 2f
+        val cy = box.centerY()
+        icon?.let { bmp ->
+            val dst = RectF(x, cy - iconSize / 2f, x + iconSize, cy + iconSize / 2f)
+            canvas.save()
+            val r = iconSize * ICON_CORNER
+            canvas.clipPath(Path().apply { addRoundRect(dst, r, r, Path.Direction.CW) })
+            canvas.drawBitmap(bmp, null, dst, Paint(Paint.FILTER_BITMAP_FLAG))
+            canvas.restore()
+            x += iconSize + gap
+        }
+        val fm = text.fontMetrics
+        canvas.drawText(NAME, x, cy - (fm.ascent + fm.descent) / 2f, text)
     }
 }

@@ -33,6 +33,8 @@
     <string name="crop_rotate_right">Obróć w prawo</string>
     <string name="crop_straighten">Prostowanie</string>
     <string name="watermark_enabled">Znak wodny: kod QR z linkiem do Retro-Film</string>
+    <string name="zoom_readout">%1$d%% · %2$d×%3$d · %4$s Mpx</string>
+    <string name="zoom_readout_cd">Powiększenie %1$d procent, rozmiar zdjęcia %2$d na %3$d pikseli, %4$s megapiksela</string>
     <string name="crop_flip">Zamień poziom/pion</string>
     <string name="crop_zoom">Docięcie (przybliżenie)</string>
     <string name="crop_pan_x">Przesuń kadr poziomo</string>
