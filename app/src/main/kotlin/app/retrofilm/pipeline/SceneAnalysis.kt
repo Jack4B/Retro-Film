@@ -63,7 +63,8 @@ object SceneAnalyzer {
     private const val GREEN_TO = 175f
     private const val HUE_BINS = 12
     private const val HUE_BIN_WIDTH = 360f / HUE_BINS
-    private const val COLORFUL = 0.05f
+    private const val COLORFUL = 0.09f
+    private const val MIN_COLORFUL_SHARE = 0.2f
     private const val FACE_W = 0.6f
     private const val FACE_H = 0.7f
     private const val PORTRAIT_SKIN = 0.04f
@@ -154,16 +155,23 @@ object SceneAnalyzer {
         }
     }
 
+    /**
+     * Udział najliczniejszych sąsiednich zakresów barw w chromie pikseli wyraźnie barwnych (chroma ≥ 0,09). Naloty
+     * oświetlenia na szarościach (chroma poniżej tego progu) nie liczą się jako „dominanta”, a bez co najmniej 20%
+     * pikseli barwnych scena nie ma dominanty w ogóle.
+     */
     private fun dominance(chroma: FloatArray, hue: FloatArray): Float {
         val bins = FloatArray(HUE_BINS)
         var total = 0f
+        var count = 0
         for (i in chroma.indices) {
-            if (chroma[i] < COLORFUL) continue
-            bins[(hue[i] / HUE_BIN_WIDTH).toInt().coerceIn(0, HUE_BINS - 1)] += chroma[i]
-            total += chroma[i]
+            if (chroma[i] >= COLORFUL) {
+                bins[(hue[i] / HUE_BIN_WIDTH).toInt().coerceIn(0, HUE_BINS - 1)] += chroma[i]
+                total += chroma[i]
+                count++
+            }
         }
-        // za mało barwnych pikseli, by mówić o dominancie
-        if (total < chroma.size * 0.02f * COLORFUL * 2f) return 0f
+        if (count < chroma.size * MIN_COLORFUL_SHARE) return 0f
         // sąsiednie zakresy liczymy razem, bo jedna barwa rozlewa się na dwa przedziały
         var best = 0f
         for (b in 0 until HUE_BINS) best = maxOf(best, bins[b] + bins[(b + 1) % HUE_BINS])

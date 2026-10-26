@@ -17,6 +17,7 @@ internal object AutoWhiteBalance {
     private const val LIMIT = 0.4f
     private const val MIN_USABLE = 0.12f
     private const val MIN_SAMPLES = 16
+    private const val MIN_ILLUMINANT_SAMPLES = 64
     private const val SKIN_HUE = 55f
     private const val SKIN_HUE_SLACK = 12f
     private const val LUM_R = 0.2126f
@@ -45,7 +46,7 @@ internal object AutoWhiteBalance {
                 n++
             }
         }
-        return if (n < MIN_SAMPLES) null else DoubleArray(3) { (sum[it] / n).pow(1.0 / GRAY_P) }
+        return if (n < MIN_ILLUMINANT_SAMPLES) null else DoubleArray(3) { (sum[it] / n).pow(1.0 / GRAY_P) }
     }
 
     private fun midtone(rgb: FloatArray, i: Int): Boolean {
