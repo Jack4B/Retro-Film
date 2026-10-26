@@ -22,6 +22,12 @@ data class Adjustments(
     val highlights: Float = 0f,
     /** Cienie −1..1: plus rozjaśnia ciemne partie, minus je pogłębia. */
     val shadows: Float = 0f,
+    /** Biele −1..1: nachylenie krzywej przy białym końcu (plus – mocniejsze światła, minus – więcej detalu). */
+    val whites: Float = 0f,
+    /** Czernie −1..1: plus unosi okolice czerni (bez szarej czerni), minus je pogłębia. */
+    val blacks: Float = 0f,
+    /** Tekstura −1..1: detal średniej skali (plus wydobywa, minus wygładza, np. skórę); w cieniach słabsza. */
+    val texture: Float = 0f,
     /** Blaknięcie 0..1: podniesiona czerń i przytłumiona biel (wygląd starej odbitki). */
     val fade: Float = 0f,
     /** Ziarno filmowe 0..1. */
@@ -65,6 +71,9 @@ data class Adjustments(
     val masks: List<LocalMask> = emptyList()
 ) {
     val isNeutral: Boolean get() = this == None
+
+    /** Czy potrzebna jest warstwowa maska tonalna ([ToneMask]): cienie, światła albo tekstura. */
+    val usesToneMask: Boolean get() = shadows != 0f || highlights != 0f || texture != 0f
 
     /** Czy potrzebny jest przebieg po sąsiedztwie pikseli ([DetailFilter]). */
     val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f
@@ -179,6 +188,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     private val rgb = FloatArray(3)
     private val hasTone = adj.shadows != 0f || adj.highlights != 0f
+    private val textureBoost: TextureBoost? = if (adj.texture != 0f) TextureBoost(adj.texture) else null
+    private val ends: LuminanceCurve? = if (adj.whites != 0f || adj.blacks != 0f) {
+        LuminanceCurve { EndsCurve.at(it, adj.whites, adj.blacks) }
+    } else {
+        null
+    }
     private val recovery: HighlightRecovery? = if (adj.highlights < 0f) HighlightRecovery(adj.highlights) else null
     private val layers = FloatArray(LAYER_COUNT)
     private val hsl: HslMixer? = if (adj.hsl.isNeutral) null else HslMixer(adj.hsl)
@@ -214,7 +229,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             chroma?.apply(rgb)
             hsl?.apply(rgb)
+            texture(mask, x, row)
             if (hasTone) toneRecovery(mask, x, row)
+            ends?.apply(rgb)
             contrast?.apply(rgb)
             curves?.apply(rgb)
             if (adj.fade > 0f) fade()
@@ -247,7 +264,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             chroma?.apply(rgb)
             hsl?.apply(rgb)
+            texture(mask, x * xStep, row)
             if (hasTone) toneRecovery(mask, x * xStep, row)
+            ends?.apply(rgb)
             contrast?.apply(rgb)
             curves?.apply(rgb)
             if (adj.fade > 0f) fade()
@@ -345,6 +364,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val keep = if (m < 1f) TONE_KEEP_DARKEN else TONE_KEEP_LIFT
         val s = 1f + (1f - keep) * (m - 1f) + chromaBoost
         for (k in 0..2) rgb[k] = (own * m + (rgb[k] - own) * s).coerceIn(0f, 1f)
+    }
+
+    /** Tekstura: detal średniej skali z [ToneMask], przed cieniami i światłami (maska opisuje jasność sprzed nich). */
+    private fun texture(mask: ToneMask?, x: Int, row: Int) {
+        if (textureBoost == null || mask == null) return
+        mask.sampleLayers(x, row, layers)
+        val m = textureBoost.ratio(luma(), maskLut[maskIndex(layers[1])], layers[2])
+        for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
     }
 
     private fun maskIndex(y: Float): Int = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
@@ -563,7 +590,7 @@ object AdjustmentsApplier {
         val h = src.height
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val blender = MaskBlender(adj.masks, w, h).takeUnless { it.isEmpty }
-        val mask = if (adj.shadows != 0f || adj.highlights != 0f) buildMask(src) else null
+        val mask = if (adj.usesToneMask) buildMask(src) else null
         // kawałki po ROWS_PER_CHUNK wierszy są niezależne; każdy wątek ma własny procesor i bufor (stan roboczy)
         Parallel.forEach(
             (h + ROWS_PER_CHUNK - 1) / ROWS_PER_CHUNK,

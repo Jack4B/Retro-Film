@@ -70,7 +70,7 @@ internal class StripAnalysis(
         val dehaze = sums?.dehaze?.let { acc -> Dehaze.plan(Array(RGB) { acc.mean(it) }, acc.low, adj.dehaze) }
         dehaze?.let { it.gain = dehazeGain(it) }
         val luma = LumaDenoise.plan(w, h, adj.lumaDenoise, if (adj.lumaDenoise > 0f) noiseSigma() else 0f)
-        val tone = if (adj.shadows != 0f || adj.highlights != 0f) toneMask(chroma, dehaze) else null
+        val tone = if (adj.usesToneMask) toneMask(chroma, dehaze) else null
         val clarity = if (adj.clarity != 0f) clarityMap(chroma, dehaze, tone) else null
         val sharpMargin = if (adj.sharpness > 0f) Sharpener.marginFor(adj.sharpenParams, max(w, h)) else 0
         val debandRadius = if (deband) Deband.radiusFor(max(w, h)) else 0

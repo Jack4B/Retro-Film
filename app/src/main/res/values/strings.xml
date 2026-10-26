@@ -203,6 +203,9 @@
     <string name="adjust_luma_denoise">Odszumianie jasności</string>
     <string name="adjust_highlights">Światła</string>
     <string name="adjust_shadows">Cienie</string>
+    <string name="adjust_whites">Biele</string>
+    <string name="adjust_blacks">Czernie</string>
+    <string name="adjust_texture">Tekstura</string>
     <string name="adjust_fade">Blaknięcie</string>
     <string name="adjust_grain">Ziarno</string>
     <string name="adjust_vignette">Winieta</string>

@@ -108,6 +108,15 @@ private fun LightSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_shadows), a.shadows, { percentText(it) }) {
         state.adjustments = a.copy(shadows = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_whites), a.whites, { percentText(it) }) {
+        state.adjustments = a.copy(whites = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_blacks), a.blacks, { percentText(it) }) {
+        state.adjustments = a.copy(blacks = it)
+    }
+    AdjustSlider(stringResource(R.string.adjust_texture), a.texture, { percentText(it) }) {
+        state.adjustments = a.copy(texture = it)
+    }
 }
 
 /** „Auto” ustawia światło i kolor z analizy zdjęcia; po użyciu ten sam przycisk cofa zmianę. */
