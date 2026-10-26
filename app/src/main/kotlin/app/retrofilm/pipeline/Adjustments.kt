@@ -192,16 +192,19 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val shadowY = (base + maxOf(base, own)) * HALF
         val highlightY = (base + minOf(base, own)) * HALF
         var m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
-        // Detal ponad bazą rośnie proporcjonalnie do zmiany bazy (jak w local Laplacian / Durand–Dorsey): przy
-        // przyciemnianiu nieba chmury zostają wyraźne, a przy rozjaśnianiu cieni faktura nie znika.
+        // Przy przyciemnianiu bazy (światła) detal ponad nią rośnie tak, by jego bezwzględny kontrast się zachował
+        // (jak w local Laplacian / Durand–Dorsey): chmury na przyciemnionym niebie zostają wyraźne zamiast spłaszczyć
+        // się do szarości. Przy rozjaśnianiu cieni detalu nie wzmacniamy (rósłby sam szum).
         val baseGain = shadowGain[maskIndex(base)] * highlightGain[maskIndex(base)]
-        val boost = TONE_DETAIL * abs(1f - baseGain)
-        if (boost > 0f && base > TONE_MIN_BASE) {
+        if (baseGain < 1f && base > TONE_MIN_BASE) {
+            val boost = minOf(1f / baseGain - 1f, TONE_BOOST_CAP) * TONE_DETAIL
             val ratio = (own / base).coerceIn(TONE_RATIO_MIN, TONE_RATIO_MAX)
             m *= (1f + boost * (ratio - 1f)).coerceIn(TONE_BOOST_MIN, TONE_BOOST_MAX)
         }
-        // Chromę skalujemy słabiej niż jasność (przy przyciemnianiu nie szarzeje, przy rozjaśnianiu nie wybucha szum).
-        val s = 1f + (1f - TONE_CHROMA_KEEP) * (m - 1f)
+        // Chromę skalujemy słabiej niż jasność: przy przyciemnianiu prawie nie szarzeje, przy rozjaśnianiu rośnie
+        // umiarkowanie.
+        val keep = if (m < 1f) TONE_KEEP_DARKEN else TONE_KEEP_LIFT
+        val s = 1f + (1f - keep) * (m - 1f)
         for (k in 0..2) rgb[k] = (own * m + (rgb[k] - own) * s).coerceIn(0f, 1f)
     }
 
@@ -247,13 +250,15 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val HIGHLIGHT_FROM = 0.40f
         private const val HIGHLIGHT_TO = 0.90f
         private const val BLACK_GUARD = 0.06f
-        private const val TONE_DETAIL = 1.0f
-        private const val TONE_CHROMA_KEEP = 0.6f
+        private const val TONE_DETAIL = 2.2f
+        private const val TONE_BOOST_CAP = 4f
+        private const val TONE_KEEP_DARKEN = 0.9f
+        private const val TONE_KEEP_LIFT = 0.6f
         private const val TONE_MIN_BASE = 0.02f
         private const val TONE_RATIO_MIN = 0.25f
         private const val TONE_RATIO_MAX = 4f
         private const val TONE_BOOST_MIN = 0.5f
-        private const val TONE_BOOST_MAX = 1.6f
+        private const val TONE_BOOST_MAX = 1.8f
         private const val MATRIX_SIZE = 9
         private const val IDX_00 = 0
         private const val IDX_01 = 1

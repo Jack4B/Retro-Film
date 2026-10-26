@@ -111,15 +111,18 @@ class StockPhotoQualityTest {
         val gainDark = dark.map { luma(shadows[it]) - luma(orig[it]) }.average()
         val driftBright = bright.map { luma(shadows[it]) - luma(orig[it]) }.average()
         val cutBright = bright.map { luma(orig[it]) - luma(highlights[it]) }.average()
-        val driftDark = dark.map { luma(highlights[it]) - luma(orig[it]) }.average()
+        // prawdziwe cienie (jasność ≤ 35%); na pochmurnych, jasnych zdjęciach ciemna ćwiartka jest już półtonem
+        val deep = orig.indices.filter { luma(orig[it]) <= DEEP_SHADOW }
+        val deepEnough = deep.size >= orig.size / 100
+        val driftDark = if (deepEnough) deep.map { luma(highlights[it]) - luma(orig[it]) }.average() else 0.0
+        val darkIsDeep = dark.map { luma(orig[it]) }.average() <= DEEP_SHADOW
         val hue = hueShift(orig, shadows)
         report.appendLine(
             "- Cienie +100%: ciemna ćwiartka +${f1(gainDark)}, jasna ${f1(driftBright)}; " +
-                "światła −100%: jasna ćwiartka −${f1(
-                    cutBright
-                )}, ciemna ${f1(driftDark)}; przesunięcie barwy ${f1(hue)}°"
+                "światła −100%: jasna ćwiartka −${f1(cutBright)}, prawdziwe cienie ${f1(driftDark)}" +
+                (if (deepEnough) "" else " (brak głębokich cieni)") + "; przesunięcie barwy ${f1(hue)}°"
         )
-        if (gainDark < MIN_TONE_GAIN) failures += "$name: cienie za słabo rozjaśniają (${f1(gainDark)})"
+        if (darkIsDeep && gainDark < MIN_TONE_GAIN) failures += "$name: cienie za słabo rozjaśniają (${f1(gainDark)})"
         if (abs(driftBright) > MAX_TONE_LEAK) failures += "$name: cienie ruszają jasne partie (${f1(driftBright)})"
         if (cutBright < MIN_TONE_GAIN / 2) failures += "$name: światła za słabo przyciemniają (${f1(cutBright)})"
         if (abs(driftDark) > MAX_TONE_LEAK) failures += "$name: światła ruszają ciemne partie (${f1(driftDark)})"
@@ -437,6 +440,7 @@ class StockPhotoQualityTest {
         const val MAX_LUMA_DRIFT = 4.0
         const val MIN_TONE_GAIN = 5.0
         const val MIN_BRIGHT_RATIO = 0.9
+        const val DEEP_SHADOW = 89.0
         const val MAX_NOISE_RATIO = 3.0
         const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
