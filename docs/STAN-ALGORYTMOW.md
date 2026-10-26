@@ -34,6 +34,8 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Maski lokalne | LocalMask.kt | ✅ | liniowa i radialna, własne korekty z maską tonalną cieni/świateł; brak malowania pędzlem i masek luminancji |
 | Auto-ulepszenie | AutoEnhance.kt, SceneAnalysis.kt | ✅ | scena: twarze (FaceDetector), skóra, niebo, rośliny, dominanta; profil obiektywu i sieci neuronowe poza zakresem |
 
+Szczegółowa ocena jakości modułów, diagnoza świateł i plan ulepszeń: [PRZEGLAD-ALGORYTMOW.md](PRZEGLAD-ALGORYTMOW.md).
+
 ## Dalsze pomysły (nic z tabeli nie jest już ❌)
 
 - Automatyczne prostowanie horyzontu i pionów (transformata Hough po wykrywaniu krawędzi) i auto-perspektywa.
