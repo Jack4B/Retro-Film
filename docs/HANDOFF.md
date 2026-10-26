@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.0.3)
+- Faza: potok pasmowy (jeden bufor float), wydanie 1.0.3
+- Zrobione: `StripPipeline` + `StripAnalysis` (#95): obraz przetwarzany pasami wierszy na kanałach float (`Planes`), jedna kwantyzacja z ditheringiem na końcu (koniec zaokrągleń po każdym etapie); mapy globalne w niskiej rozdzielczości (odszumianie koloru i dehaze ze źródła, maska tonalna i baza wyrazistości z podpróbkowania); ziarno i winieta po wyostrzaniu; maski lokalne po wyostrzaniu. Dawny potok zostaje jako `AdjustmentsApplier.applyLegacy` (podgląd maski ostrości, wzorzec w testach). Zgodność z dawnym na 9 zdjęciach stockowych: średnia różnica 0,5–1,2 poziomu, p99 ≤ 7.
+- PR / gałąź: #95 (`f20/bufor`); wersja 1.0.3 z taga `v1.0.3`.
+- Otwarte / P2 odłożone: czas „wszystko naraz” 12 Mpx na CI nowy ≈ 1,06–1,11× dawnego (cel ≤ 2,5 s dotrzymany; analiza ≈ 280–440 ms); szczyt pamięci NIE zmierzony (pomiar sterty w raporcie był nasycony śmieciami: 426 vs 429 MB) – zmierzyć z wymuszonym GC, przed twierdzeniem o oszczędności; test na telefonie zdjęcia z dehaze, odszumianiem i ziarnem (różnice vs 1.0.2 najbardziej prawdopodobne); halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; zrzuty Roborazzi panelu Film.
+- Następny krok: opinie z testów 1.0.3 na telefonie; pomiar pamięci.
+
 ## 2026-10-26 – Claude (wydanie 1.0.2)
 - Faza: poprawki po testach na telefonie i wydajność, wydanie 1.0.2
 - Zrobione: obrót ekranu nie kasuje edycji (`MainStateHolder` w ViewModelu, `configChanges` aktywności; #91), lupa i „+” zakładki Film jako przezroczyste przyciski na zdjęciu zamiast kolumny zasłaniającej przewijanie kategorii (#92), równoległe przetwarzanie obrazu (`Parallel`, do 4 wątków, wynik niezależny od liczby wątków; #90), szybsze ziarno, splot Gaussa i dehaze bez pełnowymiarowych tablic (#93), raport wydajności z rozgrzewką, medianą i rozbiciem na etapy (`quality-report.yml`).
