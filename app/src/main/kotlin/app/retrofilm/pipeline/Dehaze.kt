@@ -41,6 +41,7 @@ internal object Dehaze {
     private const val SKY_MIX_B = 2f
     private const val COMPENSATE = 0.25f
     private const val MAX_GAIN = 1.5f
+    private const val ROWS = 64
 
     /** [amount] 0..1 (0 = bez zmian). Modyfikuje [px] w miejscu. */
     fun apply(px: IntArray, width: Int, height: Int, amount: Float) {
@@ -51,15 +52,17 @@ internal object Dehaze {
         val t = transmission(chan, airlight, low, amount.coerceAtMost(1f))
         protectSky(chan, airlight, t)
         val before = meanLuma(px)
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val i = y * width + x
-                val tt = max(T_MIN, low.sample(t, x, y))
-                val c = px[i]
-                px[i] = (c and ALPHA_MASK) or
-                    (restore(channel(c, 0), airlight[0], tt) shl RED_SHIFT) or
-                    (restore(channel(c, 1), airlight[1], tt) shl GREEN_SHIFT) or
-                    restore(channel(c, 2), airlight[2], tt)
+        Parallel.rows(height, ROWS) { y0, y1 ->
+            for (y in y0 until y1) {
+                for (x in 0 until width) {
+                    val i = y * width + x
+                    val tt = max(T_MIN, low.sample(t, x, y))
+                    val c = px[i]
+                    px[i] = (c and ALPHA_MASK) or
+                        (restore(channel(c, 0), airlight[0], tt) shl RED_SHIFT) or
+                        (restore(channel(c, 1), airlight[1], tt) shl GREEN_SHIFT) or
+                        restore(channel(c, 2), airlight[2], tt)
+                }
             }
         }
         compensate(px, before)

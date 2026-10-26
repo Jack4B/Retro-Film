@@ -14,6 +14,7 @@ object DetailFilter {
     private const val CLARITY_EPS = 0.0036f
     private const val CLARITY_GAIN = 0.9f
     private const val BOX_PASSES = 3
+    private const val SAMPLE_ROWS = 64
     private const val HALF = 0.5f
     private const val BYTE_MAX = 255f
     private const val MASK = 0xFF
@@ -35,24 +36,29 @@ object DetailFilter {
     @Suppress("LongParameterList")
     fun apply(px: IntArray, width: Int, height: Int, sharp: SharpenParams, clarity: Float, maskPreview: Boolean) {
         if (sharp.amount <= 0f && clarity == 0f) return
-        val luma = FloatArray(width * height) { lumaOf(px[it]) }
+        val luma = FloatArray(width * height)
+        Parallel.range(luma.size) { from, to -> for (i in from until to) luma[i] = lumaOf(px[i]) }
         if (maskPreview && sharp.amount > 0f) {
             val m = Sharpener.maskOnly(luma, width, height, sharp)
-            for (i in px.indices) {
-                val v = (m[i] * BYTE_MAX + HALF).toInt().coerceIn(0, MASK)
-                px[i] = (px[i] and ALPHA_MASK) or (v shl RED_SHIFT) or (v shl GREEN_SHIFT) or v
+            Parallel.range(px.size) { from, to ->
+                for (i in from until to) {
+                    val v = (m[i] * BYTE_MAX + HALF).toInt().coerceIn(0, MASK)
+                    px[i] = (px[i] and ALPHA_MASK) or (v shl RED_SHIFT) or (v shl GREEN_SHIFT) or v
+                }
             }
             return
         }
         val delta = if (sharp.amount > 0f) Sharpener.delta(luma, width, height, sharp) else FloatArray(luma.size)
         if (clarity != 0f) {
             val base = edgePreservingBase(luma, width, height)
-            for (i in luma.indices) {
-                val mid = 1f - abs(2f * luma[i] / BYTE_MAX - 1f)
-                delta[i] += (luma[i] - base[i]) * clarity * CLARITY_GAIN * mid
+            Parallel.range(luma.size) { from, to ->
+                for (i in from until to) {
+                    val mid = 1f - abs(2f * luma[i] / BYTE_MAX - 1f)
+                    delta[i] += (luma[i] - base[i]) * clarity * CLARITY_GAIN * mid
+                }
             }
         }
-        for (i in px.indices) px[i] = shifted(px[i], delta[i])
+        Parallel.range(px.size) { from, to -> for (i in from until to) px[i] = shifted(px[i], delta[i]) }
     }
 
     /**
@@ -61,11 +67,15 @@ object DetailFilter {
      */
     private fun edgePreservingBase(luma: FloatArray, w: Int, h: Int): FloatArray {
         val low = Lowres.forSize(w, h, CLARITY_TARGET)
-        val small = low.down(FloatArray(luma.size) { luma[it] / BYTE_MAX })
+        val unit = FloatArray(luma.size)
+        Parallel.range(unit.size) { from, to -> for (i in from until to) unit[i] = luma[i] / BYTE_MAX }
+        val small = low.down(unit)
         val radius = max(2, max(low.w, low.h) / CLARITY_RADIUS_DIV)
         val filtered = GuidedFilter.filter(small, small, low.w, low.h, radius, CLARITY_EPS)
         val base = FloatArray(luma.size)
-        for (y in 0 until h) for (x in 0 until w) base[y * w + x] = low.sample(filtered, x, y) * BYTE_MAX
+        Parallel.rows(h, SAMPLE_ROWS) { y0, y1 ->
+            for (y in y0 until y1) for (x in 0 until w) base[y * w + x] = low.sample(filtered, x, y) * BYTE_MAX
+        }
         return base
     }
 

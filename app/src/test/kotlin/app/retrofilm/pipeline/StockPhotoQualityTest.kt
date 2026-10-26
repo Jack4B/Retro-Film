@@ -297,7 +297,10 @@ class StockPhotoQualityTest {
     }
 
     private fun performance() {
-        report.appendLine("## Wydajność (runner CI, 12 Mpx = 4000×3000)\n")
+        report.appendLine(
+            "## Wydajność (runner CI, 12 Mpx = 4000×3000, ${Runtime.getRuntime().availableProcessors()} rdzenie, " +
+                "wątki robocze: ${Parallel.workers}, mediana z $PERF_RUNS po rozgrzewce)\n"
+        )
         val w = 4000
         val h = 3000
         try {
@@ -326,11 +329,14 @@ class StockPhotoQualityTest {
                     grain = 0.3f
                 )
             )
+            AdjustmentsApplier.apply(bmp, cases.getValue("wszystko naraz")) // rozgrzewka JIT
             for ((label, adj) in cases) {
-                val t0 = System.nanoTime()
-                AdjustmentsApplier.apply(bmp, adj)
-                val ms = (System.nanoTime() - t0) / NANOS_PER_MS
-                report.appendLine("- $label: $ms ms")
+                val times = List(PERF_RUNS) {
+                    val t0 = System.nanoTime()
+                    AdjustmentsApplier.apply(bmp, adj)
+                    (System.nanoTime() - t0) / NANOS_PER_MS
+                }.sorted()
+                report.appendLine("- $label: ${times[PERF_RUNS / 2]} ms")
             }
         } catch (e: OutOfMemoryError) {
             report.appendLine("- BRAK PAMIĘCI przy 12 Mpx: ${e.message}")
@@ -487,6 +493,7 @@ class StockPhotoQualityTest {
         const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
         const val REAL_HIGHLIGHT = 165.0
+        const val PERF_RUNS = 3
         const val HALO_R = 2
         const val HALO_STEP = 2
         const val HALO_STRONG = 12.0
