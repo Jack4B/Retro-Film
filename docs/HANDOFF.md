@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.0.5: faza B)
+- Faza: korekty bez niszczenia pikseli (faza B planu), wydanie 1.0.5
+- Zrobione: B1 światła v5 (kompresja bazy w logarytmie, detal w dwóch skalach z `ToneMask`, chroma, ochrona wypaleń; stałe dobrane offline w numpy na 9 zdjęciach stockowych: kontrast w jasnych obszarach ×0,90–1,26; #103, #104, #106); B2 Biele, Czernie (krzywa ze stałymi 0 i 1) i Tekstura z bramką szumu (#104); B4 Ostrość koloru (`ChromaEdge`: chroma z jednolitej jasnościowo strony krawędzi po 4:2:0; #105); B5 wyostrzanie świadome treści (`SemanticSharpen`: włosy przez koherencję tensora struktury, oczy i skóra twarzy z `FaceBox`; przełącznik, domyślnie włączony; #105); B6 straż regresji suwaków (`SliderRegressionTest`, `sliders.md` w raporcie jakości) i cienie bez wzmacniania szumu (szum w ciemnej ćwiartce ×0,98–1,42; #106).
+- Decyzje: B3 (odszumianie z tablic kwantyzacji JPEG i NLM) odłożone – na zdjęciach z telefonów (wysoka jakość) zysk znikomy, szum mierzony z obrazu; DNG zawieszone (decyzja Jack4B); faza C jako 1.1.0.
+- PR / gałąź: #103–#106; wersja 1.0.5 z taga `v1.0.5`.
+- Otwarte / P2 odłożone: szum w cieniach na portrait_stadium ×1,42 (cel ×1,3); kontrast w jasnych obszarach beagles ×0,90 (cel ≥ 0,95); metryka halo w `sliders.md` poprawiona dopiero w 1.0.5 (wcześniejsze tabele zawyżały halo dla suwaków tonalnych); pomiar pamięci z wymuszonym GC; halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; zrzuty Roborazzi; faza C (redesign UX).
+- Następny krok: ocena 1.0.5 na telefonie (światła, cienie, biele, czernie, tekstura, ostrość koloru, włosy i oczy), potem faza C (makiety → zatwierdzenie → kod).
+
 ## 2026-10-26 – Claude (wydanie 1.0.4: faza A)
 - Faza: wierność barwy filmów (faza A planu), wydanie 1.0.4
 - Zrobione: A0 pomiar wierności (`tools/fidelity/a0_fidelity.py`, #99); A1 kolejność korekty → film → wykończenie (D15; #100); A2 odbandowanie wejścia filmu (`Deband`, poprawka ≤ ±3 poziomy tylko na płaskich gradientach; #101); A3 przycisk „Przygotuj pod film” (balans bieli, ekspozycja, zdjęcie krzywej telefonu; tylko na żądanie; #101); A4 Display P3 → sRGB z mapowaniem gamutowym w OKLab zamiast przycinania kanałów (`GamutMapper`; #101).
