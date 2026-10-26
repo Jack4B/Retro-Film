@@ -179,6 +179,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     private val rgb = FloatArray(3)
     private val hasTone = adj.shadows != 0f || adj.highlights != 0f
+    private val recovery: HighlightRecovery? = if (adj.highlights < 0f) HighlightRecovery(adj.highlights) else null
+    private val layers = FloatArray(LAYER_COUNT)
     private val hsl: HslMixer? = if (adj.hsl.isNeutral) null else HslMixer(adj.hsl)
     private val toning: SplitToning? = if (adj.shadowAmount > 0f || adj.highlightAmount > 0f) {
         SplitToning(adj.shadowHue, adj.shadowAmount, adj.highlightHue, adj.highlightAmount, adj.toneBalance)
@@ -305,14 +307,34 @@ class AdjustmentProcessor(private val adj: Adjustments) {
      */
     private fun toneRecovery(mask: ToneMask?, x: Int, row: Int) {
         val own = luma()
-        val base = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else own
-        val shadowY = (base + maxOf(base, own)) * HALF
-        val highlightY = (base + minOf(base, own)) * HALF
-        var m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
+        var chromaBoost = 0f
+        val base: Float
+        var m: Float
+        if (recovery != null) {
+            // światła ujemne: kompresja bazy i wzmocnienie detalu w dwóch skalach (HighlightRecovery)
+            if (mask != null) {
+                mask.sampleLayers(x, row, layers)
+                layers[0] = maskLut[maskIndex(layers[0])]
+                layers[1] = maskLut[maskIndex(layers[1])]
+                base = layers[0]
+            } else {
+                base = own
+                layers[1] = own
+                layers[2] = 0f
+            }
+            val shadowY = (base + maxOf(base, own)) * HALF
+            m = shadowGain[maskIndex(shadowY)] * recovery.ratio(own, base, layers[1], layers[2])
+            chromaBoost = recovery.chromaBoost(base)
+        } else {
+            base = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else own
+            val shadowY = (base + maxOf(base, own)) * HALF
+            val highlightY = (base + minOf(base, own)) * HALF
+            m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
+        }
         // Przy przyciemnianiu bazy (światła) detal ponad nią rośnie tak, by jego bezwzględny kontrast się zachował
         // (jak w local Laplacian / Durand–Dorsey): chmury na przyciemnionym niebie zostają wyraźne zamiast spłaszczyć
         // się do szarości. Przy rozjaśnianiu cieni detalu nie wzmacniamy (rósłby sam szum).
-        val baseGain = shadowGain[maskIndex(base)] * highlightGain[maskIndex(base)]
+        val baseGain = shadowGain[maskIndex(base)] * if (recovery != null) 1f else highlightGain[maskIndex(base)]
         if (baseGain < 1f && base > TONE_MIN_BASE) {
             val boost = minOf(1f / baseGain - 1f, TONE_BOOST_CAP) * TONE_DETAIL
             val ratio = (own / base).coerceIn(TONE_RATIO_MIN, TONE_RATIO_MAX)
@@ -321,7 +343,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         // Chromę skalujemy słabiej niż jasność: przy przyciemnianiu prawie nie szarzeje, przy rozjaśnianiu rośnie
         // umiarkowanie.
         val keep = if (m < 1f) TONE_KEEP_DARKEN else TONE_KEEP_LIFT
-        val s = 1f + (1f - keep) * (m - 1f)
+        val s = 1f + (1f - keep) * (m - 1f) + chromaBoost
         for (k in 0..2) rgb[k] = (own * m + (rgb[k] - own) * s).coerceIn(0f, 1f)
     }
 
@@ -363,13 +385,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     companion object {
         const val KNEE = 0.8f
         private const val SHADOW_EV = 2.0f
-        private const val HIGHLIGHT_EV = 1.2f
+        internal const val HIGHLIGHT_EV = 1.2f
         private const val GAMMA_INV = 0.4545f
         private const val SHADOW_FROM = 0.15f
         private const val SHADOW_TO = 0.55f
         private const val HIGHLIGHT_FROM = 0.40f
         private const val HIGHLIGHT_TO = 0.90f
         private const val BLACK_GUARD = 0.06f
+        private const val LAYER_COUNT = 3
         private const val TONE_DETAIL = 2.2f
         private const val TONE_BOOST_CAP = 4f
         private const val TONE_KEEP_DARKEN = 0.9f

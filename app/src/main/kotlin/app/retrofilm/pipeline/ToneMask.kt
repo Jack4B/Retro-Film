@@ -1,6 +1,7 @@
 package app.retrofilm.pipeline
 
 import kotlin.math.ceil
+import kotlin.math.ln
 import kotlin.math.max
 
 /**
@@ -13,10 +14,24 @@ class ToneMask private constructor(
     private val gridW: Int,
     private val gridH: Int,
     private val cell: Int,
-    private val data: FloatArray
+    private val data: FloatArray,
+    private val mid: FloatArray,
+    private val midRatio: FloatArray
 ) {
     /** Lokalna jasność (0..1, kodowanie gamma) w punkcie ([x], [y]) obrazu, interpolacja dwuliniowa. */
-    fun sample(x: Int, y: Int): Float {
+    fun sample(x: Int, y: Int): Float = bilinear(data, x, y) / BYTE_MAX
+
+    /**
+     * Trzy warstwy w punkcie ([x], [y]) zapisane do [out]: baza gruba (jak [sample]), baza średnia (filtr z małym
+     * promieniem, zachowuje drobniejsze krawędzie; 0..1) i ln(średnia / gruba) – detal skali średniej.
+     */
+    fun sampleLayers(x: Int, y: Int, out: FloatArray) {
+        out[0] = bilinear(data, x, y) / BYTE_MAX
+        out[1] = bilinear(mid, x, y) / BYTE_MAX
+        out[2] = bilinear(midRatio, x, y)
+    }
+
+    private fun bilinear(data: FloatArray, x: Int, y: Int): Float {
         val fx = ((x + HALF) / cell - HALF).coerceIn(0f, (gridW - 1).toFloat())
         val fy = ((y + HALF) / cell - HALF).coerceIn(0f, (gridH - 1).toFloat())
         val x0 = fx.toInt()
@@ -27,7 +42,7 @@ class ToneMask private constructor(
         val ty = fy - y0
         val top = data[y0 * gridW + x0] * (1 - tx) + data[y0 * gridW + x1] * tx
         val bottom = data[y1 * gridW + x0] * (1 - tx) + data[y1 * gridW + x1] * tx
-        return (top * (1 - ty) + bottom * ty) / BYTE_MAX
+        return top * (1 - ty) + bottom * ty
     }
 
     /** Zbiera jasność z kolejnych porcji pikseli, potem [build] rozmywa siatkę. */
@@ -77,7 +92,20 @@ class ToneMask private constructor(
             }
             val unit = FloatArray(avg.size) { avg[it] / BYTE_MAX }
             val base = GuidedFilter.filter(unit, unit, gridW, gridH, max(2, GRID_LONG / RADIUS_DIV), EDGE_EPS)
-            return ToneMask(gridW, gridH, cell, FloatArray(base.size) { base[it].coerceIn(0f, 1f) * BYTE_MAX })
+            val fine = GuidedFilter.filter(unit, unit, gridW, gridH, max(1, GRID_LONG / MID_RADIUS_DIV), MID_EDGE_EPS)
+            val coarse = FloatArray(base.size) { base[it].coerceIn(0f, 1f) }
+            val medium = FloatArray(fine.size) { fine[it].coerceIn(0f, 1f) }
+            val ratio = FloatArray(fine.size) {
+                ln(max(medium[it], MIN_LUMA) / max(coarse[it], MIN_LUMA))
+            }
+            return ToneMask(
+                gridW,
+                gridH,
+                cell,
+                FloatArray(coarse.size) { coarse[it] * BYTE_MAX },
+                FloatArray(medium.size) { medium[it] * BYTE_MAX },
+                ratio
+            )
         }
     }
 
@@ -86,6 +114,11 @@ class ToneMask private constructor(
         const val BYTE_MAX = 255f
         const val GRID_LONG = 512
         const val RADIUS_DIV = 25
+
+        /** Skala średnia: promień ok. 0,6% dłuższego boku (siatka 512 → 3 komórki), czulszy próg krawędzi. */
+        const val MID_RADIUS_DIV = 170
+        const val MID_EDGE_EPS = 0.004f
+        const val MIN_LUMA = 1e-4f
 
         /** Próg wariancji filtra: różnice jasności większe niż ok. 0,1 są traktowane jako krawędź. */
         const val EDGE_EPS = 0.012f
