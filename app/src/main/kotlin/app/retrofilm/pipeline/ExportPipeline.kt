@@ -35,7 +35,7 @@ object ExportPipeline {
     ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
         // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie
-        val corrected = AdjustmentsApplier.apply(srgb, adjustments.corrections())
+        val corrected = AdjustmentsApplier.apply(srgb, adjustments.corrections(), deband = lut != null)
         val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
         val finished = AdjustmentsApplier.apply(filmed, adjustments.finishing())
         return FrameRenderer.render(finished, frame, typeface, colorSpaceSource = srgb)

@@ -56,7 +56,11 @@ private class ClarityState(val acc: Lowres.Accumulator, val processor: Adjustmen
  * pełnych, już przetworzonych tablic. Mapy odszumiania koloru i dehaze liczone są ze źródła (pełny odczyt, tanio);
  * kompensacja jasności dehaze, maska tonalna i baza wyrazistości z podpróbkowania obrazu po kolejnych etapach.
  */
-internal class StripAnalysis(private val src: Bitmap, private val adj: Adjustments) {
+internal class StripAnalysis(
+    private val src: Bitmap,
+    private val adj: Adjustments,
+    private val deband: Boolean = false
+) {
     private val w = src.width
     private val h = src.height
 
@@ -69,7 +73,9 @@ internal class StripAnalysis(private val src: Bitmap, private val adj: Adjustmen
         val tone = if (adj.shadows != 0f || adj.highlights != 0f) toneMask(chroma, dehaze) else null
         val clarity = if (adj.clarity != 0f) clarityMap(chroma, dehaze, tone) else null
         val sharpMargin = if (adj.sharpness > 0f) Sharpener.marginFor(adj.sharpenParams, max(w, h)) else 0
-        return StripPlans(chroma, luma, dehaze, tone, clarity, sharpMargin + (luma?.margin ?: 0), max(w, h))
+        val debandRadius = if (deband) Deband.radiusFor(max(w, h)) else 0
+        val halo = sharpMargin + (luma?.margin ?: 0) + debandRadius
+        return StripPlans(chroma, luma, dehaze, tone, clarity, halo, max(w, h), debandRadius)
     }
 
     /** Sumy w komórkach dla odszumiania koloru i dehaze z całego obrazu (bez podpróbkowania); null = niepotrzebne. */
