@@ -13,10 +13,10 @@ Nowe wpisy na górze. Szablon:
 
 ## 2026-10-26 – Claude (wydanie 1.1.0: faza C)
 - Faza: redesign UX (faza C planu), wydanie 1.1.0
-- Zrobione: pięć zakładek w kolejności pracy (Kadr · Korekty · Film · Wykończenie · Ramka; edytor otwiera się na Korektach), `FinishPanel` (klisza, wyostrzanie, tonowanie, krzywe), `AdjustPanel` tylko z korektami (Światło, Kolor, Kolory, Detal, Maski), osobne „Wyzeruj korekty” i „Wyzeruj wykończenie” (`corrections()` / `finishing()`), test kolejności zakładek (#109). Domknięcie P2 z 1.0.5: `DETAIL_MID` 1,6 / `DETAIL_FINE` 3,0 (kontrast w jasnych obszarach) i `SHADOW_DETAIL` 0,1 (szum w cieniach), dobrane offline w numpy (#108); wynik na prawdziwych zdjęciach w raporcie jakości.
+- Zrobione: pięć zakładek w kolejności pracy (Kadr · Korekty · Film · Wykończenie · Ramka; edytor otwiera się na Korektach), `FinishPanel` (klisza, wyostrzanie, tonowanie, krzywe), `AdjustPanel` tylko z korektami (Światło, Kolor, Kolory, Detal, Maski), osobne „Wyzeruj korekty” i „Wyzeruj wykończenie” (`corrections()` / `finishing()`), test kolejności zakładek (#109). Domknięcie P2 z 1.0.5: `DETAIL_MID` 1,6 / `DETAIL_FINE` 3,0 (kontrast w jasnych obszarach) i `SHADOW_DETAIL` 0,1 (szum w cieniach), dobrane offline w numpy (#108); raport jakości na 9 zdjęciach stockowych po #108: niezgodności brak; kontrast w jasnych obszarach po „Światła −100%” ×0,97–1,50 (beagles ×0,97), szum w ciemnej ćwiartce po „Cienie +100%” ×0,98–1,30 (portrait_stadium ×1,30).
 - Decyzje: makiet osobno nie robiono (Jack4B: „rób C”; układ wynika z zatwierdzonych zakładek); DNG zawieszone.
 - PR / gałąź: #108, #109; wersja 1.1.0 z taga `v1.1.0`.
-- Otwarte / P2 odłożone: brak makiet i zrzutów Roborazzi nowych paneli; `docs/EKRANY.md` opisuje ekrany sprzed v2 (dopisana nota o v3); pomiar pamięci z wymuszonym GC; halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; B3 (odszumianie z DQT/NLM) odłożone; DNG zawieszone.
+- Otwarte / P2 odłożone: czas „wszystko naraz” 12 Mpx na runnerze CI 2886 ms wobec 2501 ms dawnego potoku (×1,15; było ×1,06–1,11; dochodzi mapa wyostrzania świadomego treści, analiza 565 ms) – do optymalizacji; brak makiet i zrzutów Roborazzi nowych paneli; `docs/EKRANY.md` opisuje ekrany sprzed v2 (dopisana nota o v3); pomiar pamięci z wymuszonym GC; halo wyostrzania na drobnym tekście; job „compile only” na PR-ach; B3 (odszumianie z DQT/NLM) odłożone; DNG zawieszone.
 - Następny krok: ocena 1.1.0 na telefonie (układ zakładek, czy Korekty/Wykończenie są tam, gdzie się ich szuka).
 
 ## 2026-10-26 – Claude (wydanie 1.0.5: faza B)
