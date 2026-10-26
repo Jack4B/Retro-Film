@@ -57,7 +57,9 @@ data class Adjustments(
     val highlightHue: Float = 0f,
     val highlightAmount: Float = 0f,
     /** Balans tonowania −1..1: plus rozszerza zakres świateł, minus cieni. */
-    val toneBalance: Float = 0f
+    val toneBalance: Float = 0f,
+    /** Krzywe tonalne (główna i RGB), zob. [ToneCurve]. */
+    val curves: ToneCurves = ToneCurves()
 ) {
     val isNeutral: Boolean get() = this == None
 
@@ -135,6 +137,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val chroma: ChromaScaler? = if (adj.saturation != 0f) ChromaScaler(adj.saturation) else null
     private val contrast: LuminanceContrast? = if (adj.contrast != 0f) LuminanceContrast(adj.contrast) else null
     private val vignette: VignetteLut? = if (adj.vignette > 0f) VignetteLut(adj.vignette) else null
+    private val curves: CurveLut? = if (adj.curves.isNeutral) null else CurveLut(adj.curves)
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
     /**
@@ -164,6 +167,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             hsl?.apply(rgb)
             if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
             contrast?.apply(rgb)
+            curves?.apply(rgb)
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
