@@ -59,6 +59,8 @@ class StockPhotoQualityTest {
         val clarity = AdjustmentsApplier.apply(src, Adjustments(clarity = 0.8f))
         tiles += listOf(shadows, highlights, clarity)
         checkTone(name, px, pixels(shadows), pixels(highlights))
+        checkBrightRegion(name, px, pixels(highlights), src.width, src.height)
+        checkDarkRegion(name, px, pixels(shadows), src.width, src.height)
         checkClarity(name, px, pixels(clarity), src.width, src.height)
 
         val (clean, hazy) = synthHaze(px, src.width, src.height)
@@ -107,21 +109,122 @@ class StockPhotoQualityTest {
         val dark = order.take(q)
         val bright = order.takeLast(q)
         val gainDark = dark.map { luma(shadows[it]) - luma(orig[it]) }.average()
-        val driftBright = bright.map { luma(shadows[it]) - luma(orig[it]) }.average()
+        // prawdziwe światła (jasność ≥ 65%); na ciemnych zdjęciach jasna ćwiartka to jeszcze półtony
+        val lit = orig.indices.filter { luma(orig[it]) >= REAL_HIGHLIGHT }
+        val litEnough = lit.size >= orig.size / 100
+        val driftBright = if (litEnough) lit.map { luma(shadows[it]) - luma(orig[it]) }.average() else 0.0
         val cutBright = bright.map { luma(orig[it]) - luma(highlights[it]) }.average()
-        val driftDark = dark.map { luma(highlights[it]) - luma(orig[it]) }.average()
+        // prawdziwe cienie (jasność ≤ 35%); na pochmurnych, jasnych zdjęciach ciemna ćwiartka jest już półtonem
+        val deep = orig.indices.filter { luma(orig[it]) <= DEEP_SHADOW }
+        val deepEnough = deep.size >= orig.size / 100
+        val driftDark = if (deepEnough) deep.map { luma(highlights[it]) - luma(orig[it]) }.average() else 0.0
+        val darkIsDeep = dark.map { luma(orig[it]) }.average() <= DEEP_SHADOW
         val hue = hueShift(orig, shadows)
         report.appendLine(
-            "- Cienie +100%: ciemna ćwiartka +${f1(gainDark)}, jasna ${f1(driftBright)}; " +
-                "światła −100%: jasna ćwiartka −${f1(
-                    cutBright
-                )}, ciemna ${f1(driftDark)}; przesunięcie barwy ${f1(hue)}°"
+            "- Cienie +100%: ciemna ćwiartka +${f1(gainDark)}, prawdziwe światła ${f1(driftBright)}; " +
+                "światła −100%: jasna ćwiartka −${f1(cutBright)}, prawdziwe cienie ${f1(driftDark)}" +
+                (if (deepEnough) "" else " (brak głębokich cieni)") + "; przesunięcie barwy ${f1(hue)}°"
         )
-        if (gainDark < MIN_TONE_GAIN) failures += "$name: cienie za słabo rozjaśniają (${f1(gainDark)})"
+        if (darkIsDeep && gainDark < MIN_TONE_GAIN) failures += "$name: cienie za słabo rozjaśniają (${f1(gainDark)})"
         if (abs(driftBright) > MAX_TONE_LEAK) failures += "$name: cienie ruszają jasne partie (${f1(driftBright)})"
         if (cutBright < MIN_TONE_GAIN / 2) failures += "$name: światła za słabo przyciemniają (${f1(cutBright)})"
         if (abs(driftDark) > MAX_TONE_LEAK) failures += "$name: światła ruszają ciemne partie (${f1(driftDark)})"
         if (hue > MAX_HUE_SHIFT) failures += "$name: cienie przesuwają barwy o ${f1(hue)}°"
+    }
+
+    /**
+     * Jasny obszar (górna ćwiartka jasności, np. pochmurne niebo) po światłach −100%: lokalny kontrast i barwność
+     * mają się zachować (stosunek ≥ 0,9), bo samo przyciemnienie robi z nieba płaską szarość.
+     */
+    private fun checkBrightRegion(name: String, orig: IntArray, highlights: IntArray, w: Int, h: Int) {
+        val bright = orig.indices.sortedBy { luma(orig[it]) }.takeLast(orig.size / 4)
+        val mask = BooleanArray(orig.size).also { m -> bright.forEach { m[it] = true } }
+        val c0 = localContrast(orig, mask, w, h)
+        val c1 = localContrast(highlights, mask, w, h)
+        val k0 = bright.map { chromaOf(orig[it]) }.average()
+        val k1 = bright.map { chromaOf(highlights[it]) }.average()
+        val contrastRatio = if (c0 > 0.0) c1 / c0 else 1.0
+        val chromaRatio = if (k0 > 0.0) k1 / k0 else 1.0
+        report.appendLine(
+            "- Jasny obszar po światłach −100%: lokalny kontrast ${f1(c0)} → ${f1(c1)} (×${f2(contrastRatio)}), " +
+                "barwność ${f1(k0)} → ${f1(k1)} (×${f2(chromaRatio)})"
+        )
+        if (contrastRatio <
+            MIN_BRIGHT_RATIO
+        ) {
+            failures += "$name: światła spłaszczają jasny obszar (×${f2(contrastRatio)})"
+        }
+        if (chromaRatio < MIN_BRIGHT_RATIO) failures += "$name: światła szarzeją jasny obszar (×${f2(chromaRatio)})"
+    }
+
+    /**
+     * Ciemny obszar (dolna ćwiartka jasności) po cieniach +100%: faktura nie może się spłaszczyć (kontrast lokalny
+     * ≥ 0,9), szum nie może wybuchnąć (drobny detal najwyżej 3×), a barwność ma nie spaść.
+     */
+    private fun checkDarkRegion(name: String, orig: IntArray, shadows: IntArray, w: Int, h: Int) {
+        val dark = orig.indices.sortedBy { luma(orig[it]) }.take(orig.size / 4)
+        val mask = BooleanArray(orig.size).also { m -> dark.forEach { m[it] = true } }
+        val c0 = localContrast(orig, mask, w, h)
+        val c1 = localContrast(shadows, mask, w, h)
+        val n0 = fineDetail(orig, mask, w, h)
+        val n1 = fineDetail(shadows, mask, w, h)
+        val k0 = dark.map { chromaOf(orig[it]) }.average()
+        val k1 = dark.map { chromaOf(shadows[it]) }.average()
+        val contrastRatio = if (c0 > 0.0) c1 / c0 else 1.0
+        val noiseRatio = if (n0 > 0.0) n1 / n0 else 1.0
+        val chromaRatio = if (k0 > 0.0) k1 / k0 else 1.0
+        report.appendLine(
+            "- Ciemny obszar po cieniach +100%: lokalny kontrast ${f1(c0)} → ${f1(c1)} (×${f2(contrastRatio)}), " +
+                "drobny detal/szum ×${f2(noiseRatio)}, barwność ${f1(k0)} → ${f1(k1)} (×${f2(chromaRatio)})"
+        )
+        if (contrastRatio <
+            MIN_BRIGHT_RATIO
+        ) {
+            failures += "$name: cienie spłaszczają ciemny obszar (×${f2(contrastRatio)})"
+        }
+        if (noiseRatio > MAX_NOISE_RATIO) failures += "$name: cienie wzmacniają szum (×${f2(noiseRatio)})"
+        if (chromaRatio < MIN_BRIGHT_RATIO) failures += "$name: cienie odbarwiają ciemny obszar (×${f2(chromaRatio)})"
+    }
+
+    /** Energia drobnego detalu (laplasjan 3×3) w [mask]; przy rozjaśnianiu cieni rośnie głównie szum. */
+    private fun fineDetail(px: IntArray, mask: BooleanArray, w: Int, h: Int): Double {
+        var sum = 0.0
+        var n = 0
+        for (y in 1 until h - 1) {
+            for (x in 1 until w - 1) {
+                val i = y * w + x
+                if (!mask[i]) continue
+                sum += abs(4 * luma(px[i]) - luma(px[i - 1]) - luma(px[i + 1]) - luma(px[i - w]) - luma(px[i + w]))
+                n++
+            }
+        }
+        return if (n == 0) 0.0 else sum / n
+    }
+
+    private fun chromaOf(c: Int): Double {
+        val r = Color.red(c)
+        val g = Color.green(c)
+        val b = Color.blue(c)
+        return (max(r, max(g, b)) - min(r, min(g, b))).toDouble()
+    }
+
+    /** Średnia różnica jasności piksela od czterech sąsiadów oddalonych o [LOCAL_STEP] px, tylko w [mask]. */
+    private fun localContrast(px: IntArray, mask: BooleanArray, w: Int, h: Int): Double {
+        var sum = 0.0
+        var n = 0
+        for (y in LOCAL_STEP until h - LOCAL_STEP) {
+            for (x in LOCAL_STEP until w - LOCAL_STEP) {
+                val i = y * w + x
+                if (!mask[i]) continue
+                val mean = (
+                    luma(px[i - LOCAL_STEP]) + luma(px[i + LOCAL_STEP]) +
+                        luma(px[i - LOCAL_STEP * w]) + luma(px[i + LOCAL_STEP * w])
+                    ) / 4.0
+                sum += abs(luma(px[i]) - mean)
+                n++
+            }
+        }
+        return if (n == 0) 0.0 else sum / n
     }
 
     private fun checkClarity(name: String, orig: IntArray, clarity: IntArray, w: Int, h: Int) {
@@ -325,6 +428,8 @@ class StockPhotoQualityTest {
 
     private fun f1(v: Double) = "%.1f".format(java.util.Locale.ROOT, v)
 
+    private fun f2(v: Double) = "%.2f".format(java.util.Locale.ROOT, v)
+
     private companion object {
         const val MAX_SIDE = 1600
         const val SEED = 42L
@@ -337,7 +442,12 @@ class StockPhotoQualityTest {
         const val CHROMA_GAIN = 0.7
         const val MAX_LUMA_DRIFT = 4.0
         const val MIN_TONE_GAIN = 5.0
+        const val MIN_BRIGHT_RATIO = 0.9
+        const val DEEP_SHADOW = 89.0
+        const val MAX_NOISE_RATIO = 3.0
+        const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
+        const val REAL_HIGHLIGHT = 165.0
         const val MAX_HUE_SHIFT = 4.0
         const val MAX_MEAN_SHIFT = 5.0
         const val MIN_LOOK_COLOUR = 0.6
