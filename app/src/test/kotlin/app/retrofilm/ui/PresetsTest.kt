@@ -2,6 +2,7 @@ package app.retrofilm.ui
 
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.HslAdjust
+import app.retrofilm.pipeline.SharpenMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,6 +25,10 @@ class PresetsTest {
         grain = 0.3f,
         vignette = 0.4f,
         sharpness = 0.5f,
+        sharpRadius = 1.5f,
+        sharpDetail = 0.6f,
+        sharpMasking = 0.4f,
+        sharpMode = SharpenMode.Deconvolution,
         clarity = 0.25f,
         dehaze = 0.35f,
         denoise = 0.45f,

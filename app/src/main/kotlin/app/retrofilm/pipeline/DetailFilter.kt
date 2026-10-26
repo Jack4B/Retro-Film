@@ -4,18 +4,15 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Ostrzenie (maska unsharp na jasności) i wyrazistość (lokalny kontrast: ta sama maska z dużym promieniem
+ * Wyostrzanie ([Sharpener]) i wyrazistość (lokalny kontrast: ta sama maska z dużym promieniem
  * i wagą półtonów) na pikselach ARGB, bez Androida. Promienie liczone od dłuższego boku obrazu, więc podgląd
  * i zapis wyglądają tak samo. Zmiana jasności jest dodawana do wszystkich kanałów, więc barwy się nie przesuwają.
  */
 object DetailFilter {
-    private const val SHARP_RADIUS_DIV = 1500
     private const val CLARITY_RADIUS_DIV = 25
     private const val CLARITY_TARGET = 600
     private const val CLARITY_EPS = 0.0036f
-    private const val SHARP_GAIN = 1.6f
     private const val CLARITY_GAIN = 0.9f
-    private const val NOISE_FLOOR = 2f
     private const val BOX_PASSES = 3
     private const val HALF = 0.5f
     private const val BYTE_MAX = 255f
@@ -27,17 +24,27 @@ object DetailFilter {
     private const val LUMA_B = 0.0722f
     private const val ALPHA_MASK = 0xFF000000.toInt()
 
-    /** [sharpness] 0..1, [clarity] −1..1 (minus zmiękcza); 0 = bez zmian. Modyfikuje [px] w miejscu. */
-    fun apply(px: IntArray, width: Int, height: Int, sharpness: Float, clarity: Float) {
-        if (sharpness <= 0f && clarity == 0f) return
+    /** Wygodne wywołanie z samą ilością wyostrzania i wyrazistością (ustawienia domyślne reszty parametrów). */
+    fun apply(px: IntArray, width: Int, height: Int, sharpness: Float, clarity: Float) =
+        apply(px, width, height, SharpenParams(sharpness), clarity, false)
+
+    /**
+     * Wyostrzanie ([Sharpener]) i wyrazistość −1..1 (minus zmiękcza); modyfikuje [px] w miejscu. Przy [maskPreview]
+     * zamiast zdjęcia powstaje obraz maski krawędzi (biel = wyostrzane).
+     */
+    @Suppress("LongParameterList")
+    fun apply(px: IntArray, width: Int, height: Int, sharp: SharpenParams, clarity: Float, maskPreview: Boolean) {
+        if (sharp.amount <= 0f && clarity == 0f) return
         val luma = FloatArray(width * height) { lumaOf(px[it]) }
-        val delta = FloatArray(luma.size)
-        val longSide = max(width, height)
-        if (sharpness > 0f) {
-            val radius = max(1, longSide / SHARP_RADIUS_DIV)
-            val blur = boxBlur(luma, width, height, radius)
-            for (i in luma.indices) delta[i] += softThreshold(luma[i] - blur[i]) * sharpness * SHARP_GAIN
+        if (maskPreview && sharp.amount > 0f) {
+            val m = Sharpener.maskOnly(luma, width, height, sharp)
+            for (i in px.indices) {
+                val v = (m[i] * BYTE_MAX + HALF).toInt().coerceIn(0, MASK)
+                px[i] = (px[i] and ALPHA_MASK) or (v shl RED_SHIFT) or (v shl GREEN_SHIFT) or v
+            }
+            return
         }
+        val delta = if (sharp.amount > 0f) Sharpener.delta(luma, width, height, sharp) else FloatArray(luma.size)
         if (clarity != 0f) {
             val base = edgePreservingBase(luma, width, height)
             for (i in luma.indices) {
@@ -64,12 +71,6 @@ object DetailFilter {
 
     private fun lumaOf(c: Int): Float =
         LUMA_R * ((c shr RED_SHIFT) and MASK) + LUMA_G * ((c shr GREEN_SHIFT) and MASK) + LUMA_B * (c and MASK)
-
-    /** Drobne różnice (szum) są tłumione, żeby ostrzenie nie wzmacniało ziarna matrycy. */
-    private fun softThreshold(d: Float): Float {
-        val a = abs(d)
-        return if (a <= NOISE_FLOOR) 0f else (a - NOISE_FLOOR) * (if (d < 0f) -1f else 1f)
-    }
 
     private fun shifted(c: Int, d: Float): Int {
         fun ch(v: Int) = (v + d + HALF).toInt().coerceIn(0, MASK)

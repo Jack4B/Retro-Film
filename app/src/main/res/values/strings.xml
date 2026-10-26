@@ -127,6 +127,19 @@
     <string name="adjust_group_film">Klisza</string>
     <string name="adjust_group_detail">Detal</string>
     <string name="adjust_sharpness">Ostrość</string>
+    <string name="sharpen_title">Wyostrzanie</string>
+    <string name="sharpen_auto">Auto (dobierz do zdjęcia)</string>
+    <string name="sharpen_universal">Uniwersalne</string>
+    <string name="sharpen_landscape">Krajobraz</string>
+    <string name="sharpen_portrait">Portret</string>
+    <string name="sharpen_mode_standard">Standardowe</string>
+    <string name="sharpen_mode_unsharp">Maska nieostra</string>
+    <string name="sharpen_mode_deconv">Dekonwolucja</string>
+    <string name="sharpen_amount">Ilość</string>
+    <string name="sharpen_radius">Promień</string>
+    <string name="sharpen_detail">Detal</string>
+    <string name="sharpen_masking">Maskowanie krawędzi</string>
+    <string name="sharpen_mask_preview">Podgląd maski krawędzi (biel = wyostrzane)</string>
     <string name="adjust_clarity">Wyrazistość</string>
     <string name="adjust_dehaze">Usuń zamglenie</string>
     <string name="adjust_denoise">Odszumianie kolorów</string>

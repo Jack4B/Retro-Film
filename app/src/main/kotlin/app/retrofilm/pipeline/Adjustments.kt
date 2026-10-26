@@ -27,8 +27,17 @@ data class Adjustments(
     val grain: Float = 0f,
     /** Winieta 0..1: przyciemnione rogi. */
     val vignette: Float = 0f,
-    /** Ostrość 0..1: maska unsharp na jasności (zob. [DetailFilter]). */
+    /** Ilość wyostrzania 0..1 (zob. [Sharpener]); 0 = wyłączone. */
     val sharpness: Float = 0f,
+    /** Promień wyostrzania 0,5..3 (1 = σ 1 px przy 4000 px dłuższego boku). */
+    val sharpRadius: Float = SharpenParams.DEFAULT_RADIUS,
+    /** Detal wyostrzania 0..1: 0 = maska nieostra bez aureoli, 1 = dekonwolucja. */
+    val sharpDetail: Float = SharpenParams.DEFAULT_DETAIL,
+    /** Maskowanie wyostrzania 0..1: 0 = wszędzie, 1 = tylko mocne krawędzie. */
+    val sharpMasking: Float = 0f,
+    val sharpMode: SharpenMode = SharpenMode.Standard,
+    /** Podgląd maski krawędzi zamiast zdjęcia (tylko do ustawiania, nie jest korektą). */
+    val sharpMaskPreview: Boolean = false,
     /** Wyrazistość −1..1: lokalny kontrast w półtonach; minus zmiękcza. */
     val clarity: Float = 0f,
     /** Usuwanie zamglenia 0..1 (dark channel prior, zob. [Dehaze]). */
@@ -50,6 +59,9 @@ data class Adjustments(
 
     /** Czy potrzebny jest przebieg po sąsiedztwie pikseli ([DetailFilter]). */
     val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f
+
+    val sharpenParams: SharpenParams
+        get() = SharpenParams(sharpness, sharpRadius, sharpDetail, sharpMasking, sharpMode)
 
     /** Czy potrzebny jest przebieg po całym obrazie przed korektami tonalnymi (dehaze, odszumianie). */
     val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f
@@ -397,7 +409,7 @@ object AdjustmentsApplier {
         if (adj.hasDetail) {
             val all = IntArray(w * h)
             out.getPixels(all, 0, w, 0, 0, w, h)
-            DetailFilter.apply(all, w, h, adj.sharpness, adj.clarity)
+            DetailFilter.apply(all, w, h, adj.sharpenParams, adj.clarity, adj.sharpMaskPreview)
             out.setPixels(all, 0, w, 0, 0, w, h)
         }
         return out

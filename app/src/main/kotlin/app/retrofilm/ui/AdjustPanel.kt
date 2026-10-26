@@ -118,9 +118,7 @@ private fun ColorSliders(state: MainState) {
 @Composable
 private fun DetailSliders(state: MainState) {
     val a = state.adjustments
-    AdjustSlider(stringResource(R.string.adjust_sharpness), a.sharpness, { plainPercent(it) }, range = 0f..RANGE) {
-        state.adjustments = a.copy(sharpness = it)
-    }
+    SharpenControls(state)
     AdjustSlider(stringResource(R.string.adjust_clarity), a.clarity, { percentText(it) }) {
         state.adjustments = a.copy(clarity = it)
     }
