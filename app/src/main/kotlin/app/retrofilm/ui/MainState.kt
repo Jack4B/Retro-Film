@@ -23,6 +23,7 @@ import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,7 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+    private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
 
     /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
     private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
@@ -135,6 +137,7 @@ class MainState(
         preview = null
         before = null
         autoPair = null
+        previewCache = null
         thumbnails.reset()
     }
 
@@ -213,10 +216,7 @@ class MainState(
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
         val (orig, shown) = withContext(Dispatchers.Default) {
-            val small = GeometryApplier.apply(
-                scaleDown(p, if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE),
-                geometry
-            )
+            val small = GeometryApplier.apply(previewBase(p), geometry)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
             orig to
@@ -232,6 +232,44 @@ class MainState(
         }
         before = orig
         preview = shown
+    }
+
+    /**
+     * Auto-ulepszenie: analizuje podgląd po filmie i kadrze (bez korekt), ustawia suwaki Światło i Kolor i zapamiętuje
+     * poprzednie ustawienia do cofnięcia ([undoAuto]).
+     */
+    suspend fun autoEnhance() {
+        val p = photo ?: return
+        val result = withContext(Dispatchers.Default) {
+            val small = GeometryApplier.apply(previewBase(p), geometry)
+            val graded = ExportPipeline.render(
+                small,
+                lut(),
+                graph.filmEngine.renderer,
+                FrameOptions(),
+                typeface,
+                intensity
+            )
+            val px = IntArray(graded.width * graded.height)
+            graded.getPixels(px, 0, graded.width, 0, 0, graded.width, graded.height)
+            AutoEnhance.suggest(px, graded.width, graded.height)
+        }
+        val before = adjustments
+        adjustments = result.applyTo(before)
+        autoPair = before to adjustments
+    }
+
+    fun undoAuto() {
+        autoPair?.let { adjustments = it.first }
+        autoPair = null
+    }
+
+    /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
+    private fun previewBase(p: Bitmap): Bitmap {
+        val side = if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
+        val cached = previewCache
+        if (cached != null && cached.first === p && cached.second == side) return cached.third
+        return scaleDown(p, side).also { previewCache = Triple(p, side, it) }
     }
 
     /** Eksport; nigdy nie rzuca – błędy wracają jako [UiMessage]. */
@@ -293,12 +331,18 @@ class MainState(
             val long = maxOf(src.width, src.height)
             if (long <= maxSide) return src
             val s = maxSide.toFloat() / long
-            return Bitmap.createScaledBitmap(
-                src,
-                (src.width * s).toInt().coerceAtLeast(1),
-                (src.height * s).toInt().coerceAtLeast(1),
-                true
-            )
+            val w = (src.width * s).toInt().coerceAtLeast(1)
+            val h = (src.height * s).toInt().coerceAtLeast(1)
+            val px = IntArray(src.width * src.height)
+            src.getPixels(px, 0, src.width, 0, 0, src.width, src.height)
+            val cs = src.colorSpace
+            val out = if (cs != null) {
+                Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, false, cs)
+            } else {
+                Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            }
+            out.setPixels(Resampler.resize(px, src.width, src.height, w, h), 0, w, 0, 0, w, h)
+            return out
         }
     }
 }

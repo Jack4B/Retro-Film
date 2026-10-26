@@ -20,15 +20,18 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Odszumianie kolorów | ChromaDenoise.kt | ✅ | Cb/Cr z jasnością jako przewodnikiem |
 | Odszumianie jasności | LumaDenoise.kt | ✅ | filtr prowadzony sterowany szumem; do rozważenia NLM/wavelet dla silnego szumu |
 | Winieta | ColorGrade.kt (VignetteLut) | ✅ | cos⁴; ewentualnie środek/zaokrąglenie |
-| Ziarno | FilmGrain.kt | 🟡 | jest rozmiar; brak modelu gęstości filmu i ziarna w świetle liniowym |
+| Ziarno | FilmGrain.kt | ✅ | model kryształów srebra, mnożnik w świetle liniowym, tekstura Gaussa |
 | Blaknięcie | Adjustments.kt | ✅ | podniesiona czerń, przytłumiona biel, odbarwienie |
 | Dithering 8 bit | Dither.kt | ✅ | TPDF ±0,5 |
-| Geometria: obrót, kadr | Geometry.kt, BicubicWarp.kt | 🟡 | bikubiczny obrót ✅; brak korekty perspektywy i przesuwania ramki kadru palcem |
+| Geometria: obrót, kadr, perspektywa | Geometry.kt, Perspective.kt, CropFit.kt, BicubicWarp.kt | ✅ | perspektywa pion/poziom z auto-kadrem, kadr gestem (przeciągnięcie, szczypnięcie), siatka trójpodziału |
+| Zmiana rozmiaru | Resampler.kt | ✅ | Lanczos 3 w eksporcie i podglądzie |
 | Ramka i podpis | core/frame, FrameRenderer.kt | ✅ | podpis zachowuje rozmiar z suwaka, zawijanie |
 | Znak wodny QR | Watermark.kt | ✅ | ikona + nazwa + QR |
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
 | Eksport | ExportPipeline.kt | ✅ | jakość JPEG, maks. rozmiar, wyostrzanie wyjściowe; GPS usuwany |
-| Auto-ulepszenie, krzywe tonalne, maski lokalne | — | ❌ | do zrobienia |
+| Krzywe tonalne | ToneCurve.kt | ✅ | RGB + R/G/B, PCHIP, edytor z punktami |
+| Auto-ulepszenie | AutoEnhance.kt | ✅ | histogram + balans bieli; bez rozpoznawania scen (twarze, niebo) |
+| Maski lokalne | — | ❌ | do zrobienia (PR maski) |
 
 ## Raport końcowy (alpha.16, CI, 5 zdjęć testowych)
 

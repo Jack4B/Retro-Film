@@ -1,48 +1,135 @@
 package app.retrofilm.pipeline
 
+import kotlin.math.exp
 import kotlin.math.floor
+import kotlin.math.sqrt
 
 /**
- * Ziarno filmowe jako szum wartościowy (value noise) z interpolacją gładką w dwóch oktawach:
- * gruba daje „chmurki” srebra, drobna ostrość ziarna. Deterministyczne (ten sam obraz = to samo ziarno),
- * więc podgląd i zapis są identyczne. Siła zależy od jasności: największa w półtonach, malejąca w czerni i bieli.
+ * Model ziarna filmowego.
+ *
+ * Amplituda: film jest zbiorem kryształów srebra, z których każdy jest naświetlony albo nie. Przy gęstości
+ * (jasności) p ułamek naświetlonych kryształów ma wariancję p(1−p) (rozkład dwumianowy, prawo Selwyna), więc
+ * ziarno jest największe w półtonach i zanika w czerni i bieli; mała podłoga zostaje, bo w cieniach widać szum
+ * skanu. Ziarno jest zmianą gęstości optycznej, czyli mnożnikiem 2^(a·g) światła liniowego ([stops]), a nie
+ * dodawanym szumem – dlatego nie przesuwa średniej jasności ([gain] jest znormalizowany).
+ *
+ * Struktura: biały szum Gaussa przefiltrowany Gaussem (ziarno ma widmo dolnoprzepustowe, nie ostre piksele),
+ * bez siatki wartości jak w szumie wartościowym; dwie oktawy: drobne ziarno i rzadsze „kłaczki” srebra. Tekstura
+ * jest zamknięta w torusie, więc próbkowanie jest bez szwów, a kanały barwne biorą ją z różnych przesunięć
+ * (chmury barwnika kolorowego negatywu są niezależne między warstwami). Deterministyczne, więc podgląd = zapis.
  */
 internal object FilmGrain {
-    private const val COARSE_WEIGHT = 0.6f
-    private const val FINE_WEIGHT = 0.4f
-    private const val COARSE_SCALE = 2
-    private const val MIDTONE_FLOOR = 0.35f
-    private const val MIDTONE_RANGE = 0.65f
-    private const val MIDTONE_PEAK = 4f
-    private const val SMOOTH_A = 3f
-    private const val SMOOTH_B = 2f
-    private const val CHROMA_SALT = 7
+    private const val TILE = 512
+    private const val TILE_MASK = TILE - 1
+    private const val FINE_SIGMA = 0.85f
+    private const val FINE_WEIGHT = 0.9f
+    private const val CLUMP_WEIGHT = 0.436f
+    private const val CLUMP_SCALE = 2.6f
+    private const val KERNEL_RADIUS = 3
+    private const val SALT_FINE = 11
+    private const val SALT_CLUMP = 29
+    private const val UNIFORMS = 3
+    private const val CHANNEL_SHIFT_X = 211
+    private const val CHANNEL_SHIFT_Y = 97
+    private const val CLUMP_SHIFT = 301
+    private const val LUMA_SHARE = 0.75f
+    private const val CHROMA_SHARE = 0.66f
+    private const val STOPS_MAX = 0.5f
+    private const val FLOOR = 0.25f
+    private const val PEAK = 4f
+    private const val GAMMA_EXPONENT = 0.4167f
+    private const val LN2 = 0.6931472f
+    private const val HALF = 0.5f
+    private const val P_MIN = 0.02f
 
-    /** Wspólny (jasnościowy) szum −1..1 w punkcie ([x], [y]) dla komórki o boku [cell]. */
-    fun luma(x: Int, y: Int, cell: Int): Float =
-        COARSE_WEIGHT * smooth(x, y, cell * COARSE_SCALE, 0) + FINE_WEIGHT * smooth(x, y, cell, 1)
+    private val fine: FloatArray by lazy { buildTile(SALT_FINE) }
+    private val clump: FloatArray by lazy { buildTile(SALT_CLUMP) }
 
-    /** Szum barwny −1..1 dla kanału [channel] (bez interpolacji: drobne plamki koloru). */
-    fun chroma(x: Int, y: Int, cell: Int, channel: Int): Float =
-        AdjustmentProcessor.noise(x / cell, y / cell, CHROMA_SALT + channel)
+    /** Wspólny (jasnościowy) szum o jednostkowej wariancji w punkcie ([x], [y]) dla ziarna o wielkości [cell] px. */
+    fun luma(x: Int, y: Int, cell: Float): Float = layers(x.toFloat(), y.toFloat(), cell, 0, 0)
 
-    /** Waga ziarna dla jasności [luma] 0..1: wąsko w czerni i bieli, pełna w półtonach. */
-    fun midtoneWeight(luma: Float): Float = MIDTONE_FLOOR + MIDTONE_RANGE * MIDTONE_PEAK * luma * (1f - luma)
+    /** Szum warstwy barwnej [channel] (0..2), niezależny od pozostałych; jednostkowa wariancja. */
+    fun chroma(x: Int, y: Int, cell: Float, channel: Int): Float =
+        layers(x.toFloat(), y.toFloat(), cell, (channel + 1) * CHANNEL_SHIFT_X, (channel + 1) * CHANNEL_SHIFT_Y)
 
-    private fun smooth(x: Int, y: Int, cell: Int, salt: Int): Float {
-        val fx = x.toFloat() / cell
-        val fy = y.toFloat() / cell
-        val x0 = floor(fx).toInt()
-        val y0 = floor(fy).toInt()
-        val tx = ease(fx - x0)
-        val ty = ease(fy - y0)
-        val top = lerp(AdjustmentProcessor.noise(x0, y0, salt), AdjustmentProcessor.noise(x0 + 1, y0, salt), tx)
-        val bottom =
-            lerp(AdjustmentProcessor.noise(x0, y0 + 1, salt), AdjustmentProcessor.noise(x0 + 1, y0 + 1, salt), tx)
-        return lerp(top, bottom, ty)
+    /** Ziarno kanału [channel]: wspólna jasność i niezależny barwnik, wariancja nadal jednostkowa. */
+    fun channel(x: Int, y: Int, cell: Float, channel: Int): Float =
+        LUMA_SHARE * luma(x, y, cell) + CHROMA_SHARE * chroma(x, y, cell, channel)
+
+    /** Odchylenie ziarna w stopniach ekspozycji dla jasności [luma] 0..1 (kodowanej) i siły [amount] 0..1. */
+    fun stops(luma: Float, amount: Float): Float {
+        val p = luma.coerceIn(P_MIN, 1f - P_MIN)
+        return amount * STOPS_MAX * (FLOOR + (1f - FLOOR) * sqrt(PEAK * p * (1f - p)))
     }
 
-    private fun ease(t: Float): Float = t * t * (SMOOTH_A - SMOOTH_B * t)
+    /**
+     * Mnożnik wartości kodowanej odpowiadający zmianie ekspozycji o [stops]·[g] EV w świetle liniowym
+     * (kodowanie ≈ x^(1/2,4)), rozwinięty do drugiego rzędu i znormalizowany tak, żeby średnia wynosiła 1.
+     */
+    fun gain(stops: Float, g: Float): Float {
+        val s = GAMMA_EXPONENT * LN2 * stops
+        return 1f + s * g + HALF * s * s * (g * g - 1f)
+    }
 
-    private fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
+    private fun layers(x: Float, y: Float, cell: Float, shiftX: Int, shiftY: Int): Float {
+        val a = sample(fine, x / cell + shiftX, y / cell + shiftY)
+        val c = sample(clump, x / (cell * CLUMP_SCALE) + shiftX + CLUMP_SHIFT, y / (cell * CLUMP_SCALE) + shiftY)
+        return FINE_WEIGHT * a + CLUMP_WEIGHT * c
+    }
+
+    private fun sample(tile: FloatArray, fx: Float, fy: Float): Float {
+        val x0 = floor(fx).toInt()
+        val y0 = floor(fy).toInt()
+        val tx = fx - x0
+        val ty = fy - y0
+        val xa = x0 and TILE_MASK
+        val xb = (x0 + 1) and TILE_MASK
+        val ya = (y0 and TILE_MASK) * TILE
+        val yb = ((y0 + 1) and TILE_MASK) * TILE
+        val top = tile[ya + xa] + (tile[ya + xb] - tile[ya + xa]) * tx
+        val bottom = tile[yb + xa] + (tile[yb + xb] - tile[yb + xa]) * tx
+        return top + (bottom - top) * ty
+    }
+
+    /** Biały szum Gaussa (suma równomiernych), przefiltrowany Gaussem po torusie i znormalizowany do wariancji 1. */
+    private fun buildTile(salt: Int): FloatArray {
+        val white = FloatArray(TILE * TILE) { i ->
+            var s = 0f
+            for (k in 0 until UNIFORMS) s += AdjustmentProcessor.noise(i and TILE_MASK, i / TILE, salt + k)
+            s
+        }
+        val kernel = FloatArray(2 * KERNEL_RADIUS + 1) {
+            val d = (it - KERNEL_RADIUS).toFloat()
+            exp(-d * d / (2f * FINE_SIGMA * FINE_SIGMA))
+        }
+        val tmp = FloatArray(white.size)
+        val out = FloatArray(white.size)
+        convolve(white, tmp, kernel, 1, TILE)
+        convolve(tmp, out, kernel, TILE, 1)
+        var sum = 0.0
+        var sq = 0.0
+        for (v in out) {
+            sum += v
+            sq += v.toDouble() * v
+        }
+        val mean = (sum / out.size).toFloat()
+        val inv = (1.0 / sqrt(sq / out.size - mean.toDouble() * mean)).toFloat()
+        for (i in out.indices) out[i] = (out[i] - mean) * inv
+        return out
+    }
+
+    /** Splot po torusie wzdłuż osi o kroku [step]; [other] to krok drugiej osi. */
+    private fun convolve(src: FloatArray, dst: FloatArray, kernel: FloatArray, step: Int, other: Int) {
+        val norm = kernel.sum()
+        for (line in 0 until TILE) {
+            for (pos in 0 until TILE) {
+                var acc = 0f
+                for (k in kernel.indices) {
+                    val p = (pos + k - KERNEL_RADIUS) and TILE_MASK
+                    acc += src[line * other + p * step] * kernel[k]
+                }
+                dst[line * other + pos * step] = acc / norm
+            }
+        }
+    }
 }
