@@ -2,17 +2,17 @@ package app.retrofilm.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -30,45 +31,52 @@ import app.retrofilm.R
 
 private val StripGap = 8.dp
 private val StripPad = 16.dp
+private val StripCorner = 24.dp
+private const val OVERLAY_ALPHA = 0.62f
 
-/** Pasek serii zdjęć: numer bieżącego, postęp zapisu i przełączanie między zdjęciami. */
+/**
+ * Pasek serii zdjęć jako półprzezroczysta nakładka na zdjęciu (zdjęcie jest w edytorze najważniejsze, więc pasek nie
+ * zabiera mu miejsca): numery zdjęć do przełączania (przewijane) z chipem zakresu edycji na początku. Podczas zapisu
+ * pokazuje postęp.
+ */
 @Composable
-fun PhotoStrip(state: MainState, onSelect: (Int) -> Unit) {
+fun PhotoStrip(state: MainState, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val total = state.uris.size
-    val label = if (state.exportProgress > 0) {
-        stringResource(R.string.photos_saving, state.exportProgress, total)
-    } else {
-        stringResource(R.string.photos_position, state.index + 1, total)
-    }
-    Column(
-        Modifier.fillMaxWidth().padding(top = StripGap),
-        verticalArrangement = Arrangement.spacedBy(StripGap)
+    val position = stringResource(R.string.photos_position, state.index + 1, total)
+    Surface(
+        modifier = modifier.semantics { contentDescription = position },
+        color = MaterialTheme.colorScheme.surfaceDim.copy(alpha = OVERLAY_ALPHA),
+        shape = RoundedCornerShape(StripCorner)
     ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = StripPad)
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = StripPad),
-            horizontalArrangement = Arrangement.spacedBy(StripGap)
-        ) {
-            item(key = "scope") { EditScopeChip(state) }
-            itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
-                val own = state.edits.isIndividual(i)
-                val cd = stringResource(
-                    if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd,
-                    i + 1,
-                    total
-                )
-                FilterChip(
-                    selected = i == state.index,
-                    enabled = !state.busy,
-                    onClick = { onSelect(i) },
-                    label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
-                    modifier = Modifier.semantics { contentDescription = cd }
-                )
+        if (state.exportProgress > 0) {
+            Text(
+                stringResource(R.string.photos_saving, state.exportProgress, total),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = StripPad, vertical = StripGap)
+            )
+        } else {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = StripGap),
+                horizontalArrangement = Arrangement.spacedBy(StripGap),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                item(key = "scope") { EditScopeChip(state) }
+                itemsIndexed(state.uris, key = { i, uri -> "$i-$uri" }) { i, _ ->
+                    val own = state.edits.isIndividual(i)
+                    val cd = stringResource(
+                        if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd,
+                        i + 1,
+                        total
+                    )
+                    FilterChip(
+                        selected = i == state.index,
+                        enabled = !state.busy,
+                        onClick = { onSelect(i) },
+                        label = { Text(if (own) "${i + 1} ✎" else (i + 1).toString()) },
+                        modifier = Modifier.semantics { contentDescription = cd }
+                    )
+                }
             }
         }
     }

@@ -72,6 +72,12 @@
     <string name="curve_darks">Ciemne tony</string>
     <string name="curve_mids">Półtony</string>
     <string name="curve_lights">Jasne tony</string>
+    <string name="sheet_handle_cd">Panel narzędzi</string>
+    <string name="sheet_state_collapsed">zwinięty</string>
+    <string name="sheet_state_compact">kompaktowy</string>
+    <string name="sheet_state_full">rozwinięty</string>
+    <string name="sheet_expand">Rozwiń panel</string>
+    <string name="sheet_collapse">Zwiń panel</string>
     <string name="crop_straighten">Prostowanie</string>
     <string name="crop_persp_v">Perspektywa pionowa</string>
     <string name="crop_persp_h">Perspektywa pozioma</string>
