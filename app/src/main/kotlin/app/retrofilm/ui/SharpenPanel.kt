@@ -96,11 +96,23 @@ internal fun SharpenControls(state: MainState) {
         AdjustSlider(stringResource(R.string.sharpen_masking), a.sharpMasking, { plain(it) }, 0f..1f) {
             state.adjustments = a.copy(sharpMasking = it)
         }
-        LabeledSwitch(R.string.sharpen_smart, a.sharpSmart) { state.adjustments = a.copy(sharpSmart = it) }
         LabeledSwitch(R.string.sharpen_mask_preview, a.sharpMaskPreview) {
             state.adjustments = a.copy(sharpMaskPreview = it)
         }
+        if (a.sharpMaskPreview && a.sharpMasking <= 0f) MaskHint()
+        LabeledSwitch(R.string.sharpen_smart, a.sharpSmart) { state.adjustments = a.copy(sharpSmart = it) }
     }
+}
+
+/** Podpowiedź przy pustej (całej białej) masce: podgląd działa, ale Maskowanie krawędzi wynosi 0. */
+@Composable
+private fun MaskHint() {
+    Text(
+        stringResource(R.string.sharpen_mask_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = SidePad)
+    )
 }
 
 @Composable

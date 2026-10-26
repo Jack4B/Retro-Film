@@ -203,6 +203,7 @@
     <string name="sharpen_detail">Detal</string>
     <string name="sharpen_masking">Maskowanie krawędzi</string>
     <string name="sharpen_mask_preview">Podgląd maski krawędzi (biel = wyostrzane)</string>
+    <string name="sharpen_mask_hint">Maska jest cała biała, bo Maskowanie krawędzi wynosi 0. Zwiększ ten suwak, żeby zobaczyć krawędzie.</string>
     <string name="adjust_clarity">Wyrazistość</string>
     <string name="adjust_dehaze">Usuń zamglenie</string>
     <string name="adjust_denoise">Odszumianie kolorów</string>

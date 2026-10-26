@@ -35,10 +35,10 @@ object DetailFilter {
      */
     @Suppress("LongParameterList")
     fun apply(px: IntArray, width: Int, height: Int, sharp: SharpenParams, clarity: Float, maskPreview: Boolean) {
-        if (sharp.amount <= 0f && clarity == 0f) return
+        if (sharp.amount <= 0f && clarity == 0f && !maskPreview) return
         val luma = FloatArray(width * height)
         Parallel.range(luma.size) { from, to -> for (i in from until to) luma[i] = lumaOf(px[i]) }
-        if (maskPreview && sharp.amount > 0f) {
+        if (maskPreview) {
             val m = Sharpener.maskOnly(luma, width, height, sharp)
             Parallel.range(px.size) { from, to ->
                 for (i in from until to) {

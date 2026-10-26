@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.1.2: podgląd maski krawędzi)
+- Faza: poprawka po zgłoszeniu „podgląd krawędzi przy wyostrzaniu nie działa” (fałszywy alarm: Ilość = 0), wydanie 1.1.2
+- Zrobione: podgląd maski pokazuje obraz maski także przy suwaku Ilość = 0 (wcześniej wymagał Ilość > 0, więc przełącznik wyglądał na martwy); przełącznik stoi pod Maskowaniem krawędzi; przy Maskowaniu = 0 podpowiedź („maska jest cała biała”, bo bez maskowania wyostrzane jest wszędzie); `SharpenMaskPreviewTest`. Przyczyna potwierdzona przez użytkownika: podgląd działał, tylko przy Ilość = 0 nic nie pokazywał (zachowanie starsze niż 1.1.0); 1.1.2 ułatwia to zauważyć.
+- PR / gałąź: #112 (`f33/podglad-maski`); wersja 1.1.2 z taga `v1.1.2`.
+- Otwarte / P2 odłożone: bez zmian względem 1.1.1.
+- Następny krok: ocena 1.1.2 (układ zakładek, przełączniki Auto/Przygotuj, ostrzeżenie przy wyjściu).
+
 ## 2026-10-26 – Claude (wydanie 1.1.1: poprawka zakładek)
 - Faza: poprawka po ocenie 1.1.0 na telefonie, wydanie 1.1.1
 - Zrobione: szerokość zakładek proporcjonalna do długości etykiety (pięć zakładek; „Wykończenie” przycinało się do „Wykończ…” na Realme GT7T). Podgląd maski krawędzi wyostrzania nie zniknął, tylko przeniósł się razem z wyostrzaniem do Wykończenie → Wyostrzanie (na dole panelu, pod przełącznikiem „Włosy i oczy mocniej, skóra słabiej”).
