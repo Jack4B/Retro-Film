@@ -15,6 +15,7 @@ import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
@@ -64,6 +65,11 @@ class MainState(
         private set
     var film by mutableStateOf(IDENTITY_ID)
     private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
+
+    /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
+    private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
+
+    val canUndoAuto: Boolean get() = autoPair?.second == adjustments
 
     /** Maska pokazywana jako czerwona nakładka na podglądzie, gdy ją ustawiamy (nie wpływa na zapis). */
     var maskOverlay by mutableStateOf<LocalMask?>(null)
@@ -134,6 +140,7 @@ class MainState(
         photo = null
         preview = null
         before = null
+        autoPair = null
         previewCache = null
         thumbnails.reset()
     }
@@ -229,6 +236,36 @@ class MainState(
         }
         before = orig
         preview = shown
+    }
+
+    /**
+     * Auto-ulepszenie: analizuje podgląd po filmie i kadrze (bez korekt), ustawia suwaki Światło i Kolor i zapamiętuje
+     * poprzednie ustawienia do cofnięcia ([undoAuto]).
+     */
+    suspend fun autoEnhance() {
+        val p = photo ?: return
+        val result = withContext(Dispatchers.Default) {
+            val small = GeometryApplier.apply(previewBase(p), geometry)
+            val graded = ExportPipeline.render(
+                small,
+                lut(),
+                graph.filmEngine.renderer,
+                FrameOptions(),
+                typeface,
+                intensity
+            )
+            val px = IntArray(graded.width * graded.height)
+            graded.getPixels(px, 0, graded.width, 0, 0, graded.width, graded.height)
+            AutoEnhance.suggest(px, graded.width, graded.height)
+        }
+        val before = adjustments
+        adjustments = result.applyTo(before)
+        autoPair = before to adjustments
+    }
+
+    fun undoAuto() {
+        autoPair?.let { adjustments = it.first }
+        autoPair = null
     }
 
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */

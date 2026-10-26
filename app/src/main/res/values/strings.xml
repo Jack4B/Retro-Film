@@ -31,6 +31,8 @@
     <string name="tab_crop">Kadr</string>
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
+    <string name="adjust_auto">Auto: popraw światło i kolor</string>
+    <string name="adjust_auto_undo">Cofnij auto</string>
     <string name="adjust_group_masks">Maski</string>
     <string name="mask_n">Maska %1$d</string>
     <string name="mask_add_linear">+ Liniowa</string>

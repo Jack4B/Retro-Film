@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -33,6 +34,7 @@ import app.retrofilm.R
 import app.retrofilm.pipeline.Adjustments
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 private val MinTouch = 48.dp
 private val SidePad = 16.dp
@@ -89,6 +91,7 @@ fun AdjustPanel(state: MainState) {
 @Composable
 private fun LightSliders(state: MainState) {
     val a = state.adjustments
+    AutoButton(state)
     AdjustSlider(
         label = stringResource(R.string.adjust_exposure),
         value = a.exposure / Adjustments.EXPOSURE_MAX_EV,
@@ -103,6 +106,17 @@ private fun LightSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_shadows), a.shadows, { percentText(it) }) {
         state.adjustments = a.copy(shadows = it)
     }
+}
+
+/** „Auto” ustawia światło i kolor z analizy zdjęcia; po użyciu ten sam przycisk cofa zmianę. */
+@Composable
+private fun AutoButton(state: MainState) {
+    val scope = rememberCoroutineScope()
+    val undo = state.canUndoAuto
+    OutlinedButton(
+        onClick = { if (undo) state.undoAuto() else scope.launch { state.autoEnhance() } },
+        modifier = Modifier.padding(horizontal = SidePad).fillMaxWidth().heightIn(min = MinTouch)
+    ) { Text(stringResource(if (undo) R.string.adjust_auto_undo else R.string.adjust_auto)) }
 }
 
 @Composable
