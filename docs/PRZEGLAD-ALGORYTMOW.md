@@ -100,6 +100,85 @@ przy −100% pozwoli wybrać między: wzmocnieniem struktury, barwy, ochroną pr
 Proponowana kolejność: 1 → 2 → 7 → 4 → 3 → reszta. Każda zmiana z raportem jakości na zdjęciach stockowych i testem
 równoważności tam, gdzie zachowanie ma się nie zmienić.
 
+## 3a. Stan wiedzy 2024–2026: co daje „maksimum z JPEG”
+
+Zasada kluczowa (D14): wyróżnikiem ma być wyciśnięcie z JPEG-a maksimum barwy i detalu (włosy, oczy). Poniżej
+metody, które to realnie dają, z oceną dojrzałości i ryzyk. Wszystko oznaczone „niezweryfikowane” wymaga sprawdzenia
+przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
+
+### A. Wyostrzanie świadome treści (włosy, oczy, skóra)
+
+- Stałe wzmocnienie USM prześwietla skórę i wzmacnia szum; literatura i praktyka sprowadzają się do **mapy siły
+  wyostrzania** G(x) z segmentacji: skóra łagodniej (lub wygładzanie), oczy, brwi, usta i włosy mocniej, krawędzie
+  z ograniczeniem aureoli (np. adaptacyjne wyostrzanie świadome skóry, arXiv 2107.14765).
+- Oczy: Android `FaceDetector` (już używany w `FaceFinder`) daje tylko środek oka i odległość; pełne kontury i
+  tęczówka (478 punktów w MediaPipe Face Landmarker) wymagają modelu TFLite. **Licencja modeli i ich waga w APK:
+  niezweryfikowane → eskalacja do Jack4B przed użyciem (reguła AGENTS.md).**
+- Włosy bez uczenia: pasma włosów mają **wysoką spójność orientacji gradientu** (tensor struktury, współczynnik
+  koherencji λ1−λ2 / λ1+λ2). Maska „włosopodobna” = wysoka koherencja przy drobnej skali; wyostrzanie kierunkowe
+  (wzdłuż krawędzi, nie w poprzek) wzmacnia pasma bez wzmacniania szumu. Metoda znana z coherence-enhancing filtering
+  (Weickert) i wyostrzania sterowanego tensorem struktury; tania, bez modelu.
+- Warstwa detalu zamiast USM na obrazie: wyostrzanie jako wzmocnienie warstwy detalu bazy z filtra prowadzonego w
+  logarytmie, bramkowane lokalnym σ szumu (nie wzmacnia szumu i nie rysuje aureoli).
+- Uwaga prawna: opisane idee są powszechne, ale istnieją patenty na mapy siły wyostrzania z map twarzy/skóry; wdrażamy
+  własną implementację, bez kopiowania zastrzeżeń (kwestia patentowa niezweryfikowana).
+
+### B. Wiedza specyficzna dla JPEG (największa nieużywana dźwignia)
+
+- **Model szumu kwantyzacji z tablic DQT.** Plik JPEG zawiera tablice kwantyzacji; błąd kwantyzacji współczynnika to
+  ~Δ/√12, więc znamy amplitudę „szumu komarowego” i blokowego bez zgadywania (dziś: σ Immerkaera z całego obrazu,
+  zawyżone na teksturach). Pozwala to sterować odszumianiem jasności i bramką wyostrzania per-obraz i per-jasność.
+  Koszt: parsowanie markerów DQT, bez nowych zależności.
+- **Odblokowywanie (deblocking).** Klasycznie SA-DCT (Foi 2007), które było najlepsze wśród metod nieuczonych, ale
+  rozmywa; FBCNN (ICCV 2021) jest uczone, ze sterowaniem współczynnikiem jakości; model za ciężki na dziś. Realistyczna
+  ścieżka: bramkowanie wyostrzania i odszumianie świadome siatki 8×8 z DQT.
+- **Podpróbkowanie chromy 4:2:0.** W JPEG z telefonów kolor ma połowę rozdzielczości; dekoder go rozmywa, więc na
+  krawędziach (włosy na niebie) kolor „wycieka”. **Odtworzenie krawędzi chromy filtrem prowadzonym z jasnością jako
+  przewodnikiem** (to samo narzędzie co w `ChromaDenoise`, tylko w drugą stronę) wyostrza barwy bez zmiany detalu;
+  efekt jest widoczny jako „czystsze” kolory przy krawędziach.
+
+### C. Tone mapping i światła
+
+- Metody lokalne dla JPEG: dekompozycja logarytmiczna z filtrem zachowującym krawędzie (Durand–Dorsey 2002, guided
+  filter He 2013) i local Laplacian (Paris 2011; wersja szybka Aubry 2014, ~350 ms/Mpx/rdzeń, więc na pełnej
+  rozdzielczości za wolna, ale możliwa dla bazy w niskiej skali).
+- Operatory filmic/AgX/Khronos PBR Neutral są projektowane dla scene-referred HDR; dla JPEG przydaje się z nich idea
+  **odbarwiania do bieli z zachowaniem odcienia** w shoulderze; opinie w sieci są rozbieżne, który jest „lepszy”,
+  więc traktujemy to jako opcję estetyczną, nie obowiązek.
+
+### D. Metody uczone
+
+- 3D LUT adaptacyjne (AdaInt, CVPR 2022; SepLUT, ECCV 2022): sieć przewiduje wagi LUT z miniatury; działa w czasie
+  rzeczywistym na GPU/CPU. Zgodne z naszym silnikiem LUT, ale wymaga modelu i danych treningowych (zbiory typu
+  MIT-Adobe FiveK mają ograniczenia licencyjne; niezweryfikowane) oraz pomiarów na telefonie (niezweryfikowane).
+  Obserwować; nie jest potrzebne, by osiągnąć wyróżnik.
+- Odszumianie na telefonie: sieci mobilne (MFDNet, 2022) są realne, ale jedno z badań wskazuje, że wersje GPU
+  klasycznych NLM i BM3D bywają 10–20× szybsze od CNN o porównywalnej jakości i mniej wygładzają regularne tekstury.
+  Dla nas: najpierw NLM-lite z modelem szumu z DQT, uczone później.
+- NAFNet i podobne w standardowej wielkości są za ciężkie na telefon (przykład: NAFNet-Deblur ok. 68 M parametrów,
+  niewspierany na układach mobilnych w Qualcomm AI Hub).
+
+### E. Zmiana rozmiaru w świetle liniowym
+
+Zasada jest poprawna (uśrednianie fizyczne), ale filtry z ujemnymi płatami (Lanczos, Catmull-Rom) w świetle liniowym
+dają aureole przy kontrastowych krawędziach, więc pozycja 6 planu wymaga testu na zdjęciach z tekstem i krawędziami;
+bezpieczniejsze jest jądro bez ujemnych płatów (obszarowe/Mitchell) przy zmniejszaniu.
+
+### F. Kolejność w potoku (kierunek D15)
+
+Korekty (balans bieli, ekspozycja, przebarwienia, odszumianie, dehaze) → film (LUT) → wykończenie (ziarno, winieta,
+blaknięcie, tonowanie, ostrość wyjściowa). Obecnie film idzie pierwszy i jest kwantyzowany do 8 bitów; docelowo film
+w potoku float, między korektami a wykończeniem.
+
+### G. Zaktualizowana kolejność wdrożeń (pod „maksimum z JPEG”)
+
+1. Model szumu z DQT + odszumianie jasności z bramką wyostrzania (pozycja 7 planu, ale oparta o JPEG).
+2. Odtworzenie krawędzi chromy (kolor przy krawędziach).
+3. Wyostrzanie kierunkowe z maską włosów (koherencja) i oczu (z `FaceFinder`), z mapą siły i bramką szumu.
+4. Światła/cienie v5 (pozycje 1–2).
+5. Reorganizacja przepływu korekty → film → wykończenie wraz z redesignem zakładek (D15).
+6. Reszta: tetrahedral LUT 16-bit, szeroki gamut, maski, dehaze, ziarno.
+
 ## 4. Źródła
 
 - darktable, moduł *tone equalizer* (maska z filtra prowadzonego niezależnego od ekspozycji, typowo promień 1–10% dłuższego boku): https://docs.darktable.org/usermanual/5.6/en/module-reference/processing-modules/tone-equalizer/
