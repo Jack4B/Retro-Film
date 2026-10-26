@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.retrofilm.core.engine.Lut
+import app.retrofilm.core.export.JpegExporter
 import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
@@ -60,6 +61,12 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Jakość JPEG przy zapisie (70..100). */
+    var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)
+
+    /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
+    var exportMaxSide by mutableIntStateOf(0)
 
     /** Presety użytkownika (film, moc i korekty) zapisywane w pamięci aplikacji. */
     val presetBook = PresetBook()
@@ -180,7 +187,13 @@ class MainState(
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(cropped, rendered, frame, face)
+                ExportPipeline.encode(
+                    cropped,
+                    ExportPipeline.resize(rendered, exportMaxSide),
+                    frame,
+                    face,
+                    exportQuality
+                )
             }
             withContext(Dispatchers.IO) { save(jpeg) }
         }
@@ -230,7 +243,13 @@ class MainState(
                     intensity,
                     adjustments
                 )
-                ExportPipeline.encode(cropped, rendered, frame, signatureTypeface())
+                ExportPipeline.encode(
+                    cropped,
+                    ExportPipeline.resize(rendered, exportMaxSide),
+                    frame,
+                    signatureTypeface(),
+                    exportQuality
+                )
             }
             withContext(Dispatchers.IO) { save(jpeg) }
             UiMessage.Saved
