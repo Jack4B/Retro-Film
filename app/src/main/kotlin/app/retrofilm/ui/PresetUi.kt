@@ -76,8 +76,8 @@ private fun SavePresetDialog(state: MainState, onDismiss: () -> Unit) {
             TextButton(
                 enabled = canSave,
                 onClick = {
-                    val snapshot =
-                        Preset(name, state.film, state.intensity, state.adjustments.copy(sharpMaskPreview = false))
+                    val clean = state.adjustments.copy(sharpMaskPreview = false)
+                    val snapshot = Preset(name, state.film, state.intensity, clean)
                     scope.launch { state.presetBook.save(context, snapshot) }
                     onDismiss()
                 }
