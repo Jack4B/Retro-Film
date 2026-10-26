@@ -40,14 +40,14 @@ private val MinTouch = 48.dp
 private val SidePad = 16.dp
 private val TileGap = 8.dp
 
-/** Plus przy filtrach: zapisuje bieżący film, jego moc i wszystkie korekty jako preset o podanej nazwie. */
+/**
+ * Akcja „zapisz jako preset”: bieżący film, jego moc i wszystkie korekty pod podaną nazwą. Przycisk rysuje [content]
+ * (dostaje funkcję otwierającą okno nazwy), a okno obsługuje ta funkcja.
+ */
 @Composable
-internal fun PresetAddButton(state: MainState) {
+internal fun PresetAddAction(state: MainState, content: @Composable (open: () -> Unit) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
-    val cd = stringResource(R.string.preset_add_cd)
-    IconButton(onClick = { open = true }, modifier = Modifier.size(MinTouch).semantics { contentDescription = cd }) {
-        Icon(Icons.Filled.Add, contentDescription = null)
-    }
+    content { open = true }
     if (open) SavePresetDialog(state, onDismiss = { open = false })
 }
 
