@@ -126,6 +126,7 @@
     <string name="adjust_group_color">Kolor</string>
     <string name="adjust_group_film">Klisza</string>
     <string name="adjust_group_detail">Detal</string>
+    <string name="adjust_grain_size">Rozmiar ziarna</string>
     <string name="adjust_sharpness">Ostrość</string>
     <string name="sharpen_title">Wyostrzanie</string>
     <string name="sharpen_auto">Auto (dobierz do zdjęcia)</string>

@@ -25,6 +25,8 @@ data class Adjustments(
     val fade: Float = 0f,
     /** Ziarno filmowe 0..1. */
     val grain: Float = 0f,
+    /** Rozmiar ziarna 0..1 (0,5 = domyślny, więcej = grubsze ziarno). */
+    val grainSize: Float = DEFAULT_GRAIN_SIZE,
     /** Winieta 0..1: przyciemnione rogi. */
     val vignette: Float = 0f,
     /** Ilość wyostrzania 0..1 (zob. [Sharpener]); 0 = wyłączone. */
@@ -68,6 +70,7 @@ data class Adjustments(
 
     companion object {
         val None = Adjustments()
+        const val DEFAULT_GRAIN_SIZE = 0.5f
         const val EXPOSURE_MAX_EV = 2f
     }
 }
@@ -140,7 +143,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val width = span.width
         val firstRow = span.firstRow
         val totalRows = span.totalRows
-        val cell = maxOf(1, maxOf(width, totalRows) / GRAIN_CELL_DIVISOR)
+        val cell = maxOf(
+            1,
+            (
+                maxOf(width, totalRows) / GRAIN_CELL_DIVISOR *
+                    (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
+                ).toInt()
+        )
         for (i in 0 until count) {
             val c = px[i]
             val lr = toLinear[(c shr RED_SHIFT) and BYTE_MASK]
@@ -186,6 +195,10 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val lift = FADE_LIFT * adj.fade
         val top = FADE_TOP * adj.fade
         for (k in 0..2) rgb[k] = lift + rgb[k] * (1f - lift - top)
+        // wyblakły pigment traci też chromę
+        val y = luma()
+        val keep = 1f - FADE_DESAT * adj.fade
+        for (k in 0..2) rgb[k] = y + (rgb[k] - y) * keep
     }
 
     private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Int) {
@@ -233,9 +246,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val IDX_22 = 8
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
+        private const val FADE_DESAT = 0.2f
         private const val GRAIN_MAX = 0.12f
         private const val GRAIN_SHARED = 0.8f
         private const val GRAIN_CELL_DIVISOR = 1200
+        private const val GRAIN_SIZE_MIN = 0.5f
+        private const val GRAIN_SIZE_SPAN = 2f
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263
         private const val HASH_SALT = 1442695041

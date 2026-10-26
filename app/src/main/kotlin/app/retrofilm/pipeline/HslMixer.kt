@@ -4,6 +4,8 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /** Korekty HSL dla 8 zakresów barw: odcień, nasycenie i jasność każdego w zakresie −1..1. */
 data class HslAdjust(val values: List<Float> = List(SIZE) { 0f }) {
@@ -22,21 +24,24 @@ data class HslAdjust(val values: List<Float> = List(SIZE) { 0f }) {
         const val LIGHTNESS = 2
         const val SIZE = BANDS * CHANNELS
 
-        /** Środki zakresów (stopnie): czerwony, pomarańczowy, żółty, zielony, turkusowy, niebieski, fiolet, purpura. */
-        val BAND_HUES = intArrayOf(0, 30, 60, 120, 180, 240, 280, 320)
+        /** Środki zakresów (OKLCH): czerwony, pomarańcz, żółty, zielony, turkus, niebieski, fiolet, purpura. */
+        val BAND_HUES = intArrayOf(29, 55, 110, 142, 195, 264, 305, 340)
     }
 }
 
 /**
- * Mikser HSL jak w programach do RAW: wpływ zakresu spada płynnie (cos²) z odległością od jego środka na kole
- * barw, szare piksele (bez nasycenia) nie są ruszane. Wagi liczone raz do tablic po 360 stopni, więc
- * koszt na piksel to konwersja RGB↔HSV i trzy odczyty tablic. Pracuje na wartościach kodowanych 0..1.
+ * Mikser HSL w przestrzeni OKLCH (percepcyjnie jednolitej): odcień, nasycenie i jasność dla 8 zakresów barw.
+ * Wpływ zakresu spada płynnie (cos²) z odległością kąta barwy OKLab od jego środka, więc zakresy mają podobną
+ * szerokość postrzeganą, a zmiana „jasności” zmienia L bez przesunięcia odcienia. Szare piksele nie są ruszane,
+ * a barwy o małej chromie dostają wpływ proporcjonalny. Wagi liczone raz do tablic po 360 stopni; kolory poza
+ * gamutem sRGB wracają przez zmniejszenie chromy ([OkLab.toRgb]). Pracuje na wartościach kodowanych 0..1.
  */
-@Suppress("MagicNumber") // numery sektorów koła barw HSV (0..5) i indeksy kanałów
+@Suppress("MagicNumber")
 class HslMixer(adj: HslAdjust) {
     private val hueShift = FloatArray(DEGREES)
     private val satScale = FloatArray(DEGREES)
     private val lumScale = FloatArray(DEGREES)
+    private val ok = OkLab()
 
     init {
         for (h in 0 until DEGREES) {
@@ -58,51 +63,21 @@ class HslMixer(adj: HslAdjust) {
 
     /** Zmienia [rgb] (R, G, B w 0..1) w miejscu. */
     fun apply(rgb: FloatArray) {
-        val mx = maxOf(rgb[0], rgb[1], rgb[2])
-        val mn = minOf(rgb[0], rgb[1], rgb[2])
-        val delta = mx - mn
-        if (delta < EPS) return
-        val s = delta / mx
-        val hue = hueOf(rgb, mx, delta)
+        ok.fromRgb(rgb)
+        val l = ok.lab[0]
+        val a = ok.lab[1]
+        val b = ok.lab[2]
+        val chroma = sqrt(a * a + b * b)
+        if (chroma < MIN_CHROMA) return
+        val hue = OkLab.hueDegrees(a, b)
         val idx = hue.toInt().coerceIn(0, DEGREES - 1)
-        val strength = minOf(1f, s * CHROMA_RAMP)
-        val h2 = hue + hueShift[idx] * strength
-        val s2 = (s * (1f + satScale[idx] * strength)).coerceIn(0f, 1f)
-        val v2 = (mx * (1f + lumScale[idx] * LUM_GAIN * strength)).coerceIn(0f, 1f)
-        hsvToRgb(h2, s2, v2, rgb)
-    }
-
-    private fun hueOf(rgb: FloatArray, mx: Float, delta: Float): Float {
-        val sector = when (mx) {
-            rgb[0] -> (rgb[1] - rgb[2]) / delta
-            rgb[1] -> 2f + (rgb[2] - rgb[0]) / delta
-            else -> 4f + (rgb[0] - rgb[1]) / delta
-        }
-        val h = sector * SECTOR
-        return if (h < 0f) h + DEGREES else h
-    }
-
-    private fun hsvToRgb(h: Float, s: Float, v: Float, out: FloatArray) {
-        val hh = ((h % DEGREES) + DEGREES) % DEGREES / SECTOR
-        val i = hh.toInt()
-        val f = hh - i
-        val p = v * (1f - s)
-        val q = v * (1f - s * f)
-        val t = v * (1f - s * (1f - f))
-        when (i) {
-            0 -> set(out, v, t, p)
-            1 -> set(out, q, v, p)
-            2 -> set(out, p, v, t)
-            3 -> set(out, p, q, v)
-            4 -> set(out, t, p, v)
-            else -> set(out, v, p, q)
-        }
-    }
-
-    private fun set(out: FloatArray, r: Float, g: Float, b: Float) {
-        out[0] = r
-        out[1] = g
-        out[2] = b
+        if (hueShift[idx] == 0f && satScale[idx] == 0f && lumScale[idx] == 0f) return
+        val strength = minOf(1f, chroma / CHROMA_FULL)
+        val h2 = Math.toRadians((hue + hueShift[idx] * strength).toDouble())
+        val c2 = chroma * (1f + satScale[idx] * strength).coerceAtLeast(0f)
+        val lum = lumScale[idx] * LUM_GAIN * strength
+        val l2 = (if (lum >= 0f) l + lum * (1f - l) else l * (1f + lum)).coerceIn(0f, 1f)
+        ok.toRgb(l2, c2 * cos(h2).toFloat(), c2 * sin(h2).toFloat(), rgb)
     }
 
     private fun circular(a: Int, b: Int): Float {
@@ -112,11 +87,10 @@ class HslMixer(adj: HslAdjust) {
 
     private companion object {
         const val DEGREES = 360
-        const val SECTOR = 60f
-        const val HALF_WIDTH = 45f
+        const val HALF_WIDTH = 50f
         const val HUE_RANGE = 30f
         const val LUM_GAIN = 0.5f
-        const val CHROMA_RAMP = 3f
-        const val EPS = 1e-6f
+        const val CHROMA_FULL = 0.05f
+        const val MIN_CHROMA = 1e-4f
     }
 }

@@ -139,6 +139,9 @@ private fun FilmSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_grain), a.grain, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(grain = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_grain_size), a.grainSize, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(grainSize = it)
+    }
     AdjustSlider(stringResource(R.string.adjust_vignette), a.vignette, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(vignette = it)
     }
