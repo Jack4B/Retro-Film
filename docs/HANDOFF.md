@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.0.1)
+- Faza: jakość algorytmów i UI, wydanie 1.0.1
+- Zrobione: edytor z szufladą (3 stany, uchwyt, podgląd zdjęcia na całą dostępną wysokość, pasek zdjęć i chip zakresu edycji jako półprzezroczysty overlay; poziomo panel boczny), edycja indywidualna zdjęcia w serii (EditBook), światła i cienie z zachowaniem detalu i barwy (pochmurne niebo nie szarzeje), dehaze bezpieczny na jasnych, szarych scenach (większa łatka, ω 0,85, T_MIN 0,35), raport jakości na 9 zdjęciach stockowych dobrej jakości (`quality-report.yml`, w tym metryka halo wyostrzania).
+- PR / gałąź: #84–#88 (`f11/swiatlo`, `f12/dehaze`), wersja 1.0.1 z taga `v1.0.1`.
+- Otwarte / P2 odłożone: wydajność (wszystko naraz ≈ 2,9–5,4 s przy 12 Mpx na runnerze CI, cel ≤ 2,5 s; jeden bufor float zamiast wielu przebiegów 8-bit, podział `AdjustmentProcessor`, ziarno i winieta po wyostrzaniu) – wydanie 1.0.2; wybór narzędzia w zakładce Korekty; halo wyostrzania do zbadania na zdjęciach z drobnym tekstem (`street_bus`).
+- Następny krok: 1.0.2 – wydajność potoku, pomiary w raporcie jakości.
+
 ## 2026-10-26 – Claude (algorytmy pro, wydanie 1.0)
 - Faza: jakość algorytmów, wydanie 1.0.0
 - Zrobione: przepisane/nowe algorytmy (stan: docs/STAN-ALGORYTMOW.md, wszystko ✅): kolor i ton w OKLab/OKLCH, cienie i światła z maską tonalną (filtr prowadzony), wyostrzanie (USM, dekonwolucja, maska krawędzi, Auto), dehaze, odszumianie jasności i kolorów, ziarno (model kryształów srebra), geometria (bikubiczny obrót, perspektywa z auto-kadrem, kadr gestem, Lanczos), krzywe tonalne (PCHIP), maski lokalne (liniowa/radialna, cienie/światła z maską tonalną), auto-ulepszenie świadome sceny (twarze, skóra, niebo, dominanta), edycja serii (wspólna albo osobna dla zdjęcia), presety, znak wodny QR.
