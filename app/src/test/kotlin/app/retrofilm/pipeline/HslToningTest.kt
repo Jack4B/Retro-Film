@@ -37,7 +37,7 @@ class HslToningTest {
         val adj = HslAdjust().with(0, HslAdjust.HUE, 1f) // czerwony +30° w stronę pomarańczowego
         val out = mix(adj, 0.9f, 0.1f, 0.1f)
         assertTrue("zielony składnik rośnie", out[1] > 0.1f + 0.05f)
-        assertEquals("maks. składnik bez zmian", 0.9f, out[0], 1e-3f)
+        assertTrue("nadal czerwono-pomarańczowy", out[0] > out[1] && out[1] > out[2])
     }
 
     @Test fun lightnessBrightensAndDarkensBand() {
@@ -68,5 +68,39 @@ class HslToningTest {
         val b = mid.copyOf()
         neutral.apply(b, 0.5f)
         assertTrue("minus balansu = więcej tonu cieni w półtonach", a[2] - a[0] > b[2] - b[0])
+    }
+
+    @Test fun oklabRoundTripIsAccurate() {
+        val ok = OkLab()
+        val out = FloatArray(3)
+        for (c in listOf(
+            floatArrayOf(0.8f, 0.3f, 0.2f),
+            floatArrayOf(0.1f, 0.6f, 0.9f),
+            floatArrayOf(0.5f, 0.5f, 0.5f)
+        )) {
+            ok.fromRgb(c)
+            ok.toRgb(ok.lab[0], ok.lab[1], ok.lab[2], out)
+            for (i in 0..2) assertEquals(c[i], out[i], 0.004f)
+        }
+    }
+
+    @Test fun oklabOutOfGamutChromaIsReducedNotClipped() {
+        val ok = OkLab()
+        val out = FloatArray(3)
+        ok.fromRgb(floatArrayOf(0.9f, 0.1f, 0.1f))
+        val hue = OkLab.hueDegrees(ok.lab[1], ok.lab[2])
+        ok.toRgb(ok.lab[0], ok.lab[1] * 3f, ok.lab[2] * 3f, out)
+        assertTrue(out.all { it in 0f..1f })
+        ok.fromRgb(out)
+        assertEquals("odcień zachowany", hue, OkLab.hueDegrees(ok.lab[1], ok.lab[2]), 3f)
+    }
+
+    @Test fun hslBandsSitAtTheirOklchPrimaries() {
+        // zielony (pierwotny sRGB) ma kąt ≈142° w OKLab: leży w środku zakresu nr 3
+        val ok = OkLab()
+        ok.fromRgb(floatArrayOf(0f, 1f, 0f))
+        assertEquals(HslAdjust.BAND_HUES[3].toFloat(), OkLab.hueDegrees(ok.lab[1], ok.lab[2]), 4f)
+        ok.fromRgb(floatArrayOf(0f, 0f, 1f))
+        assertEquals(HslAdjust.BAND_HUES[5].toFloat(), OkLab.hueDegrees(ok.lab[1], ok.lab[2]), 4f)
     }
 }

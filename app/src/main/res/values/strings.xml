@@ -54,6 +54,10 @@
     <string name="film_brand_polaroid">Polaroid</string>
     <string name="film_brand_ilford">Ilford</string>
     <string name="film_brand_other">Inne marki</string>
+    <string name="export_title">Zapis</string>
+    <string name="export_quality_label">Jakość JPEG: %1$d%%</string>
+    <string name="export_quality_cd">Jakość JPEG przy zapisie</string>
+    <string name="export_size_original">Oryginalny rozmiar</string>
     <string name="film_presets">Presety</string>
     <string name="preset_add_cd">Zapisz jako preset: film, moc i wszystkie korekty</string>
     <string name="preset_save_title">Zapisz preset</string>
@@ -126,6 +130,7 @@
     <string name="adjust_group_color">Kolor</string>
     <string name="adjust_group_film">Klisza</string>
     <string name="adjust_group_detail">Detal</string>
+    <string name="adjust_grain_size">Rozmiar ziarna</string>
     <string name="adjust_sharpness">Ostrość</string>
     <string name="sharpen_title">Wyostrzanie</string>
     <string name="sharpen_auto">Auto (dobierz do zdjęcia)</string>
@@ -143,6 +148,7 @@
     <string name="adjust_clarity">Wyrazistość</string>
     <string name="adjust_dehaze">Usuń zamglenie</string>
     <string name="adjust_denoise">Odszumianie kolorów</string>
+    <string name="adjust_luma_denoise">Odszumianie jasności</string>
     <string name="adjust_highlights">Światła</string>
     <string name="adjust_shadows">Cienie</string>
     <string name="adjust_fade">Blaknięcie</string>

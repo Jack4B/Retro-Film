@@ -25,6 +25,8 @@ data class Adjustments(
     val fade: Float = 0f,
     /** Ziarno filmowe 0..1. */
     val grain: Float = 0f,
+    /** Rozmiar ziarna 0..1 (0,5 = domyślny, więcej = grubsze ziarno). */
+    val grainSize: Float = DEFAULT_GRAIN_SIZE,
     /** Winieta 0..1: przyciemnione rogi. */
     val vignette: Float = 0f,
     /** Ilość wyostrzania 0..1 (zob. [Sharpener]); 0 = wyłączone. */
@@ -44,6 +46,8 @@ data class Adjustments(
     val dehaze: Float = 0f,
     /** Odszumianie kolorów 0..1 (zob. [ChromaDenoise]). */
     val denoise: Float = 0f,
+    /** Odszumianie jasności 0..1 (zob. [LumaDenoise]). */
+    val lumaDenoise: Float = 0f,
     /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
     val hsl: HslAdjust = HslAdjust(),
     /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */
@@ -64,10 +68,11 @@ data class Adjustments(
         get() = SharpenParams(sharpness, sharpRadius, sharpDetail, sharpMasking, sharpMode)
 
     /** Czy potrzebny jest przebieg po całym obrazie przed korektami tonalnymi (dehaze, odszumianie). */
-    val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f
+    val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f || lumaDenoise > 0f
 
     companion object {
         val None = Adjustments()
+        const val DEFAULT_GRAIN_SIZE = 0.5f
         const val EXPOSURE_MAX_EV = 2f
     }
 }
@@ -94,8 +99,6 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val m22: Float
     private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(it / BYTE_MAX) }
     private val encode: FloatArray
-    private val contrastLut =
-        FloatArray(CONTRAST_SIZE + 1) { contrastCurve(it.toFloat() / CONTRAST_SIZE, adj.contrast) }
 
     private val maskLut: FloatArray
     private val shadowGain = FloatArray(BYTE_LEVELS) { toneGain(adj.shadows, SHADOW_EV, shadowWeight(it / BYTE_MAX)) }
@@ -129,6 +132,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     } else {
         null
     }
+    private val chroma: ChromaScaler? = if (adj.saturation != 0f) ChromaScaler(adj.saturation) else null
+    private val contrast: LuminanceContrast? = if (adj.contrast != 0f) LuminanceContrast(adj.contrast) else null
+    private val vignette: VignetteLut? = if (adj.vignette > 0f) VignetteLut(adj.vignette) else null
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
     /**
@@ -139,7 +145,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val width = span.width
         val firstRow = span.firstRow
         val totalRows = span.totalRows
-        val cell = maxOf(1, maxOf(width, totalRows) / GRAIN_CELL_DIVISOR)
+        val cell = maxOf(
+            1,
+            (
+                maxOf(width, totalRows) / GRAIN_CELL_DIVISOR *
+                    (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
+                ).toInt()
+        )
         for (i in 0 until count) {
             val c = px[i]
             val lr = toLinear[(c shr RED_SHIFT) and BYTE_MASK]
@@ -148,14 +160,10 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[0] = encodeLinear(m00 * lr + m01 * lg + m02 * lb)
             rgb[1] = encodeLinear(m10 * lr + m11 * lg + m12 * lb)
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
-            if (adj.saturation != 0f) vibrance()
+            chroma?.apply(rgb)
             hsl?.apply(rgb)
             if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
-            if (adj.contrast !=
-                0f
-            ) {
-                for (k in 0..2) rgb[k] = contrastLut[(rgb[k].coerceIn(0f, 1f) * CONTRAST_SIZE + HALF).toInt()]
-            }
+            contrast?.apply(rgb)
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
@@ -166,25 +174,6 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     private fun luma() = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]
-
-    private fun vibrance() {
-        val mx = maxOf(rgb[0], rgb[1], rgb[2])
-        val chroma = if (mx > EPS) (mx - minOf(rgb[0], rgb[1], rgb[2])) / mx else 0f
-        val f = if (adj.saturation < 0f) 1f + adj.saturation else 1f + adj.saturation * (1f - chroma) * skinGuard()
-        val y = luma()
-        for (k in 0..2) rgb[k] = (y + (rgb[k] - y) * f).coerceIn(0f, 1f)
-    }
-
-    /** 1 poza odcieniami skóry, w pomarańczowo-różowym zakresie mniej o [SKIN_GUARD]. */
-    private fun skinGuard(): Float {
-        val r = rgb[0]
-        val g = rgb[1]
-        val b = rgb[2]
-        if (r < g || g < b || r - b < EPS) return 1f
-        val hue = (g - b) / (r - b)
-        val d = (hue - SKIN_HUE) / SKIN_WIDTH
-        return 1f - SKIN_GUARD * maxOf(0f, 1f - d * d)
-    }
 
     /**
      * Cienie i światła jako ekspozycja warstwy bazowej: rozkład na bazę (jasność wygładzona filtrem prowadzonym,
@@ -208,15 +197,17 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val lift = FADE_LIFT * adj.fade
         val top = FADE_TOP * adj.fade
         for (k in 0..2) rgb[k] = lift + rgb[k] * (1f - lift - top)
+        // wyblakły pigment traci też chromę
+        val y = luma()
+        val keep = 1f - FADE_DESAT * adj.fade
+        for (k in 0..2) rgb[k] = y + (rgb[k] - y) * keep
     }
 
     private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Int) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
             val ny = (y + HALF) / rows * 2f - 1f
-            val r = kotlin.math.sqrt((nx * nx + ny * ny) / 2f)
-            val t = ((r - VIGNETTE_START) / (1f - VIGNETTE_START)).coerceIn(0f, 1f)
-            val f = 1f - adj.vignette * VIGNETTE_MAX * t * t * (VIGNETTE_A - VIGNETTE_B * t)
+            val f = vignette?.gain((nx * nx + ny * ny) / 2f) ?: 1f
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
@@ -257,16 +248,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val IDX_22 = 8
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
-        private const val VIGNETTE_MAX = 0.65f
+        private const val FADE_DESAT = 0.2f
         private const val GRAIN_MAX = 0.12f
-        private const val SKIN_HUE = 0.5f
-        private const val SKIN_WIDTH = 0.4f
-        private const val SKIN_GUARD = 0.55f
-        private const val VIGNETTE_START = 0.35f
-        private const val VIGNETTE_A = 3f
-        private const val VIGNETTE_B = 2f
         private const val GRAIN_SHARED = 0.8f
         private const val GRAIN_CELL_DIVISOR = 1200
+        private const val GRAIN_SIZE_MIN = 0.5f
+        private const val GRAIN_SIZE_SPAN = 2f
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263
         private const val HASH_SALT = 1442695041
@@ -284,9 +271,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val ENCODE_SCALE = 4096f
         private const val ENCODE_MAX_LINEAR = 4.5f
         private const val ENCODE_SIZE = (ENCODE_MAX_LINEAR * ENCODE_SCALE).toInt()
-        private const val CONTRAST_SIZE = 1023
         private const val HALF = 0.5f
-        private const val EPS = 1e-6f
         private const val LUM_R = 0.2126f
         private const val LUM_G = 0.7152f
         private const val LUM_B = 0.0722f
@@ -385,6 +370,7 @@ object AdjustmentsApplier {
         val all = IntArray(w * h)
         src.getPixels(all, 0, w, 0, 0, w, h)
         ChromaDenoise.apply(all, w, h, adj.denoise)
+        LumaDenoise.apply(all, w, h, adj.lumaDenoise)
         Dehaze.apply(all, w, h, adj.dehaze)
         val work = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         work.setPixels(all, 0, w, 0, 0, w, h)

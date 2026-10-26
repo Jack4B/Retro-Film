@@ -311,6 +311,7 @@ fun FramePanel(state: MainState) {
     Column(Modifier.padding(vertical = Gap, horizontal = SidePad), verticalArrangement = Arrangement.spacedBy(Gap)) {
         LabeledSwitch(stringResource(R.string.frame_enabled), f.enabled) { state.frame = f.copy(enabled = it) }
         LabeledSwitch(stringResource(R.string.watermark_enabled), f.watermark) { state.frame = f.copy(watermark = it) }
+        ExportSettings(state)
         if (!f.enabled) return@Column
         LazyRow(horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             items(FrameAspect.entries, key = { it.name }) { a ->

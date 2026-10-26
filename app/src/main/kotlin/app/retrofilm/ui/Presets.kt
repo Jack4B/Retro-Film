@@ -46,9 +46,11 @@ object PresetCodec {
         mapOf(
             "exposure" to a.exposure, "contrast" to a.contrast, "saturation" to a.saturation,
             "temperature" to a.temperature, "tint" to a.tint, "highlights" to a.highlights,
-            "shadows" to a.shadows, "fade" to a.fade, "grain" to a.grain, "vignette" to a.vignette,
+            "shadows" to a.shadows, "fade" to a.fade, "grain" to a.grain, "grainSize" to a.grainSize,
+            "vignette" to a.vignette,
             "sharpness" to a.sharpness, "sharpRadius" to a.sharpRadius, "sharpDetail" to a.sharpDetail,
             "sharpMasking" to a.sharpMasking, "clarity" to a.clarity, "dehaze" to a.dehaze, "denoise" to a.denoise,
+            "lumaDenoise" to a.lumaDenoise,
             "shadowHue" to a.shadowHue, "shadowAmount" to a.shadowAmount,
             "highlightHue" to a.highlightHue, "highlightAmount" to a.highlightAmount,
             "toneBalance" to a.toneBalance
@@ -83,11 +85,20 @@ object PresetCodec {
         return Adjustments(
             exposure = f("exposure"), contrast = f("contrast"), saturation = f("saturation"),
             temperature = f("temperature"), tint = f("tint"), highlights = f("highlights"),
-            shadows = f("shadows"), fade = f("fade"), grain = f("grain"), vignette = f("vignette"),
+            shadows = f(
+                "shadows"
+            ),
+            fade = f(
+                "fade"
+            ),
+            grain = f(
+                "grain"
+            ),
+            grainSize = f("grainSize", Adjustments.DEFAULT_GRAIN_SIZE), vignette = f("vignette"),
             sharpness = f("sharpness"), sharpRadius = f("sharpRadius", SharpenParams.DEFAULT_RADIUS),
             sharpDetail = f("sharpDetail", SharpenParams.DEFAULT_DETAIL), sharpMasking = f("sharpMasking"),
             sharpMode = SharpenMode.entries.firstOrNull { it.name == o.optString("sharpMode") } ?: SharpenMode.Standard,
-            clarity = f("clarity"), dehaze = f("dehaze"), denoise = f("denoise"),
+            clarity = f("clarity"), dehaze = f("dehaze"), denoise = f("denoise"), lumaDenoise = f("lumaDenoise"),
             hsl = hsl, shadowHue = f("shadowHue"), shadowAmount = f("shadowAmount"),
             highlightHue = f("highlightHue"), highlightAmount = f("highlightAmount"), toneBalance = f("toneBalance")
         )

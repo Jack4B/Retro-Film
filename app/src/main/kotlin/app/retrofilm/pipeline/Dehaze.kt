@@ -9,6 +9,7 @@ import kotlin.math.min
  * czarny, więc jego jasność wskazuje grubość mgły. Model: I = J·t + A·(1−t); odzyskujemy J = (I−A)/t + A.
  * Mapa t liczona w zmniejszonej skali; sam obraz jest przetwarzany w pełnej rozdzielczości.
  */
+@Suppress("TooManyFunctions")
 internal object Dehaze {
     private const val TARGET = 640
     private const val CHANNELS = 3
@@ -28,6 +29,12 @@ internal object Dehaze {
     private const val LUMA_G = 0.7152f
     private const val LUMA_B = 0.0722f
     private const val HALF = 0.5f
+    private const val SKY_FROM = 0.9f
+    private const val SKY_TO = 1.0f
+    private const val SKY_MIX_A = 3f
+    private const val SKY_MIX_B = 2f
+    private const val COMPENSATE = 0.5f
+    private const val MAX_GAIN = 1.5f
 
     /** [amount] 0..1 (0 = bez zmian). Modyfikuje [px] w miejscu. */
     fun apply(px: IntArray, width: Int, height: Int, amount: Float) {
@@ -36,6 +43,8 @@ internal object Dehaze {
         val chan = Array(CHANNELS) { c -> low.down(FloatArray(px.size) { channel(px[it], c) }) }
         val airlight = airlight(chan, low)
         val t = transmission(chan, airlight, low, amount.coerceAtMost(1f))
+        protectSky(chan, airlight, t)
+        val before = meanLuma(px)
         for (y in 0 until height) {
             for (x in 0 until width) {
                 val i = y * width + x
@@ -47,7 +56,43 @@ internal object Dehaze {
                     restore(channel(c, 2), airlight[2], tt)
             }
         }
+        compensate(px, before)
     }
+
+    /**
+     * Niebo i inne obszary prawie równe świetle atmosferycznemu mają ciemny kanał wysoki i wyglądałyby jak gęsta mgła
+     * (przesadna korekta, szara plama, szum). Tam transmisja jest cofana ku 1.
+     */
+    private fun protectSky(chan: Array<FloatArray>, a: FloatArray, t: FloatArray) {
+        for (i in t.indices) {
+            val ratio = min(chan[0][i] / a[0], min(chan[1][i] / a[1], chan[2][i] / a[2]))
+            val w = ((ratio - SKY_FROM) / (SKY_TO - SKY_FROM)).coerceIn(0f, 1f)
+            t[i] += (1f - t[i]) * w * w * (SKY_MIX_A - SKY_MIX_B * w)
+        }
+    }
+
+    private fun meanLuma(px: IntArray): Float {
+        var sum = 0.0
+        for (c in px) sum += LUMA_R * channel(c, 0) + LUMA_G * channel(c, 1) + LUMA_B * channel(c, 2)
+        return (sum / px.size).toFloat()
+    }
+
+    /** Usuwanie mgły ciemni obraz; przywraca połowę utraconej średniej jasności (do +25%). */
+    private fun compensate(px: IntArray, before: Float) {
+        val after = meanLuma(px)
+        if (after < 1f) return
+        val gain = 1f + COMPENSATE * ((before / after).coerceIn(1f, MAX_GAIN) - 1f)
+        if (gain <= 1f) return
+        for (i in px.indices) {
+            val c = px[i]
+            px[i] = (c and ALPHA_MASK) or
+                (scale(channel(c, 0), gain) shl RED_SHIFT) or
+                (scale(channel(c, 1), gain) shl GREEN_SHIFT) or
+                scale(channel(c, 2), gain)
+        }
+    }
+
+    private fun scale(v: Float, g: Float): Int = (v * g + HALF).toInt().coerceIn(0, MASK)
 
     private fun channel(c: Int, k: Int): Float = ((c shr (RED_SHIFT - GREEN_SHIFT * k)) and MASK).toFloat()
 

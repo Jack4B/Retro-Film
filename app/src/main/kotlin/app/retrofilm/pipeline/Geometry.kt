@@ -94,10 +94,12 @@ object GeometryApplier {
         val w = crop.width.roundToInt().coerceAtLeast(1)
         val h = crop.height.roundToInt().coerceAtLeast(1)
         val cs = src.colorSpace
-        val out = if (cs != null) {
-            Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, false, cs)
-        } else {
-            Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val make = { bw: Int, bh: Int ->
+            if (cs != null) {
+                Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888, false, cs)
+            } else {
+                Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
+            }
         }
         val m = Matrix().apply {
             postTranslate(-src.width / 2f, -src.height / 2f)
@@ -106,9 +108,24 @@ object GeometryApplier {
             postRotate(g.straighten)
             postTranslate(w / 2f, h / 2f)
         }
-        Canvas(out).drawBitmap(src, m, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
-        return out
+        // Prostowanie wymaga interpolacji (bikubiczna); obrót o 90° i przesunięcie bez prostowania są dokładne.
+        return if (g.straighten != 0f) {
+            BicubicWarp.warp(src, m, w, h, make)
+        } else {
+            snapTranslation(m)
+            make(w, h).also { Canvas(it).drawBitmap(src, m, Paint(Paint.FILTER_BITMAP_FLAG)) }
+        }
+    }
+
+    /** Zaokrągla przesunięcie do całych pikseli, żeby kopiowanie piksel w piksel nie rozmywało obrazu. */
+    private fun snapTranslation(m: Matrix) {
+        val v = FloatArray(MATRIX_SIZE)
+        m.getValues(v)
+        v[Matrix.MTRANS_X] = v[Matrix.MTRANS_X].roundToInt().toFloat()
+        v[Matrix.MTRANS_Y] = v[Matrix.MTRANS_Y].roundToInt().toFloat()
+        m.setValues(v)
     }
 
     private const val QUARTER = 90f
+    private const val MATRIX_SIZE = 9
 }
