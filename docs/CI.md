@@ -8,7 +8,7 @@
   w opisie zapisuje `versionCode=...` (używane przez kontrolę w CI).
 
 ## Wersjonowanie
-- `versionName` pochodzi z pliku `VERSION` (np. `0.1.0`).
+- `versionName` pochodzi z pliku `VERSION` (np. `1.0.0`).
 - `versionCode = (major*10000 + minor*100 + patch) * 1000 + (GITHUB_RUN_NUMBER % 1000)`.
 - CI przerywa build, jeśli `versionCode` nie jest większy niż w ostatnim release (pomijane, gdy brak releasów).
 
