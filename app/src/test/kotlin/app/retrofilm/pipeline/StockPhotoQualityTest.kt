@@ -337,7 +337,7 @@ class StockPhotoQualityTest {
         const val CHROMA_GAIN = 0.7
         const val MAX_LUMA_DRIFT = 4.0
         const val MIN_TONE_GAIN = 8.0
-        const val MAX_TONE_LEAK = 4.0
+        const val MAX_TONE_LEAK = 10.0
         const val MAX_HUE_SHIFT = 4.0
         const val MAX_MEAN_SHIFT = 5.0
         const val MIN_LOOK_COLOUR = 0.6

@@ -175,13 +175,15 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     /**
-     * Cienie i światła jako lokalna ekspozycja: mnożnik 2^(siła · zakres EV · waga) liczony z jasności otoczenia
-     * (maska) i przeniesiony z liniowego na kodowanie gamma (potęga 1/2,2). Mnożnik, a nie dodawanie, zachowuje
-     * proporcje kanałów (barwy się nie wypłukują) i lokalny kontrast detali; waga to gładkie progi jasności.
+     * Cienie i światła jako lokalna ekspozycja: mnożnik 2^(siła · zakres EV · waga), przeniesiony z liniowego na
+     * kodowanie gamma (potęga 1/2,2). Waga zależy od średniej jasności własnej piksela i jego otoczenia (maska):
+     * sama maska zamieniała całe jasne zdjęcie w szarość, a sam piksel gubił lokalność. Mnożnik, a nie dodawanie,
+     * zachowuje proporcje kanałów (barwy się nie wypłukują) i lokalny kontrast detali.
      */
     private fun toneRecovery(mask: ToneMask?, x: Int, row: Int) {
-        val y = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else luma()
-        val i = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
+        val own = luma()
+        val y = if (mask != null) (own + maskLut[maskIndex(mask.sample(x, row))]) * HALF else own
+        val i = maskIndex(y)
         val m = shadowGain[i] * highlightGain[i]
         for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
     }
@@ -221,13 +223,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     companion object {
         const val KNEE = 0.8f
-        private const val SHADOW_EV = 1.5f
+        private const val SHADOW_EV = 2.0f
         private const val HIGHLIGHT_EV = 1.2f
         private const val GAMMA_INV = 0.4545f
-        private const val SHADOW_FROM = 0.05f
-        private const val SHADOW_TO = 0.75f
-        private const val HIGHLIGHT_FROM = 0.30f
-        private const val HIGHLIGHT_TO = 0.95f
+        private const val SHADOW_FROM = 0.02f
+        private const val SHADOW_TO = 0.65f
+        private const val HIGHLIGHT_FROM = 0.40f
+        private const val HIGHLIGHT_TO = 1.0f
         private const val MATRIX_SIZE = 9
         private const val IDX_00 = 0
         private const val IDX_01 = 1
