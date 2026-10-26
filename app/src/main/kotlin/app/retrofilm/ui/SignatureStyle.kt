@@ -38,7 +38,7 @@ private val SwatchSize = 48.dp
 private val SwatchDot = 32.dp
 private val SwatchBorder = 2.dp
 private const val MIN_SCALE = 0.32f
-private const val MAX_SCALE = 1f
+private const val MAX_SCALE = 1.4f
 private const val PERCENT = 100
 
 /** Atramenty do wyboru: ARGB zapisywany w ramce i nazwa dla TalkBack. */
