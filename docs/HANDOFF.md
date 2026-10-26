@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (algorytmy pro, wydanie 1.0)
+- Faza: jakość algorytmów, wydanie 1.0.0
+- Zrobione: przepisane/nowe algorytmy (stan: docs/STAN-ALGORYTMOW.md, wszystko ✅): kolor i ton w OKLab/OKLCH, cienie i światła z maską tonalną (filtr prowadzony), wyostrzanie (USM, dekonwolucja, maska krawędzi, Auto), dehaze, odszumianie jasności i kolorów, ziarno (model kryształów srebra), geometria (bikubiczny obrót, perspektywa z auto-kadrem, kadr gestem, Lanczos), krzywe tonalne (PCHIP), maski lokalne (liniowa/radialna, cienie/światła z maską tonalną), auto-ulepszenie świadome sceny (twarze, skóra, niebo, dominanta), edycja serii (wspólna albo osobna dla zdjęcia), presety, znak wodny QR.
+- PR / gałąź: #69–#83 (ostatnie: `f8/maski-ton-auto`, `f9/wersja-1-0`); wersja 1.0.0 z taga `v1.0.0`.
+- Otwarte / P2 odłożone: automatyczne prostowanie horyzontu (Hough), maski pędzlem/luminancji, NLM dla silnego szumu, profil obiektywu, osobny podpis/ramka na zdjęcie w serii; testy na urządzeniach (kadr gestem, krzywe, maski) czekają na opinię Jack4B.
+- Następny krok: opinie z testów na telefonie; poprawki P1/P2 według zgłoszeń.
+
 ## 2026-10-25 – Claude (Korekty)
 - Faza: redesign – zakładka Korekty
 - Zrobione: `Adjustments` (ekspozycja ±2 EV, kontrast, nasycenie, temperatura) i `AdjustmentMatrix` (czysta macierz 4×5) + `AdjustmentsApplier` (ColorMatrix) wpięte w `ExportPipeline.render` po nałożeniu filmu; zakładka Korekty w Edytorze (cztery suwaki zatwierdzane po puszczeniu, „Wyzeruj”); testy `AdjustmentsTest`. Wartości neutralne omijają krok (wynik filmu i golden bez zmian).

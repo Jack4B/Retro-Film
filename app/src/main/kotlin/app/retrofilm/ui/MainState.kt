@@ -16,6 +16,7 @@ import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
+import app.retrofilm.pipeline.AutoScene
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
@@ -70,6 +71,10 @@ class MainState(
     private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
 
     val canUndoAuto: Boolean get() = autoPair?.second == adjustments
+
+    /** Scena rozpoznana przy ostatnim auto-ulepszeniu (do podpisu przycisku). */
+    var autoScene by mutableStateOf(AutoScene.General)
+        private set
 
     /** Maska pokazywana jako czerwona nakładka na podglądzie, gdy ją ustawiamy (nie wpływa na zapis). */
     var maskOverlay by mutableStateOf<LocalMask?>(null)
@@ -293,11 +298,12 @@ class MainState(
             )
             val px = IntArray(graded.width * graded.height)
             graded.getPixels(px, 0, graded.width, 0, 0, graded.width, graded.height)
-            AutoEnhance.suggest(px, graded.width, graded.height)
+            AutoEnhance.suggest(px, graded.width, graded.height, FaceFinder.find(graded))
         }
         val before = adjustments
         adjustments = result.applyTo(before)
         autoPair = before to adjustments
+        autoScene = result.scene
     }
 
     fun undoAuto() {

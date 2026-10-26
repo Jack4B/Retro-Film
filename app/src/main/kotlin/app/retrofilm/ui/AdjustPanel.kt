@@ -32,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.AutoScene
 import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
@@ -116,7 +117,17 @@ private fun AutoButton(state: MainState) {
     OutlinedButton(
         onClick = { if (undo) state.undoAuto() else scope.launch { state.autoEnhance() } },
         modifier = Modifier.padding(horizontal = SidePad).fillMaxWidth().heightIn(min = MinTouch)
-    ) { Text(stringResource(if (undo) R.string.adjust_auto_undo else R.string.adjust_auto)) }
+    ) {
+        val scene = stringResource(
+            when (state.autoScene) {
+                AutoScene.Portrait -> R.string.scene_portrait
+                AutoScene.Landscape -> R.string.scene_landscape
+                AutoScene.Dominant -> R.string.scene_dominant
+                AutoScene.General -> R.string.scene_general
+            }
+        )
+        Text(if (undo) stringResource(R.string.adjust_auto_undo, scene) else stringResource(R.string.adjust_auto))
+    }
 }
 
 @Composable

@@ -43,7 +43,11 @@
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>
     <string name="adjust_auto">Auto: popraw światło i kolor</string>
-    <string name="adjust_auto_undo">Cofnij auto</string>
+    <string name="adjust_auto_undo">Cofnij auto (wykryto: %1$s)</string>
+    <string name="scene_portrait">portret</string>
+    <string name="scene_landscape">pejzaż</string>
+    <string name="scene_dominant">jedna dominująca barwa</string>
+    <string name="scene_general">scena ogólna</string>
     <string name="adjust_group_masks">Maski</string>
     <string name="mask_n">Maska %1$d</string>
     <string name="mask_add_linear">+ Liniowa</string>

@@ -34,6 +34,9 @@ data class LocalMask(
     val highlights: Float = 0f,
     val shadows: Float = 0f
 ) {
+    /** Czy maska zmienia cienie lub światła (wtedy blend potrzebuje maski tonalnej obrazu). */
+    val usesTone: Boolean get() = highlights != 0f || shadows != 0f
+
     /** Czy maska cokolwiek zmienia (bez korekt jest pomijana). */
     val hasEffect: Boolean
         get() = exposure != 0f || contrast != 0f || saturation != 0f || temperature != 0f ||
@@ -110,8 +113,8 @@ class MaskShapeMath(private val m: LocalMask, private val w: Int, private val h:
 /**
  * Nakłada maski lokalne na już skorygowane piksele: dla każdej maski liczy jej korekty ([AdjustmentProcessor])
  * na kopii porcji i miesza z oryginałem siłą maski w pikselu (lerp po kanałach w kodowaniu gamma). Piksele z siłą
- * zero zostają bez zmian, a porcje całkiem poza maską nie są w ogóle liczone. Cienie i światła w masce działają
- * punktowo (bez maski tonalnej obrazu), bo wejściem są już skorygowane globalnie piksele.
+ * zero zostają bez zmian, a porcje całkiem poza maską nie są w ogóle liczone. Cienie i światła w masce używają
+ * maski tonalnej ([ToneMask]) policzonej z obrazu po korektach globalnych, czyli tego samego, który jest wejściem.
  */
 internal class MaskBlender(masks: List<LocalMask>, private val w: Int, private val h: Int) {
     private class Layer(val shape: MaskShapeMath, val processor: AdjustmentProcessor)
@@ -124,8 +127,8 @@ internal class MaskBlender(masks: List<LocalMask>, private val w: Int, private v
 
     val isEmpty: Boolean get() = layers.isEmpty()
 
-    /** Miesza maski do [px] ([count] pikseli, wiersze od [firstRow]). */
-    fun blend(px: IntArray, count: Int, firstRow: Int) {
+    /** Miesza maski do [px] ([count] pikseli, wiersze od [firstRow]); [tone] to maska tonalna obrazu. */
+    fun blend(px: IntArray, count: Int, firstRow: Int, tone: ToneMask? = null) {
         if (alpha.size < count) {
             alpha = FloatArray(count)
             scratch = IntArray(count)
@@ -139,7 +142,7 @@ internal class MaskBlender(masks: List<LocalMask>, private val w: Int, private v
             }
             if (!any) continue
             System.arraycopy(px, 0, scratch, 0, count)
-            layer.processor.process(scratch, count, PixelSpan(w, firstRow, h))
+            layer.processor.process(scratch, count, PixelSpan(w, firstRow, h), tone)
             for (i in 0 until count) if (alpha[i] > 0f) px[i] = mix(px[i], scratch[i], alpha[i])
         }
     }
