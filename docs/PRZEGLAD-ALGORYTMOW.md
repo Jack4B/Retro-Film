@@ -189,6 +189,10 @@ w potoku float, między korektami a wykończeniem.
 - SMPTE, *A Review of 3D-LUT Performance in 10-bit and 12-bit HDR BT.2100 PQ* (tetrahedralna przewyższa trójliniową; ta sama jakość przy ok. 20–25% mniejszej LUT): https://journal.smpte.org/periodicals/SMPTE%20Motion%20Imaging%20Journal/129/2/17/
 - Newson, Delon, Galerne, *A Stochastic Film Grain Model for Resolution-Independent Rendering* (CGF 2017): https://diglib.eg.org:443/handle/10.1111/cgf13159
 - Foi i in., stabilizacja wariancji i uogólniona transformacja Anscombego dla szumu Poisson–Gaussa; Dabov i in., BM3D (2007); Buades i in., NLM (2005): https://webpages.tuni.fi/foi/
+- Wyostrzanie świadome skóry: *A guided edge-aware smoothing-sharpening filter…* (arXiv 2107.14765): https://arxiv.org/pdf/2107.14765
+- Jiang, Zhang, Timofte, *Towards Flexible Blind JPEG Artifacts Removal* (FBCNN, ICCV 2021): https://openaccess.thecvf.com/content/ICCV2021/html/Jiang_Towards_Flexible_Blind_JPEG_Artifacts_Removal_ICCV_2021_paper.html
+- Yang i in., *AdaInt* (CVPR 2022): https://openaccess.thecvf.com/content/CVPR2022/papers/Yang_AdaInt_Learning_Adaptive_Intervals_for_3D_Lookup_Tables_on_Real-Time_CVPR_2022_paper.pdf; Yang i in., *SepLUT* (ECCV 2022): https://arxiv.org/pdf/2207.08351
+- *Lightweight network towards real-time image denoising on mobile devices* (MFDNet): https://arxiv.org/pdf/2211.04687
 - Ottosson, *A perceptual color space for image processing* (OKLab, 2020); Mertens, Kautz, Van Reeth, *Exposure Fusion* (2007); van de Weijer i in., *Edge-Based Color Constancy* (2007).
 
 ## 5. Ograniczenia tego przeglądu
