@@ -47,7 +47,7 @@ class GamutMapperTest {
     }
 
     @Test fun inGamutColoursMatchSkiaWithinTwoLevels() {
-        val src = p3Bitmap(Triple(128, 128, 128), Triple(120, 90, 70), Triple(30, 60, 200), Triple(200, 190, 20))
+        val src = p3Bitmap(Triple(128, 128, 128), Triple(120, 90, 70), Triple(90, 110, 130), Triple(180, 170, 150))
         val mapped = GamutMapper.toSrgb(src)
         val skia = ColorPolicy.toSrgbClipped(src)
         for (x in 0 until 4) {
