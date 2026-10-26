@@ -62,6 +62,7 @@ class StockPhotoQualityTest {
         checkBrightRegion(name, px, pixels(highlights), src.width, src.height)
         checkDarkRegion(name, px, pixels(shadows), src.width, src.height)
         checkClarity(name, px, pixels(clarity), src.width, src.height)
+        reportHalo(px, pixels(AdjustmentsApplier.apply(src, Adjustments(sharpness = 1f))), src.width, src.height)
 
         val (clean, hazy) = synthHaze(px, src.width, src.height)
         val dehazed = hazy.copyOf().also { Dehaze.apply(it, src.width, src.height, 1f) }
@@ -236,6 +237,44 @@ class StockPhotoQualityTest {
         )
         if (after <= before) failures += "$name: wyrazistość nie zwiększa lokalnego kontrastu"
         if (meanShift > MAX_MEAN_SHIFT) failures += "$name: wyrazistość przesuwa jasność o ${f1(meanShift)}"
+    }
+
+    /**
+     * Aureole wyostrzania: o ile jasność po wyostrzaniu wychodzi poza zakres jasności oryginału w sąsiedztwie 5×5
+     * (przestrzelenie na krawędziach). Na razie tylko do raportu: średnia i odsetek pikseli z przestrzeleniem > 12.
+     */
+    private fun reportHalo(orig: IntArray, sharp: IntArray, w: Int, h: Int) {
+        var sum = 0.0
+        var strong = 0
+        var n = 0
+        for (y in HALO_R until h - HALO_R step HALO_STEP) {
+            for (x in HALO_R until w - HALO_R step HALO_STEP) {
+                val (lo, hi) = neighbourhoodRange(orig, w, x, y)
+                val v = luma(sharp[y * w + x])
+                val over = maxOf(0.0, v - hi) + maxOf(0.0, lo - v)
+                sum += over
+                if (over > HALO_STRONG) strong++
+                n++
+            }
+        }
+        report.appendLine(
+            "- Ostrość 100%: przestrzelenie na krawędziach średnio ${f2(sum / n)}, > ${HALO_STRONG.toInt()} w ${
+                f1(100.0 * strong / n)
+            }% pikseli"
+        )
+    }
+
+    private fun neighbourhoodRange(px: IntArray, w: Int, x: Int, y: Int): Pair<Double, Double> {
+        var lo = Double.MAX_VALUE
+        var hi = -Double.MAX_VALUE
+        for (dy in -HALO_R..HALO_R) {
+            for (dx in -HALO_R..HALO_R) {
+                val l = luma(px[(y + dy) * w + x + dx])
+                lo = minOf(lo, l)
+                hi = maxOf(hi, l)
+            }
+        }
+        return lo to hi
     }
 
     private fun checkColour(name: String, src: Bitmap, saturated: Bitmap, warm: Bitmap, look: Bitmap) {
@@ -448,6 +487,9 @@ class StockPhotoQualityTest {
         const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
         const val REAL_HIGHLIGHT = 165.0
+        const val HALO_R = 2
+        const val HALO_STEP = 2
+        const val HALO_STRONG = 12.0
         const val MAX_HUE_SHIFT = 4.0
         const val MAX_MEAN_SHIFT = 5.0
         const val MIN_LOOK_COLOUR = 0.6
