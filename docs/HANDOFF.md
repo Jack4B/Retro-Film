@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-26 – Claude (wydanie 1.1.1: poprawka zakładek)
+- Faza: poprawka po ocenie 1.1.0 na telefonie, wydanie 1.1.1
+- Zrobione: szerokość zakładek proporcjonalna do długości etykiety (pięć zakładek; „Wykończenie” przycinało się do „Wykończ…” na Realme GT7T). Podgląd maski krawędzi wyostrzania nie zniknął, tylko przeniósł się razem z wyostrzaniem do Wykończenie → Wyostrzanie (na dole panelu, pod przełącznikiem „Włosy i oczy mocniej, skóra słabiej”).
+- Uwagi użytkownika (MyNameisMrBullet): (1) błąd – po włączeniu „Popraw światło i kolor” i „Przygotuj pod film” wyłączenie i ponowne włączenie pierwszej opcji nie wracało do oryginału (jedna kopia „przed” nadpisywana przez drugi przycisk); teraz to dwa niezależne przełączniki na wspólnej podstawie (ustawienia sprzed pierwszego włączenia), kolejność nakładania stała (Auto, potem Przygotuj), ręczna zmiana suwaka robi nową podstawę (`AutoToggleTest`); (2) ostrzeżenie „Zakończyć edycję?” przy wyjściu (przycisk wstecz i strzałka), tylko gdy są niezapisane zmiany (film, intensywność, korekty, kadr, ramka względem stanu z wczytania albo ostatniego zapisu); (3) Photo Picker nie otwiera się już sam przy starcie – widać ekran Start z przyciskami (pomysł „ekran główny”: rozbudowa o ostatnie zapisy i ostatnio użyte filmy w osobnym wydaniu).
+- PR / gałąź: #111 (`f32/poprawki-ui`); wersja 1.1.1 z taga `v1.1.1`.
+- Otwarte / P2 odłożone: rozbudowa ekranu Start (ostatnie zapisy, ostatnio użyte filmy); ostrzeżenie przy wyjściu nie obejmuje osobnych edycji innych zdjęć serii; bez zmian względem 1.1.0: zrzuty Roborazzi nowych paneli (wyłapałyby ucięty napis zakładki); szukanie funkcji po przeniesieniu (podgląd maski był w Korekty → Detal).
+- Następny krok: ocena 1.1.1 na telefonie.
+
 ## 2026-10-26 – Claude (wydanie 1.1.0: faza C)
 - Faza: redesign UX (faza C planu), wydanie 1.1.0
 - Zrobione: pięć zakładek w kolejności pracy (Kadr · Korekty · Film · Wykończenie · Ramka; edytor otwiera się na Korektach), `FinishPanel` (klisza, wyostrzanie, tonowanie, krzywe), `AdjustPanel` tylko z korektami (Światło, Kolor, Kolory, Detal, Maski), osobne „Wyzeruj korekty” i „Wyzeruj wykończenie” (`corrections()` / `finishing()`), test kolejności zakładek (#109). Domknięcie P2 z 1.0.5: `DETAIL_MID` 1,6 / `DETAIL_FINE` 3,0 (kontrast w jasnych obszarach) i `SHADOW_DETAIL` 0,1 (szum w cieniach), dobrane offline w numpy (#108); raport jakości na 9 zdjęciach stockowych po #108: niezgodności brak; kontrast w jasnych obszarach po „Światła −100%” ×0,97–1,50 (beagles ×0,97), szum w ciemnej ćwiartce po „Cienie +100%” ×0,98–1,30 (portrait_stadium ×1,30).

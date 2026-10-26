@@ -22,7 +22,7 @@ internal fun PrepButton(state: MainState) {
     val scope = rememberCoroutineScope()
     val undo = state.canUndoPrep
     OutlinedButton(
-        onClick = { if (undo) state.undoAuto() else scope.launch { state.prepareForFilm() } },
+        onClick = { scope.launch { state.togglePrep() } },
         modifier = Modifier.padding(horizontal = SidePad).fillMaxWidth().heightIn(min = MinTouch)
     ) {
         Text(stringResource(if (undo) R.string.adjust_prep_undo else R.string.adjust_prep))
@@ -34,7 +34,7 @@ internal fun AutoButton(state: MainState) {
     val scope = rememberCoroutineScope()
     val undo = state.canUndoAuto
     OutlinedButton(
-        onClick = { if (undo) state.undoAuto() else scope.launch { state.autoEnhance() } },
+        onClick = { scope.launch { state.toggleAuto() } },
         modifier = Modifier.padding(horizontal = SidePad).fillMaxWidth().heightIn(min = MinTouch)
     ) {
         val scene = stringResource(

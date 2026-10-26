@@ -16,6 +16,7 @@ import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
+import app.retrofilm.pipeline.AutoResult
 import app.retrofilm.pipeline.AutoScene
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FaceBox
@@ -69,6 +70,17 @@ class MainState(
     private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
     private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
 
+    /** Ustawienia i ramka w chwili wczytania zdjęć albo ostatniego zapisu (do ostrzeżenia przed utratą zmian). */
+    private var pristine: Pair<PhotoEdit, FrameOptions>? = null
+
+    /** Czy od wczytania albo ostatniego zapisu coś zmieniono (film, korekty, kadr, ramka). */
+    val hasUnsavedEdits: Boolean
+        get() = photo != null && pristine?.let { it.first != snapshot() || it.second != frame } == true
+
+    private fun markSaved() {
+        pristine = snapshot() to frame
+    }
+
     /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */
     private fun facesFor(photo: Bitmap, small: Bitmap): List<FaceBox> = when {
         !adjustments.usesSmartSharpen -> emptyList()
@@ -77,14 +89,28 @@ class MainState(
             ?: FaceFinder.find(small).also { faceCache = Triple(photo, geometry, it) }
     }
 
-    /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
-    private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
+    /**
+     * Auto-ulepszenia to dwa niezależne przełączniki działające na wspólnej podstawie ([autoBase]: ustawienia sprzed
+     * pierwszego włączenia). Włączone propozycje są nakładane na podstawę zawsze w tej samej kolejności (Auto, potem
+     * „Przygotuj pod film”), więc wyłączenie i ponowne włączenie któregokolwiek daje ten sam wynik, a wyłączenie
+     * wszystkich wraca do podstawy. Ręczna zmiana suwaka ([autoApplied] ≠ [adjustments]) robi z bieżących ustawień nową
+     * podstawę.
+     */
+    private var autoBase by mutableStateOf<Adjustments?>(null)
 
-    private var autoKind by mutableStateOf(AutoKind.None)
+    private var autoApplied by mutableStateOf<Adjustments?>(null)
 
-    val canUndoAuto: Boolean get() = autoKind == AutoKind.Auto && autoPair?.second == adjustments
+    private var autoOn by mutableStateOf(false)
 
-    val canUndoPrep: Boolean get() = autoKind == AutoKind.Prep && autoPair?.second == adjustments
+    private var prepOn by mutableStateOf(false)
+
+    private var autoResult: AutoResult? = null
+
+    private var prepResult: AutoResult? = null
+
+    val canUndoAuto: Boolean get() = autoOn && autoApplied == adjustments
+
+    val canUndoPrep: Boolean get() = prepOn && autoApplied == adjustments
 
     /** Scena rozpoznana przy ostatnim auto-ulepszeniu (do podpisu przycisku). */
     var autoScene by mutableStateOf(AutoScene.General)
@@ -155,6 +181,7 @@ class MainState(
     @androidx.annotation.VisibleForTesting
     internal fun setPhotoForTest(bitmap: Bitmap) {
         photo = bitmap
+        markSaved()
     }
 
     private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry)
@@ -164,7 +191,7 @@ class MainState(
         intensity = e.intensity
         adjustments = e.adjustments
         updateGeometry(e.geometry)
-        autoPair = null
+        resetAuto()
     }
 
     /**
@@ -188,7 +215,8 @@ class MainState(
         photo = null
         preview = null
         before = null
-        autoPair = null
+        resetAuto()
+        pristine = null
         previewCache = null
         thumbnails.reset()
     }
@@ -221,6 +249,7 @@ class MainState(
         uris = picked
         index = 0
         edits.reset(snapshot())
+        markSaved()
         return load(context, picked.first()).also { if (it != null) uris = emptyList() }
     }
 
@@ -269,6 +298,7 @@ class MainState(
             withContext(Dispatchers.IO) { save(jpeg) }
         }
         exportProgress = 0
+        markSaved()
         UiMessage.SavedMany(result.saved, result.failed)
     }
 
@@ -296,39 +326,50 @@ class MainState(
         preview = shown
     }
 
-    /**
-     * Auto-ulepszenie: analizuje podgląd po filmie i kadrze (bez korekt), ustawia suwaki Światło i Kolor i zapamiętuje
-     * poprzednie ustawienia do cofnięcia ([undoAuto]).
-     */
-    suspend fun autoEnhance() = runAuto(AutoKind.Auto)
+    /** „Popraw światło i kolor”: przełącza propozycję z analizy zdjęcia (włącza albo wyłącza). */
+    suspend fun toggleAuto() = toggleAuto(AutoKind.Auto)
 
-    /** „Przygotuj pod film”: balans bieli, ekspozycja i delikatne zdjęcie krzywej telefonu przed nałożeniem filmu. */
-    suspend fun prepareForFilm() = runAuto(AutoKind.Prep)
+    /** „Przygotuj pod film”: balans bieli, ekspozycja i delikatne zdjęcie krzywej telefonu; przełącznik. */
+    suspend fun togglePrep() = toggleAuto(AutoKind.Prep)
 
     /** Analiza zdjęcia przed filmem (korekty są przed filmem, D15), więc ocena nie zależy od wybranego looku. */
-    private suspend fun runAuto(kind: AutoKind) {
+    private suspend fun toggleAuto(kind: AutoKind) {
         val p = photo ?: return
-        val result = withContext(Dispatchers.Default) {
-            val small = GeometryApplier.apply(previewBase(p), geometry)
-            val px = IntArray(small.width * small.height)
-            small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
-            val suggestion = AutoEnhance.suggest(px, small.width, small.height, FaceFinder.find(small))
-            if (kind == AutoKind.Prep) suggestion.forFilm() else suggestion
+        if (autoApplied != adjustments) {
+            autoBase = adjustments
+            autoOn = false
+            prepOn = false
         }
-        val before = adjustments
-        adjustments = result.applyTo(before)
-        autoPair = before to adjustments
-        autoKind = kind
-        autoScene = result.scene
+        val turnOn = if (kind == AutoKind.Auto) !autoOn else !prepOn
+        if (turnOn) {
+            val result = withContext(Dispatchers.Default) {
+                val small = GeometryApplier.apply(previewBase(p), geometry)
+                val px = IntArray(small.width * small.height)
+                small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
+                val suggestion = AutoEnhance.suggest(px, small.width, small.height, FaceFinder.find(small))
+                if (kind == AutoKind.Prep) suggestion.forFilm() else suggestion
+            }
+            if (kind == AutoKind.Auto) autoResult = result else prepResult = result
+            autoScene = result.scene
+        }
+        if (kind == AutoKind.Auto) autoOn = turnOn else prepOn = turnOn
+        var next = autoBase ?: adjustments
+        autoResult?.takeIf { autoOn }?.let { next = it.applyTo(next) }
+        prepResult?.takeIf { prepOn }?.let { next = it.applyTo(next) }
+        adjustments = next
+        autoApplied = next
     }
 
-    fun undoAuto() {
-        autoPair?.let { adjustments = it.first }
-        autoPair = null
-        autoKind = AutoKind.None
+    private fun resetAuto() {
+        autoBase = null
+        autoApplied = null
+        autoOn = false
+        prepOn = false
+        autoResult = null
+        prepResult = null
     }
 
-    private enum class AutoKind { None, Auto, Prep }
+    private enum class AutoKind { Auto, Prep }
 
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
     private fun previewBase(p: Bitmap): Bitmap {
@@ -364,6 +405,7 @@ class MainState(
                 )
             }
             withContext(Dispatchers.IO) { save(jpeg) }
+            markSaved()
             UiMessage.Saved
         } catch (_: SignatureTooLongException) {
             UiMessage.SignatureTooLong

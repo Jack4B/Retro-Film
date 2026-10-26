@@ -87,6 +87,7 @@ private val InfoDot = 28.dp
 private val InfoPad = 4.dp
 private const val ZOOM_READOUT_MIN = 1.01f
 private const val INFO_IDLE_ALPHA = 0.28f
+private const val TAB_WEIGHT_PAD = 3f
 private const val INFO_ACTIVE_ALPHA = 0.5f
 private const val INFO_ICON_ALPHA = 0.85f
 private val PanelCorner = 20.dp
@@ -400,13 +401,15 @@ internal fun TabBar(selected: EditorTab, onSelect: (EditorTab) -> Unit) {
     Row(Modifier.fillMaxWidth()) {
         EditorTab.entries.forEach { t ->
             val on = t == selected
+            val label = stringResource(t.label)
+            // szerokość zakładki proporcjonalna do długości etykiety, żeby „Wykończenie” się mieściło (5 zakładek)
             Box(
-                Modifier.weight(1f).heightIn(min = TabHeight)
+                Modifier.weight(label.length + TAB_WEIGHT_PAD).heightIn(min = TabHeight)
                     .selectable(selected = on, role = Role.Tab, onClick = { onSelect(t) }),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    stringResource(t.label),
+                    label,
                     color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
                     style = MaterialTheme.typography.labelLarge,

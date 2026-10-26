@@ -41,6 +41,10 @@
     <string name="tab_adjust">Korekty</string>
     <string name="tab_finish">Wykończenie</string>
     <string name="finish_reset">Wyzeruj wykończenie</string>
+    <string name="exit_title">Zakończyć edycję?</string>
+    <string name="exit_message">Zmiany nie zostały zapisane i zostaną utracone.</string>
+    <string name="exit_confirm">Zakończ</string>
+    <string name="exit_stay">Wróć do edycji</string>
     <string name="tab_crop">Kadr</string>
     <string name="crop_rotate_left">Obróć w lewo</string>
     <string name="crop_rotate_right">Obróć w prawo</string>

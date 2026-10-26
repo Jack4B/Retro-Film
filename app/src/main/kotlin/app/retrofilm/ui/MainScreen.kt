@@ -5,8 +5,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +19,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import app.retrofilm.R
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.ui.library.FilmLibraryScreen
 import kotlinx.coroutines.launch
@@ -23,8 +28,8 @@ import kotlinx.coroutines.launch
 private const val MAX_PICKED = 30
 
 /**
- * Korzeń ścieżki: Start (galeria: jedno lub kilka zdjęć) → Edytor (Film / Ramka) → zapis jednym dotknięciem.
- * Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
+ * Korzeń ścieżki: Start (przyciski: galeria albo pliki; wybór zdjęć nie otwiera się sam) → Edytor → zapis jednym
+ * dotknięciem. Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
  */
 @Composable
 fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> Unit) {
@@ -61,16 +66,15 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
         state.refreshPreview()
     }
     val editing = state.photo != null
-    AutoOpenGallery(editing, onPick)
     var showLibrary by rememberSaveable { mutableStateOf(false) }
-    if (editing) BackHandler(onBack = state::closePhoto)
+    val requestExit = rememberExitGuard(state, editing)
     if (editing && showLibrary) BackHandler { showLibrary = false }
     if (editing && showLibrary) {
         FilmLibraryScreen(state, onBack = { showLibrary = false })
     } else if (editing) {
         EditorScreen(
             state,
-            onBack = state::closePhoto,
+            onBack = requestExit,
             onSave = onSave,
             onOpenLibrary = { showLibrary = true },
             onSelectPhoto = { i -> scope.launch { show(state.select(context, i)) } },
@@ -115,14 +119,32 @@ private fun rememberSaveAction(state: MainState, show: (UiMessage?) -> Unit): ()
     }
 }
 
-/** Galeria otwiera się sama przy pierwszym wejściu na Start; po anulowaniu zostaje ekran z przyciskami. */
+/**
+ * Wyjście z edycji: bez zmian od wczytania albo ostatniego zapisu zamyka od razu, z niezapisanymi zmianami najpierw
+ * pyta. Zwraca akcję dla przycisku wstecz (systemowego i strzałki w pasku).
+ */
 @Composable
-private fun AutoOpenGallery(editing: Boolean, onPick: () -> Unit) {
-    var autoOpened by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!autoOpened && !editing) {
-            autoOpened = true
-            onPick()
-        }
+private fun rememberExitGuard(state: MainState, editing: Boolean): () -> Unit {
+    var confirmExit by rememberSaveable { mutableStateOf(false) }
+    val requestExit = { if (state.hasUnsavedEdits) confirmExit = true else state.closePhoto() }
+    if (editing) BackHandler(onBack = requestExit)
+    if (confirmExit && editing) {
+        ExitDialog(onStay = { confirmExit = false }, onExit = {
+            confirmExit = false
+            state.closePhoto()
+        })
     }
+    return requestExit
+}
+
+/** Pytanie przy wyjściu z edycji z niezapisanymi zmianami. */
+@Composable
+private fun ExitDialog(onStay: () -> Unit, onExit: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onStay,
+        title = { Text(stringResource(R.string.exit_title)) },
+        text = { Text(stringResource(R.string.exit_message)) },
+        confirmButton = { TextButton(onClick = onExit) { Text(stringResource(R.string.exit_confirm)) } },
+        dismissButton = { TextButton(onClick = onStay) { Text(stringResource(R.string.exit_stay)) } }
+    )
 }
