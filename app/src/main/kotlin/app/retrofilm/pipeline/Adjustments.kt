@@ -83,7 +83,7 @@ data class Adjustments(
     val usesToneMask: Boolean get() = shadows != 0f || highlights != 0f || texture != 0f
 
     /** Czy potrzebny jest przebieg po sąsiedztwie pikseli ([DetailFilter]). */
-    val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f
+    val hasDetail: Boolean get() = sharpness > 0f || clarity != 0f || sharpMaskPreview
 
     val sharpenParams: SharpenParams
         get() = SharpenParams(sharpness, sharpRadius, sharpDetail, sharpMasking, sharpMode)
