@@ -12,8 +12,9 @@ class ZoomMathTest {
     }
 
     @Test fun previewSmallerThanBoxIsScaledUpToFit() {
-        // Podgląd 500×500 w polu 1000×1000 wyświetla się 2× większy; zapis 1000 px → 200%.
-        assertEquals(200, ZoomMath.percent(Dim(1000, 1000), Dim(500, 500), 1000, 1f))
+        // Podgląd 500×500 w polu 1000×1000 wyświetla się 2× większy (1000 px na ekranie); zapis 1000 px → 100%.
+        assertEquals(100, ZoomMath.percent(Dim(1000, 1000), Dim(500, 500), 1000, 1f))
+        assertEquals(200, ZoomMath.percent(Dim(1000, 1000), Dim(500, 500), 500, 1f))
     }
 
     @Test fun exportSizeKeepsPreviewProportions() {

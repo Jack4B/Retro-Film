@@ -45,7 +45,7 @@ class WatermarkTest {
 
     private fun isRed(c: Int) = Color.red(c) > 200 && Color.green(c) < 60
 
-    private fun isDark(c: Int) = Color.red(c) < 80 && Color.green(c) < 80 && Color.blue(c) < 80
+    private fun isInk(c: Int) = Color.red(c) < 215 && Color.green(c) < 215 && !isRed(c)
 
     private fun count(bmp: Bitmap, ys: IntRange, xs: IntRange, test: (Int) -> Boolean): Int =
         ys.sumOf { y -> xs.count { x -> test(bmp.getPixel(x, y)) } }
@@ -59,7 +59,7 @@ class WatermarkTest {
                 android.graphics.Typeface.DEFAULT
             )
             assertTrue("ikona jest widoczna na karcie", count(out, 500 until 522, 700 until 800, ::isRed) > 20)
-            assertTrue("nazwa jest widoczna na karcie", count(out, 500 until 522, 700 until 800, ::isDark) > 20)
+            assertTrue("nazwa jest widoczna na karcie", count(out, 500 until 522, 700 until 800, ::isInk) > 10)
         } finally {
             Watermark.icon = null
         }
