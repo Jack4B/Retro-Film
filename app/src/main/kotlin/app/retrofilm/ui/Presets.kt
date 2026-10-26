@@ -145,8 +145,9 @@ class PresetBook {
 fun MainState.applyPreset(p: Preset) {
     if (p.film == IDENTITY_ID || library.films.any { it.id == p.film }) film = p.film
     intensity = p.intensity
-    adjustments = p.adjustments
+    adjustments = p.adjustments.copy(masks = adjustments.masks)
 }
 
 /** Czy bieżące ustawienia są identyczne z presetem (do zaznaczenia kafelka). */
-fun MainState.matches(p: Preset): Boolean = film == p.film && intensity == p.intensity && adjustments == p.adjustments
+fun MainState.matches(p: Preset): Boolean = film == p.film && intensity == p.intensity &&
+    adjustments.copy(masks = p.adjustments.masks) == p.adjustments

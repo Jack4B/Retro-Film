@@ -28,7 +28,8 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Znak wodny QR | Watermark.kt | ✅ | ikona + nazwa + QR |
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
 | Eksport | ExportPipeline.kt | ✅ | jakość JPEG, maks. rozmiar, wyostrzanie wyjściowe; GPS usuwany |
-| Auto-ulepszenie, krzywe tonalne, maski lokalne | — | ❌ | do zrobienia |
+| Maski lokalne | LocalMask.kt | ✅ | liniowa i radialna, własne korekty; brak malowania pędzlem i masek luminancji |
+| Auto-ulepszenie, krzywe tonalne | — | ❌ | do zrobienia |
 
 ## Raport końcowy (alpha.16, CI, 5 zdjęć testowych)
 

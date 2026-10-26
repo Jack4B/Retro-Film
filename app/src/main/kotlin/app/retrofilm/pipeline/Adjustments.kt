@@ -57,7 +57,9 @@ data class Adjustments(
     val highlightHue: Float = 0f,
     val highlightAmount: Float = 0f,
     /** Balans tonowania −1..1: plus rozszerza zakres świateł, minus cieni. */
-    val toneBalance: Float = 0f
+    val toneBalance: Float = 0f,
+    /** Maski lokalne (do [LocalMask.MAX_MASKS]) z własnymi korektami, zob. [LocalMask]. */
+    val masks: List<LocalMask> = emptyList()
 ) {
     val isNeutral: Boolean get() = this == None
 
@@ -382,6 +384,7 @@ object AdjustmentsApplier {
         val h = src.height
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val processor = AdjustmentProcessor(adj)
+        val blender = MaskBlender(adj.masks, w, h).takeUnless { it.isEmpty }
         val mask = if (adj.shadows != 0f || adj.highlights != 0f) buildMask(src) else null
         val buf = IntArray(w * ROWS_PER_CHUNK)
         var y = 0
@@ -389,6 +392,7 @@ object AdjustmentsApplier {
             val rows = minOf(ROWS_PER_CHUNK, h - y)
             src.getPixels(buf, 0, w, 0, y, w, rows)
             processor.process(buf, w * rows, PixelSpan(w, y, h), mask)
+            blender?.blend(buf, w * rows, y)
             out.setPixels(buf, 0, w, 0, y, w, rows)
             y += rows
         }

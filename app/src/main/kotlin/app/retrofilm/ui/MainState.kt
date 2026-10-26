@@ -21,6 +21,7 @@ import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
+import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
@@ -61,6 +62,9 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Maska pokazywana jako czerwona nakładka na podglądzie, gdy ją ustawiamy (nie wpływa na zapis). */
+    var maskOverlay by mutableStateOf<LocalMask?>(null)
 
     /** Jakość JPEG przy zapisie (70..100). */
     var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)

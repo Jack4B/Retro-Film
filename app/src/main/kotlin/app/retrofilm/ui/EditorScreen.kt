@@ -220,17 +220,19 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
         contentAlignment = Alignment.Center
     ) {
         if (shown != null) {
+            val layer = Modifier.fillMaxSize().graphicsLayer {
+                scaleX = zoom.scale
+                scaleY = zoom.scale
+                translationX = zoom.offset.x
+                translationY = zoom.offset.y
+            }
             Image(
                 bitmap = shown.asImageBitmap(),
                 contentDescription = cd,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize().graphicsLayer {
-                    scaleX = zoom.scale
-                    scaleY = zoom.scale
-                    translationX = zoom.offset.x
-                    translationY = zoom.offset.y
-                }
+                modifier = layer
             )
+            state.maskOverlay?.let { MaskOverlayImage(it, shown.width, shown.height, layer) }
         }
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
