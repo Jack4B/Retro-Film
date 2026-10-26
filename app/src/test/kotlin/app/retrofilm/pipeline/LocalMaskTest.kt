@@ -96,4 +96,33 @@ class LocalMaskTest {
         assertTrue("góra widoczna", Color.alpha(bmp.getPixel(bmp.width / 2, 1)) > 100)
         assertEquals("dół przezroczysty", 0, Color.alpha(bmp.getPixel(bmp.width / 2, bmp.height - 2)))
     }
+
+    @Test fun shadowsInAFullCoverageMaskMatchTheGlobalShadowsWithToneMask() {
+        val src = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        for (x in 0 until w) {
+            for (y in 0 until h) {
+                val bright = x in 70..130 && y in 30..70
+                val v = if (bright) 220 else 25 + y / 3
+                src.setPixel(x, y, Color.rgb(v, v, v))
+            }
+        }
+        val everywhere =
+            LocalMask(MaskShape.Radial, centerX = 0.5f, centerY = 0.5f, size = 5f, feather = 0f, shadows = 0.8f)
+        val local = AdjustmentsApplier.apply(src, Adjustments(masks = listOf(everywhere)))
+        val global = AdjustmentsApplier.apply(src, Adjustments(shadows = 0.8f))
+        var maxDiff = 0
+        for (x in 0 until w step 3) {
+            for (y in 0 until h step 3) {
+                maxDiff = maxOf(maxDiff, Math.abs(Color.red(local.getPixel(x, y)) - Color.red(global.getPixel(x, y))))
+            }
+        }
+        assertTrue("maska lokalna jak korekta globalna (różnica $maxDiff)", maxDiff <= 4)
+        assertTrue("cień faktycznie rozjaśniony", Color.red(local.getPixel(10, 10)) > 40)
+        assertEquals(
+            "jasny obiekt nie jest rozjaśniany jak cień",
+            220f,
+            Color.red(local.getPixel(100, 50)).toFloat(),
+            12f
+        )
+    }
 }

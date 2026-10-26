@@ -389,10 +389,10 @@ object AdjustmentsApplier {
             val rows = minOf(ROWS_PER_CHUNK, h - y)
             src.getPixels(buf, 0, w, 0, y, w, rows)
             processor.process(buf, w * rows, PixelSpan(w, y, h), mask)
-            blender?.blend(buf, w * rows, y)
             out.setPixels(buf, 0, w, 0, y, w, rows)
             y += rows
         }
+        if (blender != null) blendMasks(out, blender, adj.masks.any { it.hasEffect && it.usesTone })
         if (adj.hasDetail) {
             val all = IntArray(w * h)
             out.getPixels(all, 0, w, 0, 0, w, h)
@@ -400,6 +400,25 @@ object AdjustmentsApplier {
             out.setPixels(all, 0, w, 0, 0, w, h)
         }
         return out
+    }
+
+    /**
+     * Maski lokalne na już skorygowanym globalnie obrazie [out]: drugie przejście porcjami. Cienie i światła w
+     * maskach korzystają z maski tonalnej policzonej z tego samego (skorygowanego) obrazu, więc działają na warstwie
+     * bazowej jak korekty globalne i nie tworzą aureoli, a nie punktowo.
+     */
+    private fun blendMasks(out: Bitmap, blender: MaskBlender, usesTone: Boolean) {
+        val w = out.width
+        val tone = if (usesTone) buildMask(out) else null
+        val buf = IntArray(w * ROWS_PER_CHUNK)
+        var y = 0
+        while (y < out.height) {
+            val rows = minOf(ROWS_PER_CHUNK, out.height - y)
+            out.getPixels(buf, 0, w, 0, y, w, rows)
+            blender.blend(buf, w * rows, y, tone)
+            out.setPixels(buf, 0, w, 0, y, w, rows)
+            y += rows
+        }
     }
 
     /** Lokalna jasność obrazu źródłowego dla cieni i świateł (jedno dodatkowe przejście porcjami). */

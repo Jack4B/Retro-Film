@@ -99,4 +99,59 @@ class AutoEnhanceTest {
         assertEquals(0f, r.temperature, 0f)
         assertTrue(r.exposure > 0f)
     }
+
+    private fun scenePx(paint: (Int, Int) -> Int): IntArray = IntArray(w * h) { paint(it % w, it / w) }
+
+    @Test fun dominantColourWeakensWhiteBalanceComparedWithABalancedScene() {
+        // „zachód słońca” (pomarańcz) z odrobiną szarości: korekta ma być łagodniejsza niż dla szarej sceny z nalotem
+        val sunset = scenePx { x, y ->
+            if (x < 12 &&
+                y < 10
+            ) {
+                argb(128, 128, 128)
+            } else {
+                argb(225 - y / 3, 120, 50 + x / 8)
+            }
+        }
+        val cast = gradient(40, 220, Triple(1.2f, 1f, 0.85f))
+        val a = AutoEnhance.suggest(sunset, w, h)
+        assertEquals(AutoScene.Dominant, a.scene)
+        assertTrue(
+            "dominanta: korekta bieli słabsza",
+            Math.abs(a.temperature) < Math.abs(suggest(cast).temperature) + 0.05f
+        )
+    }
+
+    @Test fun portraitExposureFollowsTheSkin() {
+        // ciemne tło i jasna twarz: sama mediana ściemniłaby zdjęcie, skóra mówi, że twarz jest już dość jasna
+        val darkBg = scenePx { x, y -> if (x in 40..80 && y in 20..60) argb(224, 172, 140) else argb(20, 20, 24) }
+        val faces = listOf(FaceBox(0.3f, 0.2f, 0.7f, 0.7f))
+        val withFace = AutoEnhance.suggest(darkBg, w, h, faces)
+        val without = AutoEnhance.suggest(scenePx { _, _ -> argb(20, 20, 24) }, w, h)
+        assertEquals(AutoScene.Portrait, withFace.scene)
+        assertTrue("twarz na ciemnym tle: mniej rozjaśniania niż samo ciemne tło", withFace.exposure < without.exposure)
+        assertTrue(withFace.contrast <= 0.25f)
+        assertTrue(withFace.saturation <= 0.15f)
+    }
+
+    @Test fun brightSkyIsNotBrightenedFurther() {
+        val img = scenePx { _, y -> if (y < 36) argb(150, 190, 245) else argb(35, 40, 35) }
+        val r = AutoEnhance.suggest(img, w, h)
+        assertEquals(AutoScene.Landscape, r.scene)
+        assertTrue("jasne niebo: ekspozycja nie rośnie powyżej 0,3 EV", r.exposure <= 0.3f)
+    }
+
+    @Test fun skinGuardKeepsSkinToneInsideItsRangeWhenFacesAreKnown() {
+        val skinHeavy = scenePx { x, y ->
+            if (x in 20..100 &&
+                y in 10..80
+            ) {
+                argb(224, 172, 140)
+            } else {
+                argb(130, 128, 126)
+            }
+        }
+        val r = AutoEnhance.suggest(skinHeavy, w, h, listOf(FaceBox(0.15f, 0.1f, 0.85f, 0.9f)))
+        assertTrue("balans bieli w granicach", Math.abs(r.temperature) <= 0.4f && Math.abs(r.tint) <= 0.4f)
+    }
 }
