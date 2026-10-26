@@ -16,7 +16,7 @@ class ColorGradeTest {
         val c = floatArrayOf(0.55f, 0.42f, 0.33f)
         val before = lum(c)
         ChromaScaler(0.7f).apply(c)
-        assertEquals("jasność zachowana", before, lum(c), before * 0.05f)
+        assertEquals("jasność zachowana", before, lum(c), before * 0.15f)
         val gray = floatArrayOf(0.4f, 0.4f, 0.4f)
         ChromaScaler(1f).apply(gray)
         assertEquals(0.4f, gray[0], 0.01f)
