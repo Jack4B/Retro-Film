@@ -5,7 +5,6 @@ import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
-import kotlin.math.tanh
 
 /** Sposób wyostrzania: standardowy (maska nieostra i dekonwolucja wg „Detalu”), maska nieostra albo dekonwolucja. */
 enum class SharpenMode { Standard, Unsharp, Deconvolution }
@@ -51,6 +50,7 @@ internal object Sharpener {
     private const val MASK_LOW = 0.06f
     private const val MASK_BAND = 0.05f
     private const val STRIP_ROWS = 512
+    private const val MIN_DECONV_WEIGHT = 0.02f
     private const val MARGIN_EXTRA = 2
 
     fun sigmaFor(radius: Float, longSide: Int): Float = (radius * longSide / REF_SIDE).coerceIn(MIN_SIGMA, MAX_SIGMA)
@@ -103,7 +103,7 @@ internal object Sharpener {
             SharpenMode.Unsharp -> 0f
             SharpenMode.Deconvolution -> 1f
         }
-        val restored = if (deconvWeight > 0f) richardsonLucy(sub, w, h, sigma, iterations) else null
+        val restored = if (deconvWeight > MIN_DECONV_WEIGHT) richardsonLucy(sub, w, h, sigma, iterations) else null
         val mask = if (p.masking > 0f) edgeMask(blur, w, h, p.masking, sigma) else null
         val clip = CLIP_BASE + CLIP_PER_DETAIL * deconvWeight
         val out = FloatArray(sub.size)
@@ -111,7 +111,7 @@ internal object Sharpener {
             val usm = softThreshold(sub[i] - blur[i]) * USM_GAIN
             val deconv = if (restored != null) (restored[i] - sub[i]) * DECONV_GAIN else 0f
             val raw = ((1f - deconvWeight) * usm + deconvWeight * deconv) * p.amount
-            out[i] = clip * tanh(raw / clip) * (mask?.get(i) ?: 1f)
+            out[i] = clip * raw / (clip + abs(raw)) * (mask?.get(i) ?: 1f)
         }
         return out
     }
