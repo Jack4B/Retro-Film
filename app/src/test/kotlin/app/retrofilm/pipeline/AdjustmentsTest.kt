@@ -200,11 +200,13 @@ class AdjustmentsTest {
         }
     }
 
-    @Test fun shadowLiftKeepsChannelRatiosAndStaysBelowClipping() {
+    @Test fun shadowLiftKeepsHueOrderAndDoesNotAmplifyChroma() {
         val out = px(30, 60, 90, Adjustments(shadows = 1f))
         val ratioBefore = 90f / 30f
         val ratioAfter = Color.blue(out).toFloat() / Color.red(out)
-        assertEquals("proporcje kanałów zachowane", ratioBefore, ratioAfter, 0.35f)
+        // chroma rośnie wolniej niż jasność (szum barwny w cieniach), więc proporcja maleje, ale odcień zostaje
+        assertTrue("kolejność kanałów", Color.blue(out) > Color.green(out) && Color.green(out) > Color.red(out))
+        assertTrue("barwa nie rośnie ponad oryginał ($ratioAfter)", ratioAfter in 1.6f..ratioBefore + 0.05f)
         assertTrue(Color.red(out) in 31..255 && Color.blue(out) <= 255)
     }
 

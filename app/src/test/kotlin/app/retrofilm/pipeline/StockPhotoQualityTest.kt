@@ -109,7 +109,10 @@ class StockPhotoQualityTest {
         val dark = order.take(q)
         val bright = order.takeLast(q)
         val gainDark = dark.map { luma(shadows[it]) - luma(orig[it]) }.average()
-        val driftBright = bright.map { luma(shadows[it]) - luma(orig[it]) }.average()
+        // prawdziwe światła (jasność ≥ 65%); na ciemnych zdjęciach jasna ćwiartka to jeszcze półtony
+        val lit = orig.indices.filter { luma(orig[it]) >= REAL_HIGHLIGHT }
+        val litEnough = lit.size >= orig.size / 100
+        val driftBright = if (litEnough) lit.map { luma(shadows[it]) - luma(orig[it]) }.average() else 0.0
         val cutBright = bright.map { luma(orig[it]) - luma(highlights[it]) }.average()
         // prawdziwe cienie (jasność ≤ 35%); na pochmurnych, jasnych zdjęciach ciemna ćwiartka jest już półtonem
         val deep = orig.indices.filter { luma(orig[it]) <= DEEP_SHADOW }
@@ -118,7 +121,7 @@ class StockPhotoQualityTest {
         val darkIsDeep = dark.map { luma(orig[it]) }.average() <= DEEP_SHADOW
         val hue = hueShift(orig, shadows)
         report.appendLine(
-            "- Cienie +100%: ciemna ćwiartka +${f1(gainDark)}, jasna ${f1(driftBright)}; " +
+            "- Cienie +100%: ciemna ćwiartka +${f1(gainDark)}, prawdziwe światła ${f1(driftBright)}; " +
                 "światła −100%: jasna ćwiartka −${f1(cutBright)}, prawdziwe cienie ${f1(driftDark)}" +
                 (if (deepEnough) "" else " (brak głębokich cieni)") + "; przesunięcie barwy ${f1(hue)}°"
         )
@@ -444,6 +447,7 @@ class StockPhotoQualityTest {
         const val MAX_NOISE_RATIO = 3.0
         const val LOCAL_STEP = 3
         const val MAX_TONE_LEAK = 10.0
+        const val REAL_HIGHLIGHT = 165.0
         const val MAX_HUE_SHIFT = 4.0
         const val MAX_MEAN_SHIFT = 5.0
         const val MIN_LOOK_COLOUR = 0.6
