@@ -146,11 +146,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val firstRow = span.firstRow
         val totalRows = span.totalRows
         val cell = maxOf(
-            1,
-            (
-                maxOf(width, totalRows) / GRAIN_CELL_DIVISOR *
-                    (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
-                ).toInt()
+            GRAIN_CELL_MIN,
+            maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
         )
         for (i in 0 until count) {
             val c = px[i]
@@ -203,7 +200,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         for (k in 0..2) rgb[k] = y + (rgb[k] - y) * keep
     }
 
-    private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Int) {
+    private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Float) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
             val ny = (y + HALF) / rows * 2f - 1f
@@ -211,11 +208,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
-            val amp = adj.grain * GRAIN_MAX * FilmGrain.midtoneWeight(luma().coerceIn(0f, 1f))
-            val shared = FilmGrain.luma(x, y, cell)
-            for (k in 0..2) {
-                rgb[k] += (shared * GRAIN_SHARED + FilmGrain.chroma(x, y, cell, k) * (1f - GRAIN_SHARED)) * amp
-            }
+            val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
+            for (k in 0..2) rgb[k] *= FilmGrain.gain(stops, FilmGrain.channel(x, y, cell, k))
         }
     }
 
@@ -249,10 +243,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
         private const val FADE_DESAT = 0.2f
-        private const val GRAIN_MAX = 0.12f
-        private const val GRAIN_SHARED = 0.8f
-        private const val GRAIN_CELL_DIVISOR = 1200
-        private const val GRAIN_SIZE_MIN = 0.5f
+        private const val GRAIN_CELL_MIN = 0.7f
+        private const val GRAIN_CELL_DIVISOR = 1200f
+        private const val GRAIN_SIZE_MIN = 0.6f
         private const val GRAIN_SIZE_SPAN = 2f
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263
