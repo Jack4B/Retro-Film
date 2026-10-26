@@ -435,7 +435,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val HIGHLIGHT_TO = 0.90f
         private const val BLACK_GUARD = 0.06f
         private const val LAYER_COUNT = 3
-        private const val SHADOW_DETAIL = 0.3f
+        private const val SHADOW_DETAIL = 0.1f
         private const val TONE_DETAIL = 2.2f
         private const val TONE_BOOST_CAP = 4f
         private const val TONE_KEEP_DARKEN = 0.9f
