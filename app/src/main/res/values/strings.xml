@@ -202,6 +202,7 @@
     <string name="adjust_denoise">Odszumianie kolorów</string>
     <string name="adjust_luma_denoise">Odszumianie jasności</string>
     <string name="adjust_chroma_edges">Ostrość koloru</string>
+    <string name="sharpen_smart">Włosy i oczy mocniej, skóra słabiej</string>
     <string name="adjust_highlights">Światła</string>
     <string name="adjust_shadows">Cienie</string>
     <string name="adjust_whites">Biele</string>

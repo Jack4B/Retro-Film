@@ -96,12 +96,15 @@ internal fun SharpenControls(state: MainState) {
         AdjustSlider(stringResource(R.string.sharpen_masking), a.sharpMasking, { plain(it) }, 0f..1f) {
             state.adjustments = a.copy(sharpMasking = it)
         }
-        MaskPreviewSwitch(a.sharpMaskPreview) { state.adjustments = a.copy(sharpMaskPreview = it) }
+        LabeledSwitch(R.string.sharpen_smart, a.sharpSmart) { state.adjustments = a.copy(sharpSmart = it) }
+        LabeledSwitch(R.string.sharpen_mask_preview, a.sharpMaskPreview) {
+            state.adjustments = a.copy(sharpMaskPreview = it)
+        }
     }
 }
 
 @Composable
-private fun MaskPreviewSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun LabeledSwitch(label: Int, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Gap),
@@ -112,7 +115,7 @@ private fun MaskPreviewSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
             .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
     ) {
         Switch(checked = checked, onCheckedChange = null)
-        Text(stringResource(R.string.sharpen_mask_preview))
+        Text(stringResource(label))
     }
 }
 

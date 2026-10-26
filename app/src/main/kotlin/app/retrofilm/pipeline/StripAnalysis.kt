@@ -7,6 +7,7 @@ import kotlin.math.min
 
 private const val SAMPLE_ROWS = 16
 private const val SAMPLE_STRIDE = 3
+private const val SEMANTIC_STRIDE = 2
 private const val GAIN_STRIDE = 4
 private const val NOISE_BANDS = 8
 private const val NOISE_BAND_ROWS = 48
@@ -59,7 +60,8 @@ private class ClarityState(val acc: Lowres.Accumulator, val processor: Adjustmen
 internal class StripAnalysis(
     private val src: Bitmap,
     private val adj: Adjustments,
-    private val deband: Boolean = false
+    private val deband: Boolean = false,
+    private val faces: List<FaceBox> = emptyList()
 ) {
     private val w = src.width
     private val h = src.height
@@ -74,9 +76,10 @@ internal class StripAnalysis(
         val clarity = if (adj.clarity != 0f) clarityMap(chroma, dehaze, tone) else null
         val sharpMargin = if (adj.sharpness > 0f) Sharpener.marginFor(adj.sharpenParams, max(w, h)) else 0
         val debandRadius = if (deband) Deband.radiusFor(max(w, h)) else 0
+        val semantic = if (adj.sharpness > 0f && adj.sharpSmart) semanticMap() else null
         val edge = ChromaEdge.plan(w, h, adj.chromaEdges)
         val halo = sharpMargin + max(luma?.margin ?: 0, edge?.margin ?: 0) + debandRadius
-        return StripPlans(chroma, edge, luma, dehaze, tone, clarity, halo, max(w, h), debandRadius)
+        return StripPlans(chroma, edge, luma, dehaze, tone, clarity, semantic, halo, max(w, h), debandRadius)
     }
 
     /** Sumy w komórkach dla odszumiania koloru i dehaze z całego obrazu (bez podpróbkowania); null = niepotrzebne. */
@@ -137,6 +140,21 @@ internal class StripAnalysis(
             sum += SharpenPlanner.noiseSigma(SharpenPlanner.lumaOf(buf), w, band)
         }
         return sum / bands
+    }
+
+    /** Mapa wyostrzania świadomego treści ([SemanticSharpen]) z jasności zmniejszonego obrazu (próbki co 2 piksele). */
+    private fun semanticMap(): SemanticSharpen.Map {
+        val low = Lowres.forSize(w, h, SemanticSharpen.TARGET)
+        val stride = min(SEMANTIC_STRIDE, low.factor)
+        val sampler = Sampler(src, stride)
+        val all = Collections.synchronizedList(ArrayList<Lowres.Accumulator>())
+        Parallel.forEach(sampler.chunks, { Lowres.Accumulator(low).also { all.add(it) } }) { acc, chunk ->
+            sampler.rows(chunk) { y, p ->
+                for (i in 0 until p.size) acc.add(i * stride, y, LUMA_R * p.r[i] + LUMA_G * p.g[i] + LUMA_B * p.b[i])
+            }
+        }
+        for (i in 1 until all.size) all[0].merge(all[i])
+        return SemanticSharpen.build(low, all[0].mean(0), faces)
     }
 
     /** Odszumianie koloru i dehaze na próbkach wiersza [y] (co [stride]-ty piksel), jak na pasach. */

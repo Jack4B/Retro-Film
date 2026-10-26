@@ -85,13 +85,19 @@ object DetailFilter {
         longSide: Int,
         sharp: SharpenParams,
         clarity: Float,
-        map: ClarityMap?
+        map: ClarityMap?,
+        semantic: SemanticSharpen.Map? = null
     ): FloatArray {
         val rows = luma.size / w
         val delta = if (sharp.amount > 0f) {
             Sharpener.delta(luma, w, rows, sharp, longSide = longSide)
         } else {
             FloatArray(luma.size)
+        }
+        if (semantic != null && sharp.amount > 0f) {
+            for (y in 0 until rows) {
+                for (x in 0 until w) delta[y * w + x] *= semantic.at(x, firstRow + y)
+            }
         }
         if (clarity != 0f && map != null) {
             for (y in 0 until rows) {

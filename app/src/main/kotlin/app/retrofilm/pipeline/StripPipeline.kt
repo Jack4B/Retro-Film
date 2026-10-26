@@ -13,6 +13,7 @@ internal class StripPlans(
     val dehaze: Dehaze.Plan?,
     val tone: ToneMask?,
     val clarity: DetailFilter.ClarityMap?,
+    val semantic: SemanticSharpen.Map?,
     val halo: Int,
     val longSide: Int,
     val debandRadius: Int = 0
@@ -32,11 +33,11 @@ internal object StripPipeline {
     private const val HALO_FACTOR = 6
     private const val NANOS_PER_MS = 1_000_000L
 
-    fun run(src: Bitmap, adj: Adjustments, deband: Boolean = false): Bitmap {
+    fun run(src: Bitmap, adj: Adjustments, deband: Boolean = false, faces: List<FaceBox> = emptyList()): Bitmap {
         val w = src.width
         val h = src.height
         val t0 = System.nanoTime()
-        val plans = StripAnalysis(src, adj, deband).plans()
+        val plans = StripAnalysis(src, adj, deband, faces).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
@@ -108,7 +109,8 @@ internal class StripWorker(
             plans.longSide,
             adj.sharpenParams,
             adj.clarity,
-            plans.clarity
+            plans.clarity,
+            plans.semantic
         )
         for (i in core until core + coreCount) {
             val d = delta[i]
