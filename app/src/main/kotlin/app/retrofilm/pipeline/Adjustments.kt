@@ -58,6 +58,8 @@ data class Adjustments(
     val highlightAmount: Float = 0f,
     /** Balans tonowania −1..1: plus rozszerza zakres świateł, minus cieni. */
     val toneBalance: Float = 0f,
+    /** Krzywe tonalne (główna i RGB), zob. [ToneCurve]. */
+    val curves: ToneCurves = ToneCurves(),
     /** Maski lokalne (do [LocalMask.MAX_MASKS]) z własnymi korektami, zob. [LocalMask]. */
     val masks: List<LocalMask> = emptyList()
 ) {
@@ -137,6 +139,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val chroma: ChromaScaler? = if (adj.saturation != 0f) ChromaScaler(adj.saturation) else null
     private val contrast: LuminanceContrast? = if (adj.contrast != 0f) LuminanceContrast(adj.contrast) else null
     private val vignette: VignetteLut? = if (adj.vignette > 0f) VignetteLut(adj.vignette) else null
+    private val curves: CurveLut? = if (adj.curves.isNeutral) null else CurveLut(adj.curves)
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
     /**
@@ -148,11 +151,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val firstRow = span.firstRow
         val totalRows = span.totalRows
         val cell = maxOf(
-            1,
-            (
-                maxOf(width, totalRows) / GRAIN_CELL_DIVISOR *
-                    (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
-                ).toInt()
+            GRAIN_CELL_MIN,
+            maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
         )
         for (i in 0 until count) {
             val c = px[i]
@@ -166,6 +166,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             hsl?.apply(rgb)
             if (hasTone) toneRecovery(mask, i % width, firstRow + i / width)
             contrast?.apply(rgb)
+            curves?.apply(rgb)
             if (adj.fade > 0f) fade()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(i % width, firstRow + i / width, width, totalRows, cell)
@@ -205,7 +206,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         for (k in 0..2) rgb[k] = y + (rgb[k] - y) * keep
     }
 
-    private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Int) {
+    private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Float) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
             val ny = (y + HALF) / rows * 2f - 1f
@@ -213,11 +214,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
-            val amp = adj.grain * GRAIN_MAX * FilmGrain.midtoneWeight(luma().coerceIn(0f, 1f))
-            val shared = FilmGrain.luma(x, y, cell)
-            for (k in 0..2) {
-                rgb[k] += (shared * GRAIN_SHARED + FilmGrain.chroma(x, y, cell, k) * (1f - GRAIN_SHARED)) * amp
-            }
+            val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
+            for (k in 0..2) rgb[k] *= FilmGrain.gain(stops, FilmGrain.channel(x, y, cell, k))
         }
     }
 
@@ -251,10 +249,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
         private const val FADE_DESAT = 0.2f
-        private const val GRAIN_MAX = 0.12f
-        private const val GRAIN_SHARED = 0.8f
-        private const val GRAIN_CELL_DIVISOR = 1200
-        private const val GRAIN_SIZE_MIN = 0.5f
+        private const val GRAIN_CELL_MIN = 0.7f
+        private const val GRAIN_CELL_DIVISOR = 1200f
+        private const val GRAIN_SIZE_MIN = 0.6f
         private const val GRAIN_SIZE_SPAN = 2f
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263

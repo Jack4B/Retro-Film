@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -125,7 +126,7 @@ fun EditorScreen(
         snackbarHost = snackbar
     ) { inner ->
         Column(Modifier.fillMaxSize().padding(inner)) {
-            PreviewPane(state, showBefore, Modifier.weight(1f).fillMaxWidth())
+            PreviewPane(state, showBefore, tab == EditorTab.Crop, Modifier.weight(1f).fillMaxWidth())
             if (state.preview != null) FilmCaption(state)
             if (state.uris.size > 1) PhotoStrip(state, onSelectPhoto)
             EditorPanel(state, tab, { tab = it }, onOpenLibrary)
@@ -204,19 +205,34 @@ private fun RowScope.EditorActions(
 }
 
 @Composable
-private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifier) {
+private fun PreviewPane(state: MainState, showBefore: Boolean, cropMode: Boolean, modifier: Modifier) {
     val zoom = remember { ZoomState() }
     var showInfo by rememberSaveable { mutableStateOf(false) }
-    LaunchedEffect(state.photo) { zoom.reset() }
+    LaunchedEffect(state.photo, cropMode) { zoom.reset() }
     LaunchedEffect(zoom.isDetailed) { state.updateDetail(zoom.isDetailed) }
     val shown = if (showBefore) state.before else state.preview
+    val shownNow by rememberUpdatedState(shown)
     val cd = stringResource(if (showBefore) R.string.editor_preview_before_cd else R.string.editor_preview_cd)
     Box(
         modifier
             .clipToBounds()
             .onSizeChanged { zoom.size = it }
-            .pointerInput(Unit) { detectTransformGestures { centroid, pan, z, _ -> zoom.transform(centroid, pan, z) } }
-            .pointerInput(Unit) { detectTapGestures(onDoubleTap = { zoom.toggle(it) }) },
+            .pointerInput(cropMode) {
+                detectTransformGestures { centroid, pan, z, _ ->
+                    if (cropMode) dragCrop(state, shownNow, size, pan, z) else zoom.transform(centroid, pan, z)
+                }
+            }
+            .pointerInput(cropMode) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        if (cropMode) {
+                            state.updateGeometry(state.geometry.copy(zoom = 1f, panX = 0f, panY = 0f))
+                        } else {
+                            zoom.toggle(it)
+                        }
+                    }
+                )
+            },
         contentAlignment = Alignment.Center
     ) {
         if (shown != null) {
@@ -234,6 +250,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, modifier: Modifie
             )
             state.maskOverlay?.let { MaskOverlayImage(it, shown.width, shown.height, layer) }
         }
+        if (shown != null && cropMode) ThirdsGrid(shown.width, shown.height)
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
         if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.TopStart))

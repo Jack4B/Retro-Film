@@ -1,8 +1,11 @@
 package app.retrofilm.ui
 
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.CurvePoint
 import app.retrofilm.pipeline.HslAdjust
 import app.retrofilm.pipeline.SharpenMode
+import app.retrofilm.pipeline.ToneCurve
+import app.retrofilm.pipeline.ToneCurves
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -37,7 +40,11 @@ class PresetsTest {
         shadowAmount = 0.3f,
         highlightHue = 40f,
         highlightAmount = 0.2f,
-        toneBalance = 0.1f
+        toneBalance = 0.1f,
+        curves = ToneCurves(
+            master = ToneCurve(listOf(CurvePoint(0f, 0f), CurvePoint(0.4f, 0.3f), CurvePoint(1f, 1f))),
+            blue = ToneCurve(listOf(CurvePoint(0f, 0.05f), CurvePoint(1f, 0.9f)))
+        )
     )
 
     @Test fun roundTripKeepsEverything() {
@@ -61,5 +68,11 @@ class PresetsTest {
         val long = "x".repeat(100)
         val p = PresetCodec.decode(PresetCodec.encode(listOf(Preset(long, IDENTITY_ID, 1f, Adjustments.None)))).single()
         assertEquals(Preset.MAX_NAME, p.name.length)
+    }
+
+    @Test fun invalidCurveInFileIsIgnored() {
+        val curves = """{"master":[0.2,0.1,1,1]}"""
+        val text = """[{"name":"X","film":"identity","intensity":1,"adjustments":{"curves":$curves}}]"""
+        assertTrue(PresetCodec.decode(text).single().adjustments.curves.isNeutral)
     }
 }

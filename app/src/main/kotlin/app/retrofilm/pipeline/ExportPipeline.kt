@@ -53,29 +53,27 @@ object ExportPipeline {
         JpegExporter.encode(rendered, quality, FrameRenderer.status(frame, photo.width, photo.height, typeface))
 
     /**
-     * Zmniejsza wynik do [maxSide] px dłuższego boku (0 = oryginalny rozmiar): kolejne połowienia (uśrednianie 2×2,
-     * bez aliasingu) i końcowe dopasowanie, a potem łagodne wyostrzanie wyjściowe, które oddaje ostrość utraconą
-     * przy zmniejszaniu. Powiększać nie wolno – większy wymiar niż źródło zostaje jak jest.
+     * Zmniejsza wynik do [maxSide] px dłuższego boku (0 = oryginalny rozmiar) filtrem Lanczosa ([Resampler], bez
+     * aliasingu), a potem łagodnie wyostrza wyjściowo, żeby oddać ostrość utraconą przy zmniejszaniu. Powiększać nie
+     * wolno – większy wymiar niż źródło zostaje jak jest.
      */
     fun resize(rendered: Bitmap, maxSide: Int): Bitmap {
         val long = maxOf(rendered.width, rendered.height)
         if (maxSide <= 0 || long <= maxSide) return rendered
-        var bmp = rendered
-        while (maxOf(bmp.width, bmp.height) >= maxSide * 2) {
-            bmp = Bitmap.createScaledBitmap(bmp, bmp.width / 2, bmp.height / 2, true)
+        val k = maxSide.toFloat() / long
+        val w = (rendered.width * k).toInt().coerceAtLeast(1)
+        val h = (rendered.height * k).toInt().coerceAtLeast(1)
+        val src = IntArray(rendered.width * rendered.height)
+        rendered.getPixels(src, 0, rendered.width, 0, 0, rendered.width, rendered.height)
+        val px = Resampler.resize(src, rendered.width, rendered.height, w, h)
+        DetailFilter.apply(px, w, h, OUTPUT_SHARPEN, 0f, false)
+        val cs = rendered.colorSpace
+        val result = if (cs != null) {
+            Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, false, cs)
+        } else {
+            Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         }
-        val k = maxSide.toFloat() / maxOf(bmp.width, bmp.height)
-        val out = Bitmap.createScaledBitmap(
-            bmp,
-            (bmp.width * k).toInt().coerceAtLeast(1),
-            (bmp.height * k).toInt().coerceAtLeast(1),
-            true
-        )
-        val px = IntArray(out.width * out.height)
-        out.getPixels(px, 0, out.width, 0, 0, out.width, out.height)
-        DetailFilter.apply(px, out.width, out.height, OUTPUT_SHARPEN, 0f, false)
-        val result = if (out.isMutable) out else out.copy(Bitmap.Config.ARGB_8888, true)
-        result.setPixels(px, 0, result.width, 0, 0, result.width, result.height)
+        result.setPixels(px, 0, w, 0, 0, w, h)
         return result
     }
 

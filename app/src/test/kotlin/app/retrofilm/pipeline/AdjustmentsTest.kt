@@ -211,11 +211,46 @@ class AdjustmentsTest {
     @Test fun grainIsSmoothBetweenNeighbours() {
         var maxStep = 0f
         for (x in 0 until 60) {
-            maxStep =
-                maxOf(maxStep, kotlin.math.abs(FilmGrain.luma(x + 1, 5, 4) - FilmGrain.luma(x, 5, 4)))
+            maxStep = maxOf(maxStep, kotlin.math.abs(FilmGrain.luma(x + 1, 5, 4f) - FilmGrain.luma(x, 5, 4f)))
         }
         assertTrue("sąsiednie piksele ziarna nie skaczą", maxStep < 0.6f)
-        assertTrue(FilmGrain.midtoneWeight(0.5f) > FilmGrain.midtoneWeight(0.02f))
+    }
+
+    @Test fun grainFieldIsGaussianWithUnitVarianceAndNoPeriodicSeam() {
+        var sum = 0.0
+        var sq = 0.0
+        var n = 0
+        for (y in 0 until 300 step 3) {
+            for (x in 0 until 300 step 3) {
+                val g = FilmGrain.luma(x, y, 1f).toDouble()
+                sum += g
+                sq += g * g
+                n++
+            }
+        }
+        val mean = sum / n
+        assertEquals("średnia 0", 0.0, mean, 0.15)
+        assertEquals("wariancja ≈ 1", 1.0, sq / n - mean * mean, 0.3)
+        // niezależność kanałów barwnych: korelacja bliska zera
+        var cov = 0.0
+        for (i in 0 until 2000) {
+            cov += FilmGrain.chroma(i, i / 7, 1f, 0) * FilmGrain.chroma(i, i / 7, 1f, 1)
+        }
+        assertTrue("kanały nieskorelowane", kotlin.math.abs(cov / 2000) < 0.15)
+    }
+
+    @Test fun grainAmplitudeFollowsCrystalModel() {
+        val mid = FilmGrain.stops(0.5f, 1f)
+        assertTrue("półtony ziarniste najmocniej", mid > FilmGrain.stops(0.05f, 1f) && mid > FilmGrain.stops(0.97f, 1f))
+        assertTrue("zostaje podłoga w cieniach", FilmGrain.stops(0.02f, 1f) > 0.05f)
+        assertEquals("bez ziarna mnożnik ≈ 1", 1f, FilmGrain.gain(0f, 1.3f), 1e-6f)
+    }
+
+    @Test fun grainMultiplierKeepsMeanExposureOverManySamples() {
+        var sum = 0.0
+        val n = 20000
+        for (i in 0 until n) sum += FilmGrain.gain(0.5f, FilmGrain.luma(i % 400, i / 400, 1f))
+        assertEquals("średnia ekspozycji bez zmian", 1.0, sum / n, 0.03)
     }
 
     @Test fun vibranceBoostsSkinLessThanBlue() {
