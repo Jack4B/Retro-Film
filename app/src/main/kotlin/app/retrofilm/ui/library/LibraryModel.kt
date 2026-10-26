@@ -69,6 +69,12 @@ object LibraryModel {
     fun categoryCounts(items: List<LibraryItem>): List<Pair<String, Int>> =
         items.groupingBy { it.category }.eachCount().toList().sortedBy { it.first }
 
+    /**
+     * Czy jest co pobierać: brak listy pakietów (jeszcze niepobrana) albo choć jeden pakiet nie jest gotowy.
+     * Gdy wszystko jest na telefonie, przycisk „Pobierz więcej filmów” na Starcie znika.
+     */
+    fun hasMoreToDownload(packs: List<LutPack>): Boolean = packs.isEmpty() || packs.any { it.state != PackState.Ready }
+
     /** Filmy, które da się teraz pobrać (jeszcze niepobrane albo po błędzie). */
     fun downloadable(items: List<LibraryItem>): List<LibraryItem> =
         items.filter { it.status == FilmStatus.NotDownloaded || it.status == FilmStatus.Failed }

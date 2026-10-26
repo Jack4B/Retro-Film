@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +21,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,6 +31,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+import app.retrofilm.ui.library.LibraryModel
 
 private val MinTouch = 48.dp
 private val CtaHeight = 56.dp
@@ -36,14 +40,17 @@ private val BlockGap = 16.dp
 
 /** Start: obietnica i dwa wejścia: galeria (Photo Picker, otwiera się sama) oraz pliki z dowolnego folderu. */
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("LongParameterList") // zdarzenia ekranu przekazywane jawnie
 @Composable
 fun StartScreen(
     state: MainState,
     onPick: () -> Unit,
     onPickFiles: () -> Unit,
     onSettings: () -> Unit,
+    onDownloadFilms: () -> Unit,
     snackbar: @Composable () -> Unit
 ) {
+    val packs by state.library.packs.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -80,6 +87,12 @@ fun StartScreen(
                 enabled = !state.busy,
                 modifier = Modifier.fillMaxWidth().height(CtaHeight)
             ) { Text(stringResource(R.string.start_pick_files)) }
+            if (LibraryModel.hasMoreToDownload(packs)) {
+                FilledTonalButton(
+                    onClick = onDownloadFilms,
+                    modifier = Modifier.fillMaxWidth().height(CtaHeight)
+                ) { Text(stringResource(R.string.start_download_films)) }
+            }
             Text(
                 stringResource(R.string.start_multi_hint),
                 style = MaterialTheme.typography.bodyMedium,

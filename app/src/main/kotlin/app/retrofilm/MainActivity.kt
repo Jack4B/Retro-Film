@@ -42,7 +42,11 @@ class MainActivity : ComponentActivity() {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         val state = remember { MainState(graph, typeface, fonts) }
                         RetroFilmNavHost(graph, dynamicColor, themeMode) { navigate ->
-                            MainScreen(state, onSettings = { navigate(Route.Settings) })
+                            MainScreen(
+                                state,
+                                onSettings = { navigate(Route.Settings) },
+                                onDownloadFilms = { navigate(Route.Filters) }
+                            )
                         }
                     }
                 }

@@ -78,4 +78,11 @@ class LibraryModelTest {
         assertEquals(setOf("bw/agfa_apx_100", "colorslide/fuji_astia_100f"), ids)
         assertFalse("negative_new/fuji_160c_plus" in ids)
     }
+
+    @Test fun downloadButtonDisappearsOnlyWhenEverythingIsReady() {
+        val ready = pack("a/x", "X", PackState.Ready)
+        assertTrue(LibraryModel.hasMoreToDownload(emptyList()))
+        assertTrue(LibraryModel.hasMoreToDownload(listOf(ready, pack("a/y", "Y", PackState.NotDownloaded))))
+        assertFalse(LibraryModel.hasMoreToDownload(listOf(ready, pack("a/y", "Y", PackState.Ready))))
+    }
 }
