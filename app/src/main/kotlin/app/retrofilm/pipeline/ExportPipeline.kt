@@ -20,7 +20,7 @@ object ExportPipeline {
     const val MIME = "image/jpeg"
 
     /**
-     * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada LUT (null = oryginał) i ramkę.
+     * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada korekty, LUT (null = oryginał), wykończenie i ramkę.
      * Wynik jest zawsze w sRGB, więc `Bitmap.compress` zapisze profil zgodny z pikselami.
      */
     @Suppress("LongParameterList") // intensywność dochodzi do istniejących parametrów; grupowanie później
@@ -34,9 +34,11 @@ object ExportPipeline {
         adjustments: Adjustments = Adjustments.None
     ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
-        val filmed = if (lut == null) srgb else engine.apply(srgb, lut, intensity)
-        val adjusted = AdjustmentsApplier.apply(filmed, adjustments)
-        return FrameRenderer.render(adjusted, frame, typeface, colorSpaceSource = srgb)
+        // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie
+        val corrected = AdjustmentsApplier.apply(srgb, adjustments.corrections())
+        val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
+        val finished = AdjustmentsApplier.apply(filmed, adjustments.finishing())
+        return FrameRenderer.render(finished, frame, typeface, colorSpaceSource = srgb)
     }
 
     /**

@@ -72,6 +72,53 @@ data class Adjustments(
     val sharpenParams: SharpenParams
         get() = SharpenParams(sharpness, sharpRadius, sharpDetail, sharpMasking, sharpMode)
 
+    /**
+     * Część „korekty” (przed filmem, D15): ekspozycja, balans bieli, światła i cienie, kontrast, kolor (nasycenie,
+     * HSL), odszumianie, dehaze, wyrazistość i maski lokalne. Pola wykończenia mają wartości domyślne, więc gdy
+     * zmieniono tylko wykończenie, wynik jest równy [None] i etap jest pomijany.
+     */
+    fun corrections(): Adjustments = copy(
+        fade = 0f,
+        grain = 0f,
+        grainSize = DEFAULT_GRAIN_SIZE,
+        vignette = 0f,
+        sharpness = 0f,
+        sharpRadius = SharpenParams.DEFAULT_RADIUS,
+        sharpDetail = SharpenParams.DEFAULT_DETAIL,
+        sharpMasking = 0f,
+        sharpMode = SharpenMode.Standard,
+        sharpMaskPreview = false,
+        shadowHue = 0f,
+        shadowAmount = 0f,
+        highlightHue = 0f,
+        highlightAmount = 0f,
+        toneBalance = 0f,
+        curves = ToneCurves()
+    )
+
+    /**
+     * Część „wykończenie” (po filmie, D15): blaknięcie, tonowanie, krzywe tonalne, ziarno, winieta i wyostrzanie
+     * (ziarno i winieta idą po ostrości). Pozostałe pola mają wartości domyślne.
+     */
+    fun finishing(): Adjustments = Adjustments(
+        fade = fade,
+        grain = grain,
+        grainSize = grainSize,
+        vignette = vignette,
+        sharpness = sharpness,
+        sharpRadius = sharpRadius,
+        sharpDetail = sharpDetail,
+        sharpMasking = sharpMasking,
+        sharpMode = sharpMode,
+        sharpMaskPreview = sharpMaskPreview,
+        shadowHue = shadowHue,
+        shadowAmount = shadowAmount,
+        highlightHue = highlightHue,
+        highlightAmount = highlightAmount,
+        toneBalance = toneBalance,
+        curves = curves
+    )
+
     /** Czy potrzebny jest przebieg po całym obrazie przed korektami tonalnymi (dehaze, odszumianie). */
     val hasRestoration: Boolean get() = dehaze > 0f || denoise > 0f || lumaDenoise > 0f
 
