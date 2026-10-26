@@ -52,10 +52,10 @@ internal class HighlightRecovery(highlights: Float) {
         /**
          * Krotność odtwarzania utraconego przez przyciemnienie kontrastu w skali średniej i drobnej. Wartości > 1,
          * bo kontrast mierzony w poziomach bezwzględnych spada bardziej, niż wynika z samego mnożnika (część detalu
-         * leży poza obiema skalami); dobrane na zdjęciach stockowych (kontrast w światłach ×0,9–1,2 oryginału).
+         * leży poza obiema skalami); dobrane na zdjęciach stockowych (kontrast w światłach ×0,96–1,4 oryginału).
          */
-        const val DETAIL_MID = 1.4f
-        const val DETAIL_FINE = 2.0f
+        const val DETAIL_MID = 1.6f
+        const val DETAIL_FINE = 3.0f
         const val FINE_LIMIT = 1.4f
         const val X_LIMIT = 3f
         const val CHROMA_BOOST = 0.18f
