@@ -61,6 +61,9 @@ class MainState(
         private set
     var film by mutableStateOf(IDENTITY_ID)
 
+    /** Presety użytkownika (film, moc i korekty) zapisywane w pamięci aplikacji. */
+    val presetBook = PresetBook()
+
     /** Kadr i obrót; stosowany przed filmem, więc podgląd, ramka i zapis widzą ten sam kadr. */
     var geometry by mutableStateOf(Geometry())
         private set
