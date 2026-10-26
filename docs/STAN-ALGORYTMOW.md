@@ -33,6 +33,14 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Maski lokalne | LocalMask.kt | ✅ | liniowa i radialna, własne korekty; brak malowania pędzlem i masek luminancji |
 | Auto-ulepszenie | AutoEnhance.kt | ✅ | histogram + balans bieli; bez rozpoznawania scen (twarze, niebo) |
 
+## Dalsze pomysły (nic z tabeli nie jest już ❌)
+
+- Automatyczne prostowanie horyzontu i pionów (transformata Hough po wykrywaniu krawędzi) i auto-perspektywa.
+- Maski: pędzel, maska luminancji i koloru, maska krawędzi; tonalna maska cieni/świateł także dla masek lokalnych.
+- Odszumianie silnego szumu: NLM lub falki; odszumianie z uwzględnieniem ISO z EXIF.
+- Auto-ulepszenie z rozpoznawaniem scen (twarz, niebo) i profil obiektywu (winietowanie, dystorsja).
+- Rzeczywiste kształty ziarna z profili filmów (skala, ziarno RMS z kart technicznych).
+
 ## Raport końcowy (alpha.16, CI, 5 zdjęć testowych)
 
 - Cienie +100%: ciemna ćwiartka +20…+28 poziomów (na bardzo jasnym zdjęciu +7), przeciek na jasne partie 0…+7, zmiana barwy < 0,4°.
