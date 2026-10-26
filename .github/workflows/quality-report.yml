@@ -42,7 +42,7 @@ jobs:
         env:
           STOCK_PHOTOS: ${{ runner.temp }}/stock
           QUALITY_OUT: ${{ runner.temp }}/quality
-        run: ./gradlew :app:testDebugUnitTest --tests '*StockPhotoQualityTest' -i
+        run: ./gradlew :app:testDebugUnitTest --tests '*StockPhotoQualityTest' --tests '*SliderRegressionTest' -i
       - name: Publish report
         if: always()
         run: |

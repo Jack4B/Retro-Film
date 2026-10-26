@@ -337,27 +337,25 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val own = luma()
         var chromaBoost = 0f
         val base: Float
-        var m: Float
+        if (mask != null) {
+            mask.sampleLayers(x, row, layers)
+            layers[0] = maskLut[maskIndex(layers[0])]
+            layers[1] = maskLut[maskIndex(layers[1])]
+            base = layers[0]
+        } else {
+            base = own
+            layers[1] = own
+            layers[2] = 0f
+        }
+        val shadowY = (base + maxOf(base, own)) * HALF
+        val shadowLift = shadowGain[maskIndex(shadowY)]
+        var m = shadowLift
         if (recovery != null) {
             // światła ujemne: kompresja bazy i wzmocnienie detalu w dwóch skalach (HighlightRecovery)
-            if (mask != null) {
-                mask.sampleLayers(x, row, layers)
-                layers[0] = maskLut[maskIndex(layers[0])]
-                layers[1] = maskLut[maskIndex(layers[1])]
-                base = layers[0]
-            } else {
-                base = own
-                layers[1] = own
-                layers[2] = 0f
-            }
-            val shadowY = (base + maxOf(base, own)) * HALF
-            m = shadowGain[maskIndex(shadowY)] * recovery.ratio(own, base, layers[1], layers[2])
+            m *= recovery.ratio(own, base, layers[1], layers[2])
             chromaBoost = recovery.chromaBoost(base)
         } else {
-            base = if (mask != null) maskLut[maskIndex(mask.sample(x, row))] else own
-            val shadowY = (base + maxOf(base, own)) * HALF
-            val highlightY = (base + minOf(base, own)) * HALF
-            m = shadowGain[maskIndex(shadowY)] * highlightGain[maskIndex(highlightY)]
+            m *= highlightGain[maskIndex((base + minOf(base, own)) * HALF)]
         }
         // Przy przyciemnianiu bazy (światła) detal ponad nią rośnie tak, by jego bezwzględny kontrast się zachował
         // (jak w local Laplacian / Durand–Dorsey): chmury na przyciemnionym niebie zostają wyraźne zamiast spłaszczyć
@@ -372,7 +370,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         // umiarkowanie.
         val keep = if (m < 1f) TONE_KEEP_DARKEN else TONE_KEEP_LIFT
         val s = 1f + (1f - keep) * (m - 1f) + chromaBoost
-        for (k in 0..2) rgb[k] = (own * m + (rgb[k] - own) * s).coerceIn(0f, 1f)
+        val y = if (shadowLift > 1f && m > 1f && mask != null) liftedLuma(own, m, layers[1]) else own * m
+        for (k in 0..2) rgb[k] = (y + (rgb[k] - own) * s).coerceIn(0f, 1f)
     }
 
     /** Tekstura: detal średniej skali z [ToneMask], przed cieniami i światłami (maska opisuje jasność sprzed nich). */
@@ -382,6 +381,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         val m = textureBoost.ratio(luma(), maskLut[maskIndex(layers[1])], layers[2])
         for (k in 0..2) rgb[k] = (rgb[k] * m).coerceIn(0f, 1f)
     }
+
+    /**
+     * Rozjaśnione cienie bez wzmacniania szumu: baza średnia [mid] rośnie o pełny mnożnik [m], a detal drobny
+     * (różnica piksela od bazy) tylko o 1 + [SHADOW_DETAIL]·(m − 1), więc szum w cieniach rośnie wolniej niż jasność.
+     */
+    private fun liftedLuma(own: Float, m: Float, mid: Float): Float =
+        mid * m + (own - mid) * (1f + SHADOW_DETAIL * (m - 1f))
 
     private fun maskIndex(y: Float): Int = (y * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
 
@@ -429,6 +435,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val HIGHLIGHT_TO = 0.90f
         private const val BLACK_GUARD = 0.06f
         private const val LAYER_COUNT = 3
+        private const val SHADOW_DETAIL = 0.3f
         private const val TONE_DETAIL = 2.2f
         private const val TONE_BOOST_CAP = 4f
         private const val TONE_KEEP_DARKEN = 0.9f
