@@ -45,6 +45,8 @@ data class Adjustments(
     /** Maskowanie wyostrzania 0..1: 0 = wszędzie, 1 = tylko mocne krawędzie. */
     val sharpMasking: Float = 0f,
     val sharpMode: SharpenMode = SharpenMode.Standard,
+    /** Wyostrzanie świadome treści: mocniej włosy i oczy, słabiej gładka skóra twarzy ([SemanticSharpen]). */
+    val sharpSmart: Boolean = true,
     /** Podgląd maski krawędzi zamiast zdjęcia (tylko do ustawiania, nie jest korektą). */
     val sharpMaskPreview: Boolean = false,
     /** Wyrazistość −1..1: lokalny kontrast w półtonach; minus zmiękcza. */
@@ -55,6 +57,8 @@ data class Adjustments(
     val denoise: Float = 0f,
     /** Odszumianie jasności 0..1 (zob. [LumaDenoise]). */
     val lumaDenoise: Float = 0f,
+    /** Ostrość koloru 0..1: krawędzie koloru dopasowane do jasności po podpróbkowaniu chromy JPEG ([ChromaEdge]). */
+    val chromaEdges: Float = 0f,
     /** Mikser HSL dla 8 zakresów barw ([HslAdjust]). */
     val hsl: HslAdjust = HslAdjust(),
     /** Barwa tonowania cieni (stopnie 0..360) i jego siła 0..1. */
@@ -71,6 +75,9 @@ data class Adjustments(
     val masks: List<LocalMask> = emptyList()
 ) {
     val isNeutral: Boolean get() = this == None
+
+    /** Czy wyostrzanie korzysta z wykrywania twarzy ([SemanticSharpen]). */
+    val usesSmartSharpen: Boolean get() = sharpness > 0f && sharpSmart
 
     /** Czy potrzebna jest warstwowa maska tonalna ([ToneMask]): cienie, światła albo tekstura. */
     val usesToneMask: Boolean get() = shadows != 0f || highlights != 0f || texture != 0f
@@ -96,6 +103,7 @@ data class Adjustments(
         sharpDetail = SharpenParams.DEFAULT_DETAIL,
         sharpMasking = 0f,
         sharpMode = SharpenMode.Standard,
+        sharpSmart = true,
         sharpMaskPreview = false,
         shadowHue = 0f,
         shadowAmount = 0f,
@@ -119,6 +127,7 @@ data class Adjustments(
         sharpDetail = sharpDetail,
         sharpMasking = sharpMasking,
         sharpMode = sharpMode,
+        sharpSmart = sharpSmart,
         sharpMaskPreview = sharpMaskPreview,
         shadowHue = shadowHue,
         shadowAmount = shadowAmount,
@@ -554,9 +563,9 @@ object AdjustmentsApplier {
      * [deband] = true dodaje na końcu odbandowanie wejścia filmu ([Deband]) i wymusza przebieg także przy neutralnych
      * korektach (zdjęcie wychodzi z ditheringiem, a wartości w płaskich gradientach są podpoziomowe).
      */
-    fun apply(src: Bitmap, adj: Adjustments, deband: Boolean = false): Bitmap {
+    fun apply(src: Bitmap, adj: Adjustments, deband: Boolean = false, faces: List<FaceBox> = emptyList()): Bitmap {
         if ((adj.isNeutral && !deband) || adj.sharpMaskPreview) return applyLegacy(src, adj)
-        val out = StripPipeline.run(src, adj, deband)
+        val out = StripPipeline.run(src, adj, deband, faces)
         val blender = MaskBlender(adj.masks, out.width, out.height).takeUnless { it.isEmpty }
         if (blender != null) blendMasks(out, blender, adj.masks.any { it.hasEffect && it.usesTone })
         return out

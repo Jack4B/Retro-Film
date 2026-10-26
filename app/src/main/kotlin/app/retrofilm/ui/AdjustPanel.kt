@@ -150,6 +150,9 @@ private fun DetailSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_luma_denoise), a.lumaDenoise, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(lumaDenoise = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_chroma_edges), a.chromaEdges, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(chromaEdges = it)
+    }
 }
 
 @Composable

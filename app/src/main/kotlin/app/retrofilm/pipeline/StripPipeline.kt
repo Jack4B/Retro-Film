@@ -8,10 +8,12 @@ import kotlin.math.min
 @Suppress("LongParameterList") // zbiór niezależnych planów etapów, bez sensownego podziału
 internal class StripPlans(
     val chroma: ChromaDenoise.Plan?,
+    val chromaEdge: ChromaEdge.Plan?,
     val luma: LumaDenoise.Plan?,
     val dehaze: Dehaze.Plan?,
     val tone: ToneMask?,
     val clarity: DetailFilter.ClarityMap?,
+    val semantic: SemanticSharpen.Map?,
     val halo: Int,
     val longSide: Int,
     val debandRadius: Int = 0
@@ -31,11 +33,11 @@ internal object StripPipeline {
     private const val HALO_FACTOR = 6
     private const val NANOS_PER_MS = 1_000_000L
 
-    fun run(src: Bitmap, adj: Adjustments, deband: Boolean = false): Bitmap {
+    fun run(src: Bitmap, adj: Adjustments, deband: Boolean = false, faces: List<FaceBox> = emptyList()): Bitmap {
         val w = src.width
         val h = src.height
         val t0 = System.nanoTime()
-        val plans = StripAnalysis(src, adj, deband).plans()
+        val plans = StripAnalysis(src, adj, deband, faces).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
@@ -84,6 +86,7 @@ internal class StripWorker(
         }
         val span = PixelSpan(w, a, h)
         plans.chroma?.let { ChromaDenoise.applyPlanes(it, planes, count, span) }
+        plans.chromaEdge?.let { ChromaEdge.applyPlanes(it, planes, count, w) }
         plans.luma?.let { LumaDenoise.applyPlanes(it, planes, count, w) }
         plans.dehaze?.let { Dehaze.restorePlanes(it, planes, count, span) }
         if (!neutral) processor.processPlanes(planes, count, span, plans.tone)
@@ -106,7 +109,8 @@ internal class StripWorker(
             plans.longSide,
             adj.sharpenParams,
             adj.clarity,
-            plans.clarity
+            plans.clarity,
+            plans.semantic
         )
         for (i in core until core + coreCount) {
             val d = delta[i]

@@ -38,6 +38,7 @@ class PresetsTest {
         clarity = 0.25f,
         dehaze = 0.35f,
         denoise = 0.45f,
+        chromaEdges = 0.55f,
         hsl = HslAdjust().with(2, HslAdjust.SATURATION, 0.5f).with(5, HslAdjust.HUE, -0.25f),
         shadowHue = 210f,
         shadowAmount = 0.3f,

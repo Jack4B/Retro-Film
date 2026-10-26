@@ -18,6 +18,7 @@ import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.AutoScene
 import app.retrofilm.pipeline.ExportPipeline
+import app.retrofilm.pipeline.FaceBox
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.Geometry
@@ -66,6 +67,15 @@ class MainState(
         private set
     var film by mutableStateOf(IDENTITY_ID)
     private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
+    private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
+
+    /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */
+    private fun facesFor(photo: Bitmap, small: Bitmap): List<FaceBox> = when {
+        !adjustments.usesSmartSharpen -> emptyList()
+
+        else -> faceCache?.takeIf { it.first === photo && it.second == geometry }?.third
+            ?: FaceFinder.find(small).also { faceCache = Triple(photo, geometry, it) }
+    }
 
     /** Ustawienia sprzed i po ostatnim auto-ulepszeniu; cofnięcie możliwe, dopóki nic go nie zmieniło. */
     private var autoPair by mutableStateOf<Pair<Adjustments, Adjustments>?>(null)
@@ -245,7 +255,8 @@ class MainState(
                     frame,
                     face,
                     edit.intensity,
-                    edit.adjustments
+                    edit.adjustments,
+                    if (edit.adjustments.usesSmartSharpen) FaceFinder.find(cropped) else emptyList()
                 )
                 ExportPipeline.encode(
                     cropped,
@@ -277,7 +288,8 @@ class MainState(
                     frame,
                     signatureTypeface(),
                     intensity,
-                    adjustments
+                    adjustments,
+                    facesFor(p, small)
                 )
         }
         before = orig
@@ -340,7 +352,8 @@ class MainState(
                     frame,
                     signatureTypeface(),
                     intensity,
-                    adjustments
+                    adjustments,
+                    if (adjustments.usesSmartSharpen) FaceFinder.find(cropped) else emptyList()
                 )
                 ExportPipeline.encode(
                     cropped,

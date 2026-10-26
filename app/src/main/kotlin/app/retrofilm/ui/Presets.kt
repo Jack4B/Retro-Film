@@ -54,11 +54,12 @@ object PresetCodec {
             "vignette" to a.vignette,
             "sharpness" to a.sharpness, "sharpRadius" to a.sharpRadius, "sharpDetail" to a.sharpDetail,
             "sharpMasking" to a.sharpMasking, "clarity" to a.clarity, "dehaze" to a.dehaze, "denoise" to a.denoise,
-            "lumaDenoise" to a.lumaDenoise,
+            "lumaDenoise" to a.lumaDenoise, "chromaEdges" to a.chromaEdges,
             "shadowHue" to a.shadowHue, "shadowAmount" to a.shadowAmount,
             "highlightHue" to a.highlightHue, "highlightAmount" to a.highlightAmount,
             "toneBalance" to a.toneBalance
         ).forEach { (k, v) -> put(k, v.toDouble()) }
+        put("sharpSmart", a.sharpSmart)
         put("hsl", JSONArray(a.hsl.values.map { it.toDouble() }))
         put("sharpMode", a.sharpMode.name)
         if (!a.curves.isNeutral) put("curves", curvesToJson(a.curves))
@@ -131,7 +132,9 @@ object PresetCodec {
             sharpness = f("sharpness"), sharpRadius = f("sharpRadius", SharpenParams.DEFAULT_RADIUS),
             sharpDetail = f("sharpDetail", SharpenParams.DEFAULT_DETAIL), sharpMasking = f("sharpMasking"),
             sharpMode = SharpenMode.entries.firstOrNull { it.name == o.optString("sharpMode") } ?: SharpenMode.Standard,
+            sharpSmart = o.optBoolean("sharpSmart", true),
             clarity = f("clarity"), dehaze = f("dehaze"), denoise = f("denoise"), lumaDenoise = f("lumaDenoise"),
+            chromaEdges = f("chromaEdges"),
             hsl = hsl, shadowHue = f("shadowHue"), shadowAmount = f("shadowAmount"),
             highlightHue = f("highlightHue"), highlightAmount = f("highlightAmount"), toneBalance = f("toneBalance"),
             curves = curvesFromJson(o.optJSONObject("curves"))
