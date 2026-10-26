@@ -149,7 +149,7 @@ class AdjustmentsTest {
         assertFalse(Adjustments(fade = 0.1f).isNeutral)
     }
 
-    @Test fun shadowsLiftIsLocalNearBrightAreas() {
+    @Test fun shadowsLiftDoesNotLeakAcrossEdgesIntoBrightAreas() {
         val w = 200
         val src = Bitmap.createBitmap(w, 40, Bitmap.Config.ARGB_8888)
         for (x in 0 until w) {
@@ -170,8 +170,10 @@ class AdjustmentsTest {
         val out = AdjustmentsApplier.apply(src, Adjustments(shadows = 1f))
         val far = Color.red(out.getPixel(2, 20))
         val near = Color.red(out.getPixel(w / 2 - 3, 20))
-        assertTrue("cień daleko od jasnego rośnie mocniej", far > near + 5)
-        assertTrue(near >= 40)
+        assertTrue("cień rośnie", far > 40 + 15)
+        assertEquals("filtr zachowuje krawędź: cień przy jasnym tak samo jak daleko", far.toFloat(), near.toFloat(), 4f)
+        val bright = Color.red(out.getPixel(w / 2 + 3, 20))
+        assertEquals("jasny obszar przy krawędzi bez zmian", 230f, bright.toFloat(), 4f)
     }
 
     @Test fun tintMovesGreenMagentaAndStaysNeutralAtZero() {
@@ -184,12 +186,13 @@ class AdjustmentsTest {
     }
 
     @Test fun toneWeightsAreSmoothAndComplementary() {
-        assertEquals(1f, AdjustmentProcessor.shadowWeight(0f), 0.001f)
+        assertEquals(0f, AdjustmentProcessor.shadowWeight(0f), 0.001f)
+        assertEquals(1f, AdjustmentProcessor.shadowWeight(0.1f), 0.001f)
         assertEquals(0f, AdjustmentProcessor.shadowWeight(0.9f), 0.001f)
         assertEquals(0f, AdjustmentProcessor.highlightWeight(0.1f), 0.001f)
         assertEquals(1f, AdjustmentProcessor.highlightWeight(1f), 0.001f)
         var last = 2f
-        for (i in 0..20) {
+        for (i in 3..20) {
             val w = AdjustmentProcessor.shadowWeight(i / 20f)
             assertTrue("waga cieni nie rośnie z jasnością", w <= last + 1e-6f)
             last = w
