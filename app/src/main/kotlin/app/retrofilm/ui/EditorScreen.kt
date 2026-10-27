@@ -142,7 +142,16 @@ fun EditorScreen(
         BoxWithConstraints(Modifier.fillMaxSize().padding(inner)) {
             val sideBySide = maxWidth > maxHeight && maxWidth >= SIDE_BY_SIDE_MIN_WIDTH
             val panelWidth = (maxWidth * SIDE_PANEL_FRACTION).coerceIn(SIDE_PANEL_MIN, SIDE_PANEL_MAX)
-            val preview = PreviewMode(crop = tab == EditorTab.Crop, filmActions = tab == EditorTab.Film, onOpenLibrary)
+            val onStep = { d: Int ->
+                val i = state.index + d
+                if (!state.busy && i in state.uris.indices) onSelectPhoto(i)
+            }
+            val preview = PreviewMode(
+                crop = tab == EditorTab.Crop,
+                filmActions = tab == EditorTab.Film,
+                onOpenLibrary = onOpenLibrary,
+                onStep = onStep
+            )
             if (sideBySide) {
                 // poziomo: podgląd na całą wysokość po lewej, panel zakładek po prawej
                 Row(Modifier.fillMaxSize()) {
@@ -254,10 +263,14 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
     val shown = if (showBefore) state.before else state.preview
     val shownNow by rememberUpdatedState(shown)
     val cd = stringResource(if (showBefore) R.string.editor_preview_before_cd else R.string.editor_preview_cd)
+    val series = state.uris.size > 1
+    val next = stringResource(R.string.photos_next_cd)
+    val previous = stringResource(R.string.photos_previous_cd)
     Box(
         modifier
             .clipToBounds()
             .onSizeChanged { zoom.size = it }
+            .photoSeries(series, { canSwipe(cropMode, zoom) }, mode.onStep, next, previous)
             .pointerInput(cropMode) {
                 detectTransformGestures { centroid, pan, z, _ ->
                     if (cropMode) dragCrop(state, shownNow, size, pan, z) else zoom.transform(centroid, pan, z)
@@ -302,7 +315,12 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
 }
 
 /** Tryb podglądu zależny od zakładki: kadrowanie gestem i przyciski filmu (biblioteka, preset) na zdjęciu. */
-private class PreviewMode(val crop: Boolean, val filmActions: Boolean, val onOpenLibrary: () -> Unit)
+private class PreviewMode(
+    val crop: Boolean,
+    val filmActions: Boolean,
+    val onOpenLibrary: () -> Unit,
+    val onStep: (Int) -> Unit
+)
 
 /** Nakładki na zdjęciu: znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
 @Composable
