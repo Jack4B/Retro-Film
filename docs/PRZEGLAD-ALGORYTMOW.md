@@ -29,6 +29,8 @@ kolejność korekty → film → wykończenie, straż regresji suwaków na CI, z
    przestrzeń robocza, dehaze z haze-lines, Auto WB Grey-Edge.
 5. Ziarno: model Boolean (Newson 2017) za drogi na telefonie; ziarno zależne od ostrości i parametry z metadanych
    filmu to możliwe dalsze kroki.
+6. **Dodge & Burn** (wyrównanie skóry w pasmie środkowym i pędzel): zaplanowane, jeszcze bez kodu, zob.
+   [PLAN-DODGE-BURN.md](PLAN-DODGE-BURN.md).
 
 ## Jak oceniałem
 

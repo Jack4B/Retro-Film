@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (plan: Dodge & Burn, bez kodu)
+- Faza: planowanie na prośbę Jack4B (wracamy w sobotę 2026-10-31); zmiana tylko w dokumentach, bez wydania
+- Zrobione: `docs/PLAN-DODGE-BURN.md` (ocena wklejonych propozycji, metodologia, etapy D0–D4, kryteria akceptacji, ryzyka, pytania na sobotę); wpisy w `docs/PLAN.md` (backlog), `PRZEGLAD-ALGORYTMOW.md` (§0, pozycja 6) i `STAN-ALGORYTMOW.md`.
+- Kluczowe ustalenia: (1) w propozycji „oryginał − duży blur” spłaszczałoby też pory (plastik), więc korygujemy tylko pasmo środkowe (B_m − B_c) w logarytmie jasności, detal zostaje; (2) maska skóry z twarzy (`FaceFinder`, tylko twarze przodem) + wiarygodność w OKLab + rozrost od twarzy, bez sieci (MediaPipe odpada); (3) pędzel D&B jako osobny, późniejszy etap; (4) patenty na retusz skóry niezweryfikowane → eskalacja przed wydaniem.
+- Otwarte / P2 odłożone: pytania 1–5 z §8 planu do rozstrzygnięcia w sobotę.
+- Następny krok: sobota 2026-10-31: decyzje z §8, potem D0 (prototyp numpy na portretach stockowych).
+
 ## 2026-10-27 – Claude (wydanie 1.1.12: ziarno barwne tylko na barwnych pikselach)
 - Faza: poprawka po zgłoszeniu ze zrzutem (1.1.11 nie pomogła na Polaroidzie z odcieniem: ziarno dalej kolorowe), przegląd algorytmów ziarna, wydanie 1.1.12
 - Przyczyna: wykrywanie „czarno-białego” w 1.1.11 miało wąski próg (rozrzut kanałów 0,006–0,04), a film z odcieniem (Polaroid) go przekraczał, więc dostawał pełny niezależny szum barwny na kanał (44% wariancji ziarna) – to ten kolorowy „szum cyfrowy”.
