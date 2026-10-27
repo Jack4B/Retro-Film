@@ -128,8 +128,15 @@ class MainState(
     /** Edycje serii: wspólne ustawienia i zdjęcia edytowane osobno (zob. [EditBook]). */
     val edits = EditBook()
 
-    /** Czy bieżące zdjęcie ma osobne ustawienia (film, korekty, kadr). */
-    val individual: Boolean get() = edits.isIndividual(index)
+    /**
+     * Czy bieżące zdjęcie ma osobne ustawienia (film, korekty, kadr). W serii zmiana na zdjęciu od razu przypisuje się
+     * tylko do niego, więc zdjęcie z niezapisaną jeszcze zmianą też liczy się jako edytowane osobno.
+     */
+    val individual: Boolean get() = isIndividual(index)
+
+    /** Czy zdjęcie [i] z serii ma osobną edycję (dla bieżącego liczy też zmiany robocze). */
+    fun isIndividual(i: Int): Boolean =
+        edits.isIndividual(i) || (i == index && uris.size > 1 && snapshot() != edits.editFor(i))
 
     /** Presety użytkownika (film, moc i korekty) zapisywane w pamięci aplikacji. */
     val presetBook = PresetBook()
@@ -269,7 +276,7 @@ class MainState(
     /** Przełącza Edytor na inne zdjęcie z serii, zachowując film, korekty i ramkę. */
     suspend fun select(context: Context, i: Int): UiMessage? {
         if (i == index || i !in uris.indices) return null
-        edits.commit(index, snapshot())
+        edits.commit(index, snapshot(), uris.size > 1)
         index = i
         restore(edits.editFor(i))
         return load(context, uris[i])
@@ -277,7 +284,7 @@ class MainState(
 
     /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
     suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
-        edits.commit(index, snapshot())
+        edits.commit(index, snapshot(), uris.size > 1)
         val face = signatureTypeface()
         var current = 0
         val result = exportBatch(uris, {

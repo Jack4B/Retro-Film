@@ -2,6 +2,7 @@ package app.retrofilm.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
@@ -25,6 +26,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+
+private val HintMaxWidth = 220.dp
 
 /**
  * Wybór zdjęcia serii jako rozwijane menu w górnym pasku (nic nie zasłania fotografii): przycisk „2/3 ▾” otwiera listę
@@ -63,6 +66,12 @@ fun PhotoPicker(state: MainState, onSelect: (Int) -> Unit, modifier: Modifier = 
         )
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             PhotoItems(state, onSelect) { open = false }
+            Text(
+                stringResource(R.string.photos_swipe_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.widthIn(max = HintMaxWidth).padding(horizontal = 12.dp, vertical = 4.dp)
+            )
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
             ScopeItems(state, { open = false }) { confirm = true }
         }
@@ -75,7 +84,7 @@ fun PhotoPicker(state: MainState, onSelect: (Int) -> Unit, modifier: Modifier = 
 private fun PhotoItems(state: MainState, onSelect: (Int) -> Unit, close: () -> Unit) {
     val total = state.uris.size
     for (i in 0 until total) {
-        val own = state.edits.isIndividual(i)
+        val own = state.isIndividual(i)
         val cd = stringResource(if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd, i + 1, total)
         val name = stringResource(if (own) R.string.photos_menu_item_own else R.string.photos_menu_item, i + 1)
         DropdownMenuItem(

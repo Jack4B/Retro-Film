@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.7: przesuwanie zdjęć serii jak karuzela)
+- Faza: nowa funkcja na prośbę (przy dużej serii przełączanie zdjęć gestem), wydanie 1.1.7
+- Zrobione: przesunięcie palcem w lewo/prawo na podglądzie przełącza na następne/poprzednie zdjęcie serii (`PhotoSwipe.kt`: `photoSwipe`, `swipeStep`, `photoSeries`); gest tylko obserwuje dotyk (Initial pass), więc szczypanie, przesuwanie powiększonego zdjęcia i dwukrotne dotknięcie działają jak wcześniej; wyłączony w zakładce Kadr, przy powiększeniu i podczas pracy/zapisu; bez zapętlania (na końcu serii nic się nie dzieje). Menu „1/3 ▾” zostaje (lista zdjęć + zakres edycji) i ma podpowiedź o przesuwaniu. TalkBack: akcje „Następne zdjęcie” i „Poprzednie zdjęcie” na podglądzie. `PhotoSwipeTest` (próg 20% szerokości, poziomość ≥ 2:1, szczypanie nie jest przesunięciem).
+- Zmiana zakresu edycji (prośba Jack4B po przesuwaniu): w serii każda zmiana filmu/korekt/kadru na zdjęciu przypisuje się tylko do niego (`EditBook.commit(..., series)`: zmiana względem wspólnych → edycja osobna, wspólne bez zmian); znacznik „✎” i menu pokazują to od razu (`MainState.isIndividual`), także przed przesunięciem; zapis serii też najpierw zapisuje bieżące zdjęcie. Ramka nadal wspólna. Zapis w DECYZJE.md (D12). Testy: `EditBookTest`.
+- PR / gałąź: `f39/karuzela`; wersja 1.1.7 z taga `v1.1.7`.
+- Otwarte / P2 odłożone: brak animacji przejścia między zdjęciami (zmiana natychmiastowa, potem ładowanie); ewentualne zapętlenie serii i pasek miniatur do rozważenia po ocenie na telefonie.
+- Następny krok: ocena 1.1.7 na telefonie (czy próg przesunięcia jest wygodny).
+
 ## 2026-10-27 – Claude (wydanie 1.1.6: przegląd UI/UX ze zrzutów)
 - Faza: przegląd UI/UX na zrzutach prawdziwych ekranów (Robolectric, nowy workflow `ui-screenshots.yml`, wyniki na gałęzi `ui-screenshots`, katalog `ui/`), porównanie z makietami (docs/makiety/index.html), poprawki, wydanie 1.1.6.
 - Zrobione: (1) zakładka Film: szuflada kompaktowa ≈ 38% wysokości (reszta zakładek 26%), bo nazwy filmów były ucięte do pierwszego słowa („Kodak”, „Kodak”…), a „Moc filmu” schowana; makieta zakłada panel ≈ 40% w tej zakładce. (2) Jasny motyw: tło edytora i górny pasek miały domyślny fiolet Material (`surfaceDim`) obok ciepłego papieru szuflady; ustawione `surfaceDim` (jasny: #F3EDE4, ciemny: tło marki), pasek i szuflada spójne. (3) Zrzuty: `UiScreenshotTest` (kadr, korekty, film, wykończenie, ramka, seria + menu zdjęć, osobna edycja, jasny motyw, poziomo); uruchamiany tylko z `UI_OUT`, więc zwykły CI go pomija; podgląd i miniatury w teście podstawiane bez potoku filmu (natywna grafika Robolectric ubija JVM na pasmowym potoku).
