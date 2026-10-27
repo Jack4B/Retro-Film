@@ -11,6 +11,16 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.11: ziarno na zdjęciach czarno-białych)
+- Faza: poprawka błędu zgłoszonego ze zrzutem (film czarno-biały + Ziarno = kolorowe ziarno), szybki przegląd algorytmów pod kątem wycieku barwy, wydanie 1.1.11
+- Przyczyna: ziarno kanału = `0,75·luma + 0,66·chroma_k`, gdzie szum barwny `chroma_k` jest niezależny dla R, G i B (model kolorowego negatywu). Na szarym pikselu (film czarno-biały daje R=G=B) każdy kanał dostawał inny szum, więc ziarno wychodziło kolorowe. Nic nie wykrywało zdjęcia czarno-białego.
+- Zrobione: udział barwy piksela w ziarnie (`FilmGrain.colorfulness`, rozrzut kanałów max−min w kodowaniu 0..1: poniżej 0,006 szary, od 0,04 pełna barwa, pomiędzy gładkie przejście) liczony przed tonowaniem (w `processPlanes` do `Planes.grainChroma`, w ścieżce legacy `process` lokalnie), więc zdjęcie czarno-białe, także stonowane (sepia) i odbarwione, dostaje ziarno szare; `FilmGrain.mix(luma, chroma, colorful)` zachowuje jednostkową wariancję (ubytek barwy przechodzi w ziarno jasnościowe), a dla `colorful = 1` jest identyczne ze starym `mix`, więc zdjęcia kolorowe mają to samo ziarno co dotąd (poza prawie szarymi pikselami, gdzie szum barwny łagodnie zanika).
+- Testy: `AdjustmentsTest` (szare zdjęcie → ziarno szare w potoku pasmowym, stonowane nie dostaje barwnego szumu, kolorowe zachowuje barwne ziarno, własności `mix`/`colorfulness`).
+- Przegląd (bez zmian): ścieżka B&W po ziarnie zachowuje R=G=B (winieta, dithering, wyostrzanie i tekstura działają jednakowo na kanałach; wyostrzanie dodaje tę samą deltę, odzyskiwanie świateł nie rusza szarości); jedyne miejsce niezależnego szumu na kanał to ziarno.
+- PR / gałąź: `f44/ziarno-bw`; wersja 1.1.11 z taga `v1.1.11`.
+- Otwarte / P2 odłożone: progi 0,006 / 0,04 dobrane na oko (LUT-y B&W dają dokładnie R=G=B); do oceny na telefonie przy filmach czarno-białych z lekkim odcieniem (np. Polaroid).
+- Następny krok: ocena 1.1.11 na telefonie (ziarno na filmach czarno-białych i na zdjęciach kolorowych).
+
 ## 2026-10-27 – Claude (wydanie 1.1.10: „Ramka do wszystkich zdjęć”)
 - Faza: nowa funkcja na prośbę Jack4B (ramka na wszystkich zdjęciach przy edycji pojedynczej), wydanie 1.1.10
 - Zrobione: w zakładce Ramka (tylko w serii) przełącznik „Ramka do wszystkich zdjęć”. Włączony: jeden wygląd ramki dla całej serii (włączenie, proporcje, margines, czcionka, kolor i wielkość podpisu, „podpis włączony”), a osobny zostaje tekst podpisu każdego zdjęcia; film, korekty i kadr dalej osobno. Wyłączony (domyślnie): jak w 1.1.9, ramka i podpis osobno dla każdego zdjęcia.
