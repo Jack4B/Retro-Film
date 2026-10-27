@@ -7,7 +7,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+/** Edycja zdjęcia zawiera ramkę, której wartości domyślne sięgają do klas Androida, więc test działa w Robolectric. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class EditBookTest {
     private val warm = PhotoEdit("kodak/portra_400", 0.8f, Adjustments(exposure = 0.5f), Geometry())
     private val bw = PhotoEdit("ilford/hp5", 1f, Adjustments(contrast = 0.4f), Geometry(zoom = 2f))
