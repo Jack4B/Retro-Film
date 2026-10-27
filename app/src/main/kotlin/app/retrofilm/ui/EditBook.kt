@@ -39,6 +39,16 @@ class EditBook {
         }
     }
 
+    /**
+     * Edycje wszystkich [count] zdjęć w takiej postaci, jaką dałby [commit] ustawień roboczych [working] zdjęcia
+     * [index] (stan książki się nie zmienia). Służy do sprawdzenia, czy coś w serii różni się od ostatniego zapisu.
+     */
+    fun effective(count: Int, index: Int, working: PhotoEdit, series: Boolean): List<PhotoEdit> {
+        val assigned = index !in own && series && working != shared
+        val base = if (index in own || assigned) shared else working
+        return List(count) { i -> if (i == index) working else own[i] ?: base }
+    }
+
     /** Edycja, którą ma zdjęcie [index] (osobna, a jeśli jej nie ma – wspólna). */
     fun editFor(index: Int): PhotoEdit = own[index] ?: shared
 

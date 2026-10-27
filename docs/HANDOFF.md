@@ -11,6 +11,15 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.8: ostrzeżenie przy wyjściu w serii)
+- Faza: poprawka po zgłoszeniu („zniknęło ostrzeżenie przed zakończeniem edycji, cofnięcie wraca do wyboru zdjęć”), przegląd kodu pod kątem zgubionych funkcji, wydanie 1.1.8
+- Przyczyna: `hasUnsavedEdits` porównywał z wartością początkową tylko bieżące zdjęcie. Po edycji zdjęcia 1 i przesunięciu na zdjęcie 2 (bez zmian) wszystko wyglądało na „czyste”, więc Wstecz zamykał edytor bez pytania i edycje przepadały. To znane ograniczenie (P2 z 1.1.1), które po przesuwaniu i edycji per zdjęcie stało się łatwe do wywołania.
+- Zrobione: `EditBook.effective(count, index, working, series)` zwraca edycje wszystkich zdjęć serii tak, jak byłyby po zapisie bieżącego; `pristine` i `hasUnsavedEdits` porównują całą serię (film, korekty, kadr) i ramkę; samo przełączenie zakresu bez zmiany wyniku nie ostrzega. Testy: `ExitGuardSeriesTest` (jedno zdjęcie, seria, przesunięcie na inne, cofnięcie zmiany), `EditBookTest`.
+- Przegląd: diff 1.1.3 → 1.1.7 (usunięto tylko `PhotoStrip`/`EditScopeChip`, zastąpione `PhotoPicker`); pozostałe funkcje z 1.1.1–1.1.3 (przełączniki Auto/Przygotuj, ostrzeżenie wyjścia, Start bez pickera, nazwa filmu pod „i”, podgląd maski) bez zmian w kodzie.
+- PR / gałąź: `f41/ostrzezenie`; wersja 1.1.8 z taga `v1.1.8`.
+- Otwarte / P2 odłożone: bez zmian względem 1.1.7.
+- Następny krok: ocena 1.1.8 na telefonie (edycja kilku zdjęć serii, Wstecz).
+
 ## 2026-10-27 – Claude (wydanie 1.1.7: przesuwanie zdjęć serii jak karuzela)
 - Faza: nowa funkcja na prośbę (przy dużej serii przełączanie zdjęć gestem), wydanie 1.1.7
 - Zrobione: przesunięcie palcem w lewo/prawo na podglądzie przełącza na następne/poprzednie zdjęcie serii (`PhotoSwipe.kt`: `photoSwipe`, `swipeStep`, `photoSeries`); gest tylko obserwuje dotyk (Initial pass), więc szczypanie, przesuwanie powiększonego zdjęcia i dwukrotne dotknięcie działają jak wcześniej; wyłączony w zakładce Kadr, przy powiększeniu i podczas pracy/zapisu; bez zapętlania (na końcu serii nic się nie dzieje). Menu „1/3 ▾” zostaje (lista zdjęć + zakres edycji) i ma podpowiedź o przesuwaniu. TalkBack: akcje „Następne zdjęcie” i „Poprzednie zdjęcie” na podglądzie. `PhotoSwipeTest` (próg 20% szerokości, poziomość ≥ 2:1, szczypanie nie jest przesunięciem).

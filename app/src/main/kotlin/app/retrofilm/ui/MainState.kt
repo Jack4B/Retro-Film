@@ -70,15 +70,20 @@ class MainState(
     private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
     private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
 
-    /** Ustawienia i ramka w chwili wczytania zdjęć albo ostatniego zapisu (do ostrzeżenia przed utratą zmian). */
-    private var pristine: Pair<PhotoEdit, FrameOptions>? = null
+    /**
+     * Edycje wszystkich zdjęć serii i ramka w chwili wczytania albo ostatniego zapisu (do ostrzeżenia przed utratą
+     * zmian); obejmują też zdjęcia edytowane wcześniej i porzucone przesunięciem na inne.
+     */
+    private var pristine: Pair<List<PhotoEdit>, FrameOptions>? = null
 
-    /** Czy od wczytania albo ostatniego zapisu coś zmieniono (film, korekty, kadr, ramka). */
+    private fun effectiveEdits() = edits.effective(maxOf(uris.size, 1), index, snapshot(), uris.size > 1)
+
+    /** Czy od wczytania albo ostatniego zapisu coś zmieniono na dowolnym zdjęciu (film, korekty, kadr) lub w ramce. */
     val hasUnsavedEdits: Boolean
-        get() = photo != null && pristine?.let { it.first != snapshot() || it.second != frame } == true
+        get() = photo != null && pristine?.let { it.first != effectiveEdits() || it.second != frame } == true
 
     private fun markSaved() {
-        pristine = snapshot() to frame
+        pristine = effectiveEdits() to frame
     }
 
     /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */

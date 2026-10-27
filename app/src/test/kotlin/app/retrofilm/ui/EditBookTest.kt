@@ -40,6 +40,17 @@ class EditBookTest {
         assertEquals(PhotoEdit(), book.editFor(0))
     }
 
+    @Test fun effectiveEditsShowWhatEveryPhotoWouldGetWithoutChangingTheBook() {
+        val book = EditBook()
+        book.reset(PhotoEdit())
+        assertEquals(listOf(warm, PhotoEdit(), PhotoEdit()), book.effective(3, 0, warm, series = true))
+        assertEquals(listOf(warm, warm, warm), book.effective(3, 0, warm, series = false))
+        assertEquals("książka bez zmian", PhotoEdit(), book.editFor(1))
+        assertEquals(0, book.individualCount)
+        book.commit(1, bw, series = true)
+        assertEquals(listOf(PhotoEdit(), bw, PhotoEdit()), book.effective(3, 2, PhotoEdit(), series = true))
+    }
+
     @Test fun inSeriesUntouchedPhotoStaysShared() {
         val book = EditBook()
         book.reset(warm)
