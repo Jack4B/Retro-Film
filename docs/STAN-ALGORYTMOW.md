@@ -38,6 +38,7 @@ Szczegółowa ocena jakości modułów i plan ulepszeń (ze stanem wdrożenia na
 
 ## Dalsze pomysły (nic z tabeli nie jest już ❌)
 
+- **Dodge & Burn**: wyrównanie skóry (pasmo środkowe, maska z twarzy i rozrostu) i pędzel; plan: [PLAN-DODGE-BURN.md](PLAN-DODGE-BURN.md).
 - Automatyczne prostowanie horyzontu i pionów (transformata Hough po wykrywaniu krawędzi) i auto-perspektywa.
 - Maski: pędzel, maska luminancji i koloru, maska krawędzi; tonalna maska cieni/świateł także dla masek lokalnych.
 - Odszumianie silnego szumu: NLM lub falki; odszumianie z uwzględnieniem ISO z EXIF.
