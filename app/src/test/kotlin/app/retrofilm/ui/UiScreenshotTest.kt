@@ -72,9 +72,9 @@ class UiScreenshotTest {
         File(out, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
-    private fun editor(s: MainState) {
+    private fun editor(s: MainState, dark: Boolean = true) {
         compose.setContent {
-            RetroFilmTheme {
+            RetroFilmTheme(dynamicColor = false, darkTheme = dark) {
                 EditorScreen(s, onBack = {}, onSave = {}, onOpenLibrary = {}, onSelectPhoto = {}, snackbar = {})
             }
         }
@@ -103,6 +103,31 @@ class UiScreenshotTest {
         shot("10-seria-korekty")
         compose.onNodeWithText("1/3 ▾").performClick()
         shot("11-seria-menu-zdjec")
+    }
+
+    @Test fun lightTheme() {
+        assumeNotNull(out)
+        editor(state(1), dark = false)
+        shot("20-jasny-korekty")
+        tab("Film", "21-jasny-film")
+    }
+
+    @Test fun individualEdit() {
+        assumeNotNull(out)
+        val s = state(3)
+        s.setIndividual(true)
+        editor(s)
+        shot("30-osobna-edycja")
+        compose.onNodeWithText("✎ 1/3 ▾").performClick()
+        shot("31-osobna-edycja-menu")
+    }
+
+    @Test fun landscape() {
+        assumeNotNull(out)
+        RuntimeEnvironment.setQualifiers("+w844dp-h390dp")
+        editor(state(3))
+        shot("40-poziomo-korekty")
+        tab("Film", "41-poziomo-film")
     }
 
     private companion object {
