@@ -39,6 +39,7 @@ jobs:
           git config user.email "25393299+Jack4B@users.noreply.github.com"
           mkdir -p "$RUNNER_TEMP/pub/ui"
           cp -r "$RUNNER_TEMP/ui/." "$RUNNER_TEMP/pub/ui/" || true
+          tail -n 5 "$RUNNER_TEMP/ui/trace.txt" || true
           tail -n 200 "$RUNNER_TEMP/render.log" > "$RUNNER_TEMP/pub/log.txt" || true
           cp app/build/test-results/testDebugUnitTest/*UiScreenshotTest*.xml "$RUNNER_TEMP/pub/" || true
           git checkout --orphan ui-screenshots

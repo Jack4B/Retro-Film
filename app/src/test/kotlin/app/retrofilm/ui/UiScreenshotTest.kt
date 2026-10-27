@@ -38,6 +38,11 @@ class UiScreenshotTest {
 
     private val out: File? = System.getenv("UI_OUT")?.let { File(it).apply { mkdirs() } }
 
+    /** Ślad kroków dopisywany od razu na dysk, żeby po awarii natywnej było widać, gdzie test padł. */
+    private fun trace(step: String) {
+        out?.let { File(it, "trace.txt").appendText("$step\n") }
+    }
+
     private fun photo(): Bitmap {
         val file = System.getenv("STOCK_PHOTOS")?.let { File(it, "street_bus.jpg") }
         if (file != null && file.exists()) return PhotoLoader.load({ file.inputStream() })
@@ -48,22 +53,32 @@ class UiScreenshotTest {
         return b
     }
 
-    private fun state(count: Int) = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT).also {
-        it.setPhotoForTest(photo())
-        if (count > 1) it.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })
-        runBlocking { it.refreshPreview() }
+    private fun state(count: Int): MainState {
+        trace("state start")
+        val s = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT)
+        s.setPhotoForTest(photo())
+        trace("photo set")
+        if (count > 1) s.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })
+        runBlocking { s.refreshPreview() }
+        trace("preview ready")
+        return s
     }
 
     private fun shot(name: String) {
         compose.waitForIdle()
+        trace("idle $name")
         val bmp = compose.onRoot().captureToImage().asAndroidBitmap()
+        trace("captured $name")
         File(out, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
-    private fun editor(s: MainState) = compose.setContent {
-        RetroFilmTheme {
-            EditorScreen(s, onBack = {}, onSave = {}, onOpenLibrary = {}, onSelectPhoto = {}, snackbar = {})
+    private fun editor(s: MainState) {
+        compose.setContent {
+            RetroFilmTheme {
+                EditorScreen(s, onBack = {}, onSave = {}, onOpenLibrary = {}, onSelectPhoto = {}, snackbar = {})
+            }
         }
+        trace("content set")
     }
 
     private fun tab(label: String, name: String) {
