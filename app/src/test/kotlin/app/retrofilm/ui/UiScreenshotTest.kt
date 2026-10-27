@@ -56,6 +56,7 @@ class UiScreenshotTest {
     private fun state(count: Int): MainState {
         trace("state start")
         val s = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT)
+        s.renderOnCallerThreadForTest()
         s.setPhotoForTest(photo())
         trace("photo set")
         if (count > 1) s.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })

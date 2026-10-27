@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -41,7 +42,10 @@ class FilmThumbnails(private val graph: AppGraph, private val typeface: Typeface
         }
     }
 
-    private suspend fun render(id: String, photo: Bitmap): Bitmap? = withContext(Dispatchers.Default) {
+    /** Wątek renderowania miniatur; testy zrzutów podmieniają go na wątek wywołującego. */
+    internal var dispatcher: CoroutineDispatcher = Dispatchers.Default
+
+    private suspend fun render(id: String, photo: Bitmap): Bitmap? = withContext(dispatcher) {
         val src = source ?: MainState.scaleDown(photo, THUMB_SIDE).also { source = it }
         val lut = if (id == IDENTITY_ID) null else graph.filmEngine.load(id)
         if (lut == null && id != IDENTITY_ID) {
