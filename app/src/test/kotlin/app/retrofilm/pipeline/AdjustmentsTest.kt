@@ -299,12 +299,31 @@ class AdjustmentsTest {
         assertTrue("barwne ziarno na kolorowym zdjęciu", ratios.max() - ratios.min() > 0.05f)
     }
 
+    private fun std(values: List<Double>): Double {
+        val mean = values.average()
+        return kotlin.math.sqrt(values.sumOf { (it - mean) * (it - mean) } / values.size)
+    }
+
+    @Test fun grainOnTintedGrayPhotoIsMostlyLuminanceNotColorSpeckle() {
+        // szare zdjęcie z odcieniem filmu (chłodny Polaroid): ziarno ma być jasnościowe, odcień zostaje
+        val out = AdjustmentsApplier.apply(flat(112, 124, 136), Adjustments(grain = 1f))
+        val pixels = IntArray(64 * 64).also { out.getPixels(it, 0, 64, 0, 0, 64, 64) }
+        val luma = pixels.map { Color.green(it).toDouble() }
+        val colorDiff = pixels.map { (Color.red(it) - Color.blue(it)).toDouble() }
+        assertTrue("jest ziarno jasnościowe", std(luma) > 2.0)
+        assertTrue(
+            "szum barwny (${std(colorDiff)}) znacznie słabszy od jasnościowego (${std(luma)})",
+            std(colorDiff) < 0.35 * std(luma)
+        )
+    }
+
     @Test fun grainMixKeepsUnitVarianceAndMatchesOldBlendForColor() {
         assertEquals(FilmGrain.mix(0.7f, -0.3f), FilmGrain.mix(0.7f, -0.3f, 1f), 0f)
         assertEquals("szary piksel: samo ziarno jasnościowe", 0.7f, FilmGrain.mix(0.7f, -0.3f, 0f), 1e-6f)
         assertEquals(0f, FilmGrain.colorfulness(0f), 0f)
-        assertEquals(1f, FilmGrain.colorfulness(0.2f), 0f)
-        assertTrue("przejście gładkie i rosnące", FilmGrain.colorfulness(0.02f) in 0.05f..0.95f)
+        assertEquals(1f, FilmGrain.colorfulness(0.5f), 0f)
+        assertTrue("przejście gładkie i rosnące", FilmGrain.colorfulness(0.16f) in 0.05f..0.95f)
+        assertTrue("lekki odcień filmu to prawie szarość", FilmGrain.colorfulness(0.06f) < 0.1f)
     }
 
     @Test fun vibranceBoostsSkinLessThanBlue() {
