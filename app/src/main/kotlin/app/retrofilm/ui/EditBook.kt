@@ -26,9 +26,17 @@ class EditBook {
 
     val individualCount: Int get() = own.size
 
-    /** Zapisuje ustawienia robocze zdjęcia [index]: do jego edycji osobnej albo do wspólnych. */
-    fun commit(index: Int, working: PhotoEdit) {
-        if (index in own) own[index] = working else shared = working
+    /**
+     * Zapisuje ustawienia robocze zdjęcia [index]: do jego edycji osobnej albo do wspólnych. W serii ([series]) każda
+     * zmiana na zdjęciu bez edycji osobnej przypisuje się tylko do niego (staje się jego edycją osobną), a wspólne
+     * zostają bez zmian, więc zdjęcia edytuje się z osobna bez przełączania zakresu.
+     */
+    fun commit(index: Int, working: PhotoEdit, series: Boolean = false) {
+        when {
+            index in own -> own[index] = working
+            series && working != shared -> own[index] = working
+            else -> shared = working
+        }
     }
 
     /** Edycja, którą ma zdjęcie [index] (osobna, a jeśli jej nie ma – wspólna). */

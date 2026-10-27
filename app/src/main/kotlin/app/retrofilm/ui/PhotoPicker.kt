@@ -84,7 +84,7 @@ fun PhotoPicker(state: MainState, onSelect: (Int) -> Unit, modifier: Modifier = 
 private fun PhotoItems(state: MainState, onSelect: (Int) -> Unit, close: () -> Unit) {
     val total = state.uris.size
     for (i in 0 until total) {
-        val own = state.edits.isIndividual(i)
+        val own = state.isIndividual(i)
         val cd = stringResource(if (own) R.string.photos_pick_own_cd else R.string.photos_pick_cd, i + 1, total)
         val name = stringResource(if (own) R.string.photos_menu_item_own else R.string.photos_menu_item, i + 1)
         DropdownMenuItem(
