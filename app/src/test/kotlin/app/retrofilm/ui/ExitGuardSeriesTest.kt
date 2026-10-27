@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.FrameOptions
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -66,5 +67,29 @@ class ExitGuardSeriesTest {
         switchTo(s, 0)
         s.adjustments = Adjustments.None
         assertFalse(s.hasUnsavedEdits)
+    }
+
+    private val framed = FrameOptions(enabled = true, signatureEnabled = true, signature = "Tatry")
+
+    @Test fun frameChangeOnOnePhotoStaysWithThatPhotoAndStillWarns() {
+        val s = state(3)
+        s.frame = framed
+        assertTrue("zmiana ramki to edycja tego zdjęcia", s.individual)
+        assertTrue(s.hasUnsavedEdits)
+        switchTo(s, 1)
+        assertTrue("ramka zdjęcia 1 nie przepadła", s.hasUnsavedEdits)
+        assertFalse("zdjęcie 2 ma własną, domyślną ramkę", s.frame.enabled)
+        assertFalse(s.individual)
+        switchTo(s, 0)
+        assertTrue("po powrocie ramka i podpis wracają", s.frame == framed)
+    }
+
+    @Test fun watermarkIsOneSettingForEveryPhoto() {
+        val s = state(3)
+        s.frame = s.frame.copy(watermark = true)
+        assertFalse("znak wodny nie jest edycją zdjęcia", s.individual)
+        switchTo(s, 1)
+        assertTrue("znak wodny zostaje na innym zdjęciu", s.frame.watermark)
+        assertFalse(s.individual)
     }
 }

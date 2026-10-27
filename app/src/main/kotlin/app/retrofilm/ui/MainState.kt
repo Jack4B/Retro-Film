@@ -71,19 +71,20 @@ class MainState(
     private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
 
     /**
-     * Edycje wszystkich zdjęć serii i ramka w chwili wczytania albo ostatniego zapisu (do ostrzeżenia przed utratą
-     * zmian); obejmują też zdjęcia edytowane wcześniej i porzucone przesunięciem na inne.
+     * Edycje wszystkich zdjęć serii i znak wodny w chwili wczytania albo ostatniego zapisu (do ostrzeżenia przed
+     * utratą zmian); obejmują też zdjęcia edytowane wcześniej i porzucone przesunięciem na inne.
      */
-    private var pristine: Pair<List<PhotoEdit>, FrameOptions>? = null
+    private var pristine: Pair<List<PhotoEdit>, Boolean>? = null
 
     private fun effectiveEdits() = edits.effective(maxOf(uris.size, 1), index, snapshot(), uris.size > 1)
 
-    /** Czy od wczytania albo ostatniego zapisu coś zmieniono na dowolnym zdjęciu (film, korekty, kadr) lub w ramce. */
+    /** Czy od wczytania albo ostatniego zapisu coś zmieniono na dowolnym zdjęciu (film, korekty, kadr, ramka). */
     val hasUnsavedEdits: Boolean
-        get() = photo != null && pristine?.let { it.first != effectiveEdits() || it.second != frame } == true
+        get() = photo != null &&
+            pristine?.let { it.first != effectiveEdits() || it.second != frame.watermark } == true
 
     private fun markSaved() {
-        pristine = effectiveEdits() to frame
+        pristine = effectiveEdits() to frame.watermark
     }
 
     /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */
@@ -209,18 +210,20 @@ class MainState(
         uris = series
     }
 
-    private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry)
+    /** Ustawienia bieżącego zdjęcia; znak wodny jest wspólny dla aplikacji, więc nie wchodzi do edycji zdjęcia. */
+    private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry, frame.copy(watermark = false))
 
     private fun restore(e: PhotoEdit) {
         film = e.film
         intensity = e.intensity
         adjustments = e.adjustments
+        frame = e.frame.copy(watermark = frame.watermark)
         updateGeometry(e.geometry)
         resetAuto()
     }
 
     /**
-     * Przełącza bieżące zdjęcie między wspólnymi ustawieniami serii a osobnymi (własny film, korekty, kadr).
+     * Przełącza bieżące zdjęcie między wspólnymi ustawieniami serii a osobnymi (własny film, korekty, kadr, ramka).
      * Włączenie kopiuje bieżące ustawienia; wyłączenie porzuca osobne i wraca do wspólnych.
      */
     fun setIndividual(on: Boolean) {
@@ -290,13 +293,15 @@ class MainState(
     /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
     suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         edits.commit(index, snapshot(), uris.size > 1)
-        val face = signatureTypeface()
+        val watermark = frame.watermark
         var current = 0
         val result = exportBatch(uris, {
             current = it
             exportProgress = it + 1
         }) { uri ->
             val edit = edits.editFor(current)
+            val photoFrame = edit.frame.copy(watermark = watermark)
+            val face = fonts(photoFrame.font)
             val bmp = withContext(Dispatchers.IO) {
                 PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
             }
@@ -306,7 +311,7 @@ class MainState(
                     cropped,
                     lutFor(edit.film),
                     graph.filmEngine.renderer,
-                    frame,
+                    photoFrame,
                     face,
                     edit.intensity,
                     edit.adjustments,
@@ -315,7 +320,7 @@ class MainState(
                 ExportPipeline.encode(
                     cropped,
                     ExportPipeline.resize(rendered, exportMaxSide),
-                    frame,
+                    photoFrame,
                     face,
                     exportQuality
                 )
