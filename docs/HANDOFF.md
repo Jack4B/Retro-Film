@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.6: przegląd UI/UX ze zrzutów)
+- Faza: przegląd UI/UX na zrzutach prawdziwych ekranów (Robolectric, nowy workflow `ui-screenshots.yml`, wyniki na gałęzi `ui-screenshots`, katalog `ui/`), porównanie z makietami (docs/makiety/index.html), poprawki, wydanie 1.1.6.
+- Zrobione: (1) zakładka Film: szuflada kompaktowa ≈ 38% wysokości (reszta zakładek 26%), bo nazwy filmów były ucięte do pierwszego słowa („Kodak”, „Kodak”…), a „Moc filmu” schowana; makieta zakłada panel ≈ 40% w tej zakładce. (2) Jasny motyw: tło edytora i górny pasek miały domyślny fiolet Material (`surfaceDim`) obok ciepłego papieru szuflady; ustawione `surfaceDim` (jasny: #F3EDE4, ciemny: tło marki), pasek i szuflada spójne. (3) Zrzuty: `UiScreenshotTest` (kadr, korekty, film, wykończenie, ramka, seria + menu zdjęć, osobna edycja, jasny motyw, poziomo); uruchamiany tylko z `UI_OUT`, więc zwykły CI go pomija; podgląd i miniatury w teście podstawiane bez potoku filmu (natywna grafika Robolectric ubija JVM na pasmowym potoku).
+- Ocena reszty (bez zmian): górny pasek z „1/3 ▾”, menu zdjęć i zakresu edycji, zakładka Kadr (siatka, proporcje), Wykończenie i Ramka czytelne; układ poziomy poprawny (zdjęcie pionowe małe, bo ekran szeroki).
+- PR / gałąź: `ci/ui-zrzuty`; wersja 1.1.6 z taga `v1.1.6`.
+- Otwarte / P2 odłożone: w makiecie jest cofnij (↶) w górnym pasku – w aplikacji brak (propozycja); dwa duże przyciski Auto/Przygotuj zajmują sporo szuflady Korekt (można zestawić obok siebie); zrzuty ekranu Start i biblioteki filmów nie są jeszcze w teście; zrzuty nie pokazują efektu filmu (podgląd bez potoku).
+- Następny krok: ocena 1.1.6 na telefonie (zakładka Film, jasny motyw).
+
 ## 2026-10-27 – Claude (wydanie 1.1.5: poprawa wyglądu przycisku wyboru zdjęcia)
 - Faza: poprawka po zrzucie z telefonu (przycisk „1/3 ▾” był ściśnięty i łamał tekst pionowo), wydanie 1.1.5
 - Zrobione: przycisk zdjęć w jednej linii (`maxLines = 1`, bez zawijania); „Zapisz wszystkie (3)” skrócone do „Zapisz (3)” (pełny opis dla TalkBack: „Zapisz wszystkie zdjęcia (3)”), żeby w górnym pasku starczyło miejsca na strzałkę, wybór zdjęcia, „Przed” i „Zapisz”.

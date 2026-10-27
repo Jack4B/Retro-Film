@@ -89,7 +89,11 @@ dependencies {
     implementation(libs.compose.material.icons.core)
     implementation(libs.androidx.datastore.preferences)
 
+    debugImplementation(libs.compose.ui.test.manifest)
+
     testImplementation(libs.junit)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.core)
 

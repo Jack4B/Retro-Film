@@ -41,7 +41,11 @@ class FilmThumbnails(private val graph: AppGraph, private val typeface: Typeface
         }
     }
 
+    /** Testy zrzutów ekranów podstawiają prostą miniaturę zamiast potoku filmu (grafika natywna Robolectric). */
+    internal var renderOverride: ((String, Bitmap) -> Bitmap?)? = null
+
     private suspend fun render(id: String, photo: Bitmap): Bitmap? = withContext(Dispatchers.Default) {
+        renderOverride?.let { return@withContext it(id, photo) }
         val src = source ?: MainState.scaleDown(photo, THUMB_SIDE).also { source = it }
         val lut = if (id == IDENTITY_ID) null else graph.filmEngine.load(id)
         if (lut == null && id != IDENTITY_ID) {

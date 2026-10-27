@@ -46,6 +46,7 @@ private val HandleThickness = 4.dp
 private val SheetCorner = 20.dp
 private val SheetElevation = 8.dp
 private const val COMPACT_FRACTION = 0.26f
+private const val FILM_COMPACT_FRACTION = 0.38f
 private const val FULL_FRACTION = 0.5f
 private const val HANDLE_ALPHA = 0.5f
 private const val DRAG_THRESHOLD = 24f
@@ -64,8 +65,9 @@ internal fun TabContent(state: MainState, tab: EditorTab) {
 
 /**
  * Szuflada z narzędziami na dole ekranu (układ pionowy). Zdjęcie dostaje całą resztę miejsca nad nią, dlatego szuflada
- * jest niska domyślnie (kompaktowa ≈ 26% wysokości ekranu) i można ją zwinąć do samych zakładek albo rozwinąć
- * (≈ 50%): uchwytem (przeciągnięcie) albo dotknięciem aktywnej zakładki (zwija i rozwija), co działa też z TalkBack.
+ * jest niska domyślnie (kompaktowa ≈ 26% wysokości ekranu, w zakładce Film ≈ 38%, żeby mieściły się pełne nazwy
+ * filmów) i można ją zwinąć do samych zakładek albo rozwinąć (≈ 50%): uchwytem (przeciągnięcie) albo dotknięciem
+ * aktywnej zakładki (zwija i rozwija), co działa też z TalkBack.
  */
 @Suppress("LongParameterList") // stan, zakładka, zdarzenia i szuflada przekazywane jawnie
 @Composable
@@ -77,9 +79,10 @@ internal fun EditorSheet(
     modifier: Modifier = Modifier
 ) {
     val screen = LocalConfiguration.current.screenHeightDp
+    val compact = if (tab == EditorTab.Film) FILM_COMPACT_FRACTION else COMPACT_FRACTION
     val contentMax = when (control.mode) {
         SheetMode.Collapsed -> 0.dp
-        SheetMode.Compact -> (screen * COMPACT_FRACTION).dp
+        SheetMode.Compact -> (screen * compact).dp
         SheetMode.Full -> (screen * FULL_FRACTION).dp
     }
     val pick = { t: EditorTab ->

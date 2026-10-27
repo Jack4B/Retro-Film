@@ -184,6 +184,19 @@ class MainState(
         markSaved()
     }
 
+    /** Podgląd bez potoku filmu (testy zrzutów ekranów: grafika natywna Robolectric nie znosi potoku). */
+    @androidx.annotation.VisibleForTesting
+    internal fun setPreviewForTest(bitmap: Bitmap) {
+        preview = bitmap
+        before = bitmap
+        thumbnails.renderOverride = { _, photo -> photo }
+    }
+
+    @androidx.annotation.VisibleForTesting
+    internal fun setSeriesForTest(series: List<Uri>) {
+        uris = series
+    }
+
     private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry)
 
     private fun restore(e: PhotoEdit) {
