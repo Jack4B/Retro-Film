@@ -31,16 +31,20 @@ jobs:
         env:
           STOCK_PHOTOS: ${{ runner.temp }}/stock
           UI_OUT: ${{ runner.temp }}/ui
-        run: ./gradlew :app:testDebugUnitTest --tests '*UiScreenshotTest' -i
+        run: ./gradlew :app:testDebugUnitTest --tests '*UiScreenshotTest' -i 2>&1 | tee "$RUNNER_TEMP/render.log"
       - name: Publish screenshots
         if: always()
         run: |
           git config user.name "Jack4B"
           git config user.email "25393299+Jack4B@users.noreply.github.com"
+          mkdir -p "$RUNNER_TEMP/pub/ui"
+          cp -r "$RUNNER_TEMP/ui/." "$RUNNER_TEMP/pub/ui/" || true
+          tail -n 200 "$RUNNER_TEMP/render.log" > "$RUNNER_TEMP/pub/log.txt" || true
+          cp app/build/test-results/testDebugUnitTest/*UiScreenshotTest*.xml "$RUNNER_TEMP/pub/" || true
           git checkout --orphan ui-screenshots
           git rm -rf -q . || true
-          mkdir ui
-          cp -r "$RUNNER_TEMP/ui/." ui/ || true
+          git clean -fdxq
+          cp -r "$RUNNER_TEMP/pub/." .
           git add -A
           git commit -m "[Jack4B] Zrzuty ekranów do przeglądu UI/UX"
           git push -f origin ui-screenshots
