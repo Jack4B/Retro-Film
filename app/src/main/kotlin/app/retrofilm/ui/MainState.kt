@@ -71,20 +71,25 @@ class MainState(
     private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
 
     /**
-     * Edycje wszystkich zdjęć serii i znak wodny w chwili wczytania albo ostatniego zapisu (do ostrzeżenia przed
-     * utratą zmian); obejmują też zdjęcia edytowane wcześniej i porzucone przesunięciem na inne.
+     * Edycje wszystkich zdjęć serii i ustawienia aplikacji w chwili wczytania albo ostatniego zapisu (do ostrzeżenia
+     * przed utratą zmian); obejmują też zdjęcia edytowane wcześniej i porzucone przesunięciem na inne.
      */
-    private var pristine: Pair<List<PhotoEdit>, Boolean>? = null
+    private var pristine: Pair<List<PhotoEdit>, AppLevel>? = null
+
+    /** Ustawienia całej aplikacji wpływające na wynik: znak wodny i wspólny wygląd ramki. */
+    private data class AppLevel(val watermark: Boolean, val frameForAll: Boolean, val frameStyle: FrameOptions)
+
+    private fun appLevel() = AppLevel(frame.watermark, seriesFrame.forAll, seriesFrame.style)
 
     private fun effectiveEdits() = edits.effective(maxOf(uris.size, 1), index, snapshot(), uris.size > 1)
 
     /** Czy od wczytania albo ostatniego zapisu coś zmieniono na dowolnym zdjęciu (film, korekty, kadr, ramka). */
     val hasUnsavedEdits: Boolean
         get() = photo != null &&
-            pristine?.let { it.first != effectiveEdits() || it.second != frame.watermark } == true
+            pristine?.let { it.first != effectiveEdits() || it.second != appLevel() } == true
 
     private fun markSaved() {
-        pristine = effectiveEdits() to frame.watermark
+        pristine = effectiveEdits() to appLevel()
     }
 
     /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */
@@ -173,7 +178,18 @@ class MainState(
 
     /** Korekty (ekspozycja, kontrast, nasycenie, temperatura) po nałożeniu filmu; neutralne = bez zmian. */
     var adjustments by mutableStateOf(Adjustments.None)
-    var frame by mutableStateOf(FrameOptions())
+    private var frameState by mutableStateOf(FrameOptions())
+
+    /** Ramka i podpis bieżącego zdjęcia (stan roboczy; zob. [seriesFrame]). */
+    var frame: FrameOptions
+        get() = frameState
+        set(value) {
+            frameState = value
+            seriesFrame.onEdit(value)
+        }
+
+    /** Ramka w serii: osobna dla każdego zdjęcia albo jeden wygląd dla wszystkich (z osobnym podpisem). */
+    val seriesFrame = SeriesFrame()
 
     /** Podgląd w wyższej rozdzielczości, gdy zdjęcie jest przybliżone (zmiana odświeża podgląd i oryginał). */
     var previewDetail by mutableStateOf(false)
@@ -211,13 +227,13 @@ class MainState(
     }
 
     /** Ustawienia bieżącego zdjęcia; znak wodny jest wspólny dla aplikacji, więc nie wchodzi do edycji zdjęcia. */
-    private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry, frame.copy(watermark = false))
+    private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry, seriesFrame.stored(frame))
 
     private fun restore(e: PhotoEdit) {
         film = e.film
         intensity = e.intensity
         adjustments = e.adjustments
-        frame = e.frame.copy(watermark = frame.watermark)
+        frame = seriesFrame.working(e.frame, frame.watermark)
         updateGeometry(e.geometry)
         resetAuto()
     }
@@ -229,6 +245,23 @@ class MainState(
     fun setIndividual(on: Boolean) {
         if (on == individual) return
         if (on) edits.makeIndividual(index, snapshot()) else restore(edits.makeShared(index))
+    }
+
+    /**
+     * „Ramka do wszystkich”: włączone – wygląd ramki bieżącego zdjęcia staje się wyglądem wszystkich (podpisy zostają
+     * osobne); wyłączone – każde zdjęcie dostaje własną ramkę, zaczynając od wspólnego wyglądu.
+     */
+    fun setFrameForAll(on: Boolean) {
+        if (on == seriesFrame.forAll) return
+        if (on) {
+            seriesFrame.style = seriesFrame.styleOf(frame)
+            seriesFrame.forAll = true
+            edits.mapFrames { FrameOptions(signature = it.signature) }
+        } else {
+            val style = seriesFrame.style
+            seriesFrame.forAll = false
+            edits.mapFrames { style.copy(signature = it.signature) }
+        }
     }
 
     /** Bieżące ustawienia stają się wspólne dla całej serii (osobne edycje innych zdjęć są kasowane). */
@@ -300,7 +333,7 @@ class MainState(
             exportProgress = it + 1
         }) { uri ->
             val edit = edits.editFor(current)
-            val photoFrame = edit.frame.copy(watermark = watermark)
+            val photoFrame = seriesFrame.working(edit.frame, watermark)
             val face = fonts(photoFrame.font)
             val bmp = withContext(Dispatchers.IO) {
                 PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
