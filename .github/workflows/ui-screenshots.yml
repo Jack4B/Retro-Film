@@ -1,0 +1,46 @@
+name: UI screenshots
+
+# Ręczne zrzuty prawdziwych ekranów aplikacji (Robolectric) do przeglądu UI/UX. Zdjęcie testowe pobierane tylko na czas
+# przebiegu. PNG trafiają na gałąź ui-screenshots (katalog ui/).
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci/ui-zrzuty]
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+      - name: Download test photo
+        run: |
+          mkdir -p "$RUNNER_TEMP/stock"
+          curl -fsSL -o "$RUNNER_TEMP/stock/street_bus.jpg" \
+            https://raw.githubusercontent.com/ultralytics/yolov5/master/data/images/bus.jpg
+      - name: Render screens
+        continue-on-error: true
+        env:
+          STOCK_PHOTOS: ${{ runner.temp }}/stock
+          UI_OUT: ${{ runner.temp }}/ui
+        run: ./gradlew :app:testDebugUnitTest --tests '*UiScreenshotTest' -i
+      - name: Publish screenshots
+        if: always()
+        run: |
+          git config user.name "Jack4B"
+          git config user.email "25393299+Jack4B@users.noreply.github.com"
+          git checkout --orphan ui-screenshots
+          git rm -rf -q . || true
+          mkdir ui
+          cp -r "$RUNNER_TEMP/ui/." ui/ || true
+          git add -A
+          git commit -m "[Jack4B] Zrzuty ekranów do przeglądu UI/UX"
+          git push -f origin ui-screenshots

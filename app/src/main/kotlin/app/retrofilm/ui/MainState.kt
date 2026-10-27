@@ -184,6 +184,11 @@ class MainState(
         markSaved()
     }
 
+    @androidx.annotation.VisibleForTesting
+    internal fun setSeriesForTest(series: List<Uri>) {
+        uris = series
+    }
+
     private fun snapshot() = PhotoEdit(film, intensity, adjustments, geometry)
 
     private fun restore(e: PhotoEdit) {
