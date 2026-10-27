@@ -72,7 +72,6 @@ import kotlin.math.roundToInt
 private val MinTouch = 48.dp
 private const val CAPTION_ALPHA = 0.55f
 private val CaptionCorner = 16.dp
-private val StripEndGap = 56.dp
 private val SIDE_BY_SIDE_MIN_WIDTH = 560.dp
 private const val SIDE_PANEL_FRACTION = 0.42f
 private val SIDE_PANEL_MIN = 320.dp
@@ -133,7 +132,7 @@ fun EditorScreen(
                         )
                     }
                 },
-                title = {},
+                title = { PhotoPicker(state, onSelectPhoto) },
                 actions = { EditorActions(state, showBefore, { showBefore = !showBefore }, onSave) }
             )
         },
@@ -147,7 +146,7 @@ fun EditorScreen(
             if (sideBySide) {
                 // poziomo: podgląd na całą wysokość po lewej, panel zakładek po prawej
                 Row(Modifier.fillMaxSize()) {
-                    PreviewPane(state, showBefore, preview, onSelectPhoto, Modifier.weight(1f).fillMaxHeight())
+                    PreviewPane(state, showBefore, preview, Modifier.weight(1f).fillMaxHeight())
                     SidePanel(state, tab, { tab = it }, Modifier.width(panelWidth).fillMaxHeight())
                 }
             } else {
@@ -156,7 +155,7 @@ fun EditorScreen(
                 val bottom = with(LocalDensity.current) { sheetPx.toDp() }
                 Box(Modifier.fillMaxSize()) {
                     val previewModifier = Modifier.fillMaxSize().padding(bottom = bottom)
-                    PreviewPane(state, showBefore, preview, onSelectPhoto, previewModifier)
+                    PreviewPane(state, showBefore, preview, previewModifier)
                     EditorSheet(
                         state,
                         tab,
@@ -242,13 +241,7 @@ private fun RowScope.EditorActions(
 }
 
 @Composable
-private fun PreviewPane(
-    state: MainState,
-    showBefore: Boolean,
-    mode: PreviewMode,
-    onSelectPhoto: (Int) -> Unit,
-    modifier: Modifier
-) {
+private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode, modifier: Modifier) {
     val cropMode = mode.crop
     val zoom = remember { ZoomState() }
     var showInfo by rememberSaveable { mutableStateOf(false) }
@@ -297,7 +290,7 @@ private fun PreviewPane(
         if (shown != null && cropMode) ThirdsGrid(shown.width, shown.height)
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
         if (shown == null || state.busy) CircularProgressIndicator()
-        PreviewBadges(state, showBefore, onSelectPhoto)
+        PreviewBadges(state, showBefore)
         if (mode.filmActions && shown != null) {
             FilmActions(state, mode.onOpenLibrary, Modifier.align(Alignment.TopEnd).padding(top = MinTouch))
         }
@@ -307,16 +300,9 @@ private fun PreviewPane(
 /** Tryb podglądu zależny od zakładki: kadrowanie gestem i przyciski filmu (biblioteka, preset) na zdjęciu. */
 private class PreviewMode(val crop: Boolean, val filmActions: Boolean, val onOpenLibrary: () -> Unit)
 
-/** Nakładki na zdjęciu: pasek zdjęć serii, znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
+/** Nakładki na zdjęciu: znaczek „Przed” i ostrzeżenie o zbyt długim podpisie. */
 @Composable
-private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean, onSelectPhoto: (Int) -> Unit) {
-    if (state.uris.size > 1) {
-        PhotoStrip(
-            state,
-            onSelectPhoto,
-            Modifier.align(Alignment.TopStart).padding(start = EdgePad, top = EdgePad, end = StripEndGap)
-        )
-    }
+private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean) {
     if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.BottomStart))
     if (state.signatureStatus() == SignatureFitStatus.TooLong) {
         Badge(

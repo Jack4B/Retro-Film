@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.4: wybór zdjęcia z menu)
+- Faza: poprawka po zgłoszeniu (przy serii zdjęć pasek z numerami wchodził na fotografię), wydanie 1.1.4
+- Zrobione: nakładka `PhotoStrip` usunięta; w górnym pasku edytora jest przycisk „2/3 ▾” (`PhotoPicker`), który rozwija menu: lista zdjęć (bieżące z haczykiem, „✎” przy edytowanych osobno), a pod nią zakres edycji (Edytuj tylko to zdjęcie / Wróć do wspólnych ustawień / Zastosuj do wszystkich… z potwierdzeniem). Podczas zapisu przycisk zastępuje tekst „Zapisywanie N z M”. Fotografia nie jest już niczym zasłonięta.
+- PR / gałąź: `f35/wybor-zdjecia`; wersja 1.1.4 z taga `v1.1.4`.
+- Otwarte / P2 odłożone: bez zmian względem 1.1.3; przy bardzo długiej serii menu przewija się razem z pozycjami zakresu edycji.
+- Następny krok: ocena 1.1.4 na telefonie (układ w pionie i w poziomie).
+
 ## 2026-10-26 – Claude (wydanie 1.1.3: nazwa filmu pod „i”)
 - Faza: poprawka po zgłoszeniu (nazwa filmu zasłaniała podpis w ramce), wydanie 1.1.3
 - Zrobione: plakietka z nazwą filmu i intensywnością („Kodak Ektachrome 100 VS Generic · 100%”) nie wisi już na dole podglądu; pokazuje się po dotknięciu ikony „i” pod rozmiarem zdjęcia (górny środek), tak jak rozdzielczość. Opis dostępności ikony: „Pokaż/Ukryj rozmiar zdjęcia i nazwę filmu”.

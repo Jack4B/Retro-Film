@@ -20,8 +20,10 @@
     <string name="photos_saving">Zapisywanie %1$d z %2$d</string>
     <string name="photos_pick_cd">Zdjęcie %1$d z %2$d</string>
     <string name="photos_pick_own_cd">Zdjęcie %1$d z %2$d, edytowane osobno</string>
-    <string name="scope_chip_shared">Wspólna edycja ▾</string>
-    <string name="scope_chip_own">✎ Osobno ▾</string>
+    <string name="photos_button">%1$d/%2$d ▾</string>
+    <string name="photos_button_own">✎ %1$d/%2$d ▾</string>
+    <string name="photos_menu_item">Zdjęcie %1$d</string>
+    <string name="photos_menu_item_own">Zdjęcie %1$d ✎</string>
     <string name="scope_menu_own">Edytuj tylko to zdjęcie</string>
     <string name="scope_menu_shared">Wróć do wspólnych ustawień</string>
     <string name="scope_apply_all">Zastosuj do wszystkich…</string>
