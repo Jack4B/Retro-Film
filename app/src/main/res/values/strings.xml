@@ -15,7 +15,8 @@
     <!-- Edytor -->
     <string name="editor_back">Wróć do wyboru zdjęcia</string>
     <string name="editor_save">Zapisz</string>
-    <string name="editor_save_all">Zapisz wszystkie (%1$d)</string>
+    <string name="editor_save_all">Zapisz (%1$d)</string>
+    <string name="editor_save_all_cd">Zapisz wszystkie zdjęcia (%1$d)</string>
     <string name="photos_position">Zdjęcie %1$d z %2$d</string>
     <string name="photos_saving">Zapisywanie %1$d z %2$d</string>
     <string name="photos_pick_cd">Zdjęcie %1$d z %2$d</string>

@@ -55,7 +55,7 @@ fun PhotoPicker(state: MainState, onSelect: (Int) -> Unit, modifier: Modifier = 
             selected = own,
             enabled = !state.busy,
             onClick = { open = true },
-            label = { Text(label) },
+            label = { Text(label, maxLines = 1, softWrap = false) },
             modifier = Modifier.semantics {
                 contentDescription = position
                 stateDescription = scopeCd

@@ -226,17 +226,21 @@ private fun RowScope.EditorActions(
         label = { Text(stringResource(R.string.editor_before_toggle)) },
         modifier = Modifier.padding(end = EdgePad)
     )
+    val many = state.uris.size > 1
+    val saveCd = if (many) stringResource(R.string.editor_save_all_cd, state.uris.size) else null
     Button(
         onClick = onSave,
         enabled = !state.busy && state.signatureStatus() != SignatureFitStatus.TooLong,
-        modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch)
+        modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch).semantics {
+            saveCd?.let { contentDescription = it }
+        }
     ) {
-        val label = if (state.uris.size > 1) {
+        val label = if (many) {
             stringResource(R.string.editor_save_all, state.uris.size)
         } else {
             stringResource(R.string.editor_save)
         }
-        Text(label, fontWeight = FontWeight.SemiBold)
+        Text(label, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 
