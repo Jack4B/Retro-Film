@@ -16,7 +16,6 @@ import app.retrofilm.core.ui.RetroFilmTheme
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.PhotoLoader
 import java.io.File
-import kotlinx.coroutines.runBlocking
 import org.junit.Assume.assumeNotNull
 import org.junit.Rule
 import org.junit.Test
@@ -56,11 +55,11 @@ class UiScreenshotTest {
     private fun state(count: Int): MainState {
         trace("state start")
         val s = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT)
-        s.renderOnCallerThreadForTest()
-        s.setPhotoForTest(photo())
+        val photo = photo()
+        s.setPhotoForTest(photo)
+        s.setPreviewForTest(photo)
         trace("photo set")
         if (count > 1) s.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })
-        runBlocking { s.refreshPreview() }
         trace("preview ready")
         return s
     }

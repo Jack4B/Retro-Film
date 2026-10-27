@@ -30,7 +30,6 @@ import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
 import java.io.IOException
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -185,13 +184,12 @@ class MainState(
         markSaved()
     }
 
-    private var previewDispatcher: CoroutineDispatcher = Dispatchers.Default
-
-    /** Podgląd i miniatury na wątku wywołującego (natywna grafika Robolectric na innych wątkach kończy proces). */
+    /** Podgląd bez potoku filmu (testy zrzutów ekranów: grafika natywna Robolectric nie znosi potoku). */
     @androidx.annotation.VisibleForTesting
-    internal fun renderOnCallerThreadForTest() {
-        previewDispatcher = Dispatchers.Unconfined
-        thumbnails.dispatcher = Dispatchers.Unconfined
+    internal fun setPreviewForTest(bitmap: Bitmap) {
+        preview = bitmap
+        before = bitmap
+        thumbnails.renderOverride = { _, photo -> photo }
     }
 
     @androidx.annotation.VisibleForTesting
@@ -321,7 +319,7 @@ class MainState(
     suspend fun refreshPreview() {
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
-        val (orig, shown) = withContext(previewDispatcher) {
+        val (orig, shown) = withContext(Dispatchers.Default) {
             val small = GeometryApplier.apply(previewBase(p), geometry)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
