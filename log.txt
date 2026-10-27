@@ -1,0 +1,200 @@
+Resolve mutations for :app:bundleDebugClassesToCompileJar (Thread[#58,Execution worker,5,main]) started.
+:app:bundleDebugClassesToCompileJar (Thread[#57,included builds,5,main]) started.
+Resolve mutations for :app:processDebugJavaRes (Thread[#58,Execution worker,5,main]) started.
+:app:processDebugJavaRes (Thread[#58,Execution worker,5,main]) started.
+
+> Task :app:processDebugJavaRes
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/main/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/debug/resources', not found
+Caching disabled for task ':app:processDebugJavaRes' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:processDebugJavaRes' is not up-to-date because:
+  No history is available.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/main/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/debug/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/main/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/debug/resources', not found
+work action resolve out (project ':app') (Thread[#59,Execution worker Thread 2,5,main]) started.
+
+> Task :app:bundleDebugClassesToCompileJar
+Caching disabled for task ':app:bundleDebugClassesToCompileJar' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:bundleDebugClassesToCompileJar' is not up-to-date because:
+  No history is available.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes', not found
+work action resolve classes.jar (project ':app') (Thread[#58,Execution worker,5,main]) started.
+Resolve mutations for :app:compileDebugUnitTestKotlin (Thread[#58,Execution worker,5,main]) started.
+:app:compileDebugUnitTestKotlin (Thread[#58,Execution worker,5,main]) started.
+
+> Task :app:bundleDebugClassesToRuntimeJar
+Caching disabled for task ':app:bundleDebugClassesToRuntimeJar' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:bundleDebugClassesToRuntimeJar' is not up-to-date because:
+  No history is available.
+work action resolve classes.jar (project ':app') (Thread[#57,included builds,5,main]) started.
+
+> Task :app:compileDebugUnitTestKotlin
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+Caching disabled for ClasspathEntrySnapshotTransform: /home/runner/work/Retro-Film/Retro-Film/app/build/intermediates/compile_app_classes_jar/debug/bundleDebugClassesToCompileJar/classes.jar because:
+  Build cache is disabled
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+Custom actions are attached to task ':app:compileDebugUnitTestKotlin'.
+Caching disabled for task ':app:compileDebugUnitTestKotlin' because:
+  Build cache is disabled
+Task ':app:compileDebugUnitTestKotlin' is not up-to-date because:
+  No history is available.
+The input changes require a full rebuild for incremental task ':app:compileDebugUnitTestKotlin'.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/kotlin', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/java', not found
+Kotlin source files: /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/MainActivityRotationTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/lut/PackDownloadedFilesTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/AdjustmentsTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/WhiteBalanceTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SharpenerTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SceneAnalysisTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ChromaEdgeTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ColorGradeTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ResamplerTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/HslToningTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/StockPhotoQualityTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/StripPipelineTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/AdjustmentsSplitTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SemanticSharpenTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ToneMaskTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/GeometryTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/DebandTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/GamutMapperTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/RestorationTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SharpenPlannerTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/LumaDenoiseTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SharpenMaskPreviewTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/AutoResultForFilmTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/PipelineTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/AutoEnhanceTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/WhitesBlacksTextureTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/LocalMaskTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/HighlightRecoveryTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/DetailFilterTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ToneCurveTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/ExifOrientationTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/WatermarkTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/PerspectiveTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/SliderRegressionTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/pipeline/BicubicWarpTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/settings/AppSettingsRepositoryTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/EditorSheetTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/BatchExportTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/PresetsTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/FilmGroupsTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/library/LibraryModelTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/CropGestureTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/EditBookTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/ZoomStateTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/AutoToggleTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/EditorTabsTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/ZoomMathTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/UiScreenshotTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/engine/EngineFilmEngineLruTest.kt, /home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/engine/EngineFilmEngineDownloadedTest.kt
+Java source files: 
+Script source files: 
+Script file extensions: 
+Using Kotlin/JVM incremental compilation
+[KOTLIN] Kotlin compilation 'jdkHome' argument: /usr/lib/jvm/temurin-21-jdk-amd64
+i: Options for KOTLIN DAEMON: IncrementalCompilationOptions(super=CompilationOptions(compilerMode=INCREMENTAL_COMPILER, targetPlatform=JVM, reportCategories=[0], reportSeverity=2, requestedCompilationResults=[0], kotlinScriptExtensions=[], generateCompilerRefIndex=false), sourceChanges=org.jetbrains.kotlin.buildtools.api.SourcesChanges$Unknown@20a0a575, classpathChanges=NotAvailableDueToMissingClasspathSnapshot, workingDir=/home/runner/work/Retro-Film/Retro-Film/app/build/kotlin/compileDebugUnitTestKotlin/cacheable, multiModuleICSettings=null, icFeatures=IncrementalCompilationFeatures(usePreciseJavaTracking=true, withAbiSnapshot=false, preciseCompilationResultsBackup=true, keepIncrementalCompilationCachesInMemory=true, enableUnsafeIncrementalCompilationForMultiplatform=false, enableMonotonousIncrementalCompileSetExpansion=true), outputFiles=[/home/runner/work/Retro-Film/Retro-Film/app/build/intermediates/built_in_kotlinc/debugUnitTest/compileDebugUnitTestKotlin/classes, /home/runner/work/Retro-Film/Retro-Film/app/build/kotlin/compileDebugUnitTestKotlin/cacheable, /home/runner/work/Retro-Film/Retro-Film/app/build/kotlin/compileDebugUnitTestKotlin/local-state])
+w: file:///home/runner/work/Retro-Film/Retro-Film/app/src/test/kotlin/app/retrofilm/ui/UiScreenshotTest.kt:36:29 'fun createComposeRule(effectContext: CoroutineContext = ...): ComposeContentTestRule' is deprecated. Use `androidx.compose.ui.test.junit4.v2.createComposeRule` instead. The v2 APIs use StandardTestDispatcher instead of UnconfinedTestDispatcher, which aligns with standard coroutine behavior by queuing tasks rather than executing them immediately. Tests relying on immediate execution may require explicit synchronization. Please refer to the migration guide for more details.
+i: Finished executing kotlin compiler using DAEMON strategy
+Resolve mutations for :app:compileDebugUnitTestJavaWithJavac (Thread[#58,Execution worker,5,main]) started.
+:app:compileDebugUnitTestJavaWithJavac (Thread[#57,included builds,5,main]) started.
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+Skipping task ':app:compileDebugUnitTestJavaWithJavac' as it has no source files and no previous output files.
+Resolve mutations for :app:processDebugUnitTestJavaRes (Thread[#57,included builds,5,main]) started.
+:app:processDebugUnitTestJavaRes (Thread[#58,Execution worker,5,main]) started.
+
+> Task :app:processDebugUnitTestJavaRes
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/resources', not found
+Caching disabled for task ':app:processDebugUnitTestJavaRes' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:processDebugUnitTestJavaRes' is not up-to-date because:
+  No history is available.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/test/resources', not found
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/resources', not found
+Resolve mutations for :app:testDebugUnitTest (Thread[#58,Execution worker,5,main]) started.
+:app:testDebugUnitTest (Thread[#58,Execution worker,5,main]) started.
+Gradle Test Executor 1 started executing tests.
+
+> Task :app:testDebugUnitTest
+Caching disabled for AarToClassTransform: /home/runner/.gradle/caches/modules-2/files-2.1/androidx.test.ext/junit/1.1.5/7428e93063c869a537fadbdfcb15f37131c57965/junit-1.1.5.aar because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarToClassTransform: /home/runner/.gradle/caches/modules-2/files-2.1/androidx.test.espresso/espresso-core/3.5.0/ad190e8b95ac21ceab785c880d5c781d9731c703/espresso-core-3.5.0.aar because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarToClassTransform: /home/runner/.gradle/caches/modules-2/files-2.1/androidx.test/runner/1.5.0/64daa2867437cbe2d35a1f2b55eef58c30ce136f/runner-1.5.0.aar because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarToClassTransform: /home/runner/.gradle/caches/modules-2/files-2.1/androidx.test/core/1.5.0/df16179f32254a154a3cff24866d80c0bc3bef61/core-1.5.0.aar because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarToClassTransform: /home/runner/.gradle/caches/modules-2/files-2.1/androidx.test.services/storage/1.4.2/92d79ff741f8fa99524f9752b57bfe308a53630f/storage-1.4.2.aar because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/34740b7ea5fed5fbbdc69679b092d090/transformed/junit-1.1.5 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/34818efc571b913596e3461b89775021/transformed/runner-1.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/0f4268d745375abcb16309725f1c8963/transformed/espresso-core-3.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1e5d6a40f313dce45263bbbc0c012932/transformed/core-1.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1e618cf8c6f5145438354f7f215c66cd/transformed/storage-1.4.2 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for task ':app:testDebugUnitTest' because:
+  Build cache is disabled
+Task ':app:testDebugUnitTest' is not up-to-date because:
+  No history is available.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/build/intermediates/javac/debugUnitTest/compileDebugUnitTestJavaWithJavac/classes', not found
+Starting process 'Gradle Test Executor 1'. Working directory: /home/runner/work/Retro-Film/Retro-Film/app Command: /usr/lib/jvm/temurin-21-jdk-amd64/bin/java -Djava.awt.headless=true -Djava.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib:/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/jniLibs:/home/runner/work/Retro-Film/Retro-Film/app/src/test/jniLibs -Dorg.gradle.internal.worker.tmpdir=/home/runner/work/Retro-Film/Retro-Film/app/build/tmp/testDebugUnitTest/work --add-opens=java.base/java.io=ALL-UNNAMED @/home/runner/.gradle/.tmp/gradle-worker-classpath17741317231160539332txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 1'
+Successfully started process 'Gradle Test Executor 1'
+
+Gradle Test Executor 1 finished executing tests.
+
+> Task :app:testDebugUnitTest
+Generating HTML test report...
+Finished generating test html results (0.06 secs) into: /home/runner/work/Retro-Film/Retro-Film/app/build/reports/tests/testDebugUnitTest
+Finished generating test XML results (0.003 secs) into: /home/runner/work/Retro-Film/Retro-Film/app/build/test-results/testDebugUnitTest
+AAPT2 aapt2-9.4.1-15978811-linux Daemon #0: shutdown
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_2-1793097791054.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/Retro-Film/Retro-Film/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 11s
+207 actionable tasks: 207 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.2/userguide/configuration_cache_enabling.html
