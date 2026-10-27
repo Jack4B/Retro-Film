@@ -20,21 +20,21 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Odszumianie kolorów | ChromaDenoise.kt | ✅ | Cb/Cr z jasnością jako przewodnikiem |
 | Odszumianie jasności | LumaDenoise.kt | ✅ | filtr prowadzony sterowany szumem; do rozważenia NLM/wavelet dla silnego szumu |
 | Winieta | ColorGrade.kt (VignetteLut) | ✅ | cos⁴; ewentualnie środek/zaokrąglenie |
-| Ziarno | FilmGrain.kt | ✅ | model kryształów srebra, mnożnik w świetle liniowym, tekstura Gaussa |
+| Ziarno | FilmGrain.kt | ✅ | model kryształów srebra, mnożnik w świetle liniowym, tekstura Gaussa; kanały skorelowane (szum barwny 16%), szare zdjęcia i odcień filmu dają ziarno prawie szare (1.1.12) |
 | Blaknięcie | Adjustments.kt | ✅ | podniesiona czerń, przytłumiona biel, odbarwienie |
 | Dithering 8 bit | Dither.kt | ✅ | TPDF ±0,5 |
 | Geometria: obrót, kadr, perspektywa | Geometry.kt, Perspective.kt, CropFit.kt, BicubicWarp.kt | ✅ | perspektywa pion/poziom z auto-kadrem, kadr gestem (przeciągnięcie, szczypnięcie), siatka trójpodziału |
 | Zmiana rozmiaru | Resampler.kt | ✅ | Lanczos 3 w eksporcie i podglądzie |
 | Ramka i podpis | core/frame, FrameRenderer.kt | ✅ | podpis zachowuje rozmiar z suwaka, zawijanie |
 | Znak wodny QR | Watermark.kt | ✅ | ikona + nazwa + QR |
-| Edycja serii zdjęć | EditBook.kt | ✅ | wspólne ustawienia albo osobne dla zdjęcia (film, moc, korekty, maski, kadr); ramka i podpis wspólne |
+| Edycja serii zdjęć | EditBook.kt, SeriesFrame.kt | ✅ | zmiana na zdjęciu zostaje przy nim (film, moc, korekty, maski, kadr, ramka i podpis); przełącznik „Ramka do wszystkich zdjęć” daje wspólny wygląd ramki z osobnym podpisem; znak wodny wspólny |
 | Presety użytkownika | Presets.kt | ✅ | bez kadru/ramki (świadomie) |
 | Eksport | ExportPipeline.kt | ✅ | jakość JPEG, maks. rozmiar, wyostrzanie wyjściowe; GPS usuwany |
 | Krzywe tonalne | ToneCurve.kt | ✅ | RGB + R/G/B, PCHIP, edytor z punktami |
 | Maski lokalne | LocalMask.kt | ✅ | liniowa i radialna, własne korekty z maską tonalną cieni/świateł; brak malowania pędzlem i masek luminancji |
 | Auto-ulepszenie | AutoEnhance.kt, SceneAnalysis.kt | ✅ | scena: twarze (FaceDetector), skóra, niebo, rośliny, dominanta; profil obiektywu i sieci neuronowe poza zakresem |
 
-Szczegółowa ocena jakości modułów, diagnoza świateł i plan ulepszeń: [PRZEGLAD-ALGORYTMOW.md](PRZEGLAD-ALGORYTMOW.md).
+Szczegółowa ocena jakości modułów i plan ulepszeń (ze stanem wdrożenia na 1.1.12): [PRZEGLAD-ALGORYTMOW.md](PRZEGLAD-ALGORYTMOW.md).
 
 ## Dalsze pomysły (nic z tabeli nie jest już ❌)
 

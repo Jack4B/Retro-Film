@@ -1,6 +1,34 @@
 # Przegląd algorytmów: ocena jakości i plan ulepszeń
 
-Stan: wersja 1.0.3 (potok pasmowy). Autor: Claude, na prośbę Jack4B po uwadze, że światła „nadal wyglądają słabo”.
+Pierwotny przegląd: wersja 1.0.3 (potok pasmowy), autor: Claude, na prośbę Jack4B po uwadze, że światła „nadal wyglądają
+słabo”. **Zaktualizowany 2026-10-27 do wersji 1.1.12** (zob. §0): analizy i oceny z 1.0.3 zostały, ale każda ma
+teraz oznaczony stan wdrożenia.
+
+## 0. Stan na 1.1.12: co jest aktualne, a co historyczne
+
+Od 1.0.3 wydano fazę A (1.0.4: wierność filmów), fazę B (1.0.5: korekty bez niszczenia pikseli), fazę C (1.1.0: zakładki,
+kolejność korekty → film → wykończenie) i poprawki 1.1.1–1.1.12. Jak czytać dokument:
+
+- **§1 (diagnoza świateł)** jest historyczna: opisuje stan 1.0.3, a problem rozwiązała zmiana B1 w 1.0.5.
+- **§2 (oceny modułów)**: oceny 1–5 pochodzą z 1.0.3; nowa kolumna „Stan 1.1.12” mówi, co się od tego czasu zmieniło.
+- **§3 (plan)** ma kolumnę „Stan” (✅ wdrożone, 🟡 częściowo, ❌ nie wdrożone) przy każdej pozycji.
+- **§3a (stan wiedzy)** ma przy każdym podrozdziale linię „Stan”; podrozdział H (ziarno) jest nowy.
+- **§4 (źródła)** bez zmian; **§5 (ograniczenia)** uzupełniony.
+
+**Wdrożone od 1.0.3:** światła/cienie v5, Biele/Czernie/Tekstura, odtworzenie krawędzi chromy 4:2:0, wyostrzanie świadome
+treści (włosy, oczy, skóra), odbandowanie przed filmem, „Przygotuj pod film”, mapowanie gamutowe Display P3 → sRGB,
+kolejność korekty → film → wykończenie, straż regresji suwaków na CI, ziarno ze skorelowanymi kanałami.
+
+**Nadal otwarte (kolejność wg wartości dla JPEG z telefonów):**
+
+1. Odszumianie jasności: nadal wygładzanie filtrem prowadzonym, najsłabszy moduł; B3 (DQT + NLM) odłożone, bo na JPEG
+   z telefonów zysk znikomy.
+2. Maski: tylko liniowa i radialna; brak pędzla oraz masek luminancji i koloru.
+3. Film w pełnej precyzji: LUT trójliniowy 8-bit (tetrahedralny jest w kodzie, ale nie domyślny), brak LUT 16-bit.
+4. Shoulder filmic/AgX (odbarwianie przepaleń do bieli), zmiana rozmiaru w świetle liniowym, szeroki gamut jako
+   przestrzeń robocza, dehaze z haze-lines, Auto WB Grey-Edge.
+5. Ziarno: model Boolean (Newson 2017) za drogi na telefonie; ziarno zależne od ostrości i parametry z metadanych
+   filmu to możliwe dalsze kroki.
 
 ## Jak oceniałem
 
@@ -12,7 +40,7 @@ Stan: wersja 1.0.3 (potok pasmowy). Autor: Claude, na prośbę Jack4B po uwadze,
 Oceny 1–5 to mój osąd jakości względem stanu wiedzy, nie wynik testów użytkowników. Prototyp jest przybliżeniem
 potoku w Kotlinie (bez wszystkich etapów), więc liczby z niego pokazują kierunek, nie wartości końcowe.
 
-## 1. Światła: diagnoza
+## 1. Światła: diagnoza (historyczna, wersja 1.0.3; rozwiązana w 1.0.5 przez B1)
 
 **To nie jest regres.** Metryki jasnego obszaru po „światłach −100%” są praktycznie identyczne przed i po potoku
 pasmowym (np. aloe: spadek jasności −56,6 → −57,0, lokalny kontrast ×1,06 w obu wersjach). Zmiany 1.0.3 dotyczyły
@@ -57,47 +85,47 @@ przy −100% pozwoli wybrać między: wzmocnieniem struktury, barwy, ochroną pr
 
 ## 2. Ocena modułów
 
-| Moduł | Metoda w aplikacji | Ocena | Najważniejsze uwagi |
-|---|---|---|---|
-| Ekspozycja, kolano | mnożnik w świetle liniowym, miękki shoulder | 4 | brak odbarwiania do bieli (filmic/AgX): przepalone kolory zostają nasycone |
-| Balans bieli | adaptacja Bradforda, temperatura w miredach | 4 | CAT16 jako alternatywa; Auto WB: shades-of-gray p = 2 (Grey-Edge, van de Weijer 2007, dałby stabilniejszy wynik) |
-| Cienie i światła | baza filtra prowadzonego + detal | 3 | zob. §1; szum drobnego detalu w głębokich cieniach rośnie ×1,4…×1,9 po rozjaśnieniu (raport CI, 7 z 9 zdjęć), brak sterowania szumem |
-| Kontrast | sigmoida na jasności Rec. 709, skalowanie kanałów | 4 | pivot 18% jako opcja filmowa jest; hue-preserving |
-| Nasycenie (vibrance) | OKLab, chroma przy stałym L i odcieniu | 4,5 | gamut przez bisekcję chromy; lepsza byłaby adaptacyjna L0 (Ottosson) dla bardzo nasyconych świateł |
-| HSL, tonowanie | OKLCH / OKLab | 4 | percepcyjnie poprawne |
-| Krzywe | PCHIP (monotoniczny) RGB + jasność | 4,5 | bez nadstrzałów |
-| Wyrazistość | baza filtra prowadzonego w 600 px, jedna skala | 3,5 | brak osobnej „Tekstury” (skala drobna) i skali średniej |
-| Wyostrzanie | USM z miękkim limitem + Richardson–Lucy, maska krawędzi | 4 | halo: 0,0–0,2% pikseli > 12 poziomów (1,2% na drobnym tekście); PSF gaussowski bez estymacji |
-| Dehaze | DCP (He 2009) + filtr prowadzony, duża łatka, ω 0,85 | 3,5 | PSNR na sztucznej mgle +1…+9 dB na wszystkich 9 zdjęciach; słabość: białe obiekty i niebo (DCP); alternatywa: haze-lines (Berman 2016) |
-| Odszumianie koloru | filtr prowadzony Cb/Cr z jasnością jako przewodnikiem | 3,5 | błąd chrominancji −50…−80%; działa dobrze, nie modeluje szumu zależnego od sygnału |
-| Odszumianie jasności | filtr prowadzony, eps = (σk)², σ Immerkaera | 2,5 | to wygładzanie, nie denoiser: efekt „plastiku”, σ globalne (zawyżone na teksturach), stałe w jasności; stan wiedzy: NLM/BM3D/falki + stabilizacja wariancji |
-| Ziarno | model kryształów srebra, amplituda √(p(1−p)), tekstura Gaussa | 4 | wygląd dobry; fizycznie dokładniejszy jest model Boolean (Newson 2017), ale kosztowny |
-| Winieta | cos⁴ | 4 | |
-| Dithering | TPDF ±0,5, jedna kwantyzacja na końcu korekt | 5 | |
-| Silnik filmów | LUT 3D, domyślnie trójliniowy, wynik 8-bit | 3,5 | tetrahedralna jest w kodzie, ale nieużywana domyślnie; wynik filmu kwantyzowany do 8 bitów bez ditheringu przed korektami |
-| Gamut | sRGB (zdjęcia P3 wracają przez kanwę) | 3 | telefony zapisują P3; przycinanie do sRGB zubaża nasycone kolory |
-| Zmiana rozmiaru | Lanczos 3, jądro rozciągane | 3,5 | skalowanie w kodowaniu gamma (ciemnieją drobne jasne detale); lepsze w świetle liniowym |
-| Maski lokalne | liniowa, radialna + maska tonalna cieni/świateł | 3 | brak pędzla i masek luminancji/koloru (najczęściej używane w programach pro) |
-| Auto-ulepszenie | percentyle + scena (skóra, niebo) | 3,5 | heurystyki; sensowne granice, brak uczenia |
-| Geometria, perspektywa | Catmull–Rom, homografia, auto-kadr | 4 | |
+| Moduł | Metoda w aplikacji | Ocena | Najważniejsze uwagi | Stan 1.1.12 |
+|---|---|---|---|---|
+| Ekspozycja, kolano | mnożnik w świetle liniowym, miękki shoulder | 4 | brak odbarwiania do bieli (filmic/AgX): przepalone kolory zostają nasycone | bez zmian (filmic/AgX niewdrożone) |
+| Balans bieli | adaptacja Bradforda, temperatura w miredach | 4 | CAT16 jako alternatywa; Auto WB: shades-of-gray p = 2 (Grey-Edge, van de Weijer 2007, dałby stabilniejszy wynik) | bez zmian; Auto-WB działa też w „Przygotuj pod film” (A3, na żądanie) |
+| Cienie i światła | baza filtra prowadzonego + detal | 3 | zob. §1; szum drobnego detalu w głębokich cieniach rośnie ×1,4…×1,9 po rozjaśnieniu (raport CI, 7 z 9 zdjęć), brak sterowania szumem | **poprawione (B1, 1.0.5)**: log 3-warstwowy, chroma i ochrona wypaleń w światłach, `SHADOW_DETAIL` 0,1 (szum w cieniach rośnie wolniej niż jasność), straż regresji suwaków (B6); ocena ≈ 4 |
+| Kontrast | sigmoida na jasności Rec. 709, skalowanie kanałów | 4 | pivot 18% jako opcja filmowa jest; hue-preserving | dodane Biele/Czernie (`EndsCurve`) i Tekstura (`TextureBoost`) w B2 (1.0.5) |
+| Nasycenie (vibrance) | OKLab, chroma przy stałym L i odcieniu | 4,5 | gamut przez bisekcję chromy; lepsza byłaby adaptacyjna L0 (Ottosson) dla bardzo nasyconych świateł | bez zmian |
+| HSL, tonowanie | OKLCH / OKLab | 4 | percepcyjnie poprawne | bez zmian |
+| Krzywe | PCHIP (monotoniczny) RGB + jasność | 4,5 | bez nadstrzałów | bez zmian |
+| Wyrazistość | baza filtra prowadzonego w 600 px, jedna skala | 3,5 | brak osobnej „Tekstury” (skala drobna) i skali średniej | częściowo: skala drobna jest teraz osobnym suwakiem Tekstura (B2); Wyrazistość nadal jedna skala |
+| Wyostrzanie | USM z miękkim limitem + Richardson–Lucy, maska krawędzi | 4 | halo: 0,0–0,2% pikseli > 12 poziomów (1,2% na drobnym tekście); PSF gaussowski bez estymacji | **rozbudowane (B5, 1.0.5)**: włosy (koherencja tensora struktury), oczy (`FaceFinder`), skóra słabiej, przełącznik; podgląd maski krawędzi |
+| Dehaze | DCP (He 2009) + filtr prowadzony, duża łatka, ω 0,85 | 3,5 | PSNR na sztucznej mgle +1…+9 dB na wszystkich 9 zdjęciach; słabość: białe obiekty i niebo (DCP); alternatywa: haze-lines (Berman 2016) | bez zmian (haze-lines niewdrożone) |
+| Odszumianie koloru | filtr prowadzony Cb/Cr z jasnością jako przewodnikiem | 3,5 | błąd chrominancji −50…−80%; działa dobrze, nie modeluje szumu zależnego od sygnału | dodane odtworzenie krawędzi chromy 4:2:0 (B4, 1.0.5) |
+| Odszumianie jasności | filtr prowadzony, eps = (σk)², σ Immerkaera | 2,5 | to wygładzanie, nie denoiser: efekt „plastiku”, σ globalne (zawyżone na teksturach), stałe w jasności; stan wiedzy: NLM/BM3D/falki + stabilizacja wariancji | bez zmian: B3 (DQT + NLM) odłożone, na JPEG z telefonów zysk znikomy; nadal najsłabszy moduł |
+| Ziarno | model kryształów srebra, amplituda √(p(1−p)), tekstura Gaussa | 4 | wygląd dobry; fizycznie dokładniejszy jest model Boolean (Newson 2017), ale kosztowny | **zmienione (1.1.11–1.1.12)**: kanały silnie skorelowane (szum barwny 16%), szare zdjęcia i odcień filmu dają ziarno prawie szare; zob. §3a H |
+| Winieta | cos⁴ | 4 | | bez zmian |
+| Dithering | TPDF ±0,5, jedna kwantyzacja na końcu korekt | 5 | | bez zmian; dochodzi odbandowanie przed filmem (A2) |
+| Silnik filmów | LUT 3D, domyślnie trójliniowy, wynik 8-bit | 3,5 | tetrahedralna jest w kodzie, ale nieużywana domyślnie; wynik filmu kwantyzowany do 8 bitów bez ditheringu przed korektami | częściowo: `Deband` przed filmem (A2, ≤ ±3 poziomy tylko na płaskich gradientach); LUT nadal 8-bit, trójliniowy domyślnie |
+| Gamut | sRGB (zdjęcia P3 wracają przez kanwę) | 3 | telefony zapisują P3; przycinanie do sRGB zubaża nasycone kolory | **wdrożone (A4, 1.0.4)**: Display P3 → sRGB z mapowaniem gamutowym w OKLab zamiast przycinania; przestrzeń robocza nadal sRGB |
+| Zmiana rozmiaru | Lanczos 3, jądro rozciągane | 3,5 | skalowanie w kodowaniu gamma (ciemnieją drobne jasne detale); lepsze w świetle liniowym | bez zmian (nadal w kodowaniu gamma) |
+| Maski lokalne | liniowa, radialna + maska tonalna cieni/świateł | 3 | brak pędzla i masek luminancji/koloru (najczęściej używane w programach pro) | bez zmian: liniowa i radialna (do 3), brak pędzla i masek luminancji/koloru |
+| Auto-ulepszenie | percentyle + scena (skóra, niebo) | 3,5 | heurystyki; sensowne granice, brak uczenia | dodane niezależne, odwracalne przełączniki Auto i Przygotuj (1.1.1) |
+| Geometria, perspektywa | Catmull–Rom, homografia, auto-kadr | 4 | | bez zmian |
 
 ## 3. Plan ulepszeń (priorytet, nakład, ryzyko)
 
-| # | Zmiana | Zysk | Nakład | Ryzyko |
-|---|---|---|---|---|
-| 1 | **Światła/cienie v5**: rozkład logarytmiczny 3-warstwowy, wzmocnienie detalu ~ suwak, chroma w światłach, ochrona prześwietleń, sterowanie szumem w cieniach | światła wyraźnie lepsze (kontrast, barwa) | 1 PR | niskie (testy metryk + zestawienia przed/po) |
-| 2 | Suwak **Tekstura** (skala drobna), **Biele/Czernie**, skala średnia osobno | pełny zestaw jak w programach pro | 1 PR | niskie |
-| 3 | Shoulder **filmic/AgX**: odbarwianie do bieli zachowujące odcień, obejmuje kolano ekspozycji | mniej „plastikowych” przepaleń | 1 PR | średnie (zmiana wyglądu) |
-| 4 | Film w potoku float: LUT tetrahedralny, LUT 16-bit/float, dither przed pierwszą kwantyzacją | mniej pasmowania w niebie (potwierdzone w literaturze SMPTE) | 2 PR | średnie (wydajność GPU) |
-| 5 | Przestrzeń robocza szeroki gamut (P3) | pełne kolory z telefonu | 2 PR | średnie |
-| 6 | Zmiana rozmiaru w świetle liniowym | poprawne drobne detale | 1 PR | niskie |
-| 7 | **Odszumianie jasności**: model szumu zależny od sygnału (Poisson–Gaussa: σ²(y) = a·y + b), lokalne σ, NLM-lite lub falki ze stabilizacją wariancji (GAT) | ostatni słaby moduł | 2–3 PR | średnie (czas) |
-| 8 | Maski: luminancja, zakres koloru, pędzel z krawędzią z filtru prowadzonego | najczęściej używane narzędzie pro | 2 PR | niskie |
-| 9 | Dehaze: A z regionu nieba, opcjonalnie haze-lines | dehaze na niebie i bieli | 1–2 PR | średnie |
-| 10 | Ziarno: parametry z metadanych filmu, opcjonalny model Boolean | autentyczność | 2 PR | niskie |
-| 11 | Auto WB Grey-Edge, Auto-tone z krzywą S ważoną twarzami | lepsze „Auto” | 1 PR | niskie |
+| # | Zmiana | Zysk | Nakład | Ryzyko | Stan 1.1.12 |
+|---|---|---|---|---|---|
+| 1 | **Światła/cienie v5**: rozkład logarytmiczny 3-warstwowy, wzmocnienie detalu ~ suwak, chroma w światłach, ochrona prześwietleń, sterowanie szumem w cieniach | światła wyraźnie lepsze (kontrast, barwa) | 1 PR | niskie (testy metryk + zestawienia przed/po) | ✅ 1.0.5 (B1) |
+| 2 | Suwak **Tekstura** (skala drobna), **Biele/Czernie**, skala średnia osobno | pełny zestaw jak w programach pro | 1 PR | niskie | ✅ 1.0.5 (B2: Tekstura, Biele, Czernie; warstwa średnia w `ToneMask`) |
+| 3 | Shoulder **filmic/AgX**: odbarwianie do bieli zachowujące odcień, obejmuje kolano ekspozycji | mniej „plastikowych” przepaleń | 1 PR | średnie (zmiana wyglądu) | ❌ niewdrożone (opcja estetyczna, niski priorytet) |
+| 4 | Film w potoku float: LUT tetrahedralny, LUT 16-bit/float, dither przed pierwszą kwantyzacją | mniej pasmowania w niebie (potwierdzone w literaturze SMPTE) | 2 PR | średnie (wydajność GPU) | 🟡 film po korektach i odbandowanie (A1, A2); LUT tetrahedralny/16-bit nadal nie domyślny |
+| 5 | Przestrzeń robocza szeroki gamut (P3) | pełne kolory z telefonu | 2 PR | średnie | 🟡 mapowanie gamutowe P3 → sRGB (A4); szeroki gamut jako przestrzeń robocza nie |
+| 6 | Zmiana rozmiaru w świetle liniowym | poprawne drobne detale | 1 PR | niskie | ❌ niewdrożone |
+| 7 | **Odszumianie jasności**: model szumu zależny od sygnału (Poisson–Gaussa: σ²(y) = a·y + b), lokalne σ, NLM-lite lub falki ze stabilizacją wariancji (GAT) | ostatni słaby moduł | 2–3 PR | średnie (czas) | ❌ odłożone (B3: niski zysk na JPEG z telefonów) |
+| 8 | Maski: luminancja, zakres koloru, pędzel z krawędzią z filtru prowadzonego | najczęściej używane narzędzie pro | 2 PR | niskie | ❌ niewdrożone |
+| 9 | Dehaze: A z regionu nieba, opcjonalnie haze-lines | dehaze na niebie i bieli | 1–2 PR | średnie | 🟡 ochrona nieba i kompensacja jasności są; haze-lines nie |
+| 10 | Ziarno: parametry z metadanych filmu, opcjonalny model Boolean | autentyczność | 2 PR | niskie | 🟡 ziarno poprawione w 1.1.11–1.1.12 (zob. §3a H); parametry z metadanych filmu i model Boolean nie |
+| 11 | Auto WB Grey-Edge, Auto-tone z krzywą S ważoną twarzami | lepsze „Auto” | 1 PR | niskie | 🟡 Auto ze sceną (skóra, niebo) jest; Grey-Edge nie wdrożony |
 
-Proponowana kolejność: 1 → 2 → 7 → 4 → 3 → reszta. Każda zmiana z raportem jakości na zdjęciach stockowych i testem
+Proponowana kolejność (z 1.0.3): 1 → 2 → 7 → 4 → 3 → reszta; wykonano 1 i 2, pozycja 7 odłożona. Każda zmiana z raportem jakości na zdjęciach stockowych i testem
 równoważności tam, gdzie zachowanie ma się nie zmienić.
 
 ## 3a. Stan wiedzy 2024–2026: co daje „maksimum z JPEG”
@@ -107,6 +135,8 @@ metody, które to realnie dają, z oceną dojrzałości i ryzyk. Wszystko oznacz
 przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
 
 ### A. Wyostrzanie świadome treści (włosy, oczy, skóra)
+
+**Stan 1.1.12:** wdrożone w 1.0.5 (B5): włosy przez koherencję tensora struktury, oczy z `FaceFinder` (Android `FaceDetector`, bez modeli uczonych; licencja modeli TFLite nadal nierozstrzygnięta), skóra wyostrzana słabiej, własna implementacja (kwestia patentowa niezweryfikowana).
 
 - Stałe wzmocnienie USM prześwietla skórę i wzmacnia szum; literatura i praktyka sprowadzają się do **mapy siły
   wyostrzania** G(x) z segmentacji: skóra łagodniej (lub wygładzanie), oczy, brwi, usta i włosy mocniej, krawędzie
@@ -125,6 +155,8 @@ przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
 
 ### B. Wiedza specyficzna dla JPEG (największa nieużywana dźwignia)
 
+**Stan 1.1.12:** odtworzenie krawędzi chromy 4:2:0 wdrożone (B4, 1.0.5). Model szumu z tablic DQT i odblokowywanie odłożone (B3): na zdjęciach z telefonów, zapisanych w wysokiej jakości, zysk znikomy, a szum mierzony z obrazu wystarcza.
+
 - **Model szumu kwantyzacji z tablic DQT.** Plik JPEG zawiera tablice kwantyzacji; błąd kwantyzacji współczynnika to
   ~Δ/√12, więc znamy amplitudę „szumu komarowego” i blokowego bez zgadywania (dziś: σ Immerkaera z całego obrazu,
   zawyżone na teksturach). Pozwala to sterować odszumianiem jasności i bramką wyostrzania per-obraz i per-jasność.
@@ -139,6 +171,8 @@ przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
 
 ### C. Tone mapping i światła
 
+**Stan 1.1.12:** dekompozycja logarytmiczna z filtrem prowadzonym wdrożona (B1, 1.0.5). Odbarwianie do bieli (filmic/AgX) niewdrożone.
+
 - Metody lokalne dla JPEG: dekompozycja logarytmiczna z filtrem zachowującym krawędzie (Durand–Dorsey 2002, guided
   filter He 2013) i local Laplacian (Paris 2011; wersja szybka Aubry 2014, ~350 ms/Mpx/rdzeń, więc na pełnej
   rozdzielczości za wolna, ale możliwa dla bazy w niskiej skali).
@@ -147,6 +181,8 @@ przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
   więc traktujemy to jako opcję estetyczną, nie obowiązek.
 
 ### D. Metody uczone
+
+**Stan 1.1.12:** bez zmian, obserwacja (nic z tej sekcji nie jest wdrożone ani planowane na teraz).
 
 - 3D LUT adaptacyjne (AdaInt, CVPR 2022; SepLUT, ECCV 2022): sieć przewiduje wagi LUT z miniatury; działa w czasie
   rzeczywistym na GPU/CPU. Zgodne z naszym silnikiem LUT, ale wymaga modelu i danych treningowych (zbiory typu
@@ -160,17 +196,23 @@ przed wdrożeniem (licencje modeli, opóźnienia na telefonie).
 
 ### E. Zmiana rozmiaru w świetle liniowym
 
+**Stan 1.1.12:** niewdrożone (Lanczos 3 w kodowaniu gamma).
+
 Zasada jest poprawna (uśrednianie fizyczne), ale filtry z ujemnymi płatami (Lanczos, Catmull-Rom) w świetle liniowym
 dają aureole przy kontrastowych krawędziach, więc pozycja 6 planu wymaga testu na zdjęciach z tekstem i krawędziami;
 bezpieczniejsze jest jądro bez ujemnych płatów (obszarowe/Mitchell) przy zmniejszaniu.
 
 ### F. Kolejność w potoku (kierunek D15)
 
+**Stan 1.1.12:** wdrożone: korekty → film → wykończenie (A1 w 1.0.4, D15; zakładki w 1.1.0). Film nadal przechodzi przez 8-bitową bitmapę po LUT-cie (trójliniowy), ale jest poprzedzony odbandowaniem (A2).
+
 Korekty (balans bieli, ekspozycja, przebarwienia, odszumianie, dehaze) → film (LUT) → wykończenie (ziarno, winieta,
 blaknięcie, tonowanie, ostrość wyjściowa). Obecnie film idzie pierwszy i jest kwantyzowany do 8 bitów; docelowo film
 w potoku float, między korektami a wykończeniem.
 
 ### G. Zaktualizowana kolejność wdrożeń (pod „maksimum z JPEG”)
+
+**Stan 1.1.12:** punkty 2–5 wdrożone (B4, B5, B1–B2, D15 w fazie C), punkt 1 odłożony (B3), punkt 6 częściowo (mapowanie gamutowe P3 → sRGB; reszta otwarta).
 
 1. Model szumu z DQT + odszumianie jasności z bramką wyostrzania (pozycja 7 planu, ale oparta o JPEG).
 2. Odtworzenie krawędzi chromy (kolor przy krawędziach).
@@ -217,3 +259,4 @@ bierzemy tylko idee):
 - Oceny 1–5 są moim osądem, nie badaniem użytkowników.
 - Prototyp świateł nie obejmuje całego potoku Kotlina (np. efektów po drodze); wartości końcowe mogą się różnić.
 - Nie oceniałem wyglądu na telefonie; przegląd opiera się na kodzie, metrykach CI i porównaniach z numpy.
+- Aktualizacja z 2026-10-27 dodaje tylko status wdrożenia (kolumny „Stan 1.1.12”, linie „Stan”, §0 i §3a H); oceny 1–5 w §2 nie były przeliczane od nowa, więc poprawione moduły mają ocenę z 1.0.3, a nową opisuje kolumna stanu.
