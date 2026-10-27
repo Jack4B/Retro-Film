@@ -26,8 +26,9 @@ class ExitGuardSeriesTest {
         it.setPhotoForTest(Bitmap.createBitmap(IntArray(16 * 16) { Color.GRAY }, 16, 16, Bitmap.Config.ARGB_8888))
     }
 
+    /** Wczytanie pliku z content:// nie działa w Robolectric (wyjątek), ale indeks i ustawienia są już przełączone. */
     private fun switchTo(s: MainState, i: Int) {
-        runBlocking { s.select(RuntimeEnvironment.getApplication(), i) }
+        runCatching { runBlocking { s.select(RuntimeEnvironment.getApplication(), i) } }
     }
 
     @Test fun nothingChangedMeansNoWarning() {
