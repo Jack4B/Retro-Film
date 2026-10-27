@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.5: poprawa wyglądu przycisku wyboru zdjęcia)
+- Faza: poprawka po zrzucie z telefonu (przycisk „1/3 ▾” był ściśnięty i łamał tekst pionowo), wydanie 1.1.5
+- Zrobione: przycisk zdjęć w jednej linii (`maxLines = 1`, bez zawijania); „Zapisz wszystkie (3)” skrócone do „Zapisz (3)” (pełny opis dla TalkBack: „Zapisz wszystkie zdjęcia (3)”), żeby w górnym pasku starczyło miejsca na strzałkę, wybór zdjęcia, „Przed” i „Zapisz”.
+- PR / gałąź: `f36/pasek-wyboru`; wersja 1.1.5 z taga `v1.1.5`.
+- Otwarte / P2 odłożone: brak zrzutu Roborazzi górnego paska przy serii zdjęć (sprawdzone tylko na zrzucie z telefonu).
+- Następny krok: ocena 1.1.5 na telefonie.
+
 ## 2026-10-27 – Claude (wydanie 1.1.4: wybór zdjęcia z menu)
 - Faza: poprawka po zgłoszeniu (przy serii zdjęć pasek z numerami wchodził na fotografię), wydanie 1.1.4
 - Zrobione: nakładka `PhotoStrip` usunięta; w górnym pasku edytora jest przycisk „2/3 ▾” (`PhotoPicker`), który rozwija menu: lista zdjęć (bieżące z haczykiem, „✎” przy edytowanych osobno), a pod nią zakres edycji (Edytuj tylko to zdjęcie / Wróć do wspólnych ustawień / Zastosuj do wszystkich… z potwierdzeniem). Podczas zapisu przycisk zastępuje tekst „Zapisywanie N z M”. Fotografia nie jest już niczym zasłonięta.
