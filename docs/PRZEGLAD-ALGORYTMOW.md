@@ -179,6 +179,23 @@ w potoku float, między korektami a wykończeniem.
 5. Reorganizacja przepływu korekty → film → wykończenie wraz z redesignem zakładek (D15).
 6. Reszta: tetrahedral LUT 16-bit, szeroki gamut, maski, dehaze, ziarno.
 
+### H. Ziarno filmowe (przegląd z 2026-10-27, po zgłoszeniu kolorowego ziarna na Polaroidzie)
+
+Zgłoszenie: na zdjęciu czarno-białym z odcieniem filmu (Polaroid) ziarno wychodziło kolorowe. Przyczyna: model dawał
+każdemu kanałowi RGB niezależny szum barwny (44% wariancji), a wykrywanie „czarno-białego” (1.1.11) miało wąski próg,
+którego odcień filmu nie spełniał. Przegląd metod (sprawdzone pod kątem naszej aplikacji; kodu copyleft nie kopiujemy,
+bierzemy tylko idee):
+
+| Metoda | Co daje | Decyzja |
+|--------|---------|---------|
+| Zależność od jasności (prawo Selwyna, p(1−p)) | ziarno „oddycha” z tonami | **już jest** (`FilmGrain.stops`) |
+| Clumping, widmo dolnoprzepustowe, dwie oktawy | organiczny wygląd, bez ostrych pikseli | **już jest** (tekstura Gaussa po torusie) |
+| Silna korelacja kanałów (Pierre 2023, stos warstw kryształów; Zhang 2023) | unika cyfrowego szumu barwnego | **wdrożone (1.1.12)**: szum barwny 16% wariancji zamiast 44%, reszta to wspólna jasność |
+| Udział barwy zależny od nasycenia piksela | zdjęcia czarno-białe i z odcieniem dostają ziarno prawie szare, odcień zostaje | **wdrożone (1.1.12)**: gładka skala, rozrzut kanałów 0,02 → 0,30 zamiast progu |
+| Newson, Delon, Galerne 2017 (model Boolean, Monte Carlo) | najwierniejszy, niezależny od rozdzielczości | **odłożone**: koszt na 12 Mpx przekracza budżet czasu na telefonie |
+| Ansel (GPL), Dehancer, Filmbox, TheGrain | warstwy, ziarno zależne od ostrości (TheGrain) | tylko idee; ziarno zależne od ostrości do rozważenia później |
+| Skany prawdziwego ziarna (overlaye) | autentyczność | **odrzucone**: licencje skanów, wzór „zamrożony”, rozmiar w APK |
+
 ## 4. Źródła
 
 - darktable, moduł *tone equalizer* (maska z filtra prowadzonego niezależnego od ekspozycji, typowo promień 1–10% dłuższego boku): https://docs.darktable.org/usermanual/5.6/en/module-reference/processing-modules/tone-equalizer/

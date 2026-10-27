@@ -16,7 +16,9 @@ import kotlin.math.sqrt
  * Struktura: biały szum Gaussa przefiltrowany Gaussem (ziarno ma widmo dolnoprzepustowe, nie ostre piksele),
  * bez siatki wartości jak w szumie wartościowym; dwie oktawy: drobne ziarno i rzadsze „kłaczki” srebra. Tekstura
  * jest zamknięta w torusie, więc próbkowanie jest bez szwów, a kanały barwne biorą ją z różnych przesunięć
- * (chmury barwnika kolorowego negatywu są niezależne między warstwami). Deterministyczne, więc podgląd = zapis.
+ * (chmury barwnika kolorowego negatywu są niezależne między warstwami), ale tylko w małej części ([CHROMA_SHARE]):
+ * ziarno kanałów jest silnie skorelowane (wspólna jasność), bo niezależny szum RGB wygląda jak cyfrowy, a nie
+ * filmowy, i barwi zdjęcia czarno-białe z odcieniem. Deterministyczne, więc podgląd = zapis.
  */
 @Suppress("TooManyFunctions") // prymitywy jednego modelu ziarna: szum, amplituda, mnożnik, udział barwy
 internal object FilmGrain {
@@ -33,8 +35,8 @@ internal object FilmGrain {
     private const val CHANNEL_SHIFT_X = 211
     private const val CHANNEL_SHIFT_Y = 97
     private const val CLUMP_SHIFT = 301
-    private const val LUMA_SHARE = 0.75f
-    private const val CHROMA_SHARE = 0.66f
+    private const val LUMA_SHARE = 0.9165f
+    private const val CHROMA_SHARE = 0.4f
     private const val STOPS_MAX = 0.5f
     private const val FLOOR = 0.25f
     private const val PEAK = 4f
@@ -42,8 +44,8 @@ internal object FilmGrain {
     private const val LN2 = 0.6931472f
     private const val HALF = 0.5f
     private const val P_MIN = 0.02f
-    private const val NEUTRAL_SPREAD = 0.006f
-    private const val COLOR_SPREAD = 0.04f
+    private const val NEUTRAL_SPREAD = 0.02f
+    private const val COLOR_SPREAD = 0.3f
     private const val SMOOTH_A = 3f
     private const val SMOOTH_B = 2f
 
@@ -76,8 +78,9 @@ internal object FilmGrain {
 
     /**
      * Udział barwy 0..1 dla piksela o rozrzucie kanałów [spread] (największy minus najmniejszy, kodowanie 0..1):
-     * piksele szare (rozrzut poniżej [NEUTRAL_SPREAD]) dostają ziarno szare, od [COLOR_SPREAD] pełne barwne,
-     * pomiędzy gładkie przejście.
+     * piksele szare (rozrzut poniżej [NEUTRAL_SPREAD]) dostają ziarno szare, od [COLOR_SPREAD] (barwy nasycone)
+     * pełne barwne, pomiędzy gładkie przejście. Szeroki zakres sprawia, że zdjęcie czarno-białe z odcieniem filmu
+     * (Polaroid, sepia) też dostaje ziarno prawie szare, a zachowuje swój odcień.
      */
     fun colorfulness(spread: Float): Float {
         val t = ((spread - NEUTRAL_SPREAD) / (COLOR_SPREAD - NEUTRAL_SPREAD)).coerceIn(0f, 1f)

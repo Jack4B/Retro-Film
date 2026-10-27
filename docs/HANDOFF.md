@@ -11,6 +11,16 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.12: ziarno barwne tylko na barwnych pikselach)
+- Faza: poprawka po zgłoszeniu ze zrzutem (1.1.11 nie pomogła na Polaroidzie z odcieniem: ziarno dalej kolorowe), przegląd algorytmów ziarna, wydanie 1.1.12
+- Przyczyna: wykrywanie „czarno-białego” w 1.1.11 miało wąski próg (rozrzut kanałów 0,006–0,04), a film z odcieniem (Polaroid) go przekraczał, więc dostawał pełny niezależny szum barwny na kanał (44% wariancji ziarna) – to ten kolorowy „szum cyfrowy”.
+- Zrobione: (1) szum barwny w modelu zmniejszony do 16% wariancji (`CHROMA_SHARE` 0,66 → 0,4, `LUMA_SHARE` 0,75 → 0,9165): ziarno kanałów silnie skorelowane, jak w modelach fizycznych; (2) udział barwy piksela liczony gładką skalą (rozrzut kanałów 0,02 → 0,30 zamiast progu 0,006/0,04): szarość i lekki odcień filmu → ziarno prawie szare, odcień zostaje, barwy nasycone → pełne barwne ziarno; liczony przed tonowaniem jak w 1.1.11. Przegląd metod w docs/PRZEGLAD-ALGORYTMOW.md (H).
+- Zmiana wyglądu ziarna na zdjęciach kolorowych jest celowa (mniej barwnego szumu, więcej jasnościowego, wariancja bez zmian); reszta algorytmów bez zmian.
+- Testy: `AdjustmentsTest` (szare zdjęcie → szare ziarno; szare z odcieniem filmu → szum barwny < 35% jasnościowego; stonowane; kolorowe zachowuje barwne ziarno; własności `mix`/`colorfulness`).
+- PR / gałąź: `f45/ziarno-ton`; wersja 1.1.12 z taga `v1.1.12`.
+- Otwarte / P2 odłożone: model Boolean (Newson 2017) za drogi na telefonie; ziarno zależne od ostrości (TheGrain) i parametry ziarna z metadanych filmu jako możliwy dalszy krok.
+- Następny krok: ocena 1.1.12 na telefonie (Polaroid z odcieniem, film czarno-biały, zdjęcie kolorowe).
+
 ## 2026-10-27 – Claude (wydanie 1.1.11: ziarno na zdjęciach czarno-białych)
 - Faza: poprawka błędu zgłoszonego ze zrzutem (film czarno-biały + Ziarno = kolorowe ziarno), szybki przegląd algorytmów pod kątem wycieku barwy, wydanie 1.1.11
 - Przyczyna: ziarno kanału = `0,75·luma + 0,66·chroma_k`, gdzie szum barwny `chroma_k` jest niezależny dla R, G i B (model kolorowego negatywu). Na szarym pikselu (film czarno-biały daje R=G=B) każdy kanał dostawał inny szum, więc ziarno wychodziło kolorowe. Nic nie wykrywało zdjęcia czarno-białego.
