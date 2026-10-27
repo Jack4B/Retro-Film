@@ -217,6 +217,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val curves: CurveLut? = if (adj.curves.isNeutral) null else CurveLut(adj.curves)
     private val hasEffects = adj.vignette > 0f || adj.grain > 0f
 
+    /** Udział barwy bieżącego piksela w ziarnie (zob. [grainColor]); ustawiany tuż przed [effects]. */
+    private var grainColorful = 1f
+
     /**
      * Przetwarza [count] pikseli ARGB w miejscu (alfa bez zmian). [width], [firstRow] i [totalRows]
      * opisują położenie porcji w obrazie (winieta i ziarno zależą od współrzędnych).
@@ -244,6 +247,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             contrast?.apply(rgb)
             curves?.apply(rgb)
             if (adj.fade > 0f) fade()
+            grainColorful = grainColor()
             toning?.apply(rgb, luma())
             if (hasEffects) effects(x, row, width, totalRows, cell)
             val d = Dither.at(x, row)
@@ -279,6 +283,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             contrast?.apply(rgb)
             curves?.apply(rgb)
             if (adj.fade > 0f) fade()
+            planes.grainChroma[i] = grainColor()
             toning?.apply(rgb, luma())
             store(planes, i)
             if (++x == span.width) {
@@ -298,6 +303,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[0] = planes.r[i] / BYTE_MAX
             rgb[1] = planes.g[i] / BYTE_MAX
             rgb[2] = planes.b[i] / BYTE_MAX
+            grainColorful = planes.grainChroma[i]
             effects(x, row, span.width, span.totalRows, cell)
             store(planes, i)
             if (++x == span.width) {
@@ -401,6 +407,17 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         for (k in 0..2) rgb[k] = y + (rgb[k] - y) * keep
     }
 
+    /**
+     * Udział barwy piksela dla ziarna (0 szary .. 1 barwny), liczony przed tonowaniem, żeby zdjęcie czarno-białe
+     * (film czarno-biały, odbarwione zdjęcie) nawet stonowane dostawało ziarno szare, nie kolorowe.
+     */
+    private fun grainColor(): Float {
+        if (adj.grain <= 0f) return 1f
+        val hi = maxOf(rgb[0], rgb[1], rgb[2])
+        val lo = minOf(rgb[0], rgb[1], rgb[2])
+        return FilmGrain.colorfulness(hi - lo)
+    }
+
     private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Float) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
@@ -412,7 +429,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
             val common = FilmGrain.luma(x, y, cell)
             for (k in 0..2) {
-                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(common, FilmGrain.chroma(x, y, cell, k)))
+                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(common, FilmGrain.chroma(x, y, cell, k), grainColorful))
             }
         }
     }

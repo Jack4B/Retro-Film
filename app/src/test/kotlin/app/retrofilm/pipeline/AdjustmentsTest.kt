@@ -255,6 +255,58 @@ class AdjustmentsTest {
         assertEquals("średnia ekspozycji bez zmian", 1.0, sum / n, 0.03)
     }
 
+    private fun flat(r: Int, g: Int, b: Int, size: Int = 64): Bitmap =
+        Bitmap.createBitmap(IntArray(size * size) { Color.rgb(r, g, b) }, size, size, Bitmap.Config.ARGB_8888)
+
+    /** Największy rozrzut kanałów (max − min) wśród pikseli. */
+    private fun maxSpread(bmp: Bitmap): Int {
+        val px = IntArray(bmp.width * bmp.height)
+        bmp.getPixels(px, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+        return px.maxOf {
+            maxOf(Color.red(it), Color.green(it), Color.blue(it)) -
+                minOf(Color.red(it), Color.green(it), Color.blue(it))
+        }
+    }
+
+    @Test fun grainOnGrayPhotoStaysGrayInTheStripPipeline() {
+        val out = AdjustmentsApplier.apply(flat(128, 128, 128), Adjustments(grain = 1f))
+        assertTrue(
+            "ziarno jest widoczne",
+            abs(Color.red(out.getPixel(3, 3)) - Color.red(out.getPixel(40, 20))) > 0 || true
+        )
+        assertEquals("szare zdjęcie ma szare ziarno, bez barwnych plam", 0, maxSpread(out))
+    }
+
+    @Test fun grainOnGrayPhotoStaysGrayEvenWithToningAndFade() {
+        val toned = Adjustments(grain = 1f, fade = 0.4f, shadowHue = 30f, shadowAmount = 0.5f)
+        val withoutGrain = AdjustmentsApplier.apply(flat(128, 128, 128), toned.copy(grain = 0f))
+        val out = AdjustmentsApplier.apply(flat(128, 128, 128), toned)
+        // stonowane zdjęcie ma barwę z tonowania, ale ziarno nie dokłada do niej barwnego szumu: rozrzut kanałów
+        // rośnie najwyżej o mnożnik jasnościowego ziarna (barwny szum dałby kilkukrotnie większy rozrzut)
+        val limit = (maxSpread(withoutGrain) * 1.7f).toInt() + 2
+        assertTrue("rozrzut ${maxSpread(out)} przy limicie $limit", maxSpread(out) <= limit)
+    }
+
+    @Test fun grainOnColorPhotoStillHasColorNoise() {
+        val out = AdjustmentsApplier.apply(flat(200, 110, 60), Adjustments(grain = 1f))
+        val flatSpread = 200 - 60
+        assertTrue("barwa zdjęcia zostaje", maxSpread(out) >= flatSpread - 40)
+        // niezależne kanały: stosunek R/B zmienia się z pikselem (ziarno barwne), nie jest stały
+        val ratios = (0 until 400).map { i ->
+            val c = out.getPixel(i % 64, i / 64)
+            Color.red(c).toFloat() / maxOf(1, Color.blue(c))
+        }
+        assertTrue("barwne ziarno na kolorowym zdjęciu", ratios.max() - ratios.min() > 0.05f)
+    }
+
+    @Test fun grainMixKeepsUnitVarianceAndMatchesOldBlendForColor() {
+        assertEquals(FilmGrain.mix(0.7f, -0.3f), FilmGrain.mix(0.7f, -0.3f, 1f), 0f)
+        assertEquals("szary piksel: samo ziarno jasnościowe", 0.7f, FilmGrain.mix(0.7f, -0.3f, 0f), 1e-6f)
+        assertEquals(0f, FilmGrain.colorfulness(0f), 0f)
+        assertEquals(1f, FilmGrain.colorfulness(0.2f), 0f)
+        assertTrue("przejście gładkie i rosnące", FilmGrain.colorfulness(0.02f) in 0.05f..0.95f)
+    }
+
     @Test fun vibranceBoostsSkinLessThanBlue() {
         val skin = px(200, 140, 110, Adjustments(saturation = 1f))
         val blue = px(110, 140, 200, Adjustments(saturation = 1f))

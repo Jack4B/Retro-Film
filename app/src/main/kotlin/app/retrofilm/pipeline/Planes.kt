@@ -4,6 +4,9 @@ package app.retrofilm.pipeline
 internal class Planes(val r: FloatArray, val g: FloatArray, val b: FloatArray) {
     val size: Int get() = r.size
 
+    /** Udział barwnego szumu ziarna na piksel (0 = szary, samo ziarno jasnościowe); liczony przed tonowaniem. */
+    val grainChroma = FloatArray(r.size)
+
     companion object {
         fun of(size: Int) = Planes(FloatArray(size), FloatArray(size), FloatArray(size))
     }

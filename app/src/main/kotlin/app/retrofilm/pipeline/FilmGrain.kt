@@ -18,6 +18,7 @@ import kotlin.math.sqrt
  * jest zamknięta w torusie, więc próbkowanie jest bez szwów, a kanały barwne biorą ją z różnych przesunięć
  * (chmury barwnika kolorowego negatywu są niezależne między warstwami). Deterministyczne, więc podgląd = zapis.
  */
+@Suppress("TooManyFunctions") // prymitywy jednego modelu ziarna: szum, amplituda, mnożnik, udział barwy
 internal object FilmGrain {
     private const val TILE = 512
     private const val TILE_MASK = TILE - 1
@@ -41,6 +42,10 @@ internal object FilmGrain {
     private const val LN2 = 0.6931472f
     private const val HALF = 0.5f
     private const val P_MIN = 0.02f
+    private const val NEUTRAL_SPREAD = 0.006f
+    private const val COLOR_SPREAD = 0.04f
+    private const val SMOOTH_A = 3f
+    private const val SMOOTH_B = 2f
 
     private val fine: FloatArray by lazy { buildTile(SALT_FINE) }
     private val clump: FloatArray by lazy { buildTile(SALT_CLUMP) }
@@ -57,6 +62,27 @@ internal object FilmGrain {
 
     /** Składa ziarno kanału ze wspólnej [luma] i szumu barwnego [chroma] (wspólna część liczona raz na piksel). */
     fun mix(luma: Float, chroma: Float): Float = LUMA_SHARE * luma + CHROMA_SHARE * chroma
+
+    /**
+     * Jak [mix], ale z udziałem barwy [colorful] 0..1: dla 1 identycznie jak [mix], a im piksel bardziej szary
+     * (zdjęcie czarno-białe), tym mniej szumu barwnego; wariancja zostaje jednostkowa (ubytek barwy przechodzi w
+     * ziarno jasnościowe), więc ziarno szarego piksela jest szare, a nie kolorowe.
+     */
+    fun mix(luma: Float, chroma: Float, colorful: Float): Float {
+        if (colorful >= 1f) return mix(luma, chroma)
+        val c = CHROMA_SHARE * colorful
+        return sqrt(1f - c * c) * luma + c * chroma
+    }
+
+    /**
+     * Udział barwy 0..1 dla piksela o rozrzucie kanałów [spread] (największy minus najmniejszy, kodowanie 0..1):
+     * piksele szare (rozrzut poniżej [NEUTRAL_SPREAD]) dostają ziarno szare, od [COLOR_SPREAD] pełne barwne,
+     * pomiędzy gładkie przejście.
+     */
+    fun colorfulness(spread: Float): Float {
+        val t = ((spread - NEUTRAL_SPREAD) / (COLOR_SPREAD - NEUTRAL_SPREAD)).coerceIn(0f, 1f)
+        return t * t * (SMOOTH_A - SMOOTH_B * t)
+    }
 
     /** Odchylenie ziarna w stopniach ekspozycji dla jasności [luma] 0..1 (kodowanej) i siły [amount] 0..1. */
     fun stops(luma: Float, amount: Float): Float {
