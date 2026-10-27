@@ -295,6 +295,7 @@ private fun StrengthSlider(state: MainState) {
 fun FramePanel(state: MainState) {
     val f = state.frame
     Column(Modifier.padding(vertical = Gap, horizontal = SidePad), verticalArrangement = Arrangement.spacedBy(Gap)) {
+        if (state.uris.size > 1) FrameForAll(state)
         LabeledSwitch(stringResource(R.string.frame_enabled), f.enabled) { state.frame = f.copy(enabled = it) }
         LabeledSwitch(stringResource(R.string.watermark_enabled), f.watermark) { state.frame = f.copy(watermark = it) }
         ExportSettings(state)
@@ -337,6 +338,18 @@ fun FramePanel(state: MainState) {
             SignatureStyleControls(state)
         }
     }
+}
+
+/** Przełącznik serii: jeden wygląd ramki dla wszystkich zdjęć (podpis zostaje osobny) albo ramka osobna dla każdego. */
+@Composable
+private fun FrameForAll(state: MainState) {
+    val on = state.seriesFrame.forAll
+    LabeledSwitch(stringResource(R.string.frame_for_all), on) { state.setFrameForAll(it) }
+    Text(
+        stringResource(if (on) R.string.frame_for_all_on_hint else R.string.frame_for_all_off_hint),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable

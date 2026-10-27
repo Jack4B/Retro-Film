@@ -11,6 +11,15 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.10: „Ramka do wszystkich zdjęć”)
+- Faza: nowa funkcja na prośbę Jack4B (ramka na wszystkich zdjęciach przy edycji pojedynczej), wydanie 1.1.10
+- Zrobione: w zakładce Ramka (tylko w serii) przełącznik „Ramka do wszystkich zdjęć”. Włączony: jeden wygląd ramki dla całej serii (włączenie, proporcje, margines, czcionka, kolor i wielkość podpisu, „podpis włączony”), a osobny zostaje tekst podpisu każdego zdjęcia; film, korekty i kadr dalej osobno. Wyłączony (domyślnie): jak w 1.1.9, ramka i podpis osobno dla każdego zdjęcia.
+- Jak działa: `SeriesFrame` (`forAll`, `style`, `stored`, `working`, `onEdit`); w `MainState` `frame` ma setter, który przy włączonym trybie zapisuje wspólny wygląd (bez tworzenia edycji osobnych), `snapshot()` zapisuje wtedy w edycji zdjęcia tylko podpis, a `restore()` i `exportAll` składają ramkę ze wspólnego wyglądu i podpisu zdjęcia. `setFrameForAll(true)`: wygląd bieżącego zdjęcia staje się wspólnym (inne zdjęcia tracą własny wygląd, podpisy zostają); `setFrameForAll(false)`: każde zdjęcie dostaje własną ramkę ze wspólnego wyglądu (`EditBook.mapFrames`). Ostrzeżenie przy wyjściu uwzględnia tryb i wspólny wygląd. Znak wodny i jakość zapisu dalej wspólne.
+- Testy: `FrameForAllTest` (wspólny wygląd + osobny podpis, włączenie, wyłączenie, brak fałszywego ostrzeżenia po przełączeniu).
+- PR / gałąź: `f43/ramka-dla-wszystkich`; wersja 1.1.10 z taga `v1.1.10`.
+- Otwarte / P2 odłożone: przy trybie wspólnym jedno „podpis włączony” dla wszystkich (zdjęcia bez tekstu po prostu nie mają podpisu); ostrzeżenie „podpis za długi” przed zapisem serii dla zdjęć innych niż bieżące.
+- Następny krok: ocena 1.1.10 na telefonie.
+
 ## 2026-10-27 – Claude (wydanie 1.1.9: ramka i podpis per zdjęcie)
 - Faza: zmiana na prośbę Jack4B (ramka z podpisem nałożona na wszystkie zdjęcia serii, a miała być osobna), wydanie 1.1.9
 - Zrobione: `FrameOptions` wchodzi do `PhotoEdit` (obok filmu, mocy, korekt i kadru), więc ramka, proporcje, margines, podpis, czcionka, kolor i wielkość podpisu zmieniają się tylko na bieżącym zdjęciu (zmiana = edycja osobna, ✎); `restore`/`snapshot` przenoszą ramkę przy przesuwaniu; zapis serii (`exportAll`) renderuje każde zdjęcie z jego ramką i czcionką podpisu; ostrzeżenie przy wyjściu obejmuje też ramki. „Zastosuj do wszystkich” kopiuje też ramkę; opisy w menu zaktualizowane.

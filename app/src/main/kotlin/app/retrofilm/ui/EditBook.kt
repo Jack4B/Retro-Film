@@ -69,6 +69,15 @@ class EditBook {
         return shared
     }
 
+    /** Przekształca ramkę w edycji wspólnej i w każdej edycji osobnej (zdjęcia bez edycji osobnej nie dostają jej). */
+    fun mapFrames(transform: (FrameOptions) -> FrameOptions) {
+        shared = shared.copy(frame = transform(shared.frame))
+        for (index in own.keys.toList()) {
+            val edit = own.getValue(index)
+            own[index] = edit.copy(frame = transform(edit.frame))
+        }
+    }
+
     /** Ustawienia [working] stają się wspólne dla wszystkich zdjęć, osobne edycje znikają. */
     fun applyToAll(working: PhotoEdit) {
         own.clear()

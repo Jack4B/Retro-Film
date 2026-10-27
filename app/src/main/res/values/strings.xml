@@ -245,6 +245,9 @@
     <string name="adjust_reset">Wyzeruj korekty</string>
 
     <!-- Ramka -->
+    <string name="frame_for_all">Ramka do wszystkich zdjęć</string>
+    <string name="frame_for_all_on_hint">Jeden wygląd ramki dla całej serii. Podpis zostaje osobny dla każdego zdjęcia.</string>
+    <string name="frame_for_all_off_hint">Każde zdjęcie ma własną ramkę i podpis. Włącz, żeby ramka była taka sama na wszystkich.</string>
     <string name="frame_enabled">Ramka</string>
     <string name="signature_enabled">Podpis</string>
     <string name="signature_label">Tekst podpisu</string>
