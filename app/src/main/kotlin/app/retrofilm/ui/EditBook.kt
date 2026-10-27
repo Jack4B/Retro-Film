@@ -2,19 +2,24 @@ package app.retrofilm.ui
 
 import androidx.compose.runtime.mutableStateMapOf
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.Geometry
 
-/** Edycja jednego zdjęcia: film, jego moc, korekty (z maskami) i kadr. Ramka i podpis są wspólne dla serii. */
+/**
+ * Edycja jednego zdjęcia: film, jego moc, korekty (z maskami), kadr oraz ramka z podpisem. Znak wodny nie wchodzi do
+ * edycji zdjęcia: to ustawienie całej aplikacji, wspólne dla każdego zdjęcia ([MainState.snapshot] zeruje go tutaj).
+ */
 data class PhotoEdit(
     val film: String = IDENTITY_ID,
     val intensity: Float = 1f,
     val adjustments: Adjustments = Adjustments.None,
-    val geometry: Geometry = Geometry()
+    val geometry: Geometry = Geometry(),
+    val frame: FrameOptions = FrameOptions()
 )
 
 /**
  * Edycje serii zdjęć. Domyślnie wszystkie zdjęcia mają wspólne ustawienia ([shared]); zdjęcie można przełączyć na
- * edycję osobną ([makeIndividual]) – wtedy ma własny film, korekty i kadr, a zmiany wspólnych go nie dotyczą.
+ * edycję osobną ([makeIndividual]) – wtedy ma własny film, korekty, kadr i ramkę, a zmiany wspólnych go nie dotyczą.
  * Ustawienia „robocze” bieżącego zdjęcia żyją w stanie edytora, a tutaj trafiają przez [commit] przy zmianie zdjęcia
  * i przed zapisem. Stan osobnych edycji jest obserwowalny (znacznik w pasku zdjęć).
  */

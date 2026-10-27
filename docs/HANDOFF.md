@@ -11,6 +11,16 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-27 – Claude (wydanie 1.1.9: ramka i podpis per zdjęcie)
+- Faza: zmiana na prośbę Jack4B (ramka z podpisem nałożona na wszystkie zdjęcia serii, a miała być osobna), wydanie 1.1.9
+- Zrobione: `FrameOptions` wchodzi do `PhotoEdit` (obok filmu, mocy, korekt i kadru), więc ramka, proporcje, margines, podpis, czcionka, kolor i wielkość podpisu zmieniają się tylko na bieżącym zdjęciu (zmiana = edycja osobna, ✎); `restore`/`snapshot` przenoszą ramkę przy przesuwaniu; zapis serii (`exportAll`) renderuje każde zdjęcie z jego ramką i czcionką podpisu; ostrzeżenie przy wyjściu obejmuje też ramki. „Zastosuj do wszystkich” kopiuje też ramkę; opisy w menu zaktualizowane.
+- Świadomie bez zmian: znak wodny (QR) i jakość/rozmiar zapisu zostają ustawieniami całej aplikacji (znak wodny jest wycięty z edycji zdjęcia w `snapshot()`, `restore()` zachowuje bieżący, a zapis stosuje go do każdego zdjęcia). Po zamknięciu zdjęcia ramka i film nadal zostają jako wartości startowe następnej serii (jak dotąd).
+- Przegląd funkcji: pozostałe użycia `frame` (podgląd, pojedynczy zapis, blokada „podpis za długi” dla bieżącego zdjęcia, maska, LaunchedEffect odświeżania) działają na stanie roboczym i nie zmieniły się; zapis serii nie blokuje z góry zdjęć, na których podpis jest za długi (liczone jako „nie udało się”, jak dotąd).
+- Testy: `EditBookTest`, `ExitGuardSeriesTest` (ramka per zdjęcie, powrót do zdjęcia przywraca ramkę i podpis, znak wodny wspólny).
+- PR / gałąź: `f42/ramka-per-zdjecie`; wersja 1.1.9 z taga `v1.1.9`.
+- Otwarte / P2 odłożone: ostrzeżenie „podpis za długi” przed zapisem serii dla zdjęć innych niż bieżące.
+- Następny krok: ocena 1.1.9 na telefonie (różne ramki na zdjęciach serii, zapis serii).
+
 ## 2026-10-27 – Claude (wydanie 1.1.8: ostrzeżenie przy wyjściu w serii)
 - Faza: poprawka po zgłoszeniu („zniknęło ostrzeżenie przed zakończeniem edycji, cofnięcie wraca do wyboru zdjęć”), przegląd kodu pod kątem zgubionych funkcji, wydanie 1.1.8
 - Przyczyna: `hasUnsavedEdits` porównywał z wartością początkową tylko bieżące zdjęcie. Po edycji zdjęcia 1 i przesunięciu na zdjęcie 2 (bez zmian) wszystko wyglądało na „czyste”, więc Wstecz zamykał edytor bez pytania i edycje przepadały. To znane ograniczenie (P2 z 1.1.1), które po przesuwaniu i edycji per zdjęcie stało się łatwe do wywołania.

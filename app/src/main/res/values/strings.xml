@@ -31,10 +31,10 @@
     <string name="scope_menu_own">Edytuj tylko to zdjęcie</string>
     <string name="scope_menu_shared">Wróć do wspólnych ustawień</string>
     <string name="scope_apply_all">Zastosuj do wszystkich…</string>
-    <string name="scope_state_one_cd">Edycja tylko tego zdjęcia: własny film, korekty i kadr; pozostałe mają ustawienia wspólne</string>
+    <string name="scope_state_one_cd">Edycja tylko tego zdjęcia: własny film, korekty, kadr i ramka; pozostałe mają ustawienia wspólne</string>
     <string name="scope_state_all_cd">Edycja wspólna dla wszystkich zdjęć</string>
     <string name="scope_apply_all_title">Zastosować do wszystkich?</string>
-    <string name="scope_apply_all_text">Film, korekty i kadr tego zdjęcia zostaną ustawione dla całej serii. Osobne edycje pozostałych zdjęć zostaną zastąpione.</string>
+    <string name="scope_apply_all_text">Film, korekty, kadr i ramka z podpisem tego zdjęcia zostaną ustawione dla całej serii. Osobne edycje pozostałych zdjęć zostaną zastąpione.</string>
     <string name="scope_apply_all_ok">Zastosuj</string>
     <string name="export_many_done">Zapisano zdjęcia: %1$d</string>
     <string name="export_many_partial">Zapisano zdjęcia: %1$d, nie udało się: %2$d</string>

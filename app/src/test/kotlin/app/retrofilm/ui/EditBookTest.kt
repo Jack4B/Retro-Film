@@ -1,6 +1,7 @@
 package app.retrofilm.ui
 
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.Geometry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -49,6 +50,17 @@ class EditBookTest {
         assertEquals(0, book.individualCount)
         book.commit(1, bw, series = true)
         assertEquals(listOf(PhotoEdit(), bw, PhotoEdit()), book.effective(3, 2, PhotoEdit(), series = true))
+    }
+
+    @Test fun frameBelongsToThePhotoEditLikeFilmAndCrop() {
+        val framed = PhotoEdit(frame = FrameOptions(enabled = true, signatureEnabled = true, signature = "Tatry"))
+        val book = EditBook()
+        book.reset(PhotoEdit())
+        book.commit(1, framed, series = true)
+        assertTrue(book.isIndividual(1))
+        assertEquals("Tatry", book.editFor(1).frame.signature)
+        assertFalse("pozostałe bez ramki", book.editFor(0).frame.enabled)
+        assertFalse(book.editFor(2).frame.enabled)
     }
 
     @Test fun inSeriesUntouchedPhotoStaysShared() {

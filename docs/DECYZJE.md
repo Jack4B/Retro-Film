@@ -86,7 +86,8 @@ Domyślnie wyłączony; ciemny motyw marki, akcent `#F5A33B`.
 - **Miniatury filmów:** w APK (JPG, ok. 4 MB łącznie), także dla filmów do pobrania, żeby wybierać po wyglądzie.
 - **Biblioteka:** 260 filmów obsłużone kategoriami z licznikami, wyszukiwaniem i ulubionymi.
 - Decyzja Jack4B, 2026-10-25 (PR #26). Kod UI idzie osobnymi PR-ami po zatwierdzeniu makiet (pierwszy: „Edytor krok 1”, PR #27).
-- **Zmiana (Jack4B, 2026-10-27, wydanie 1.1.7):** w serii film, korekty i kadr są per zdjęcie – zmiana wprowadzona na zdjęciu przypisuje się tylko do niego (bez przełączania zakresu); zdjęcia bez zmian zostają na ustawieniach wspólnych. Ramka nadal jedna na serię. „Zastosuj do wszystkich” i „Wróć do wspólnych” zostają w menu zdjęć.
+- **Zmiana (Jack4B, 2026-10-27, wydanie 1.1.7):** w serii film, korekty i kadr są per zdjęcie – zmiana wprowadzona na zdjęciu przypisuje się tylko do niego (bez przełączania zakresu); zdjęcia bez zmian zostają na ustawieniach wspólnych. „Zastosuj do wszystkich” i „Wróć do wspólnych” zostają w menu zdjęć.
+- **Zmiana (Jack4B, 2026-10-27, wydanie 1.1.9):** ramka i podpis są też per zdjęcie (tak jak film, korekty i kadr; ramka wchodzi do `PhotoEdit`). Znak wodny (QR) zostaje ustawieniem całej aplikacji, wspólnym dla każdego zdjęcia, tak jak jakość i rozmiar zapisu.
 
 ## D13 – Motyw jasny i ciemny
 - Wybór w Ustawieniach → Wygląd: **Systemowy / Ciemny / Jasny**. Domyślnie **Ciemny** (D3 bez zmian).
