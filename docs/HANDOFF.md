@@ -11,6 +11,12 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-28 – Claude (mapa Graphify budowana na starcie sesji)
+- Faza: konfiguracja na prośbę Jack4B (mapa gotowa na sobotę); bez wydania
+- Zrobione: `tools/graphify_build.py` (mapa z kodu `main` wszystkich modułów: 139 plików, 1730 węzłów, 4590 krawędzi, 95 społeczności; ok. 5 s, lokalnie, bez tokenów) wywoływany przez `.claude/hooks/session-start.sh` po instalacji Graphify; instrukcja w `docs/NARZEDZIA-CLAUDE.md` (bez `/graphify app/src`, które puszcza 260 miniatur do analizy przez model).
+- Znane: parser Kotlina zgłasza błędy składni w `PhotoLoader.kt`, `PhotoPicker.kt` i `PresetUi.kt` (mapa ma z nich tylko część symboli); nazwy społeczności automatyczne.
+- Następny krok: sobota, nowa sesja: sprawdzić, że `graphify-out/graph.json` istnieje od startu, i zacząć od planu z `docs/PLAN-DODGE-BURN.md`.
+
 ## 2026-10-28 – Claude (wyłączony Agent Skills)
 - Faza: zmiana konfiguracji na prośbę Jack4B; bez wydania
 - Zrobione: Agent Skills usunięty z `.claude/settings.json` i hooka (ok. 3,7 tys. tokenów w każdej sesji, zasada 2), wyłączony w bieżącym kontenerze; `docs/NARZEDZIA-CLAUDE.md` przepisany pod Ponytail i Graphify z radami dla naszej aplikacji (kiedy lite/normal przy algorytmach obrazu, co mapować w Graphify, mapa tylko z kodu `app/src`).
