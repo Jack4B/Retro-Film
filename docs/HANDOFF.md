@@ -11,6 +11,12 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-28 – Claude (wyłączony Agent Skills)
+- Faza: zmiana konfiguracji na prośbę Jack4B; bez wydania
+- Zrobione: Agent Skills usunięty z `.claude/settings.json` i hooka (ok. 3,7 tys. tokenów w każdej sesji, zasada 2), wyłączony w bieżącym kontenerze; `docs/NARZEDZIA-CLAUDE.md` przepisany pod Ponytail i Graphify z radami dla naszej aplikacji (kiedy lite/normal przy algorytmach obrazu, co mapować w Graphify, mapa tylko z kodu `app/src`).
+- Otwarte / P2 odłożone: mapa Graphify jeszcze niezbudowana (`/graphify app/src`).
+- Następny krok: nowa sesja po scaleniu: `claude plugin list` (tylko Ponytail) i `/graphify app/src`.
+
 ## 2026-10-28 – Claude (narzędzia sesji: Ponytail, Agent Skills, Graphify)
 - Faza: konfiguracja na prośbę Jack4B; tylko konfiguracja i dokumenty, bez wydania
 - Zrobione: `.claude/settings.json` (marketplace i włączone pluginy Ponytail i Agent Skills), `.claude/hooks/session-start.sh` (sesje zdalne: jawna instalacja pluginów i Graphify, powtarzalna), `graphify-out/` w `.gitignore`, instrukcja użycia w `docs/NARZEDZIA-CLAUDE.md`.

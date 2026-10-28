@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start sesji w chmurze: pluginy Ponytail i Agent Skills oraz Graphify (mapa wiedzy projektu).
+# Start sesji w chmurze: plugin Ponytail oraz Graphify (mapa wiedzy projektu).
 # settings.json deklaruje pluginy, a tutaj instalujemy je jawnie, bo sesja w chmurze nie robi tego sama.
 # Tylko sesje zdalne; idempotentne (każdy krok jest bezpiecznie powtarzalny, błąd pluginu nie blokuje sesji).
 set -euo pipefail
@@ -13,8 +13,6 @@ export PATH="$HOME/.local/bin:$PATH"
 if command -v claude >/dev/null 2>&1; then
   claude plugin marketplace add DietrichGebert/ponytail || true
   claude plugin install ponytail@ponytail || true
-  claude plugin marketplace add addyosmani/agent-skills || true
-  claude plugin install agent-skills@addy-agent-skills || true
 fi
 
 if ! command -v graphify >/dev/null 2>&1; then
