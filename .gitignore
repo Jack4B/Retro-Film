@@ -24,3 +24,6 @@ __pycache__/
 /tools/golden/photos/orig/
 /tools/golden/compare/photos/*.jpg
 /pack144/
+
+# mapa wiedzy Graphify (generowana lokalnie komendą /graphify)
+graphify-out/
