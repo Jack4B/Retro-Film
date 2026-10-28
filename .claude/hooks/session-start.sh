@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start sesji w chmurze: plugin Ponytail oraz Graphify (mapa wiedzy projektu).
+# Start sesji w chmurze: plugin Ponytail oraz Graphify (instalacja i budowa mapy wiedzy projektu).
 # settings.json deklaruje pluginy, a tutaj instalujemy je jawnie, bo sesja w chmurze nie robi tego sama.
 # Tylko sesje zdalne; idempotentne (każdy krok jest bezpiecznie powtarzalny, błąd pluginu nie blokuje sesji).
 set -euo pipefail
@@ -25,3 +25,7 @@ fi
 
 # rejestruje skill /graphify w ~/.claude (bezpiecznie powtarzalne)
 graphify install --platform claude >/dev/null
+
+# mapa wiedzy z kodu (lokalnie, bez tokenów), żeby od pierwszej wiadomości dało się pytać o architekturę
+cd "${CLAUDE_PROJECT_DIR:-.}"
+"$(head -1 "$(command -v graphify)" | tr -d '#!')" tools/graphify_build.py || true

@@ -40,8 +40,14 @@ wyłączenie: „stop ponytail”.
 Buduje graf zależności projektu, żeby pytać o architekturę zamiast grepować. Graf trafia do `graphify-out/` (w
 `.gitignore`).
 
-**Jak zacząć:** `/graphify app/src`. Zacznij od samego kodu (analiza lokalna, bez kosztu tokenów); dokumentów `docs/`
-nie dodawaj od razu, bo ich analiza idzie przez model. Po większych zmianach odśwież tą samą komendą.
+**Jak zacząć:** nic nie trzeba robić. Hook startu sesji w chmurze buduje mapę sam (`tools/graphify_build.py`: wszystkie
+moduły, tylko kod `main`, bez testów, obrazów i dokumentów; analiza lokalna, kilka sekund, bez tokenów), więc od
+pierwszej wiadomości można pytać o architekturę. Ręczna odbudowa po zmianach w trwającej sesji (z korzenia repo):
+`"$(head -1 "$(command -v graphify)" | tr -d '#!')" tools/graphify_build.py`. Nie używaj `/graphify app/src`: wykrywa
+260 miniatur filmów i puszcza je do kosztownej analizy przez model.
+
+**Wskazówka:** nazwa występująca w kilku plikach jest niejednoznaczna (np. `ToneMask`); podaj `ścieżka::symbol`, np.
+`graphify explain "app/src/main/kotlin/app/retrofilm/pipeline/ToneMask.kt::ToneMask"`.
 
 **Najlepsze użycie u nas:**
 
