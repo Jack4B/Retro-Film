@@ -11,6 +11,14 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-10-28 – Claude (narzędzia sesji: Ponytail, Agent Skills, Graphify)
+- Faza: konfiguracja na prośbę Jack4B; tylko konfiguracja i dokumenty, bez wydania
+- Zrobione: `.claude/settings.json` (marketplace i włączone pluginy Ponytail i Agent Skills), `.claude/hooks/session-start.sh` (sesje zdalne: jawna instalacja pluginów i Graphify, powtarzalna), `graphify-out/` w `.gitignore`, instrukcja użycia w `docs/NARZEDZIA-CLAUDE.md`.
+- Sprawdzone: hook od pustego katalogu domowego instaluje oba pluginy (`claude plugin list`: enabled) i Graphify z skillem; ponowne uruchomienie nic nie psuje. Nie sprawdzone (nie da się z sesji): samo ładowanie pluginów przez `settings.json` w nowej sesji w chmurze.
+- Uwaga: Agent Skills dokłada ok. 3,7 tys. tokenów do każdej sesji, Ponytail ok. 0,6 tys. (zasada 2: limit abonamentu) – do oceny, czy zostawiać oba na stałe.
+- Otwarte / P2 odłożone: mapa Graphify jeszcze niezbudowana (`/graphify app/src` po scaleniu).
+- Następny krok: po scaleniu uruchomić nową sesję i sprawdzić `claude plugin list` oraz `/graphify`.
+
 ## 2026-10-27 – Claude (plan: Dodge & Burn, bez kodu)
 - Faza: planowanie na prośbę Jack4B (wracamy w sobotę 2026-10-31); zmiana tylko w dokumentach, bez wydania
 - Zrobione: `docs/PLAN-DODGE-BURN.md` (ocena wklejonych propozycji, metodologia, etapy D0–D4, kryteria akceptacji, ryzyka, pytania na sobotę); wpisy w `docs/PLAN.md` (backlog), `PRZEGLAD-ALGORYTMOW.md` (§0, pozycja 6) i `STAN-ALGORYTMOW.md`.
