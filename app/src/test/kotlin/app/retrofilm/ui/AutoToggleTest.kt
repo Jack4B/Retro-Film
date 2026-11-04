@@ -77,7 +77,7 @@ class AutoToggleTest {
         val before = s.adjustments
         s.updatePrepInversion(0.2f)
         assertEquals(0.2f, s.adjustments.toneInversion, 1e-6f)
-        assertEquals("reszta propozycji bez zmian", before.copy(toneInversion = 0.2f), s.adjustments)
+        assertEquals("balans bieli bez zmian", before.temperature, s.adjustments.temperature, 0.05f)
         assertTrue("dalej można cofnąć", s.canUndoPrep)
         s.togglePrep()
         assertEquals("cofnięcie zdejmuje też odwrócenie", 0f, s.adjustments.toneInversion, 0f)
@@ -99,5 +99,29 @@ class AutoToggleTest {
         assertTrue(s.hasUnsavedEdits)
         s.adjustments = Adjustments.None
         assertFalse("powrót do wyjściowych ustawień to brak zmian", s.hasUnsavedEdits)
+    }
+
+    @Test fun inversionSliderStaysUsableAfterManualExposureAndKeepsIt() = runBlocking {
+        val s = state()
+        s.togglePrep()
+        s.adjustments = s.adjustments.copy(exposure = -0.7f)
+        assertTrue("suwak zdjęcia krzywej dalej widoczny", s.canAdjustPrepInversion)
+        s.updatePrepInversion(1f)
+        assertEquals(1f, s.adjustments.toneInversion, 1e-6f)
+        assertEquals("ręczna ekspozycja zostaje", -0.7f, s.adjustments.exposure, 1e-6f)
+        s.updatePrepInversion(0.1f)
+        assertEquals(0.1f, s.adjustments.toneInversion, 1e-6f)
+        assertEquals(-0.7f, s.adjustments.exposure, 1e-6f)
+    }
+
+    @Test fun untouchedPrepRecomputesExposureForTheNewInversion() = runBlocking {
+        val s = state()
+        s.togglePrep()
+        s.updatePrepInversion(0f)
+        val e0 = s.adjustments.exposure
+        s.updatePrepInversion(1f)
+        assertEquals(1f, s.adjustments.toneInversion, 1e-6f)
+        assertNotEquals("ekspozycja liczona po zdjęciu krzywej", e0, s.adjustments.exposure)
+        assertTrue("propozycja dalej nałożona", s.canUndoPrep)
     }
 }
