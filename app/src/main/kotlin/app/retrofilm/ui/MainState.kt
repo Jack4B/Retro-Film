@@ -49,7 +49,10 @@ sealed interface UiMessage {
     data object SignatureTooLong : UiMessage
     data object Saved : UiMessage
     data object LoadFailed : UiMessage
-    data class SavedMany(val saved: Int, val failed: Int) : UiMessage
+    data class SavedMany(val saved: Int, val failed: Int, val reduced: Int = 0) : UiMessage
+
+    /** Zapisano, ale w mniejszej rozdzielczości niż plik (zabrakło pamięci na pełną). */
+    data object SavedReduced : UiMessage
     data class ExportFailed(val reason: String) : UiMessage
 }
 
@@ -144,6 +147,14 @@ class MainState(
     /** Jakość JPEG przy zapisie (70..100). */
     var exportQuality by mutableIntStateOf(JpegExporter.DEFAULT_QUALITY)
 
+    /** Chroma 4:4:4 (pełna rozdzielczość koloru) zamiast 4:2:0. */
+    var exportChroma444 by mutableStateOf(true)
+
+    /** Przenoszenie danych aparatu (EXIF z białej listy, nigdy GPS). */
+    var exportKeepExif by mutableStateOf(true)
+
+    val exportFormat: ExportFormat get() = ExportFormat(exportQuality, exportChroma444, exportKeepExif)
+
     /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
     var exportMaxSide by mutableIntStateOf(0)
 
@@ -174,6 +185,8 @@ class MainState(
     fun currentAsDefaults(): EditDefaults = EditDefaults(
         quality = exportQuality,
         maxSide = exportMaxSide,
+        chroma444 = exportChroma444,
+        keepExif = exportKeepExif,
         frameEnabled = frame.enabled,
         frameAspect = frame.aspect.name,
         frameMargin = frame.margin,
@@ -190,6 +203,8 @@ class MainState(
     internal fun applyDefaults(d: EditDefaults) {
         exportQuality = d.quality
         exportMaxSide = d.maxSide
+        exportChroma444 = d.chroma444
+        exportKeepExif = d.keepExif
         val base = FrameOptions()
         frame = base.copy(
             enabled = d.frameEnabled,
@@ -432,6 +447,7 @@ class MainState(
         commitCurrent()
         val watermark = frame.watermark
         var current = 0
+        var reducedCount = 0
         val result = exportBatch(only, {
             current = only[it]
             exportProgress = it + 1
@@ -440,35 +456,25 @@ class MainState(
             val edit = edits.editFor(current)
             val photoFrame = seriesFrame.working(edit.frame, watermark)
             val face = fonts(photoFrame.font)
-            val bmp = withContext(Dispatchers.IO) {
-                PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
+            val job = ExportJob(
+                ExportLook(edit.geometry, lutFor(edit.film), edit.intensity, edit.adjustments),
+                graph.filmEngine.renderer,
+                photoFrame,
+                face,
+                exportMaxSide,
+                exportFormat
+            )
+            val out = withContext(Dispatchers.Default) {
+                job.run({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }, null)
             }
-            val jpeg = withContext(Dispatchers.Default) {
-                val cropped = GeometryApplier.apply(bmp, edit.geometry)
-                val rendered = ExportPipeline.render(
-                    cropped,
-                    lutFor(edit.film),
-                    graph.filmEngine.renderer,
-                    photoFrame,
-                    face,
-                    edit.intensity,
-                    edit.adjustments,
-                    if (edit.adjustments.usesSmartSharpen) FaceFinder.find(cropped) else emptyList()
-                )
-                ExportPipeline.encode(
-                    cropped,
-                    ExportPipeline.resize(rendered, exportMaxSide),
-                    photoFrame,
-                    face,
-                    exportQuality
-                )
-            }
+            if (out.reduced) reducedCount++
+            val jpeg = out.jpeg
             withContext(Dispatchers.IO) { save(jpeg) }
         }
         exportProgress = 0
         failedIndices = result.failedIndices.map { only[it] }
         markSaved()
-        UiMessage.SavedMany(result.saved, result.failed)
+        UiMessage.SavedMany(result.saved, result.failed, reducedCount)
     }
 
     /** Podgląd: ta sama ścieżka co eksport, na pomniejszonej kopii. */
@@ -584,33 +590,28 @@ class MainState(
     }
 
     /** Eksport; nigdy nie rzuca – błędy wracają jako [UiMessage]. */
-    suspend fun export(save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
+    suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val p = photo ?: return@withBusy UiMessage.LoadFailed
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
-            val jpeg = withContext(Dispatchers.Default) {
-                val cropped = GeometryApplier.apply(p, geometry)
-                val rendered = ExportPipeline.render(
-                    cropped,
-                    lut(),
-                    graph.filmEngine.renderer,
-                    frame,
-                    signatureTypeface(),
-                    intensity,
-                    adjustments,
-                    if (adjustments.usesSmartSharpen) FaceFinder.find(cropped) else emptyList()
-                )
-                ExportPipeline.encode(
-                    cropped,
-                    ExportPipeline.resize(rendered, exportMaxSide),
-                    frame,
-                    signatureTypeface(),
-                    exportQuality
-                )
+            val job = ExportJob(
+                ExportLook(geometry, lut(), intensity, adjustments),
+                graph.filmEngine.renderer,
+                frame,
+                signatureTypeface(),
+                exportMaxSide,
+                exportFormat
+            )
+            val uri = uris.getOrNull(index)
+            val open: (() -> java.io.InputStream)? = if (context != null && uri != null) {
+                { context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }
+            } else {
+                null
             }
-            withContext(Dispatchers.IO) { save(jpeg) }
+            val out = withContext(Dispatchers.Default) { job.run(open, p) }
+            withContext(Dispatchers.IO) { save(out.jpeg) }
             markSaved()
-            UiMessage.Saved
+            if (out.reduced) UiMessage.SavedReduced else UiMessage.Saved
         } catch (_: SignatureTooLongException) {
             UiMessage.SignatureTooLong
         } catch (e: IOException) {

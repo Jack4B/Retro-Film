@@ -50,6 +50,8 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             EditDefaults(
                 quality = p[DEF_QUALITY] ?: EditDefaults.FACTORY_QUALITY,
                 maxSide = p[DEF_MAX_SIDE] ?: 0,
+                chroma444 = p[DEF_CHROMA_444] ?: true,
+                keepExif = p[DEF_KEEP_EXIF] ?: true,
                 frameEnabled = p[DEF_FRAME] ?: false,
                 frameAspect = p[DEF_ASPECT],
                 frameMargin = p[DEF_MARGIN],
@@ -65,6 +67,8 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         store.edit { p ->
             p[DEF_QUALITY] = v.quality
             p[DEF_MAX_SIDE] = v.maxSide
+            p[DEF_CHROMA_444] = v.chroma444
+            p[DEF_KEEP_EXIF] = v.keepExif
             p[DEF_FRAME] = v.frameEnabled
             v.frameAspect?.let { p[DEF_ASPECT] = it } ?: p.remove(DEF_ASPECT)
             v.frameMargin?.let { p[DEF_MARGIN] = it } ?: p.remove(DEF_MARGIN)
@@ -82,6 +86,8 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
     companion object {
         internal val DEF_QUALITY = intPreferencesKey("default_quality")
         internal val DEF_MAX_SIDE = intPreferencesKey("default_max_side")
+        internal val DEF_CHROMA_444 = booleanPreferencesKey("default_chroma_444")
+        internal val DEF_KEEP_EXIF = booleanPreferencesKey("default_keep_exif")
         internal val DEF_FRAME = booleanPreferencesKey("default_frame")
         internal val DEF_ASPECT = stringPreferencesKey("default_frame_aspect")
         internal val DEF_MARGIN = floatPreferencesKey("default_frame_margin")
@@ -91,6 +97,8 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         private val DEFAULT_KEYS = listOf(
             DEF_QUALITY,
             DEF_MAX_SIDE,
+            DEF_CHROMA_444,
+            DEF_KEEP_EXIF,
             DEF_FRAME,
             DEF_ASPECT,
             DEF_MARGIN,

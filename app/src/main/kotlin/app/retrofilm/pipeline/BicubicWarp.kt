@@ -26,9 +26,8 @@ internal object BicubicWarp {
         val pixels = IntArray(sw * sh)
         src.getPixels(pixels, 0, sw, 0, 0, sw, sh)
         val out = IntArray(outW * outH)
-        val wx = FloatArray(TAPS)
-        val wy = FloatArray(TAPS)
-        for (y in 0 until outH) {
+        // wiersze niezależne – równolegle (50 MP jednym wątkiem to kilkanaście sekund)
+        Parallel.forEach(outH, { FloatArray(TAPS) to FloatArray(TAPS) }) { (wx, wy), y ->
             val py = y + HALF
             for (x in 0 until outW) {
                 val px = x + HALF

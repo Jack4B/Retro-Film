@@ -149,6 +149,7 @@ private fun Progress(state: MainState, result: UiMessage?) {
 
         result is UiMessage.SavedMany -> {
             Text(stringResource(R.string.save_sheet_done, result.saved), modifier = live)
+            if (result.reduced > 0) Text(stringResource(R.string.save_sheet_reduced_many, result.reduced))
             if (result.failed > 0) {
                 Text(
                     stringResource(R.string.save_sheet_failed, result.failed),
@@ -158,6 +159,11 @@ private fun Progress(state: MainState, result: UiMessage?) {
         }
 
         result == UiMessage.Saved -> Text(stringResource(R.string.save_sheet_done, 1), modifier = live)
+
+        result == UiMessage.SavedReduced -> Text(
+            stringResource(R.string.save_sheet_done, 1) + "\n" + stringResource(R.string.save_reduced),
+            modifier = live
+        )
 
         result != null -> Text(
             UiTexts.from(LocalContext.current).of(result),

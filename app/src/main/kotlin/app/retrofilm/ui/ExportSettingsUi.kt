@@ -2,16 +2,23 @@ package app.retrofilm.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -23,7 +30,10 @@ private const val MIN_QUALITY = 70f
 private const val MAX_QUALITY = 100f
 private val Sizes = listOf(0, 4096, 2048, 1080)
 
-/** Ustawienia zapisu: jakość JPEG i maksymalny rozmiar (zmniejszanie bez aliasingu + wyostrzanie wyjściowe). */
+/**
+ * Ustawienia zapisu: format i kolor pliku, jakość JPEG, maksymalny rozmiar (zmniejszanie bez aliasingu
+ * + wyostrzanie wyjściowe) i dane aparatu. Domyślnie JPEG 4:4:4, jakość 95, sRGB, EXIF bez GPS.
+ */
 @Composable
 internal fun ExportSettings(state: MainState) {
     Column(verticalArrangement = Arrangement.spacedBy(Gap)) {
@@ -31,6 +41,7 @@ internal fun ExportSettings(state: MainState) {
             stringResource(R.string.export_title),
             style = MaterialTheme.typography.titleSmall
         )
+        ExportFileOptions(state)
         Text(stringResource(R.string.export_quality_label, state.exportQuality))
         val cd = stringResource(R.string.export_quality_cd)
         Slider(
@@ -55,3 +66,49 @@ internal fun ExportSettings(state: MainState) {
 }
 
 private const val QUALITY_STEP = 5
+
+/** Format, podpróbkowanie chromy, przestrzeń barw i EXIF. */
+@Composable
+private fun ExportFileOptions(state: MainState) {
+    OptionRow(R.string.export_format_label) {
+        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.export_format_jpeg)) })
+    }
+    OptionRow(R.string.export_chroma_label) {
+        FilterChip(
+            selected = state.exportChroma444,
+            onClick = { state.exportChroma444 = true },
+            label = { Text(stringResource(R.string.export_chroma_444)) },
+            modifier = Modifier.testTag("export-chroma-444")
+        )
+        FilterChip(
+            selected = !state.exportChroma444,
+            onClick = { state.exportChroma444 = false },
+            label = { Text(stringResource(R.string.export_chroma_420)) },
+            modifier = Modifier.testTag("export-chroma-420")
+        )
+    }
+    OptionRow(R.string.export_space_label) {
+        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.export_space_srgb)) })
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = MinTouch)
+            .toggleable(
+                value = state.exportKeepExif,
+                role = Role.Switch,
+                onValueChange = { state.exportKeepExif = it }
+            )
+            .testTag("export-exif")
+    ) {
+        Text(stringResource(R.string.export_exif), modifier = Modifier.weight(1f))
+        Switch(checked = state.exportKeepExif, onCheckedChange = null)
+    }
+}
+
+@Composable
+private fun OptionRow(label: Int, content: @Composable () -> Unit) {
+    Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
+    Row(horizontalArrangement = Arrangement.spacedBy(Gap)) { content() }
+}

@@ -10,6 +10,8 @@ import app.retrofilm.core.export.JpegExporter
 data class EditDefaults(
     val quality: Int = FACTORY_QUALITY,
     val maxSide: Int = 0,
+    val chroma444: Boolean = true,
+    val keepExif: Boolean = true,
     val frameEnabled: Boolean = false,
     val frameAspect: String? = null,
     val frameMargin: Float? = null,
