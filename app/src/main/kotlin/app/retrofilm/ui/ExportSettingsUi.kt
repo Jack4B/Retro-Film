@@ -88,7 +88,18 @@ private fun ExportFileOptions(state: MainState) {
         )
     }
     OptionRow(R.string.export_space_label) {
-        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.export_space_srgb)) })
+        FilterChip(
+            selected = !state.exportP3,
+            onClick = { state.exportP3 = false },
+            label = { Text(stringResource(R.string.export_space_srgb)) },
+            modifier = Modifier.testTag("export-space-srgb")
+        )
+        FilterChip(
+            selected = state.exportP3,
+            onClick = { state.exportP3 = true },
+            label = { Text(stringResource(R.string.export_space_p3)) },
+            modifier = Modifier.testTag("export-space-p3")
+        )
     }
     Row(
         verticalAlignment = Alignment.CenterVertically,

@@ -15,13 +15,15 @@ import app.retrofilm.pipeline.ExportSource
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
+import app.retrofilm.pipeline.OutputSpace
 import java.io.InputStream
 
 /** Ustawienia pliku wyjściowego (arkusz Zapis). Domyślnie JPEG 4:4:4, jakość 95, sRGB, EXIF bez GPS. */
 data class ExportFormat(
     val quality: Int = JpegExporter.DEFAULT_QUALITY,
     val chroma444: Boolean = true,
-    val keepExif: Boolean = true
+    val keepExif: Boolean = true,
+    val space: OutputSpace = OutputSpace.Srgb
 )
 
 /** Edycja jednego zdjęcia potrzebna do zapisu. */
@@ -65,14 +67,19 @@ internal class ExportJob(
             typeface,
             look.intensity,
             look.adjustments,
-            faces
+            faces,
+            format.space
         )
         val out = ExportPipeline.resize(rendered, maxSide)
         if (out !== rendered && rendered !== cropped && rendered !== source) rendered.recycle()
+        val wide = format.space == OutputSpace.DisplayP3
         val options = JpegOptions(
             quality = format.quality,
             subsampling = if (format.chroma444) ChromaSubsampling.Full444 else ChromaSubsampling.Half420,
-            exif = exif?.takeIf { format.keepExif }?.let { ExifWriter.write(it, out.width, out.height, SOFTWARE) }
+            exif = exif?.takeIf {
+                format.keepExif
+            }?.let { ExifWriter.write(it, out.width, out.height, SOFTWARE, wide) },
+            wideGamut = wide
         )
         val jpeg = ExportPipeline.encode(cropped, out, frame, typeface, options)
         if (out !== cropped && out !== source) out.recycle()

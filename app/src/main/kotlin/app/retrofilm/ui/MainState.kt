@@ -29,6 +29,7 @@ import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
 import app.retrofilm.pipeline.LocalMask
+import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
@@ -153,7 +154,16 @@ class MainState(
     /** Przenoszenie danych aparatu (EXIF z białej listy, nigdy GPS). */
     var exportKeepExif by mutableStateOf(true)
 
-    val exportFormat: ExportFormat get() = ExportFormat(exportQuality, exportChroma444, exportKeepExif)
+    /** Zapis w Display P3 (szerszy gamut, profil P3) zamiast sRGB. */
+    var exportP3 by mutableStateOf(false)
+
+    val exportFormat: ExportFormat
+        get() = ExportFormat(
+            exportQuality,
+            exportChroma444,
+            exportKeepExif,
+            if (exportP3) OutputSpace.DisplayP3 else OutputSpace.Srgb
+        )
 
     /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
     var exportMaxSide by mutableIntStateOf(0)
@@ -187,6 +197,7 @@ class MainState(
         maxSide = exportMaxSide,
         chroma444 = exportChroma444,
         keepExif = exportKeepExif,
+        displayP3 = exportP3,
         frameEnabled = frame.enabled,
         frameAspect = frame.aspect.name,
         frameMargin = frame.margin,
@@ -205,6 +216,7 @@ class MainState(
         exportMaxSide = d.maxSide
         exportChroma444 = d.chroma444
         exportKeepExif = d.keepExif
+        exportP3 = d.displayP3
         val base = FrameOptions()
         frame = base.copy(
             enabled = d.frameEnabled,

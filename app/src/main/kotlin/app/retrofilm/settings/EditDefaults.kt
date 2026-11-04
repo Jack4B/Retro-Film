@@ -12,6 +12,7 @@ data class EditDefaults(
     val maxSide: Int = 0,
     val chroma444: Boolean = true,
     val keepExif: Boolean = true,
+    val displayP3: Boolean = false,
     val frameEnabled: Boolean = false,
     val frameAspect: String? = null,
     val frameMargin: Float? = null,

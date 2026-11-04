@@ -11,17 +11,20 @@ enum class ChromaSubsampling { Full444, Half420 }
 
 /**
  * Ustawienia kodowania. [exif] to blok TIFF z [ExifWriter] (biała lista, bez GPS) albo null = bez EXIF.
- * Profil ICC jest zawsze dołączany i wynika z przestrzeni barw bitmapy (sRGB albo Display P3).
+ * Profil ICC jest zawsze dołączany i wynika z przestrzeni barw bitmapy (sRGB albo Display P3); [wideGamut] = piksele
+ * są wartościami Display P3 w bitmapie z etykietą sRGB (eksport P3) – plik dostaje profil P3.
  */
 data class JpegOptions(
     val quality: Int = JpegExporter.DEFAULT_QUALITY,
     val subsampling: ChromaSubsampling = ChromaSubsampling.Full444,
-    val exif: ByteArray? = null
+    val exif: ByteArray? = null,
+    val wideGamut: Boolean = false
 ) {
     override fun equals(other: Any?): Boolean = other is JpegOptions && other.quality == quality &&
-        other.subsampling == subsampling && other.exif.contentEquals(exif)
+        other.subsampling == subsampling && other.exif.contentEquals(exif) && other.wideGamut == wideGamut
 
-    override fun hashCode(): Int = (quality * 31 + subsampling.hashCode()) * 31 + exif.contentHashCode()
+    override fun hashCode(): Int =
+        ((quality * 31 + subsampling.hashCode()) * 31 + exif.contentHashCode()) * 31 + wideGamut.hashCode()
 }
 
 /**
@@ -46,7 +49,7 @@ object JpegExporter {
     fun encode(bitmap: Bitmap, options: JpegOptions, signatureFit: SignatureFitStatus): ByteArray {
         if (signatureFit == SignatureFitStatus.TooLong) throw SignatureTooLongException()
         val q = options.quality.coerceIn(1, MAX_QUALITY)
-        val icc = iccFor(bitmap)
+        val icc = if (options.wideGamut) IccProfiles.displayP3() else iccFor(bitmap)
         val src = if (bitmap.config == Bitmap.Config.ARGB_8888) bitmap else bitmap.copy(Bitmap.Config.ARGB_8888, false)
         return when (options.subsampling) {
             ChromaSubsampling.Full444 -> JpegEncoder.encode(src.width, src.height, q, icc, options.exif) { y0, n, out ->

@@ -52,6 +52,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
                 maxSide = p[DEF_MAX_SIDE] ?: 0,
                 chroma444 = p[DEF_CHROMA_444] ?: true,
                 keepExif = p[DEF_KEEP_EXIF] ?: true,
+                displayP3 = p[DEF_P3] ?: false,
                 frameEnabled = p[DEF_FRAME] ?: false,
                 frameAspect = p[DEF_ASPECT],
                 frameMargin = p[DEF_MARGIN],
@@ -69,6 +70,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             p[DEF_MAX_SIDE] = v.maxSide
             p[DEF_CHROMA_444] = v.chroma444
             p[DEF_KEEP_EXIF] = v.keepExif
+            p[DEF_P3] = v.displayP3
             p[DEF_FRAME] = v.frameEnabled
             v.frameAspect?.let { p[DEF_ASPECT] = it } ?: p.remove(DEF_ASPECT)
             v.frameMargin?.let { p[DEF_MARGIN] = it } ?: p.remove(DEF_MARGIN)
@@ -88,6 +90,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         internal val DEF_MAX_SIDE = intPreferencesKey("default_max_side")
         internal val DEF_CHROMA_444 = booleanPreferencesKey("default_chroma_444")
         internal val DEF_KEEP_EXIF = booleanPreferencesKey("default_keep_exif")
+        internal val DEF_P3 = booleanPreferencesKey("default_display_p3")
         internal val DEF_FRAME = booleanPreferencesKey("default_frame")
         internal val DEF_ASPECT = stringPreferencesKey("default_frame_aspect")
         internal val DEF_MARGIN = floatPreferencesKey("default_frame_margin")
@@ -99,6 +102,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             DEF_MAX_SIDE,
             DEF_CHROMA_444,
             DEF_KEEP_EXIF,
+            DEF_P3,
             DEF_FRAME,
             DEF_ASPECT,
             DEF_MARGIN,

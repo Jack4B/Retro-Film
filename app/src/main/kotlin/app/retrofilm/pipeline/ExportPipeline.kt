@@ -21,10 +21,11 @@ object ExportPipeline {
     const val MIME = "image/jpeg"
 
     /**
-     * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada korekty, LUT (null = oryginał), wykończenie i ramkę.
-     * Wynik jest zawsze w sRGB; koder dołącza zgodny profil ICC (sRGB).
+     * Pełny eksport: przestrzeń robocza ([FloatExport.working]: sRGB albo Display P3), korekty, LUT (null = oryginał)
+     * i wykończenie w jednym potoku float ([FloatExport.look]), na końcu ramka. [engine] zostaje dla zgodności API –
+     * eksport liczy LUT na CPU (czworościennie, bez pośredniej kwantyzacji); podgląd dalej używa silnika GPU.
      */
-    @Suppress("LongParameterList") // intensywność dochodzi do istniejących parametrów; grupowanie później
+    @Suppress("LongParameterList", "UnusedParameter") // jak [look]; engine tylko dla zgodności wywołań
     suspend fun render(
         photo: Bitmap,
         lut: Lut?,
@@ -33,19 +34,13 @@ object ExportPipeline {
         typeface: Typeface,
         intensity: Float = 1f,
         adjustments: Adjustments = Adjustments.None,
-        faces: List<FaceBox> = emptyList()
+        faces: List<FaceBox> = emptyList(),
+        space: OutputSpace = OutputSpace.Srgb
     ): Bitmap {
-        val srgb = ColorPolicy.toSrgb(photo)
-        // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie.
-        // Etapy pośrednie są zwalniane od razu – przy pełnej rozdzielczości (50 MP = 200 MB na kopię) to różnica
-        // między eksportem a brakiem pamięci. Wejście [photo] należy do wywołującego i nie jest zwalniane.
-        val corrected = correct(srgb, adjustments, lut != null)
-        release(srgb, corrected, photo)
-        val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
-        release(corrected, filmed, photo)
-        val finishing = adjustments.finishing()
-        val finished = if (finishing.isNeutral) filmed else AdjustmentsApplier.apply(filmed, finishing, faces = faces)
-        release(filmed, finished, photo)
+        // Etapy pośrednie są zwalniane od razu (50 MP = 200 MB na kopię). Wejście [photo] należy do wywołującego.
+        val work = FloatExport.working(photo, space)
+        val finished = FloatExport.look(work, lut, intensity, adjustments, space, faces)
+        release(work, finished, photo)
         val framed = FrameRenderer.render(finished, frame, typeface, colorSpaceSource = finished)
         release(finished, framed, photo)
         return framed
