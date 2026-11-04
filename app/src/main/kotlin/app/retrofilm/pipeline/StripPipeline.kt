@@ -73,7 +73,7 @@ internal object StripPipeline {
             val y = row * core
             val x = col * coreW
             worker.run(src, out, Tile(x, y, min(w, x + coreW), min(h, y + core)))
-            SaveProgress.tiles(done.incrementAndGet(), chunks)
+            io.progress?.tiles(done.incrementAndGet(), chunks)
         }
         PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
         PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS
@@ -96,7 +96,9 @@ internal object StripBudget {
     private const val MAX_TILES_X = 8
     private const val MB = 1L shl 20
     const val MIN_BYTES = 48 * MB
-    private const val MAX_BYTES = 256 * MB
+
+    // J: telefon (sterta 512 MB) dawał szczyt 500–560 MB z bitmapami źródła/wyniku; 128 MB pasów trzyma całość < 300 MB
+    private const val MAX_BYTES = 128 * MB
     private const val HEAP_SHARE = 2 // piksele bitmap są poza stertą Javy (API 26+) – bufory pasów to główny jej koszt
     private const val BASE_BPP = 16 // ints + 3 płaszczyzny float
     private const val DEBAND_BPP = 16 // Deband.Scratch
@@ -335,6 +337,7 @@ internal fun interface PlaneStage {
  * kanał, [Frac]) – razem z bitmapą daje ~10 bitów między etapami eksportu bez pełnej kopii float. [stage] działa na
  * kanałach float tuż przed kwantyzacją. [dither] = false wyłącza dithering (np. wyjście pośrednie).
  */
+@Suppress("LongParameterList") // nośnik konfiguracji z wartościami domyślnymi
 internal class StripIo(
     val fracIn: ByteArray? = null,
     val fracOut: ByteArray? = null,
@@ -343,9 +346,11 @@ internal class StripIo(
     /** Wykończenie po [stage] w tym samym przebiegu (G): LUT na całym pasie, potem wyostrzanie, ziarno i winieta. */
     val finish: Adjustments? = null,
     /** Limit pamięci buforów pasów (H); null = [StripBudget.bytes]. */
-    val budget: Long? = null
+    val budget: Long? = null,
+    /** Sesja zapisu raportująca ukończone kafle (J); null = podgląd. */
+    val progress: SaveProgress? = null
 ) {
-    fun copyWith(budget: Long) = StripIo(fracIn, fracOut, stage, dither, finish, budget)
+    fun copyWith(budget: Long) = StripIo(fracIn, fracOut, stage, dither, finish, budget, progress)
 
     companion object {
         val Default = StripIo()

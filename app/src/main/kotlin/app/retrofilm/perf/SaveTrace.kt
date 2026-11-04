@@ -12,6 +12,9 @@ class SaveTrace(
 ) {
     private var peak = 0L
 
+    /** Postęp tej sesji zapisu (J) – UI odpytuje go zamiast globalnego licznika. */
+    val progress = app.retrofilm.pipeline.SaveProgress()
+
     inline fun <T> stage(name: String, block: () -> T): T {
         val start = System.nanoTime()
         try {

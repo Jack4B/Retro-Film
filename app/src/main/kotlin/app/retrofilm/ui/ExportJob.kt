@@ -23,7 +23,6 @@ import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.HeicExport
 import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.Png16Export
-import app.retrofilm.pipeline.SaveProgress
 import app.retrofilm.pipeline.UltraHdrExport
 import java.io.InputStream
 
@@ -92,7 +91,7 @@ internal class ExportJob(
         } else {
             emptyList()
         }
-        SaveProgress.range(RENDER_FROM, RENDER_TO)
+        trace?.progress?.range(RENDER_FROM, RENDER_TO)
         val rendered = ExportPipeline.render(
             cropped,
             look.lut,
@@ -106,13 +105,13 @@ internal class ExportJob(
             frac,
             trace
         )
-        SaveProgress.close()
+        trace?.progress?.close()
         val out = trace.timed("resize") { ExportPipeline.resize(rendered, maxSide) }
         if (out !== rendered && rendered !== cropped && rendered !== source) rendered.recycle()
         val bytes = encodeFile(cropped, out, if (out === rendered) frac else null, exif, gain)
         if (out !== cropped && out !== source) out.recycle()
         if (cropped !== source) cropped.recycle()
-        SaveProgress.mark(ENCODED)
+        trace?.progress?.mark(ENCODED)
         return bytes
     }
 

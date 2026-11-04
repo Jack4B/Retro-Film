@@ -41,6 +41,7 @@ import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.RawLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SaveProgress
 import app.retrofilm.pipeline.SignatureFont
@@ -52,6 +53,8 @@ import java.io.InputStream
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
@@ -342,6 +345,10 @@ class MainState(
     var exportProgress by mutableIntStateOf(0)
         private set
 
+    /** Postęp bieżącej sesji zapisu (J); null poza zapisem. */
+    var saveProgress: SaveProgress? by mutableStateOf(null)
+        private set
+
     /** Moc filmu 0..1 (miks z oryginałem); 1 = pełny film. */
     var intensity by mutableFloatStateOf(1f)
 
@@ -463,6 +470,16 @@ class MainState(
         return FrameRenderer.status(frame, w, h, signatureTypeface())
     }
 
+    /** Zmierzony zapas HDR w EV: z treści gain mapy (I) albo z dekodu F16 DNG (J); null = prior z nagłówka. */
+    private fun measureHeadroom(bytes: ByteArray): Float? = when {
+        photoHasGainMap && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
+            UltraHdrExport.measuredHeadroom({ java.io.ByteArrayInputStream(bytes) }, hdrInfo.headroomEv)
+
+        HdrAnalysis.isTiff(bytes) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> RawLoader.analyseHeadroom(bytes)
+
+        else -> null
+    }
+
     /** Wymiary oryginału dla [p] (gdy nieznane: wymiary bitmapy). */
     fun sourceOf(p: Bitmap): Pair<Int, Int> = sourceSize.takeIf { it.first > 0 } ?: (p.width to p.height)
 
@@ -478,11 +495,10 @@ class MainState(
             }
             photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
             hdrInfo = HdrAnalysis.of(bytes)
-            if (photoHasGainMap && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                // I: zapas z rzeczywistej treści gain mapy (mocno pomniejszony dekod), nie tylko z XMP
-                val raw = { java.io.ByteArrayInputStream(bytes) }
-                runCatching { withContext(Dispatchers.IO) { UltraHdrExport.measuredHeadroom(raw, hdrInfo.headroomEv) } }
-                    .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
+            // J: pomiar zapasu HDR (gain mapa / DNG F16) równolegle z dekodowaniem podglądu, nie przed nim – w I
+            // dokładał się szeregowo do open_first_preview i open_full_preview (230 → 302 ms w CI).
+            val headroom = CoroutineScope(currentCoroutineContext()).async(Dispatchers.Default) {
+                runCatching { measureHeadroom(bytes) }.getOrNull()
             }
             // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
             // HDR wpływa tylko na zapis, więc nie wymaga ponownego dekodowania.
@@ -505,6 +521,7 @@ class MainState(
             updatePerfContext()
             photo = loaded.bitmap
             before = null
+            headroom.await()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
             thumbnails.switchTo(uri)
             null
         } catch (_: IOException) {
@@ -552,7 +569,6 @@ class MainState(
         var reducedCount = 0
         val result = exportBatch(only, {
             current = only[it]
-            SaveProgress.reset()
             exportProgress = it + 1
         }) { photoIndex ->
             val uri = uris[photoIndex]
@@ -566,7 +582,7 @@ class MainState(
                 face,
                 exportMaxSide,
                 exportFormat.copy(hdr = hdrFor(photoIndex))
-            ).apply { trace = SaveTrace() }
+            ).apply { trace = SaveTrace().also { saveProgress = it.progress } }
             val out = withContext(Dispatchers.Default) {
                 job.run(exportSource(context, uri, hdrFor(photoIndex)), null)
             }
@@ -790,7 +806,6 @@ class MainState(
     suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val start = PerfLog.now()
         val p = photo ?: return@withBusy UiMessage.LoadFailed
-        SaveProgress.reset()
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val job = ExportJob(
@@ -800,7 +815,7 @@ class MainState(
                 signatureTypeface(),
                 exportMaxSide,
                 exportFormat
-            ).apply { trace = SaveTrace() }
+            ).apply { trace = SaveTrace().also { saveProgress = it.progress } }
             val uri = uris.getOrNull(index)
             val open: (() -> java.io.InputStream)? = if (context != null &&
                 uri != null
@@ -845,6 +860,7 @@ class MainState(
             block()
         } finally {
             busy = false
+            saveProgress = null
         }
     }
 

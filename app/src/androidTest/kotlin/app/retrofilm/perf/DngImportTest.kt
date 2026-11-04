@@ -47,4 +47,16 @@ class DngImportTest {
         const val TOL = 40
         const val NS = 1_000_000L
     }
+
+    /** J: analiza zapasu HDR z DNG (dekod F16) nie rzuca, daje wartość w zakresie i mieści się w budżecie czasu. */
+    @Test
+    fun analysesHeadroomFromF16Decode() {
+        val bytes = open().use { it.readBytes() }
+        val t = System.nanoTime()
+        val ev = app.retrofilm.pipeline.RawLoader.analyseHeadroom(bytes)
+        val ms = (System.nanoTime() - t) / NS
+        instr.sendStatus(0, Bundle().apply { putString("dng_headroom_ms", ms.toString()) })
+        instr.sendStatus(0, Bundle().apply { putString("dng_headroom_ev_x100", (ev * 100).toInt().toString()) })
+        assertTrue("ev=$ev", ev in 0f..6f)
+    }
 }

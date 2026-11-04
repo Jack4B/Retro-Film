@@ -61,6 +61,20 @@ object HdrAnalysis {
         return (minLog2 + (maxLog2 - minLog2) * g).coerceIn(0f, MAX_HEADROOM_EV)
     }
 
+    /**
+     * Zapas HDR (EV) DNG z pomniejszonego dekodu F16 w liniowym rozszerzonym sRGB (J): 99,5 percentyl luminancji
+     * ponad biel SDR (1,0) po zniesieniu BaselineExposure, którą dekoder już nałożył ([baselineEv] – jasność po
+     * zalecanej ekspozycji producenta to punkt odniesienia, zapas liczymy względem niej). Dekoder, który obcina
+     * do 1,0, daje 0 – bezpieczny brak zapasu.
+     */
+    fun rawHeadroom(linearLuma: FloatArray): Float {
+        if (linearLuma.isEmpty()) return 0f
+        val sorted = linearLuma.copyOf().also { it.sort() }
+        val p = sorted[((sorted.size - 1) * RAW_PERCENTILE).toInt()]
+        return if (p <= 1f) 0f else (kotlin.math.ln(p) / kotlin.math.ln(2f)).coerceIn(0f, MAX_HEADROOM_EV)
+    }
+
+    private const val RAW_PERCENTILE = 0.995f
     private const val BYTE_LEVELS = 256
     private const val P99 = 0.99f
     private const val MIN_GAMMA = 0.01f
@@ -93,7 +107,7 @@ object HdrAnalysis {
         private fun u(at: Int) = b[at].toInt() and 0xFF
     }
 
-    private fun isTiff(b: ByteArray) = b.size > 8 && (
+    internal fun isTiff(b: ByteArray) = b.size > 8 && (
         (b[0] == 'I'.code.toByte() && b[1] == 'I'.code.toByte() && b[2].toInt() == 42 && b[3].toInt() == 0) ||
             (b[0] == 'M'.code.toByte() && b[1] == 'M'.code.toByte() && b[2].toInt() == 0 && b[3].toInt() == 42)
         )

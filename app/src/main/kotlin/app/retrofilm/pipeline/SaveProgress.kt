@@ -3,22 +3,17 @@ package app.retrofilm.pipeline
 import kotlin.math.max
 
 /**
- * Postęp pojedynczego zapisu 0..1 (I): etapy [ExportJob] ustawiają znaczniki, a [StripPipeline] w zakresie
+ * Postęp jednej sesji zapisu 0..1 (I; J: obiekt per sesja zamiast globalnego – równoległy podgląd lub druga
+ * sesja nie miesza się z paskiem): etapy [ExportJob] ustawiają znaczniki, a [StripPipeline] w zakresie
  * [range] raportuje ukończone kafle – pasek jest określony zamiast „kręciołka”. Tylko odczyt z UI (polling).
  */
-object SaveProgress {
+class SaveProgress {
     @Volatile var value = 0f
         private set
 
     @Volatile private var from = 0f
 
     @Volatile private var to = 0f
-
-    fun reset() {
-        value = 0f
-        from = 0f
-        to = 0f
-    }
 
     /** Ustawia postęp (nie cofa). */
     fun mark(v: Float) {

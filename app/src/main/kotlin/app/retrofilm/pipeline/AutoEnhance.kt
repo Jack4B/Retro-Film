@@ -218,8 +218,15 @@ object AutoEnhance {
         return ev.coerceIn(-EXPOSURE_LIMIT, EXPOSURE_LIMIT).let { if (abs(it) < MIN_EV) 0f else it }
     }
 
-    /** Średnia logarytmiczna jasności ważona do środka kadru (gaussowsko), z przepalonymi blokami włącznie. */
-    private fun key(lumas: FloatArray, s: Sample): Float {
+    /**
+     * Klucz sceny (J): średnia logarytmiczna ważona do środka kadru (gaussowsko) z cenzurą przepalonych bloków.
+     * Przepalony blok to wiadomo tylko „≥ obserwowanej”, więc nie jest ani odrzucany (zaniża klucz), ani brany
+     * wprost: jego log-jasność zastępuje oczekiwana wartość ogona powyżej progu, oszacowana z jasnych
+     * nieprzepalonych bloków (estymator typu Tobit, jednostronny). Bez przepalonych = dawna średnia.
+     */
+    internal fun key(lumas: FloatArray, s: Sample): Float {
+        val logs = DoubleArray(lumas.size) { ln(lumas[it].coerceAtLeast(MIN_LUMA).toDouble()) }
+        val bonus = CensoredTail.bonus(logs, s.clipped)
         var sumW = 0.0
         var sumL = 0.0
         for (i in lumas.indices) {
@@ -227,7 +234,7 @@ object AutoEnhance {
             val dy = ((i / s.gw) + 0.5f) / s.gh - 0.5f
             val wgt = exp(-(dx * dx + dy * dy) / (2f * CENTER_SIGMA * CENTER_SIGMA)).toDouble()
             sumW += wgt
-            sumL += wgt * ln(lumas[i].coerceAtLeast(MIN_LUMA).toDouble())
+            sumL += wgt * (logs[i] + if (s.clipped[i]) bonus else 0.0)
         }
         return kotlin.math.exp(sumL / sumW).toFloat()
     }
@@ -265,5 +272,21 @@ object AutoEnhance {
             else -> -((chroma - 0.16f) * 3f).coerceIn(0f, 0.2f)
         }
         return if (scene.scene == AutoScene.Portrait) value.coerceAtMost(0.15f) else value
+    }
+}
+
+/**
+ * Średnia nadwyżka log-jasności ponad próg w górnym ogonie nieprzepalonych (od [TAIL_FROM] percentyla):
+ * jeśli rozkład jest wykładniczy w ogonie, oczekiwana nadwyżka nad progiem cenzury jest stała (bez pamięci).
+ */
+internal object CensoredTail {
+    private const val TAIL_FROM = 0.9f
+    private const val MIN_TAIL = 20
+    private const val MAX_BONUS = 0.1 // ln: ≤ 0,14 EV; większe przestrzeliwuje ColorChecker +1 EV (0,2 → 0,24 EV)
+    fun bonus(logs: DoubleArray, clipped: BooleanArray): Double {
+        val free = logs.filterIndexed { i, _ -> !clipped[i] }.sorted()
+        if (clipped.none { it } || free.size < MIN_TAIL) return 0.0
+        val from = free[((free.size - 1) * TAIL_FROM).toInt()]
+        return (free.filter { it >= from }.average() - from).coerceIn(0.0, MAX_BONUS)
     }
 }

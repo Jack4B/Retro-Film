@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
-import app.retrofilm.pipeline.SaveProgress
 import kotlinx.coroutines.delay
 
 private val Pad = 20.dp
@@ -145,7 +144,7 @@ private fun Progress(state: MainState, result: UiMessage?) {
     // I: postęp w obrębie jednego zdjęcia (kafle potoku), odczytywany co 100 ms – pasek określony także dla 1 zdjęcia
     val within by produceState(0f, state.busy) {
         while (state.busy) {
-            value = SaveProgress.value
+            value = state.saveProgress?.value ?: 0f
             delay(PROGRESS_POLL_MS)
         }
         value = 0f

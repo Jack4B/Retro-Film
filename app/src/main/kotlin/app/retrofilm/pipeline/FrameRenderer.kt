@@ -108,26 +108,15 @@ object FrameRenderer {
         } else {
             1
         }
-        val (cw, ch) = TightFrame.canvasSize(
-            options.aspect,
-            photo.width.toFloat(),
-            photo.height.toFloat(),
-            options.margin,
-            options.drawsSignature,
-            maxOf(photo.width, photo.height).toFloat(),
-            options.signatureScale,
-            lines
-        )
-        val w = cw.roundToInt().coerceAtLeast(1)
-        val h = ch.roundToInt().coerceAtLeast(1)
-        val layout = TightFrame.layout(
-            SizeF(w.toFloat(), h.toFloat()),
-            SizeF(photo.width.toFloat(), photo.height.toFloat()),
-            options.margin,
-            options.drawsSignature,
-            options.signatureScale,
-            lines
-        )
+        // J: płótno dobrane tak, by okno zdjęcia miało (po zaokrągleniu) jego rozmiar – zdjęcie kopiowane 1:1, ramka
+        // rośnie na zewnątrz. Dawniej dłuższy bok płótna = dłuższy bok zdjęcia, więc każde zdjęcie w ramce przechodziło
+        // pełny Lanczos (0,3–0,6 s przy 12 MP) i traciło ostrość. Układ jest liniowy w długości boku: dwa przybliżenia.
+        val first = layoutFor(photo, options, lines, maxOf(photo.width, photo.height).toFloat())
+        val grow = photo.width / first.photo.width.coerceAtLeast(1f)
+        val longSide = maxOf(first.canvasWidth, first.canvasHeight) * grow.coerceIn(1f, MAX_GROW)
+        val layout = layoutFor(photo, options, lines, longSide)
+        val w = layout.canvasWidth.roundToInt().coerceAtLeast(1)
+        val h = layout.canvasHeight.roundToInt().coerceAtLeast(1)
         val out = blank(w, h, colorSpaceSource)
         val canvas = Canvas(out)
         canvas.drawColor(Color.WHITE)
@@ -136,6 +125,34 @@ object FrameRenderer {
         if (options.drawsSignature) drawSignature(canvas, layout, options, typeface)
         if (options.watermark) Watermark.draw(canvas, AndroidRectF(p.left, p.top, p.right, p.bottom))
         return out
+    }
+
+    private fun layoutFor(
+        photo: Bitmap,
+        options: FrameOptions,
+        lines: Int,
+        longSide: Float
+    ): app.retrofilm.core.frame.FrameLayout {
+        val (cw, ch) = TightFrame.canvasSize(
+            options.aspect,
+            photo.width.toFloat(),
+            photo.height.toFloat(),
+            options.margin,
+            options.drawsSignature,
+            longSide,
+            options.signatureScale,
+            lines
+        )
+        val w = cw.roundToInt().coerceAtLeast(1)
+        val h = ch.roundToInt().coerceAtLeast(1)
+        return TightFrame.layout(
+            SizeF(w.toFloat(), h.toFloat()),
+            SizeF(photo.width.toFloat(), photo.height.toFloat()),
+            options.margin,
+            options.drawsSignature,
+            options.signatureScale,
+            lines
+        )
     }
 
     private fun drawSignature(
@@ -210,3 +227,6 @@ object FrameRenderer {
 }
 
 private const val SNAP_PX = 2
+
+/** Płótno co najwyżej tyle razy dłuższe niż zdjęcie (bardzo szerokie marginesy lub proporcje). */
+private const val MAX_GROW = 2f

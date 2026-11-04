@@ -80,7 +80,7 @@ object FloatExport {
             val finish = finishing.takeUnless { it.isNeutral }
             val name = if (finish == null) "lut_render_dither" else "lut_effects_dither"
             return trace.timed(name) {
-                val io = StripIo(fracOut = fracOut, stage = stage, finish = finish)
+                val io = StripIo(fracOut = fracOut, stage = stage, finish = finish, progress = trace?.progress)
                 runOrShrink(input, first, deband, if (finish == null) emptyList() else faces, io)
             }.also {
                 if (input !== work) input.recycle()
@@ -88,11 +88,23 @@ object FloatExport {
         }
         val frac = ByteArray(work.width * work.height)
         val filmed = trace.timed("lut_render") {
-            StripPipeline.run(input, first, deband, emptyList(), StripIo(null, frac, stage, false))
+            StripPipeline.run(
+                input,
+                first,
+                deband,
+                emptyList(),
+                StripIo(null, frac, stage, false, progress = trace?.progress)
+            )
         }
         if (input !== work) input.recycle()
         val finished = trace.timed("effects_dither") {
-            StripPipeline.run(filmed, finishing, false, faces, StripIo(fracIn = frac, fracOut = fracOut))
+            StripPipeline.run(
+                filmed,
+                finishing,
+                false,
+                faces,
+                StripIo(fracIn = frac, fracOut = fracOut, progress = trace?.progress)
+            )
         }
         filmed.recycle()
         return finished
