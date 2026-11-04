@@ -44,6 +44,8 @@ data class Adjustments(
     val grainSize: Float = DEFAULT_GRAIN_SIZE,
     /** Winieta 0..1: przyciemnione rogi. */
     val vignette: Float = 0f,
+    /** Halacja 0..1 (I): ciepła poświata wokół świateł ([Halation]); część wykończenia. */
+    val halation: Float = 0f,
     /** Ilość wyostrzania 0..1 (zob. [Sharpener]); 0 = wyłączone. */
     val sharpness: Float = 0f,
     /** Promień wyostrzania 0,5..3 (1 = σ 1 px przy 4000 px dłuższego boku). */
@@ -106,6 +108,7 @@ data class Adjustments(
         grain = 0f,
         grainSize = DEFAULT_GRAIN_SIZE,
         vignette = 0f,
+        halation = 0f,
         sharpness = 0f,
         sharpRadius = SharpenParams.DEFAULT_RADIUS,
         sharpDetail = SharpenParams.DEFAULT_DETAIL,
@@ -130,6 +133,7 @@ data class Adjustments(
         grain = grain,
         grainSize = grainSize,
         vignette = vignette,
+        halation = halation,
         sharpness = sharpness,
         sharpRadius = sharpRadius,
         sharpDetail = sharpDetail,
@@ -223,7 +227,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val contrast: LuminanceContrast? = if (adj.contrast != 0f) LuminanceContrast(adj.contrast) else null
     private val vignette: VignetteLut? = if (adj.vignette > 0f) VignetteLut(adj.vignette) else null
     private val curves: CurveLut? = if (adj.curves.isNeutral) null else CurveLut(adj.curves)
-    private val hasEffects = adj.vignette > 0f || adj.grain > 0f
+    private val hasEffects = adj.vignette > 0f || adj.grain > 0f || adj.halation > 0f
 
     /** Udział barwy bieżącego piksela w ziarnie (zob. [grainColor]); ustawiany tuż przed [effects]. */
     private var grainColorful = 1f
@@ -285,8 +289,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             chroma?.apply(rgb)
             hsl?.apply(rgb)
-            texture(mask, x * xStep, row)
-            if (hasTone) toneRecovery(mask, x * xStep, row)
+            val gx = span.firstCol + x * xStep
+            texture(mask, gx, row)
+            if (hasTone) toneRecovery(mask, gx, row)
             ends?.apply(rgb)
             contrast?.apply(rgb)
             curves?.apply(rgb)
@@ -302,9 +307,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     }
 
     /** Winieta i ziarno na kanałach float: [count] pikseli od indeksu [from] (początek wiersza), położenie [span]. */
-    internal fun effectsPlanes(planes: Planes, from: Int, count: Int, span: PixelSpan) {
+    internal fun effectsPlanes(planes: Planes, from: Int, count: Int, span: PixelSpan, halation: Halation.Map? = null) {
         if (!hasEffects) return
-        val cell = grainCell(span.width, span.totalRows)
+        val cell = grainCell(span.totalCols, span.totalRows)
         var x = 0
         var row = span.firstRow
         for (i in from until from + count) {
@@ -312,7 +317,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[1] = planes.g[i] / BYTE_MAX
             rgb[2] = planes.b[i] / BYTE_MAX
             grainColorful = planes.grainChroma[i]
-            effects(x, row, span.width, span.totalRows, cell)
+            val gx = span.firstCol + x
+            if (halation != null) Halation.apply(rgb, halation.at(gx, row), adj.halation)
+            effects(gx, row, span.totalCols, span.totalRows, cell)
             store(planes, i)
             if (++x == span.width) {
                 x = 0
@@ -430,9 +437,12 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Float) {
         if (adj.vignette > 0f) {
-            val nx = (x + HALF) / width * 2f - 1f
-            val ny = (y + HALF) / rows * 2f - 1f
-            val f = vignette?.gain((nx * nx + ny * ny) / 2f) ?: 1f
+            // odległość od osi w pikselach względem połowy przekątnej: koło, nie elipsa (I, audyt efektów)
+            val dx = x + HALF - width / 2f
+            val dy = y + HALF - rows / 2f
+            val f =
+                vignette?.gain((dx * dx + dy * dy) / ((width.toFloat() * width + rows.toFloat() * rows) * HALF * HALF))
+                    ?: 1f
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
@@ -588,7 +598,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 }
 
 /** Położenie porcji pikseli w obrazie: szerokość wiersza, pierwszy wiersz i liczba wierszy całego obrazu. */
-data class PixelSpan(val width: Int, val firstRow: Int = 0, val totalRows: Int = 1)
+data class PixelSpan(
+    val width: Int,
+    val firstRow: Int = 0,
+    val totalRows: Int = 1,
+    /** Kafel (I): pierwsza kolumna porcji i szerokość całego obrazu (winieta, ziarno, mapy w niskiej rozdz.). */
+    val firstCol: Int = 0,
+    val totalCols: Int = width
+)
 
 /** Nakłada [Adjustments] na bitmapę (nowa bitmapa ARGB_8888, źródło bez zmian). */
 object AdjustmentsApplier {

@@ -79,7 +79,7 @@ internal object Dehaze {
         var x = 0
         var row = span.firstRow
         for (i in 0 until count) {
-            val tt = max(T_MIN, plan.low.sample(plan.t, x * xStep, row))
+            val tt = max(T_MIN, plan.low.sample(plan.t, span.firstCol + x * xStep, row))
             planes.r[i] = (restoreF(planes.r[i], plan.airlight[0], tt) * plan.gain).coerceAtMost(BYTE_MAX)
             planes.g[i] = (restoreF(planes.g[i], plan.airlight[1], tt) * plan.gain).coerceAtMost(BYTE_MAX)
             planes.b[i] = (restoreF(planes.b[i], plan.airlight[2], tt) * plan.gain).coerceAtMost(BYTE_MAX)

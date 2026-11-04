@@ -86,19 +86,20 @@ object DetailFilter {
         sharp: SharpenParams,
         clarity: Float,
         map: ClarityMap?,
-        semantic: SemanticSharpen.Map? = null
+        semantic: SemanticSharpen.Map? = null,
+        firstCol: Int = 0
     ): FloatArray {
         val rows = luma.size / w
         val delta = if (sharp.amount > 0f) {
-            // pas z [StripPipeline] ma już zapas wierszy: bez dzielenia na podpasy (G – bez zagnieżdżonych wątków i
-            // powtórnych marginesów)
-            Sharpener.delta(luma, w, rows, sharp, stripRows = rows, longSide = longSide)
+            // podpasy [StripBudget.SHARP_CHUNK] (I): bufory RL nie rosną z wysokością pasa; w wątku pasa bez
+            // zagnieżdżonych wątków
+            Sharpener.delta(luma, w, rows, sharp, stripRows = StripBudget.SHARP_CHUNK, longSide = longSide)
         } else {
             FloatArray(luma.size)
         }
         if (semantic != null && sharp.amount > 0f) {
             for (y in 0 until rows) {
-                for (x in 0 until w) delta[y * w + x] *= semantic.at(x, firstRow + y)
+                for (x in 0 until w) delta[y * w + x] *= semantic.at(firstCol + x, firstRow + y)
             }
         }
         if (clarity != 0f && map != null) {
@@ -106,7 +107,7 @@ object DetailFilter {
                 for (x in 0 until w) {
                     val i = y * w + x
                     val mid = 1f - abs(2f * luma[i] / BYTE_MAX - 1f)
-                    delta[i] += (luma[i] - map.base(x, firstRow + y)) * clarity * CLARITY_GAIN * mid
+                    delta[i] += (luma[i] - map.base(firstCol + x, firstRow + y)) * clarity * CLARITY_GAIN * mid
                 }
             }
         }
@@ -154,13 +155,14 @@ object DetailFilter {
     }
 
     internal fun blurRows(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
-        val window = (2 * r + 1).toFloat()
+        // sumy w double: wynik praktycznie nie zależy od początku pasa/kafla (I: kafle kolumnowe)
+        val window = (2 * r + 1).toDouble()
         for (y in 0 until h) {
             val row = y * w
-            var sum = 0f
+            var sum = 0.0
             for (k in -r..r) sum += src[row + k.coerceIn(0, w - 1)]
             for (x in 0 until w) {
-                dst[row + x] = sum / window
+                dst[row + x] = (sum / window).toFloat()
                 sum += src[row + (x + r + 1).coerceAtMost(w - 1)] - src[row + (x - r).coerceAtLeast(0)]
             }
         }
@@ -168,8 +170,8 @@ object DetailFilter {
 
     /** Jak [blurRows] w pionie; wiersz po wierszu z sumami kolumn (kolejność sum ta sama, wynik identyczny, G). */
     internal fun blurCols(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
-        val window = (2 * r + 1).toFloat()
-        val sums = FloatArray(w)
+        val window = (2 * r + 1).toDouble()
+        val sums = DoubleArray(w)
         for (k in -r..r) {
             val row = k.coerceIn(0, h - 1) * w
             for (x in 0 until w) sums[x] += src[row + x]
@@ -179,7 +181,7 @@ object DetailFilter {
             val add = (y + r + 1).coerceAtMost(h - 1) * w
             val sub = (y - r).coerceAtLeast(0) * w
             for (x in 0 until w) {
-                dst[out + x] = sums[x] / window
+                dst[out + x] = (sums[x] / window).toFloat()
                 sums[x] += src[add + x] - src[sub + x]
             }
         }

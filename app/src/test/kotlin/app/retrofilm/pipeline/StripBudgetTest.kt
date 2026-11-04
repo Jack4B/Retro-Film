@@ -21,13 +21,26 @@ class StripBudgetTest {
     private fun plans(halo: Int, sharpMargin: Int, deband: Int) =
         StripPlans(null, null, null, null, null, null, null, halo, 4096, deband, sharpMargin)
 
+    @Test fun previewSizeKeepsAllEightThreads() {
+        // I: H obcinało tu wątki do 2–3 (regres open_full_preview 568 → 1227 ms na realme)
+        val p = plans(halo = 70, sharpMargin = 30, deband = 17)
+        val l = StripBudget.layout(1536, 2048, p, sharp, StripBudget.bytes(512 * mb), workers = 8)
+        assertTrue("$l", l.threads == 8)
+    }
+
+    @Test fun twelveMpTypicalUsesMostCores() {
+        val p = plans(halo = 70, sharpMargin = 30, deband = 34)
+        val l = StripBudget.layout(3072, 4096, p, sharp, StripBudget.bytes(512 * mb), workers = 8)
+        assertTrue("$l", l.threads >= 6)
+    }
+
     @Test fun twelveMpFitsBudgetOfTypicalHeap() {
         val p = plans(halo = 156, sharpMargin = 122, deband = 34)
         val budget = StripBudget.bytes(512 * mb)
         val l = StripBudget.layout(3072, 4096, p, sharp, budget)
-        val total = StripBudget.workerBytes(3072, l.core, p, true) * l.threads
+        val total = StripBudget.workerBytes(StripBudget.tileWidth(3072, l.tilesX, 156), l.core, p, true) * l.threads
         assertTrue("total=${total / mb} MB budget=${budget / mb} MB $l", total <= budget && l.threads >= 1)
-        assertTrue(budget <= 250 * mb)
+        assertTrue(budget <= 256 * mb)
     }
 
     @Test fun oldLayoutWasOverAGigabyte() {

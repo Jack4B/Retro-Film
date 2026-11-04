@@ -39,4 +39,16 @@ class HdrAnalysisTest {
         assertEquals(0f, HdrAnalysis.gainMapHeadroom("brak".toByteArray()), 0f)
         assertEquals(6f, HdrAnalysis.gainMapHeadroom("hdrgm:HDRCapacityMax=\"99\"".toByteArray()), 0f)
     }
+
+    @Test fun measuredHeadroomFromGainMapContent() {
+        // I: mapa prawie pusta (scena bez świateł) → ~0 EV mimo HDRCapacityMax 3
+        val flat = IntArray(1000) { 0 }
+        org.junit.Assert.assertEquals(0f, HdrAnalysis.measuredHeadroom(flat, 0f, 3f, 1f), 1e-4f)
+        // 5% pikseli na pełnej wartości → p99 = max
+        val bright = IntArray(1000) { if (it < 50) 255 else 0 }
+        org.junit.Assert.assertEquals(3f, HdrAnalysis.measuredHeadroom(bright, 0f, 3f, 1f), 1e-4f)
+        // połowa wartości przy γ=1 → połowa zakresu
+        val half = IntArray(1000) { 128 }
+        org.junit.Assert.assertEquals(1.5f, HdrAnalysis.measuredHeadroom(half, 0f, 3f, 1f), 0.02f)
+    }
 }

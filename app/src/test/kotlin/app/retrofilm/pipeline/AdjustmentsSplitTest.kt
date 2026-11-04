@@ -13,7 +13,7 @@ class AdjustmentsSplitTest {
         "whites", "blacks", "texture", "denoise", "lumaDenoise", "chromaEdges", "hsl", "masks"
     )
     private val finishing = setOf(
-        "fade", "grain", "grainSize", "vignette", "sharpness", "sharpRadius", "sharpDetail", "sharpMasking",
+        "fade", "grain", "grainSize", "vignette", "halation", "sharpness", "sharpRadius", "sharpDetail", "sharpMasking",
         "sharpMode", "sharpSmart", "sharpMaskPreview", "shadowHue", "shadowAmount", "highlightHue", "highlightAmount",
         "toneBalance", "curves"
     )

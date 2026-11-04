@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -41,7 +42,9 @@ import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
+import app.retrofilm.pipeline.SaveProgress
 import app.retrofilm.pipeline.SignatureFont
+import app.retrofilm.pipeline.UltraHdrExport
 import app.retrofilm.pipeline.UltraHdrJpeg
 import app.retrofilm.settings.EditDefaults
 import java.io.IOException
@@ -475,6 +478,12 @@ class MainState(
             }
             photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
             hdrInfo = HdrAnalysis.of(bytes)
+            if (photoHasGainMap && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                // I: zapas z rzeczywistej treści gain mapy (mocno pomniejszony dekod), nie tylko z XMP
+                val raw = { java.io.ByteArrayInputStream(bytes) }
+                runCatching { withContext(Dispatchers.IO) { UltraHdrExport.measuredHeadroom(raw, hdrInfo.headroomEv) } }
+                    .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
+            }
             // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
             // HDR wpływa tylko na zapis, więc nie wymaga ponownego dekodowania.
             val decodeBytes = UltraHdrJpeg.sdrOnly(bytes)
@@ -543,6 +552,7 @@ class MainState(
         var reducedCount = 0
         val result = exportBatch(only, {
             current = only[it]
+            SaveProgress.reset()
             exportProgress = it + 1
         }) { photoIndex ->
             val uri = uris[photoIndex]
@@ -780,6 +790,7 @@ class MainState(
     suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val start = PerfLog.now()
         val p = photo ?: return@withBusy UiMessage.LoadFailed
+        SaveProgress.reset()
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val job = ExportJob(

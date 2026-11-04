@@ -38,7 +38,9 @@ internal object Parallel {
         val threads = minOf(workers, count, maxThreads)
         if (threads <= 1 || insideWorker.get()) {
             val state = newState()
-            for (i in 0 until count) body(state, i)
+            val serial = { for (i in 0 until count) body(state, i) }
+            // limit wątków z budżetu pamięci (I): zagnieżdżone pętle też zostają w tym wątku
+            if (maxThreads < workers && !insideWorker.get()) asWorker(serial) else serial()
             return
         }
         val next = AtomicInteger()

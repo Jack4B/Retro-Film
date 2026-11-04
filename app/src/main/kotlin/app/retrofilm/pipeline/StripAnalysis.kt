@@ -14,6 +14,7 @@ private const val LUMA_R = 0.2126f
 private const val LUMA_G = 0.7152f
 private const val LUMA_B = 0.0722f
 private const val MASK = 0xFF
+private const val BYTE_MAX_F = 255f
 private const val RED_SHIFT = 16
 private const val GREEN_SHIFT = 8
 
@@ -94,6 +95,7 @@ internal class StripAnalysis(
             halo = halo,
             longSide = max(w, h),
             debandRadius = debandRadius,
+            halation = if (sharp.halation > 0f) halationMap(chroma, dehaze, tone) else null,
             sharpMargin = sharpMargin
         )
     }
@@ -175,6 +177,29 @@ internal class StripAnalysis(
             }
         }
         return SemanticSharpen.build(low, acc0.acc.mean(0), faces)
+    }
+
+    /** Mapa halacji z jasności po korektach (i filmie), w skali [Halation.TARGET]. */
+    private fun halationMap(chroma: ChromaDenoise.Plan?, dehaze: Dehaze.Plan?, tone: ToneMask?): Halation.Map {
+        val low = Lowres.forSize(w, h, Halation.TARGET)
+        val stride = min(SEMANTIC_STRIDE, low.factor)
+        val sampler = Sampler(src, stride)
+        val acc0 = Parallel.reduce(
+            sampler.chunks,
+            { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
+            { a, b -> a.acc.merge(b.acc) }
+        ) { state, chunk ->
+            sampler.rows(chunk) { y, p ->
+                restoreRow(chroma, dehaze, p, y, stride)
+                if (!adj.isNeutral) state.processor.processPlanes(p, p.size, PixelSpan(p.size, y, h), tone, stride)
+                stage?.apply(p, 0, p.size)
+                for (i in 0 until p.size) {
+                    val l = (LUMA_R * p.r[i] + LUMA_G * p.g[i] + LUMA_B * p.b[i]) / BYTE_MAX_F
+                    state.acc.add(i * stride, y, Halation.energy(l))
+                }
+            }
+        }
+        return Halation.build(low, acc0.acc.mean(0))
     }
 
     /** Odszumianie koloru i dehaze na próbkach wiersza [y] (co [stride]-ty piksel), jak na pasach. */

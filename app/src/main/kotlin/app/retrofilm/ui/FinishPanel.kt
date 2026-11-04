@@ -84,6 +84,9 @@ private fun KlisaSliders(state: MainState) {
     AdjustSlider(stringResource(R.string.adjust_vignette), a.vignette, { plainPercent(it) }, range = 0f..RANGE) {
         state.adjustments = a.copy(vignette = it)
     }
+    AdjustSlider(stringResource(R.string.adjust_halation), a.halation, { plainPercent(it) }, range = 0f..RANGE) {
+        state.adjustments = a.copy(halation = it)
+    }
 }
 
 private fun plainPercent(v: Float): String = "%d%%".format(Locale.forLanguageTag("pl"), (v * PERCENT).roundToInt())

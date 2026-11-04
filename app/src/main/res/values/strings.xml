@@ -245,6 +245,7 @@
     <string name="adjust_fade">Blaknięcie</string>
     <string name="adjust_grain">Ziarno</string>
     <string name="adjust_vignette">Winieta</string>
+    <string name="adjust_halation">Halacja</string>
     <string name="adjust_group_hsl">Kolory</string>
     <string name="adjust_group_toning">Tonowanie</string>
     <string name="hsl_red">Czerwony</string>
