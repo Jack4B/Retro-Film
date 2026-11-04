@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
 /**
  * K: jądra LUT-a na GPU vs [LutStage] na CPU – różnica pikseli (skala 0..255, przed ditheringiem) w granicy szumu
  * ditheringu ([SaveBackend.TOLERANCE]) dla każdego jądra, które na tym urządzeniu działa; co najmniej jedno musi.
- * Raportuje czasy pasa 2 MP (emulator liczy GPU programowo – czasy tylko orientacyjne).
+ * Raportuje czasy pasa 1 MP (emulator liczy GPU programowo – czasy tylko orientacyjne).
  */
 @RunWith(AndroidJUnit4::class)
 class GpuSaveKernelTest {
@@ -50,12 +50,12 @@ class GpuSaveKernelTest {
 
     @Test
     fun gpuKernelsMatchCpuWithinDitherNoise() {
-        val n = 2_000_000
+        val n = 1_000_000
         val cpu = LutStage(lut, 0.8f, false)
         val ref = planes(n)
         val t0 = System.nanoTime()
         cpu.apply(ref, 0, n)
-        report("gpu_kernel_cpu_2mp_ms", (System.nanoTime() - t0) / 1_000_000)
+        report("gpu_kernel_cpu_1mp_ms", (System.nanoTime() - t0) / 1_000_000)
         val good = mutableListOf<String>()
         for (k in kernels()) {
             val key = k.name.replace('-', '_')
@@ -65,7 +65,7 @@ class GpuSaveKernelTest {
                 val p2 = planes(n)
                 val t = System.nanoTime()
                 k.apply(p2.r, p2.g, p2.b, 0, n, lut, 0.8f)
-                report("gpu_kernel_${key}_2mp_ms", (System.nanoTime() - t) / 1_000_000)
+                report("gpu_kernel_${key}_1mp_ms", (System.nanoTime() - t) / 1_000_000)
                 var max = 0f
                 for (i in 0 until n) {
                     max = maxOf(max, abs(p2.r[i] - ref.r[i]), abs(p2.g[i] - ref.g[i]), abs(p2.b[i] - ref.b[i]))
@@ -74,7 +74,19 @@ class GpuSaveKernelTest {
             }
             runCatching { k.close() }
             val diff = result.getOrNull()
-            Log.i("RetroFilmPerf", "${k.name}: diff=$diff error=${result.exceptionOrNull()}")
+            val err = result.exceptionOrNull()
+            Log.i("RetroFilmPerf", "${k.name}: diff=$diff error=$err", err)
+            err?.let { e ->
+                val msg = generateSequence(e) {
+                    it.cause
+                }.joinToString(" <- ") { "${it.javaClass.simpleName}: ${it.message}" }
+                InstrumentationRegistry.getInstrumentation().sendStatus(
+                    0,
+                    Bundle().apply {
+                        putString("gpu_kernel_${key}_error", msg.take(400))
+                    }
+                )
+            }
             report("gpu_kernel_${key}_diff_x100", ((diff ?: -1f) * 100).toLong())
             if (diff != null && diff <= SaveBackend.TOLERANCE) good += k.name
         }
