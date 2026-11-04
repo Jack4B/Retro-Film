@@ -36,7 +36,7 @@ w kodzie i istniejących testów (goldeny silnika, straż regresji suwaków w CI
 | Plik | Jak działa | Poprawność | Wydajność | Ryzyka | Rekomendacje |
 |---|---|---|---|---|---|
 | pipeline/StripPipeline.kt, StripAnalysis.kt | Analiza w niskiej rozdzielczości → pasy z zapasem (halo) → wszystkie etapy na float → jedna kwantyzacja z ditheringiem | koncepcja bardzo dobra (brak pośrednich zaokrągleń) | pamięć stała względem rozmiaru; `synchronized(src)` na `getPixels` serializuje odczyt | niedeterminizm sum (R1 #2) | akumulator na kawałek |
-| pipeline/Parallel.kt | Pula ≤ 4 wątków, dynamiczny przydział, wywołania zagnieżdżone sekwencyjnie | poprawna, czeka na wszystkie po błędzie | dobra | pula `workers − 1` przy 1 rdzeniu: `newFixedThreadPool(0)` rzuci wyjątek, ale ścieżka `threads <= 1` omija pulę (lazy) – OK | — |
+| pipeline/Parallel.kt | Pula ≤ 4 wątków, dynamiczny przydział, wywołania zagnieżdżone sekwencyjnie | poprawna, czeka na wszystkie po błędzie | dobra | maks. 4 wątki niezależnie od rdzeni | — |
 | pipeline/Adjustments.kt (AdjustmentProcessor) | Ekspozycja, kontrast, światła/cienie, biele/czernie, temperatura, HSL, krzywa, maski na planach float | dobra; neutralne omijane (goldeny filmu bez zmian) | największy plik (688 linii), liczne tablice | złożoność utrzymania | dalszy podział na etapy |
 | pipeline/ToneMask.kt, HighlightRecovery.kt, TextureBoost.kt | Baza jasności filtrem prowadzonym; kompresja bazy w log-jasności + detal w 2 skalach (Durand–Dorsey / local Laplacian) | dobra; brak halo dzięki filtrowi prowadzonemu | niska rozdzielczość bazy, tanio | — | — |
 | pipeline/ToneCurve.kt | PCHIP (Fritsch–Carlson), monotoniczny | poprawna | tablica LUT 1D | — | — |
@@ -58,7 +58,7 @@ w kodzie i istniejących testów (goldeny silnika, straż regresji suwaków w CI
 |---|---|---|---|---|---|
 | pipeline/Geometry.kt, Perspective.kt, BicubicWarp.kt, CropFit.kt | Kamera otworkowa (pion/poziom), Catmull–Rom 16 próbek, największy kadr w czworokącie | poprawna | 16 próbek/piksel – najdroższy etap geometrii | nadstrzał przycinany | — |
 | pipeline/Resampler.kt | Lanczos-3 rozdzielny, jądro rozciągnięte przy zmniejszaniu | poprawny (bez aliasingu) | jednowątkowy, boxing wag | R1 #3 | R1 #3 |
-| pipeline/ExportPipeline.kt | sRGB → korekty → film → wykończenie → ramka → (rozmiar + lekkie wyostrzenie) → JPEG, MediaStore z `IS_PENDING` | poprawna kolejność; sprzątanie wpisu po błędzie | pełne kopie bitmap między etapami | pamięć przy 50 MP; przy `SecurityException` wpis zostaje pending | łapać też `RuntimeException` przy usuwaniu |
+| pipeline/ExportPipeline.kt | sRGB → korekty → film → wykończenie → ramka → (rozmiar + lekkie wyostrzenie) → JPEG, MediaStore z `IS_PENDING` | poprawna kolejność; sprzątanie wpisu po błędzie | pełne kopie bitmap między etapami | pamięć przy 50 MP | przetwarzanie pasami także w kroku rozmiaru |
 | pipeline/PhotoLoader.kt, ExifOrientation.kt | Dekodowanie z próbkowaniem do maxSide, orientacja EXIF na pikselach, zachowany profil | poprawna | — | — | — |
 | pipeline/FrameRenderer.kt, core/frame/FrameGeometry.kt, TightFrame.kt, Watermark.kt | Płótno ramki, podpis z kontrolą długości, znak wodny z QR v3-M | poprawna | rysowanie Canvas | QR stałego rozmiaru | — |
 | core/export/JpegMetadata.kt | Przepisywanie segmentów APP (EXIF/ICC) w JPEG | poprawna dla typowych plików | strumieniowo | nietypowe markery (np. bez EOI) | testy z plikami brzegowymi |
