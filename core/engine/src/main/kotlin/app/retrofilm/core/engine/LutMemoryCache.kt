@@ -15,11 +15,21 @@ class LutMemoryCache(private val maxBytes: Long = DEFAULT_MAX_BYTES) {
     @Synchronized
     fun get(id: String): Lut? = map[id]
 
+    private val loading = HashMap<String, Any>()
+
     /**
-     * Zwraca LUT z cache albo ładuje go przez [load] (poza blokadą) i wstawia;
-     * `null` z [load] nie jest cache'owane.
+     * Zwraca LUT z cache albo ładuje go przez [load] i wstawia; `null` z [load] nie jest cache'owane.
+     * Ładowanie odbywa się poza główną blokadą, ale z blokadą na identyfikator: równoległe wywołania
+     * dla tego samego [id] dekodują LUT raz (kolejne czekają i biorą wynik z cache), a różne id nie
+     * blokują się nawzajem.
      */
-    fun getOrPut(id: String, load: () -> Lut?): Lut? = get(id) ?: load()?.let { put(id, it) }
+    fun getOrPut(id: String, load: () -> Lut?): Lut? {
+        get(id)?.let { return it }
+        val lock = synchronized(this) { loading.getOrPut(id) { Any() } }
+        return synchronized(lock) {
+            get(id) ?: load()?.let { put(id, it) }
+        }.also { synchronized(this) { loading.remove(id) } }
+    }
 
     @Synchronized
     fun put(id: String, lut: Lut): Lut {

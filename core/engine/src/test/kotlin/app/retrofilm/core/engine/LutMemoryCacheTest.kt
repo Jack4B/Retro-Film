@@ -6,6 +6,10 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 class LutMemoryCacheTest {
     private fun lut(size: Int = 2) = Lut(size, ByteArray(Lut.expectedBytes(size, 1)))
@@ -58,5 +62,49 @@ class LutMemoryCacheTest {
     @Test
     fun defaultFitsThree144Luts() {
         assertEquals(3L * Lut.expectedBytes(144, 1), LutMemoryCache.DEFAULT_MAX_BYTES)
+    }
+
+    @Test
+    fun concurrentGetOrPutLoadsOnce() {
+        val c = LutMemoryCache(maxBytes = 4 * one)
+        val loads = AtomicInteger()
+        val threads = 16
+        val pool = Executors.newFixedThreadPool(threads)
+        val start = CountDownLatch(1)
+        val results = (0 until threads).map {
+            pool.submit<Lut?> {
+                start.await()
+                c.getOrPut("a") {
+                    loads.incrementAndGet()
+                    Thread.sleep(20)
+                    lut()
+                }
+            }
+        }
+        start.countDown()
+        val luts = results.map { it.get(5, TimeUnit.SECONDS) }
+        pool.shutdown()
+        assertEquals(1, loads.get())
+        assertTrue(luts.all { it === luts[0] })
+    }
+
+    @Test
+    fun concurrentMixedAccessKeepsInvariants() {
+        val c = LutMemoryCache(maxBytes = 3 * one)
+        val pool = Executors.newFixedThreadPool(8)
+        val tasks = (0 until 8).map { t ->
+            pool.submit {
+                repeat(2000) { i ->
+                    val id = "k${(i * 7 + t) % 6}"
+                    c.getOrPut(id) { lut() }
+                    c.get("k${i % 6}")
+                    c.keys()
+                }
+            }
+        }
+        tasks.forEach { it.get(30, TimeUnit.SECONDS) }
+        pool.shutdown()
+        assertTrue(c.keys().size <= 3)
+        assertEquals(c.keys().size * one, c.sizeBytes())
     }
 }
