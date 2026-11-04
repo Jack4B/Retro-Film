@@ -72,4 +72,8 @@ class StripBudgetTest {
         val b = IntArray(w * h).also { tiny.getPixels(it, 0, w, 0, 0, w, h) }
         assertArrayEquals(a, b)
     }
+
+    @Test fun phoneHeapBudgetIsCappedAt128Mb() {
+        org.junit.Assert.assertEquals(128L * mb, StripBudget.bytes(512 * mb))
+    }
 }

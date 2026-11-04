@@ -96,7 +96,9 @@ internal object StripBudget {
     private const val MAX_TILES_X = 8
     private const val MB = 1L shl 20
     const val MIN_BYTES = 48 * MB
-    private const val MAX_BYTES = 256 * MB
+
+    // J: telefon (sterta 512 MB) dawał szczyt 500–560 MB z bitmapami źródła/wyniku; 128 MB pasów trzyma całość < 300 MB
+    private const val MAX_BYTES = 128 * MB
     private const val HEAP_SHARE = 2 // piksele bitmap są poza stertą Javy (API 26+) – bufory pasów to główny jej koszt
     private const val BASE_BPP = 16 // ints + 3 płaszczyzny float
     private const val DEBAND_BPP = 16 // Deband.Scratch

@@ -18,3 +18,8 @@ telefonie. Zostaje na wydanie K, z CPU jako ścieżką referencyjną/zapasową.
 ## Uwagi
 - Zmiana ramki: plik z ramką jest większy o margines (np. 4000×3000 → 4333×3333), zdjęcie w nim ma natywną ostrość.
 - DNG: analiza zapasu działa równolegle z dekodem podglądu.
+
+## Po CSV z telefonu (I, realme)
+- Ramka 453–536 ms (~22% zapisu) → naprawiona (kopiowanie 1:1; CI: 12–17 ms zamiast 297–531 ms).
+- Szczyt pamięci 499–563 MB → budżet pasów ograniczony do 128 MB (było 256 MB przy stercie 512 MB); cel < 300 MB – do potwierdzenia na telefonie.
+- open_full_preview 590–950 ms (cel ≤ 600) → pomiar zapasu HDR przeniesiony równolegle do dekodu; do potwierdzenia na telefonie.
