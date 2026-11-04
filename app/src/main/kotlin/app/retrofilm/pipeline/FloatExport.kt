@@ -44,6 +44,9 @@ object FloatExport {
         return out
     }
 
+    /** Wyrazistość korekt i podgląd maski wyostrzania wymagają osobnych przebiegów (inna analiza pasów). */
+    private fun canFuse(first: Adjustments, finishing: Adjustments) = first.clarity == 0f && !finishing.sharpMaskPreview
+
     /**
      * Korekty + LUT + wykończenie na bitmapie roboczej ([working]); wynik nowa bitmapa (wejście bez zmian).
      * [fracOut] (PNG 16) = ułamki kanałów ostatniego etapu zamiast ditheringu (~10 bitów precyzji).
@@ -57,7 +60,8 @@ object FloatExport {
         space: OutputSpace,
         faces: List<FaceBox> = emptyList(),
         fracOut: ByteArray? = null,
-        trace: SaveTrace? = null
+        trace: SaveTrace? = null,
+        fused: Boolean = true
     ): Bitmap {
         val stage = lut?.let { LutStage(it, intensity, space == OutputSpace.DisplayP3) }
         val finishing = adjustments.finishing()
@@ -70,9 +74,14 @@ object FloatExport {
         }
         val first = if (masked) Adjustments.None else adjustments.corrections()
         val deband = lut != null && !masked
-        if (finishing.isNeutral) {
-            return trace.timed("lut_render_dither") {
-                StripPipeline.run(input, first, deband, emptyList(), StripIo(fracOut = fracOut, stage = stage))
+        val single = finishing.isNeutral || (fused && !masked && canFuse(first, finishing))
+        if (single) {
+            // G: jeden przebieg – bez pośredniej bitmapy i ułamków (−60 MB przy 12 MP, analiza i odczyt raz)
+            val finish = finishing.takeUnless { it.isNeutral }
+            val name = if (finish == null) "lut_render_dither" else "lut_effects_dither"
+            return trace.timed(name) {
+                val io = StripIo(fracOut = fracOut, stage = stage, finish = finish)
+                StripPipeline.run(input, first, deband, if (finish == null) emptyList() else faces, io)
             }.also {
                 if (input !== work) input.recycle()
             }

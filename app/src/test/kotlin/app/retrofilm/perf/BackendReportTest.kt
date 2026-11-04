@@ -30,6 +30,10 @@ class BackendReportTest {
         }
     }
 
+    private companion object {
+        const val LARGE = 64
+    }
+
     private val bmp = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
 
     @Test
@@ -48,6 +52,30 @@ class BackendReportTest {
         assertEquals("cpu-tetra", e.activeBackend)
         assertTrue(e.fallbackReason!!.contains("agsl-tetra"))
         assertTrue(e.fallbackReason!!.contains("IllegalStateException: brak shadera"))
+    }
+
+    /** Awaria na dużej bitmapie nie może przełączyć na CPU mniejszych (szybki i pełny podgląd na GPU). */
+    @Test
+    fun failureOnLargeBitmapKeepsGpuForSmallerOnes() = runBlocking {
+        var calls = 0
+        val bySize = object : LutEngine {
+            override val name = "agsl-tetra"
+
+            override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap {
+                calls++
+                check(src.width * src.height < LARGE * LARGE) { "za duża tekstura" }
+                return src
+            }
+        }
+        val e = FallbackLutEngine(bySize, CpuLutEngine(Interpolation.TETRAHEDRAL))
+        val large = Bitmap.createBitmap(LARGE, LARGE, Bitmap.Config.ARGB_8888)
+        e.apply(large, Lut.identity(2), 1f)
+        e.apply(large, Lut.identity(2), 1f) // drugi raz bez ponownej próby GPU
+        assertEquals(1, calls)
+        assertTrue(e.apply(bmp, Lut.identity(2), 1f) === bmp) // mała dalej przez GPU
+        assertEquals(2, calls)
+        assertEquals("agsl-tetra", e.activeBackend)
+        assertTrue(e.fallbackReason!!.contains("za duża tekstura"))
     }
 
     @Test

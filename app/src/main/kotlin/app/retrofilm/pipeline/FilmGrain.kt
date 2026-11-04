@@ -1,7 +1,6 @@
 package app.retrofilm.pipeline
 
 import kotlin.math.exp
-import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
@@ -32,6 +31,7 @@ internal object FilmGrain {
     private const val SALT_FINE = 11
     private const val SALT_CLUMP = 29
     private const val UNIFORMS = 3
+    private const val LAYER_CHANNELS = 3
     private const val CHANNEL_SHIFT_X = 211
     private const val CHANNEL_SHIFT_Y = 97
     private const val CLUMP_SHIFT = 301
@@ -102,6 +102,24 @@ internal object FilmGrain {
         return 1f + s * g + HALF * s * s * (g * g - 1f)
     }
 
+    /**
+     * Wspólny szum ([out]\[0]) i szum trzech warstw barwnych ([out]\[1..3]) piksela naraz – te same wartości co
+     * [luma] i [chroma], ale dzielenia przez wielkość ziarna liczone raz na piksel (G: zapis 12 MP).
+     */
+    fun pixel(x: Int, y: Int, cell: Float, out: FloatArray) {
+        val fx = x.toFloat() / cell
+        val fy = y.toFloat() / cell
+        val big = cell * CLUMP_SCALE
+        val cx = x.toFloat() / big
+        val cy = y.toFloat() / big
+        for (k in 0..LAYER_CHANNELS) {
+            val sx = k * CHANNEL_SHIFT_X
+            val sy = k * CHANNEL_SHIFT_Y
+            out[k] = FINE_WEIGHT * sample(fine, fx + sx, fy + sy) +
+                CLUMP_WEIGHT * sample(clump, cx + sx + CLUMP_SHIFT, cy + sy)
+        }
+    }
+
     private fun layers(x: Float, y: Float, cell: Float, shiftX: Int, shiftY: Int): Float {
         val a = sample(fine, x / cell + shiftX, y / cell + shiftY)
         val c = sample(clump, x / (cell * CLUMP_SCALE) + shiftX + CLUMP_SHIFT, y / (cell * CLUMP_SCALE) + shiftY)
@@ -109,8 +127,9 @@ internal object FilmGrain {
     }
 
     private fun sample(tile: FloatArray, fx: Float, fy: Float): Float {
-        val x0 = floor(fx).toInt()
-        val y0 = floor(fy).toInt()
+        // współrzędne są nieujemne, więc obcięcie = floor (szybciej niż Math.floor na double)
+        val x0 = fx.toInt()
+        val y0 = fy.toInt()
         val tx = fx - x0
         val ty = fy - y0
         val xa = x0 and TILE_MASK
