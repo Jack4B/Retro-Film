@@ -86,6 +86,10 @@ internal fun LazyListScope.toolsSections(tools: SettingsToolsState, actions: Set
             actions.onRestoreBackup
         )
     }
+    diagnosticsSection(tools, actions)
+}
+
+private fun LazyListScope.diagnosticsSection(tools: SettingsToolsState, actions: SettingsToolsActions) {
     item { SectionHeader(stringResource(R.string.settings_section_diagnostics)) }
     item {
         SwitchRow(
