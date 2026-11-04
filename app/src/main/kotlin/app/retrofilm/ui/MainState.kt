@@ -78,6 +78,10 @@ class MainState(
     var busy by mutableStateOf(false)
         private set
 
+    /** Trwa dekodowanie RAW/DNG bez osadzonego podglądu — Edytor pokazuje zastępczy napis z postępem. */
+    var loadingRaw by mutableStateOf(false)
+        private set
+
     /** Podgląd oryginału (to samo skalowanie co [preview]) – pokazywany po przytrzymaniu zdjęcia. */
     var before by mutableStateOf<Bitmap?>(null)
         private set
@@ -440,7 +444,12 @@ class MainState(
             val open = { java.io.ByteArrayInputStream(decodeBytes) }
             // Najpierw osadzona miniatura (ms), potem dekodowanie pomniejszone do rozmiaru podglądu (nie pełne MP).
             withContext(Dispatchers.IO) { PhotoLoader.thumbnail(open) }.let { preview = it }
-            val loaded = withContext(Dispatchers.IO) { PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE) }
+            loadingRaw = preview == null && PhotoLoader.isTiffRaw(open)
+            val loaded = try {
+                withContext(Dispatchers.IO) { PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE) }
+            } finally {
+                loadingRaw = false
+            }
             sourceSize = loaded.sourceWidth to loaded.sourceHeight
             photo = loaded.bitmap
             before = null

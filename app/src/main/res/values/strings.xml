@@ -134,6 +134,7 @@
     <string name="hdr_from_photo_label">HDR ze zdjęcia</string>
     <string name="hdr_on">Wł.</string>
     <string name="hdr_off">Wył.</string>
+    <string name="raw_loading">Wczytywanie RAW…</string>
     <string name="hdr_note">HDR: zapis 4:2:0 i bez ramki (ograniczenie gain mapy).</string>
     <string name="export_space_p3">Display P3 (szerszy gamut)</string>
     <string name="export_exif">Dane aparatu (EXIF, bez GPS)</string>

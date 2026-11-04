@@ -316,7 +316,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
         }
         if (shown != null && cropMode) ThirdsGrid(shown.width, shown.height)
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
-        if (shown == null || state.busy) CircularProgressIndicator()
+        LoadingIndicator(shown == null || state.busy, state.loadingRaw)
         PreviewBadges(state, showBefore)
         if (mode.filmActions && shown != null) {
             FilmActions(state, mode.onOpenLibrary, Modifier.align(Alignment.TopEnd).padding(top = MinTouch))
