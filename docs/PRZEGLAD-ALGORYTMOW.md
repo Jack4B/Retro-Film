@@ -63,6 +63,36 @@ w kodzie i istniejących testów (goldeny silnika, straż regresji suwaków w CI
 | pipeline/FrameRenderer.kt, core/frame/FrameGeometry.kt, TightFrame.kt, Watermark.kt | Płótno ramki, podpis z kontrolą długości, znak wodny z QR v3-M | poprawna | rysowanie Canvas | QR stałego rozmiaru | — |
 | core/export/JpegMetadata.kt | Przepisywanie segmentów APP (EXIF/ICC) w JPEG | poprawna dla typowych plików | strumieniowo | nietypowe markery (np. bez EOI) | testy z plikami brzegowymi |
 
+## R4. Poprawki (gałąź fix/algorithms, 2026-11-04)
+
+**Korekta ustalenia #1:** w R1 przesadziłem. `LutMemoryCache` był już `@Synchronized`, więc wyścigu na mapie nie było. Prawdziwy problem to podwójne, równoległe dekodowanie tego samego LUT-a. Teraz każde id ładuje się raz, a pozostali czekają na wynik.
+
+| # | Poprawka | Efekt |
+|---|---|---|
+| a | LutMemoryCache: jedno ładowanie na id | brak zduplikowanych dekodowań (test współbieżności) |
+| b | Determinizm: `Parallel.reduce` ze stałymi grupami, sumy Double | identyczny wynik niezależnie od liczby wątków |
+| c | Resampler pasami, równolegle, w świetle liniowym (tylko eksport) | pamięć robocza ok. 35 MB zamiast ok. 250 MB; podgląd filtruje w sRGB (`resizeEncoded`), bez kosztu linearyzacji |
+| d | GLES: kafle do `GL_MAX_TEXTURE_SIZE`, hurtowy transfer, trwały kontekst EGL, LRU 2 tekstur LUT | brak awarii na >4K; interpolacja bez zmian; AGSL dalej pierwszy |
+| e | FaceFinder: zwalnianie bitmap pomocniczych; test bezpiecznego fallbacku bez twarzy | brak wycieku; ML Kit odrzucony (ok. 6,9 MB, telemetria Firebase datatransport łamie zasadę offline); zostaje `android.media.FaceDetector` |
+
+**Pomiar na urządzeniu** (realme RMX5085, Mali-G720, tolerancja 2):
+
+| Backend | max diff | render 12 MP | upload LUT 33/65/144 |
+|---|---|---|---|
+| AGSL | 1 | 172 ms | 13/33/287 ms |
+| GLES3 | 1 | 2406 ms | 17/70/603 ms |
+| CPU | 0 | 3933 ms | — |
+
+**Wydajność podglądu i miniatur** (`PerfTimingTest`, emulator CI API 34 x86_64, build debug, zdjęcie 4000×3000):
+
+| Pomiar | main @ cb0e3e9 | fix/algorithms |
+|---|---|---|
+| skalowanie podglądu do 1280 | 4556 ms | 616 ms |
+| siatka 11 miniatur (zimno) | 15169 ms | 5495 ms |
+| mediana nałożenia filmu (1280) | 1773 ms | 1691 ms |
+
+Co jeszcze się zmieniło: miniatury mają LRU dla 3 ostatnich zdjęć (powrót do zdjęcia nie renderuje ich ponownie). Podgląd działa w trybie latest-wins: zmiany scalają się co 16 ms, a przestarzały render zostaje porzucony (`ensureActive`). Historia cofania trzyma tylko parametry `PhotoEdit`, bez bitmap. Najbardziej prawdopodobna przyczyna wolniejszego APK redesignu: był to build debug (debuggable, ograniczony JIT/AOT), a oryginał był release. Dlatego prerelease zawiera też APK typu release.
+
 ## R3. Czego ten przegląd nie obejmuje
 
 Nie mierzono czasu ani jakości na urządzeniach (§0 i dalej mają wcześniejsze pomiary). Nie zmieniono żadnego progu ani
