@@ -7,8 +7,10 @@ import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
+import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.ui.MainState
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
@@ -68,6 +70,26 @@ class PerfTimingTest {
             (System.nanoTime() - s) / NS
         }.sorted()
         report("film_apply_median_ms", times[times.size / 2])
+
+        // dotknięcie filmu w nowym potoku: korekty liczone raz na zdjęcie, potem tylko LUT + wykończenie + ramka
+        val corrected = ExportPipeline.correct(preview, Adjustments.None, true)
+        val taps = films.takeLast(APPLY).map { f ->
+            val lut = engine.load(f.id)
+            val s = System.nanoTime()
+            val looked = ExportPipeline.look(corrected, lut, engine.renderer, 1f, Adjustments.None)
+            FrameRenderer.render(looked, FrameOptions(), Typeface.DEFAULT)
+            (System.nanoTime() - s) / NS
+        }.sorted()
+        report("film_tap_cached_median_ms", taps[taps.size / 2])
+        val q = System.nanoTime()
+        ExportPipeline.look(
+            MainState.scaleDown(corrected, QUICK),
+            engine.load(films.first().id),
+            engine.renderer,
+            1f,
+            Adjustments.None
+        )
+        report("film_tap_quick512_ms", (System.nanoTime() - q) / NS)
     }
 
     private companion object {
@@ -76,6 +98,7 @@ class PerfTimingTest {
         const val APPLY = 3
         const val PREVIEW = 1280
         const val THUMB = 160
+        const val QUICK = 512
         const val NS = 1_000_000L
     }
 }

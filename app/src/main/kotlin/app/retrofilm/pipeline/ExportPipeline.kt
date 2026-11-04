@@ -36,10 +36,31 @@ object ExportPipeline {
     ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
         // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie
-        val corrected = AdjustmentsApplier.apply(srgb, adjustments.corrections(), deband = lut != null)
-        val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
-        val finished = AdjustmentsApplier.apply(filmed, adjustments.finishing(), faces = faces)
+        val corrected = correct(srgb, adjustments, lut != null)
+        val finished = look(corrected, lut, engine, intensity, adjustments, faces)
         return FrameRenderer.render(finished, frame, typeface, colorSpaceSource = srgb)
+    }
+
+    /**
+     * Etap 1: korekty (przed filmem). Nie zależy od wybranego filmu (poza włączeniem debandingu pod LUT), więc
+     * podgląd liczy go raz i trzyma w pamięci – zmiana filmu nie powtarza odszumiania, analizy i wyostrzania.
+     */
+    fun correct(srgb: Bitmap, adjustments: Adjustments, hasLut: Boolean): Bitmap =
+        AdjustmentsApplier.apply(srgb, adjustments.corrections(), deband = hasLut)
+
+    /** Etap 2: film (LUT, null = bez filmu) i wykończenie (ziarno, winieta); bez ramki. */
+    @Suppress("LongParameterList") // etapy potoku dostają te same parametry co [render]
+    suspend fun look(
+        corrected: Bitmap,
+        lut: Lut?,
+        engine: LutEngine,
+        intensity: Float,
+        adjustments: Adjustments,
+        faces: List<FaceBox> = emptyList()
+    ): Bitmap {
+        val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
+        val finishing = adjustments.finishing()
+        return if (finishing.isNeutral) filmed else AdjustmentsApplier.apply(filmed, finishing, faces = faces)
     }
 
     /**

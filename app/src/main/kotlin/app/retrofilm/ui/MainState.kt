@@ -20,6 +20,7 @@ import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.AutoResult
 import app.retrofilm.pipeline.AutoScene
+import app.retrofilm.pipeline.ColorPolicy
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FaceBox
 import app.retrofilm.pipeline.FrameOptions
@@ -33,6 +34,7 @@ import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
 import app.retrofilm.settings.EditDefaults
 import java.io.IOException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -71,6 +73,11 @@ class MainState(
     var before by mutableStateOf<Bitmap?>(null)
         private set
     var film by mutableStateOf(IDENTITY_ID)
+
+    /** Czy podgląd jest właśnie liczony (UI pokazuje wskaźnik dopiero po chwili). */
+    var rendering by mutableStateOf(false)
+        private set
+    private val stages = PreviewStages()
     private var previewCache: Triple<Bitmap, Int, Bitmap>? = null
     private var faceCache: Triple<Bitmap, Geometry, List<FaceBox>>? = null
 
@@ -468,26 +475,59 @@ class MainState(
     suspend fun refreshPreview() {
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
-        val (orig, shown) = withContext(Dispatchers.Default) {
-            val small = GeometryApplier.apply(previewBase(p), geometry)
-            ensureActive() // nowsza zmiana już czeka: porzuć przestarzały render (latest-wins)
-            val orig = before
-                ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
-            ensureActive()
-            orig to
-                ExportPipeline.render(
-                    small,
-                    lut(),
-                    graph.filmEngine.renderer,
-                    frame,
-                    signatureTypeface(),
-                    intensity,
-                    adjustments,
-                    facesFor(p, small)
-                )
+        rendering = true
+        try {
+            withContext(Dispatchers.Default) { renderPreview(p) }
+        } finally {
+            rendering = false
         }
-        before = orig
-        preview = shown
+    }
+
+    /**
+     * Podgląd etapami z pamięcią każdego etapu ([PreviewStages]): kadr, korekty i wynik bez ramki są liczone tylko,
+     * gdy zmieniło się to, od czego zależą. Zmiana filmu = sam LUT na gotowych korektach (bez odszumiania, analizy
+     * i twarzy), zmiana ramki = samo złożenie ramki. Przy nowym filmie najpierw idzie szybki podgląd w małej
+     * rozdzielczości, potem pełny (progresywnie).
+     */
+    private suspend fun CoroutineScope.renderPreview(p: Bitmap) {
+        val base = previewBase(p)
+        val small = stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
+        ensureActive() // nowsza zmiana już czeka: porzuć przestarzały render (latest-wins)
+        val srgb = stages.srgb(small) { ColorPolicy.toSrgb(small) }
+        before = before ?: FrameRenderer.render(srgb, FrameOptions(), typeface, colorSpaceSource = srgb)
+        val lut = lut()
+        val corrected = stages.corrected(srgb, adjustments, lut != null) {
+            ExportPipeline.correct(srgb, adjustments, lut != null)
+        }
+        ensureActive()
+        val key = PreviewStages.LookKey(film, intensity, adjustments.finishing())
+        val engine = graph.filmEngine.renderer
+        if (!stages.hasLook(corrected, key) && lut != null) {
+            val quick = ExportPipeline.look(
+                scaleDown(corrected, PREVIEW_SIDE_QUICK),
+                lut,
+                engine,
+                intensity,
+                adjustments
+            )
+            ensureActive()
+            preview = FrameRenderer.render(quick, frame, signatureTypeface(), colorSpaceSource = srgb)
+        }
+        val looked = stages.look(corrected, key) {
+            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, small))
+        }
+        ensureActive()
+        preview = FrameRenderer.render(looked, frame, signatureTypeface(), colorSpaceSource = srgb)
+        prefetchNeighbours()
+    }
+
+    /** Ładuje w tle LUT-y sąsiednich filmów karuzeli, żeby kolejne dotknięcie nie czekało na dekodowanie. */
+    private fun prefetchNeighbours() {
+        val ids = graph.filmEngine.availableLuts().map { it.id }
+        val i = ids.indexOf(film)
+        if (i < 0) return
+        listOf(i + 1, i - 1).mapNotNull { ids.getOrNull(it) }.filter { it != IDENTITY_ID }
+            .forEach { runCatching { graph.filmEngine.load(it) } }
     }
 
     /** „Popraw światło i kolor”: przełącza propozycję z analizy zdjęcia (włącza albo wyłącza). */
@@ -600,6 +640,7 @@ class MainState(
 
     companion object {
         const val PREVIEW_SIDE = 1280
+        const val PREVIEW_SIDE_QUICK = 512
         const val PREVIEW_SIDE_DETAIL = 2560
 
         fun scaleDown(src: Bitmap, maxSide: Int): Bitmap {
