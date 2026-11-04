@@ -11,7 +11,10 @@ import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
+import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.ui.IDENTITY_ID
 import app.retrofilm.ui.MainState
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -92,8 +95,38 @@ class PerfTimingTest {
         report("film_tap_quick512_ms", (System.nanoTime() - q) / NS)
     }
 
+    /** Pierwsze otwarcie zdjęcia 12 MP: stara vs nowa ścieżka. */
+    @Test
+    fun firstOpen() = runBlocking {
+        val file = File(context.cacheDir, "first-open.jpg")
+        file.outputStream().use {
+            photo().compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it)
+            it.write(ByteArray(MOTION_TAIL)) // jak Motion Photo: ~9 MB wideo doklejone za JPEG-iem
+        }
+        val open = { file.inputStream() }
+        var t = System.nanoTime()
+        val old = PhotoLoader.load(open, PhotoLoader.DEFAULT_MAX_SIDE)
+        report("open_decode_4096_ms", (System.nanoTime() - t) / NS)
+        t = System.nanoTime()
+        PhotoLoader.thumbnail(open)
+        report("open_thumbnail_ms", (System.nanoTime() - t) / NS)
+        t = System.nanoTime()
+        val loaded = PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE)
+        report("open_decode_preview_ms", (System.nanoTime() - t) / NS)
+        assertTrue(loaded.sourceWidth == old.width && loaded.bitmap.width <= old.width)
+        val engine = AppGraph(context).filmEngine
+        t = System.nanoTime()
+        val small = MainState.scaleDown(loaded.bitmap, PREVIEW)
+        val lut = checkNotNull(engine.load(engine.availableLuts().first { it.id != IDENTITY_ID }.id))
+        engine.renderer.apply(small, lut, 1f)
+        report("open_first_preview_cold_ms", (System.nanoTime() - t) / NS)
+        file.delete()
+    }
+
     private companion object {
         const val TAG = "RetroPerf"
+        const val JPEG_Q = 90
+        const val MOTION_TAIL = 9 * 1024 * 1024
         const val GRID = 12
         const val APPLY = 3
         const val PREVIEW = 1280

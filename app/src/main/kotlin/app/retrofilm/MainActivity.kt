@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val graph = AppGraph.get(this)
+        if (savedInstanceState == null) graph.warmUp()
         Watermark.installIcon(this)
         val state = holder.state
         setContent {

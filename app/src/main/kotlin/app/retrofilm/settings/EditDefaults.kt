@@ -13,6 +13,8 @@ data class EditDefaults(
     val chroma444: Boolean = true,
     val keepExif: Boolean = true,
     val displayP3: Boolean = false,
+    /** Gain mapa Ultra HDR ze zdjęcia w edycji i zapisie; domyślnie wyłączona (czysty SDR). */
+    val hdrFromPhoto: Boolean = false,
     val frameEnabled: Boolean = false,
     val frameAspect: String? = null,
     val frameMargin: Float? = null,

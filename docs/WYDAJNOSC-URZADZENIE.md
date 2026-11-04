@@ -17,3 +17,23 @@ cache LRU 6 LUT-ów (było 2), a `LutEngine.warm` przygotowuje atlasy sąsiednic
 
 Odłożone: atlas 2D zapisywany na dysk (cache plików) – do rozważenia, jeśli pierwsze otwarcie 144³ okaże się zbyt
 wolne po zmierzeniu nowego builda.
+
+## Pierwsze otwarcie zdjęcia (zgłoszenie: „pierwsze wczytanie trwa bardzo długo”)
+
+Plik użytkownika (realme, prywatny, nie w repo): JPEG 3072×4096, 15,6 MB = obraz bazowy 5,8 MB + gain mapa Ultra HDR
+2048×1536 (1 MB, MPF/XMP hdrgm) + wideo Motion/Live Photo 9,5 MB doklejone na końcu.
+
+Przyczyny i poprawki:
+- plik był czytany 4× przez ContentResolver (EXIF orientacja, wymiary, dekodowanie, miniatura) → teraz 1 odczyt do pamięci;
+- podgląd dekodował do 4096 px (praktycznie pełna rozdzielczość) → teraz do 2560 (`PREVIEW_MAX_SIDE`, inSampleSize),
+  pełna rozdzielczość tylko w eksporcie (`ExportSource`), a wymiary oryginału trzymane osobno (`sourceSize`);
+- dekoder na API 34+ dekodował też gain mapę → „HDR ze zdjęcia” domyślnie Wył.: `UltraHdrJpeg.sdrOnly` odcina MPF,
+  XMP hdrgm i wszystko za EOI obrazu bazowego (27 ms na JVM dla tego pliku: 16,4 MB → 5,8 MB);
+- miniatura EXIF pokazywana od razu, zanim skończy się dekodowanie;
+- rozgrzewka w tle przy starcie (`AppGraph.warmUp`): katalog, pierwszy LUT, atlas AGSL i mini-render (zimny shader/EGL).
+
+Pomiar: `PerfTimingTest.firstOpen` (syntetyczny 12 MP + 9 MB „wideo” za JPEG-iem; prywatnego zdjęcia nie ma w CI):
+`open_decode_4096_ms` (stara ścieżka), `open_thumbnail_ms`, `open_decode_preview_ms`, `open_first_preview_cold_ms`.
+
+DNG: `RawLoader` (ImageDecoder, API 28+) – dekodowanie od razu do rozmiaru podglądu, orientacja z dekodera,
+neutralne renderowanie platformy (balans bieli z pliku, bazowa krzywa DNG) jako płaski punkt startu.
