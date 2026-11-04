@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
 }
 
 val versionFile: String = rootProject.file("VERSION").readText().trim()
@@ -87,6 +88,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.core)
+    implementation(libs.compose.material.icons)
     implementation(libs.androidx.datastore.preferences)
 
     debugImplementation(libs.compose.ui.test.manifest)
@@ -95,9 +97,14 @@ dependencies {
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
     testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
     testImplementation(libs.kotlinx.coroutines.core)
 
     androidTestImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
 }

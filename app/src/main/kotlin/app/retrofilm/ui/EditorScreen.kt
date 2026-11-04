@@ -23,13 +23,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.Compare
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -81,33 +85,22 @@ private val CaptionPad = 6.dp
 private const val BADGE_ALPHA = 0.72f
 private val EdgePad = 8.dp
 private val BadgePad = 12.dp
-private val TabHeight = 56.dp
 private val InfoDot = 28.dp
 private val InfoPad = 4.dp
 private const val ZOOM_READOUT_MIN = 1.01f
 private const val INFO_IDLE_ALPHA = 0.28f
-private const val TAB_WEIGHT_PAD = 3f
 private const val INFO_ACTIVE_ALPHA = 0.5f
 private const val INFO_ICON_ALPHA = 0.85f
 private val PanelCorner = 20.dp
 private val PanelElevation = 8.dp
 
-/** Kolejność zakładek jest kolejnością pracy (D15): kadr, korekty, film, wykończenie, ramka. */
-internal enum class EditorTab(val label: Int) {
-    Crop(R.string.tab_crop),
-    Adjust(R.string.tab_adjust),
-    Film(R.string.tab_film),
-    Finish(R.string.tab_finish),
-    Frame(R.string.tab_frame)
-}
-
 /**
  * Edytor: zdjęcie na pierwszym planie (cały obszar), narzędzia w szufladzie na dole (zakładki Kadr / Korekty / Film /
- * Wykończenie / Ramka; poziomo panel z boku).
- * Przycisk „Przed” pokazuje oryginał, szczypanie i dwukrotne dotknięcie przybliżają podgląd; „Zapisz” zapisuje od razu.
+ * Efekty / Ramka; poziomo szyna nawigacji i panel z boku). Nad zakładkami pasek serii (gdy zdjęć jest kilka).
+ * Pasek górny: Cofnij / Ponów, „Przed” (oryginał) i „Zapisz” (otwiera arkusz zapisu).
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("LongParameterList") // zdarzenia ekranu przekazywane jawnie
+@Suppress("LongParameterList", "LongMethod") // zdarzenia ekranu przekazywane jawnie; tylko układ, bez logiki
 @Composable
 fun EditorScreen(
     state: MainState,
@@ -132,7 +125,7 @@ fun EditorScreen(
                         )
                     }
                 },
-                title = { PhotoPicker(state, onSelectPhoto) },
+                title = { EditorTitle(state) },
                 actions = { EditorActions(state, showBefore, { showBefore = !showBefore }, onSave) }
             )
         },
@@ -154,9 +147,11 @@ fun EditorScreen(
             )
             if (sideBySide) {
                 // poziomo: podgląd na całą wysokość po lewej, panel zakładek po prawej
+                // szyna nawigacji przy krawędzi, podgląd w środku, panel zakładki z prawej (tablet / poziomo)
                 Row(Modifier.fillMaxSize()) {
+                    EditorRail(tab, { tab = it })
                     PreviewPane(state, showBefore, preview, Modifier.weight(1f).fillMaxHeight())
-                    SidePanel(state, tab, { tab = it }, Modifier.width(panelWidth).fillMaxHeight())
+                    SidePanel(state, tab, onSelectPhoto, Modifier.width(panelWidth).fillMaxHeight())
                 }
             } else {
                 // pionowo: podgląd na cały obszar, panel to szuflada na dole; zdjęcie dopasowuje się nad szufladą
@@ -170,7 +165,8 @@ fun EditorScreen(
                         tab,
                         { tab = it },
                         SheetControl(sheet, { sheet = it }, { sheetPx = it }),
-                        Modifier.align(Alignment.BottomCenter)
+                        Modifier.align(Alignment.BottomCenter),
+                        header = { SeriesStrip(state, onSelectPhoto) }
                     )
                 }
             }
@@ -178,9 +174,9 @@ fun EditorScreen(
     }
 }
 
-/** Panel boczny (układ poziomy): zawartość zakładki z przewijaniem na całą wysokość i pasek zakładek na dole. */
+/** Panel boczny (układ poziomy): pasek serii i zawartość zakładki z przewijaniem; zakładki są w szynie nawigacji. */
 @Composable
-private fun SidePanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Unit, modifier: Modifier) {
+private fun SidePanel(state: MainState, tab: EditorTab, onSelectPhoto: (Int) -> Unit, modifier: Modifier) {
     Surface(
         modifier = modifier,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -188,10 +184,10 @@ private fun SidePanel(state: MainState, tab: EditorTab, onTab: (EditorTab) -> Un
         shadowElevation = PanelElevation
     ) {
         Column(Modifier.fillMaxHeight()) {
+            SeriesStrip(state, onSelectPhoto)
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())) {
                 TabContent(state, tab)
             }
-            TabBar(tab, onTab)
         }
     }
 }
@@ -222,6 +218,17 @@ private fun FilmCaption(state: MainState, modifier: Modifier) {
     }
 }
 
+/** Tytuł edytora: przy serii pozycja zdjęcia („2 z 5”), przy jednym zdjęciu pusty (więcej miejsca na akcje). */
+@Composable
+private fun EditorTitle(state: MainState) {
+    if (state.uris.size < 2) return
+    Text(
+        stringResource(R.string.editor_title_series, state.index + 1, state.uris.size),
+        style = MaterialTheme.typography.titleMedium,
+        maxLines = 1
+    )
+}
+
 @Composable
 private fun RowScope.EditorActions(
     state: MainState,
@@ -229,27 +236,26 @@ private fun RowScope.EditorActions(
     onToggleBefore: () -> Unit,
     onSave: () -> Unit
 ) {
-    FilterChip(
-        selected = showBefore,
-        onClick = onToggleBefore,
-        label = { Text(stringResource(R.string.editor_before_toggle)) },
-        modifier = Modifier.padding(end = EdgePad)
-    )
+    val history = state.history
+    IconButton(onClick = state::undo, enabled = !state.busy && history.canUndo) {
+        Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.editor_undo))
+    }
+    IconButton(onClick = state::redo, enabled = !state.busy && history.canRedo) {
+        Icon(Icons.AutoMirrored.Filled.Redo, contentDescription = stringResource(R.string.editor_redo))
+    }
+    IconToggleButton(checked = showBefore, onCheckedChange = { onToggleBefore() }) {
+        Icon(Icons.Outlined.Compare, contentDescription = stringResource(R.string.editor_before_cd))
+    }
     val many = state.uris.size > 1
     val saveCd = if (many) stringResource(R.string.editor_save_all_cd, state.uris.size) else null
     Button(
         onClick = onSave,
-        enabled = !state.busy && state.signatureStatus() != SignatureFitStatus.TooLong,
-        modifier = Modifier.padding(end = EdgePad).heightIn(min = MinTouch).semantics {
+        enabled = !state.busy,
+        modifier = Modifier.padding(start = 4.dp, end = EdgePad).heightIn(min = MinTouch).semantics {
             saveCd?.let { contentDescription = it }
         }
     ) {
-        val label = if (many) {
-            stringResource(R.string.editor_save_all, state.uris.size)
-        } else {
-            stringResource(R.string.editor_save)
-        }
-        Text(label, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(stringResource(R.string.editor_save), fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 
@@ -406,30 +412,5 @@ private fun Badge(text: String, modifier: Modifier, color: Color = Color.White) 
         modifier = modifier.padding(BadgePad)
     ) {
         Text(text, color = color, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(BadgePad))
-    }
-}
-
-@Composable
-internal fun TabBar(selected: EditorTab, onSelect: (EditorTab) -> Unit) {
-    Row(Modifier.fillMaxWidth()) {
-        EditorTab.entries.forEach { t ->
-            val on = t == selected
-            val label = stringResource(t.label)
-            // szerokość zakładki proporcjonalna do długości etykiety, żeby „Wykończenie” się mieściło (5 zakładek)
-            Box(
-                Modifier.weight(label.length + TAB_WEIGHT_PAD).heightIn(min = TabHeight)
-                    .selectable(selected = on, role = Role.Tab, onClick = { onSelect(t) }),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    label,
-                    color = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = if (on) FontWeight.Bold else FontWeight.Normal,
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
     }
 }

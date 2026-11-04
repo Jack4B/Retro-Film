@@ -25,10 +25,11 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RedesignStateTest {
-    private fun state(count: Int = 3) = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT).also {
-        it.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })
-        it.setPhotoForTest(Bitmap.createBitmap(IntArray(16 * 16) { Color.GRAY }, 16, 16, Bitmap.Config.ARGB_8888))
-    }
+    private fun state(count: Int = 3) =
+        MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT).also {
+            it.setSeriesForTest(List(count) { i -> Uri.parse("content://test/$i") })
+            it.setPhotoForTest(Bitmap.createBitmap(IntArray(16 * 16) { Color.GRAY }, 16, 16, Bitmap.Config.ARGB_8888))
+        }
 
     private fun switchTo(s: MainState, i: Int) {
         runCatching { runBlocking { s.select(RuntimeEnvironment.getApplication(), i) } }

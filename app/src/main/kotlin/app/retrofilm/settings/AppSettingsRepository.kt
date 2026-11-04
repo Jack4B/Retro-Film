@@ -89,7 +89,14 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         internal val DEF_SIGNATURE = stringPreferencesKey("default_signature")
         internal val DEF_FONT = stringPreferencesKey("default_signature_font")
         private val DEFAULT_KEYS = listOf(
-            DEF_QUALITY, DEF_MAX_SIDE, DEF_FRAME, DEF_ASPECT, DEF_MARGIN, DEF_SIGNATURE_ON, DEF_SIGNATURE, DEF_FONT
+            DEF_QUALITY,
+            DEF_MAX_SIDE,
+            DEF_FRAME,
+            DEF_ASPECT,
+            DEF_MARGIN,
+            DEF_SIGNATURE_ON,
+            DEF_SIGNATURE,
+            DEF_FONT
         )
 
         internal val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")

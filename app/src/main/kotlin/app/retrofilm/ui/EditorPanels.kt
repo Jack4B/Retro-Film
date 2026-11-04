@@ -298,7 +298,6 @@ fun FramePanel(state: MainState) {
         if (state.uris.size > 1) FrameForAll(state)
         LabeledSwitch(stringResource(R.string.frame_enabled), f.enabled) { state.frame = f.copy(enabled = it) }
         LabeledSwitch(stringResource(R.string.watermark_enabled), f.watermark) { state.frame = f.copy(watermark = it) }
-        ExportSettings(state)
         if (!f.enabled) return@Column
         LazyRow(horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
             items(FrameAspect.entries, key = { it.name }) { a ->
