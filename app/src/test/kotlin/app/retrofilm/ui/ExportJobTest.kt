@@ -9,6 +9,7 @@ import app.retrofilm.core.export.ExifData
 import app.retrofilm.core.export.IccProfiles
 import app.retrofilm.core.export.JpegInspector
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.FileType
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.OutputSpace
@@ -17,6 +18,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -89,5 +91,30 @@ class ExportJobTest {
         )
         val read = ExifInterface(ByteArrayInputStream(jpeg))
         assertEquals(0xFFFF, read.getAttributeInt(ExifInterface.TAG_COLOR_SPACE, 0))
+    }
+
+    @Test
+    fun png16CarriesMoreThanEightBits() = runBlocking {
+        val j = ExportJob(
+            ExportLook(Geometry(), null, 1f, Adjustments(exposure = 0.37f)),
+            CpuLutEngine(),
+            FrameOptions(),
+            Typeface.DEFAULT,
+            0,
+            ExportFormat(type = FileType.Png16)
+        )
+        val out = j.run(null, photo(64, 48))
+        val img = javax.imageio.ImageIO.read(ByteArrayInputStream(out.jpeg))
+        assertEquals(64 to 48, img.width to img.height)
+        assertEquals(16, img.colorModel.getComponentSize(0))
+        val px = IntArray(3)
+        var fine = 0
+        for (y in 0 until 48) {
+            for (x in 0 until 64) {
+                img.raster.getPixel(x, y, px)
+                if (px.any { it % 257 != 0 }) fine++
+            }
+        }
+        assertTrue("brak wartości pośrednich między poziomami 8-bit", fine > 64 * 48 / 2)
     }
 }

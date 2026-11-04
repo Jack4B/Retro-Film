@@ -134,6 +134,10 @@
     <string name="hdr_from_photo_label">HDR ze zdjęcia</string>
     <string name="hdr_on">Wł.</string>
     <string name="hdr_off">Wył.</string>
+    <string name="export_format_png16">PNG 16</string>
+    <string name="export_format_heic">HEIC</string>
+    <string name="export_png16_note">PNG 16 bitów bez strat (~10 bitów precyzji z potoku float, gdy bez ramki i bez zmiany rozmiaru). Bez EXIF.</string>
+    <string name="export_heic_note">HEIC 8-bit (koder HEVC urządzenia). Bez EXIF.</string>
     <string name="raw_loading">Wczytywanie RAW…</string>
     <string name="hdr_note">HDR: zapis 4:2:0 i bez ramki (ograniczenie gain mapy).</string>
     <string name="export_space_p3">Display P3 (szerszy gamut)</string>

@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.compose.material.icons.core)
     implementation(libs.compose.material.icons)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.heifwriter)
 
     debugImplementation(libs.compose.ui.test.manifest)
 

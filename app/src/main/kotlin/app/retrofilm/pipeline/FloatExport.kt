@@ -42,7 +42,10 @@ object FloatExport {
         return out
     }
 
-    /** Korekty + LUT + wykończenie na bitmapie roboczej ([working]); wynik nowa bitmapa (wejście bez zmian). */
+    /**
+     * Korekty + LUT + wykończenie na bitmapie roboczej ([working]); wynik nowa bitmapa (wejście bez zmian).
+     * [fracOut] (PNG 16) = ułamki kanałów ostatniego etapu zamiast ditheringu (~10 bitów precyzji).
+     */
     @Suppress("LongParameterList") // te same dane co ExportPipeline.render
     fun look(
         work: Bitmap,
@@ -50,7 +53,8 @@ object FloatExport {
         intensity: Float,
         adjustments: Adjustments,
         space: OutputSpace,
-        faces: List<FaceBox> = emptyList()
+        faces: List<FaceBox> = emptyList(),
+        fracOut: ByteArray? = null
     ): Bitmap {
         val stage = lut?.let { LutStage(it, intensity, space == OutputSpace.DisplayP3) }
         val finishing = adjustments.finishing()
@@ -60,14 +64,20 @@ object FloatExport {
         val first = if (masked) Adjustments.None else adjustments.corrections()
         val deband = lut != null && !masked
         if (finishing.isNeutral) {
-            return StripPipeline.run(input, first, deband, emptyList(), StripIo(stage = stage)).also {
+            return StripPipeline.run(
+                input,
+                first,
+                deband,
+                emptyList(),
+                StripIo(fracOut = fracOut, stage = stage)
+            ).also {
                 if (input !== work) input.recycle()
             }
         }
         val frac = ByteArray(work.width * work.height)
         val filmed = StripPipeline.run(input, first, deband, emptyList(), StripIo(null, frac, stage, false))
         if (input !== work) input.recycle()
-        val finished = StripPipeline.run(filmed, finishing, false, faces, StripIo(fracIn = frac))
+        val finished = StripPipeline.run(filmed, finishing, false, faces, StripIo(fracIn = frac, fracOut = fracOut))
         filmed.recycle()
         return finished
     }

@@ -42,8 +42,9 @@ internal fun rememberSaveFlow(state: MainState, show: (UiMessage?) -> Unit): () 
     }
     val toMediaStore: suspend (ByteArray) -> Unit = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val name = ExportPipeline.fileName(System.currentTimeMillis())
-            state.savedUris += ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
+            val type = state.exportFileType
+            val name = ExportPipeline.fileName(System.currentTimeMillis(), type)
+            state.savedUris += ExportPipeline.saveToMediaStore(context.contentResolver, it, name, type.mime)
         }
     }
     val save: () -> Unit = {
@@ -61,7 +62,7 @@ internal fun rememberSaveFlow(state: MainState, show: (UiMessage?) -> Unit): () 
                     }
             }
         } else {
-            createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
+            createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis(), state.exportFileType))
         }
         Unit
     }
