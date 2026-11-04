@@ -7,6 +7,8 @@ import android.net.Uri
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -46,8 +48,8 @@ class RedesignEditorTest {
                 }, onSave = { saveOpened = true }, onOpenLibrary = {}, onSelectPhoto = {}, snackbar = {})
             }
         }
-        compose.onNodeWithText("Efekty").performClick().assertIsSelected()
-        compose.onNodeWithText("Ramka").performClick().assertIsSelected()
+        compose.onNode(hasText("Efekty", substring = false) and isSelectable()).performClick().assertIsSelected()
+        compose.onNode(hasText("Ramka", substring = false) and isSelectable()).performClick().assertIsSelected()
         compose.onNodeWithContentDescription("Cofnij").assertIsNotEnabled()
         compose.runOnIdle {
             s.recordHistory()
