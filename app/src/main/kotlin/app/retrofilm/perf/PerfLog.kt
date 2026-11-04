@@ -29,6 +29,13 @@ object PerfLog {
 
     fun since(name: String, start: Long) = log(name, now() - start)
 
+    /** Wpis diagnostyczny (np. `last_crash`) – zawsze w [ring], także gdy logi czasów są wyłączone. */
+    fun always(name: String, note: String) {
+        val c = context
+        val target = recorder ?: ring
+        target.add(PerfEntry(System.currentTimeMillis(), name, 0, c.backend, c.width, c.height, c.hdr, device, note))
+    }
+
     fun log(name: String, ms: Long, note: String = "") {
         Log.i(TAG, if (note.isEmpty()) "${name}_ms=$ms" else "${name}_ms=$ms $note")
         val ring = recorder ?: return

@@ -81,7 +81,7 @@ object FloatExport {
             val name = if (finish == null) "lut_render_dither" else "lut_effects_dither"
             return trace.timed(name) {
                 val io = StripIo(fracOut = fracOut, stage = stage, finish = finish)
-                StripPipeline.run(input, first, deband, if (finish == null) emptyList() else faces, io)
+                runOrShrink(input, first, deband, if (finish == null) emptyList() else faces, io)
             }.also {
                 if (input !== work) input.recycle()
             }
@@ -98,6 +98,14 @@ object FloatExport {
         return finished
     }
 }
+
+/** H: brak pamięci przy pełnym budżecie pasów → ponów najmniejszymi pasami (zwykle jeden wątek). */
+private fun runOrShrink(input: Bitmap, adj: Adjustments, deband: Boolean, faces: List<FaceBox>, io: StripIo): Bitmap =
+    try {
+        StripPipeline.run(input, adj, deband, faces, io)
+    } catch (_: OutOfMemoryError) {
+        StripPipeline.run(input, adj, deband, faces, io.copyWith(StripBudget.MIN_BYTES))
+    }
 
 /**
  * LUT na kanałach float (0..255) w pasie. [wide] = wartości w Display P3: próbkowanie w sRGB po przycięciu do jego

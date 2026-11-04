@@ -23,6 +23,7 @@ import app.retrofilm.core.ui.RetroFilmTheme
 import app.retrofilm.core.ui.ThemeMode
 import app.retrofilm.core.ui.photo.LocalPhotoRenderer
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.perf.CrashLog
 import app.retrofilm.pipeline.SignatureFont
 import app.retrofilm.pipeline.Watermark
 import app.retrofilm.ui.MainScreen
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CrashLog.install(applicationContext)
         val graph = AppGraph.get(this)
         if (savedInstanceState == null) graph.warmUp()
         Watermark.installIcon(this)

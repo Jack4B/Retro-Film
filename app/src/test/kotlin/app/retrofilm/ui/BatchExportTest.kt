@@ -38,4 +38,10 @@ class BatchExportTest {
     @Test fun emptyListSavesNothing() = runBlocking {
         assertEquals(BatchResult(0, 0), exportBatch(emptyList<Int>()) { error("nie powinno być wywołane") })
     }
+
+    @Test
+    fun outOfMemoryInOnePhotoDoesNotStopSeries() = runBlocking {
+        val r = exportBatch(listOf(1, 2, 3)) { if (it == 2) throw OutOfMemoryError("12 MP") }
+        assertEquals(BatchResult(2, 1, listOf(1)), r)
+    }
 }
