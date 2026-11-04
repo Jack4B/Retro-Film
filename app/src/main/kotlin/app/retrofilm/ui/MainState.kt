@@ -164,12 +164,14 @@ class MainState(
         private set
     private var hdrInfo = HdrAnalysis.NONE
     private var autoFilm: String? = null
-    private var prepRaw: AutoResult? = null
     private val calibrations = HashMap<String, FilmCalibration>()
 
     val canUndoAuto: Boolean get() = autoOn && autoApplied == adjustments
 
     val canUndoPrep: Boolean get() = prepOn && autoApplied == adjustments
+
+    /** Suwak „Zdejmij krzywą telefonu” jest dostępny przy włączonym przygotowaniu, także po ręcznych zmianach. */
+    val canAdjustPrepInversion: Boolean get() = prepOn
 
     /** Scena rozpoznana przy ostatnim auto-ulepszeniu (do podpisu przycisku). */
     var autoScene by mutableStateOf(AutoScene.General)
@@ -739,12 +741,24 @@ class MainState(
         reapplyAuto()
     }
 
-    /** Suwak siły odwrócenia krzywej telefonu; przy włączonym „Przygotuj pod film” od razu stosuje nową siłę. */
-    fun updatePrepInversion(value: Float) {
+    /**
+     * Suwak siły odwrócenia krzywej telefonu (niezależny od pozostałych suwaków). Bez ręcznych zmian propozycja
+     * liczy się od nowa po zdjęciu krzywej z nową siłą (ekspozycja pasuje do tego, co zobaczy film); po ręcznych
+     * zmianach zmienia się tylko odwrócenie, a ręczna ekspozycja i reszta zostają.
+     */
+    suspend fun updatePrepInversion(value: Float) {
         prepInversion = value.coerceIn(0f, 1f)
-        if (!prepOn || autoApplied != adjustments) return
-        prepResult = prepRaw?.forFilm(prepInversion) ?: return
-        reapplyAuto()
+        if (!prepOn) return
+        val p = photo
+        if (autoApplied == adjustments && p != null) {
+            val asked = prepInversion
+            val result = suggestFor(p, AutoKind.Prep)
+            if (asked != prepInversion) return // przeciąganie: liczy się tylko najnowsza wartość
+            prepResult = result
+            reapplyAuto()
+        } else {
+            adjustments = adjustments.copy(toneInversion = prepInversion)
+        }
     }
 
     /** Po zmianie filmu propozycja liczy się od nowa pod jego szarość (o ile od tej pory nie zmieniano korekt). */
@@ -761,13 +775,14 @@ class MainState(
         val px = IntArray(small.width * small.height)
         small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
         val faces = FaceFinder.find(small)
-        val context = AutoContext(calibration().targetGrey, hdrInfo.headroomEv, hdrInfo.baselineEv)
+        val cal = calibration()
+        val inversion = if (kind == AutoKind.Prep) prepInversion else 0f
+        val context = AutoContext(cal.targetGrey, hdrInfo.headroomEv, hdrInfo.baselineEv, inversion, cal.shoulder)
         autoFilm = film
         val start = PerfLog.now()
         val suggestion = AutoEnhance.suggest(px, small.width, small.height, faces, context)
         PerfLog.since("auto_suggest", start)
         if (kind == AutoKind.Prep) {
-            prepRaw = suggestion
             suggestion.forFilm(prepInversion)
         } else {
             suggestion
@@ -795,7 +810,6 @@ class MainState(
         prepOn = false
         autoResult = null
         prepResult = null
-        prepRaw = null
     }
 
     private enum class AutoKind { Auto, Prep }

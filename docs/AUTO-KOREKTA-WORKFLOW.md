@@ -25,7 +25,10 @@ Oba przyciski są w zakładce **Korekty**.
 
 ## 3. Suwak „Zdejmij krzywą telefonu”
 
-Suwak jest widoczny pod przyciskiem **Cofnij przygotowanie pod film**, czyli tylko wtedy, gdy przygotowanie jest włączone. Wartość domyślna to **50%**.
+Suwak jest widoczny pod przyciskiem przygotowania, gdy przygotowanie jest włączone, **także po ręcznej zmianie Ekspozycji czy innych suwaków** (od wydania M; wcześniej ręczna zmiana chowała suwak i blokowała zmianę). Wartość domyślna to **50%**; **100% = pełne zdjęcie krzywej**.
+
+- **Bez ręcznych zmian** przesunięcie suwaka przelicza propozycję (ekspozycję i balans bieli) na zdjęciu *po* zdjęciu krzywej z nową siłą, czyli na tym, co dostanie film.
+- **Po ręcznych zmianach** suwak zmienia tylko zdjęcie krzywej; Twoja ekspozycja i reszta zostają.
 
 Działanie: telefon podbija kontrast półtonów krzywą w kształcie litery S. Suwak cofa tę krzywą, więc film dostaje bardziej „płaskie” wejście. Szarość 18% oraz czerń i biel prawie się nie zmieniają.
 
@@ -35,6 +38,12 @@ Działanie: telefon podbija kontrast półtonów krzywą w kształcie litery S. 
 - **DNG**: zalecane **0–25%**. Obraz z RAW nie ma krzywej z procesora telefonu, więc mocna inwersja tylko go spłaszczy.
 
 Gdy inwersja jest większa od 0, suwak **Kontrast** z przygotowania zostaje na 0. Za kontrast odpowiada wtedy film.
+
+### Ekspozycja z „Przygotuj pod film” a twarze (wydanie M)
+
+- Ekspozycja jest mierzona po zdjęciu krzywej telefonu przy bieżącej sile suwaka (wcześniej na surowym JPEG-u, niezależnie od suwaka).
+- Gdy wykrywacz znajdzie twarze, propozycja ma górną granicę: 75. percentyl najjaśniejszego kanału w ramkach twarzy po korekcie nie przekroczy ok. sRGB 0,81 (liniowo 0,62) ani ramienia filmu. Przepalone bloki twarzy liczą się jako biel, więc przepalonej twarzy auto już nie rozjaśnia.
+- Wcześniej przy filmach o jasnej szarości docelowej (do 0,36 zamiast 0,18) cel jasności skóry rósł razem z nią, a ograniczenie świateł patrzyło tylko na luminancję nieprzepalonych bloków (do 1,0): twarz mogła dostać do +0,9 EV i czerwony kanał 255.
 
 ## 4. Kolejność pracy
 

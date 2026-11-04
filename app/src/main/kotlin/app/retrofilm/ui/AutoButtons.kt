@@ -30,13 +30,13 @@ internal fun PrepButton(state: MainState) {
         Text(stringResource(if (undo) R.string.adjust_prep_undo else R.string.adjust_prep))
     }
     // Siła zdjęcia krzywej tonalnej telefonu (domyślnie umiarkowana), tylko gdy propozycja jest nałożona.
-    if (undo) {
+    if (state.canAdjustPrepInversion) {
         AdjustSlider(
             stringResource(R.string.adjust_prep_inversion),
             state.prepInversion,
             { "%d%%".format(Locale.forLanguageTag("pl"), (it * PERCENT).roundToInt()) },
             range = 0f..1f
-        ) { state.updatePrepInversion(it) }
+        ) { scope.launch { state.updatePrepInversion(it) } }
     }
 }
 

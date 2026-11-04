@@ -55,12 +55,16 @@ data class AutoResult(
 /**
  * Kontekst automatycznej korekty spoza pikseli: [targetGrey] – liniowa jasność wejścia, którą wybrany film oddaje
  * jako 18% szarości ([FilmCalibration]); [headroomEv] – zapas jasności ponad biel SDR z HDR/RAW ([HdrAnalysis]);
- * [baselineEv] – BaselineExposure z DNG (prior ekspozycji przy niskiej pewności pomiaru).
+ * [baselineEv] – BaselineExposure z DNG (prior ekspozycji przy niskiej pewności pomiaru); [inversion] – bieżąca siła
+ * „Zdejmij krzywą telefonu” (pomiar na pikselach po jej zdjęciu, tak jak zobaczy je film); [shoulder] – ramię filmu
+ * ([FilmCalibration.shoulder]), powyżej którego twarz byłaby ściśnięta.
  */
 data class AutoContext(
     val targetGrey: Float = FilmCalibration.MID_GREY,
     val headroomEv: Float = 0f,
-    val baselineEv: Float? = null
+    val baselineEv: Float? = null,
+    val inversion: Float = 0f,
+    val shoulder: Float = 1f
 )
 
 /**
@@ -95,6 +99,9 @@ object AutoEnhance {
     private const val CENTER_SIGMA = 0.35f
     private const val FACE_WEIGHT = 0.6f
 
+    /** Najjaśniejszy kanał skóry (liniowo, ≈ sRGB 0,81) po ekspozycji z auto – twarz nie idzie w przepalenie. */
+    const val FACE_CEILING = 0.62f
+
     /** [faces] (opcjonalnie) to twarze z wykrywacza; bez nich skórę rozpoznaje się po kolorze. */
     fun suggest(
         px: IntArray,
@@ -103,12 +110,17 @@ object AutoEnhance {
         faces: List<FaceBox> = emptyList(),
         context: AutoContext = AutoContext()
     ): AutoResult {
-        val sample = sample(px, w, h)
+        val sample = sample(px, w, h, context.inversion)
         val scene = SceneAnalyzer.analyze(sample, faces)
         val wb = AutoWhiteBalance.estimate(sample, scene)
         val m = WhiteBalance.matrix(wb.temperature, wb.tint, wb.dx, wb.dy)
         val lumas = FloatArray(sample.count) { luma(sample.rgb, it, m) }
-        val ev = exposure(lumas, sample, scene, context)
+        val ev = exposure(lumas, sample, scene, context).let {
+            minOf(
+                it,
+                FaceExposureCap.ev(sample, faces, context) ?: it
+            )
+        }
         val gain = 2f.pow(ev)
         val enc = FloatArray(lumas.size) { AdjustmentProcessor.linearToSrgb((lumas[it] * gain).coerceIn(0f, 1f)) }
         enc.sort()
@@ -138,7 +150,12 @@ object AutoEnhance {
      * Próbki liniowego RGB (trójki) jako średnie bloków siatki o dłuższym boku ok. [SAMPLE_SIDE] (bez aliasingu
      * drobnych detali; ten sam wynik dla podglądu i pełnej rozdzielczości), z flagą przepalenia bloku.
      */
-    internal fun sample(px: IntArray, w: Int, h: Int): Sample {
+    internal fun sample(px: IntArray, w: Int, h: Int, inversion: Float = 0f): Sample {
+        val table = if (inversion <= 0f) {
+            LINEAR
+        } else {
+            FloatArray(256) { AdjustmentProcessor.srgbToLinear(PhoneCurve.invert(it / 255f, inversion)) }
+        }
         val step = maxOf(1, (maxOf(w, h) + SAMPLE_SIDE - 1) / SAMPLE_SIDE)
         val gw = (w + step - 1) / step
         val gh = (h + step - 1) / step
@@ -149,7 +166,7 @@ object AutoEnhance {
         Parallel.forEach(gh) { gy ->
             for (gx in 0 until gw) {
                 val i = gy * gw + gx
-                clipped[i] = blockMean(px, w, h, gx * step, gy * step, step, clip, out, 3 * i)
+                clipped[i] = blockMean(px, w, h, gx * step, gy * step, step, clip, table, out, 3 * i)
             }
         }
         return Sample(out, gw, gh, clipped)
@@ -165,6 +182,7 @@ object AutoEnhance {
         y0: Int,
         step: Int,
         clip: Int,
+        table: FloatArray,
         out: FloatArray,
         at: Int
     ): Boolean {
@@ -180,9 +198,9 @@ object AutoEnhance {
                 val cg = (c shr 8) and 0xFF
                 val cb = c and 0xFF
                 hot = hot || cr >= clip || cg >= clip || cb >= clip
-                r += LINEAR[cr]
-                g += LINEAR[cg]
-                b += LINEAR[cb]
+                r += table[cr]
+                g += table[cg]
+                b += table[cb]
                 n++
             }
         }
@@ -288,5 +306,32 @@ internal object CensoredTail {
         if (clipped.none { it } || free.size < MIN_TAIL) return 0.0
         val from = free[((free.size - 1) * TAIL_FROM).toInt()]
         return (free.filter { it >= from }.average() - from).coerceIn(0.0, MAX_BONUS)
+    }
+}
+
+/** Górna granica ekspozycji z twarzy (M), wydzielona z [AutoEnhance]. */
+@Suppress("MagicNumber") // indeksy kanałów RGB i środek bloku
+internal object FaceExposureCap {
+    private const val FACE_PERCENTILE = 0.75f
+    private const val MIN_BLOCKS = 16
+    private const val MIN_VALUE = 1e-4f
+
+    /**
+     * Górna granica EV z twarz z wykrywacza (M): 75. percentyl najjaśniejszego kanału bloków w ramkach twarzy
+     * (przepalone liczą się jako 1, więc przepalona twarz nie jest rozjaśniana) nie może przejść [FACE_CEILING]
+     * ani ramienia filmu. Kanał, nie luminancja: w skórze pierwszy przepala się czerwony.
+     */
+    fun ev(s: Sample, faces: List<FaceBox>, ctx: AutoContext): Float? {
+        val vals = ArrayList<Float>()
+        for (i in s.clipped.indices) {
+            val x = ((i % s.gw) + 0.5f) / s.gw
+            val y = ((i / s.gw) + 0.5f) / s.gh
+            if (faces.none { x in it.left..it.right && y in it.top..it.bottom }) continue
+            vals += if (s.clipped[i]) 1f else maxOf(s.rgb[3 * i], s.rgb[3 * i + 1], s.rgb[3 * i + 2])
+        }
+        if (vals.size < MIN_BLOCKS) return null
+        vals.sort()
+        val bright = vals[((vals.size - 1) * FACE_PERCENTILE).toInt()].coerceAtLeast(MIN_VALUE)
+        return ln(minOf(AutoEnhance.FACE_CEILING, ctx.shoulder) / bright) / ln(2f)
     }
 }
