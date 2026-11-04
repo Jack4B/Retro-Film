@@ -68,9 +68,9 @@ internal object RawLoader {
         val sb = buf.asShortBuffer()
         val n = bitmap.width * bitmap.height
         return FloatArray(n) {
-            val r = Half.toFloat(sb.get(4 * it))
-            val g = Half.toFloat(sb.get(4 * it + 1))
-            val b = Half.toFloat(sb.get(4 * it + 2))
+            val r = Half.toFloat(sb.get(RGBA * it))
+            val g = Half.toFloat(sb.get(RGBA * it + 1))
+            val b = Half.toFloat(sb.get(RGBA * it + 2))
             LUMA_R * r + LUMA_G * g + LUMA_B * b
         }
     }
@@ -80,3 +80,5 @@ internal object RawLoader {
     private const val LUMA_G = 0.7152f
     private const val LUMA_B = 0.0722f
 }
+
+private const val RGBA = 4

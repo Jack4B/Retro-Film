@@ -335,6 +335,7 @@ internal fun interface PlaneStage {
  * kanał, [Frac]) – razem z bitmapą daje ~10 bitów między etapami eksportu bez pełnej kopii float. [stage] działa na
  * kanałach float tuż przed kwantyzacją. [dither] = false wyłącza dithering (np. wyjście pośrednie).
  */
+@Suppress("LongParameterList") // nośnik konfiguracji z wartościami domyślnymi
 internal class StripIo(
     val fracIn: ByteArray? = null,
     val fracOut: ByteArray? = null,

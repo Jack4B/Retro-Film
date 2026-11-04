@@ -92,9 +92,6 @@ object AutoEnhance {
     private const val MIN_LUMA = 1e-4f
     private const val MIN_EV = 0.05f
     private const val CLIP_LEVEL = 0.98f
-    private const val TAIL_FROM = 0.9f
-    private const val MIN_TAIL = 20
-    private const val MAX_BONUS = 0.1 // ln: ≤ 0,14 EV; większe przestrzeliwuje ColorChecker +1 EV (0,2 → 0,24 EV)
     private const val CENTER_SIGMA = 0.35f
     private const val FACE_WEIGHT = 0.6f
 
@@ -229,7 +226,7 @@ object AutoEnhance {
      */
     internal fun key(lumas: FloatArray, s: Sample): Float {
         val logs = DoubleArray(lumas.size) { ln(lumas[it].coerceAtLeast(MIN_LUMA).toDouble()) }
-        val bonus = censoredBonus(logs, s.clipped)
+        val bonus = CensoredTail.bonus(logs, s.clipped)
         var sumW = 0.0
         var sumL = 0.0
         for (i in lumas.indices) {
@@ -240,19 +237,6 @@ object AutoEnhance {
             sumL += wgt * (logs[i] + if (s.clipped[i]) bonus else 0.0)
         }
         return kotlin.math.exp(sumL / sumW).toFloat()
-    }
-
-    /**
-     * Średnia nadwyżka log-jasności ponad próg w górnym ogonie nieprzepalonych (od [TAIL_FROM] percentyla):
-     * jeśli rozkład jest wykładniczy w ogonie, oczekiwana nadwyżka nad progiem cenzury jest stała (bez pamięci).
-     */
-    private fun censoredBonus(logs: DoubleArray, clipped: BooleanArray): Double {
-        if (clipped.none { it }) return 0.0
-        val free = logs.filterIndexed { i, _ -> !clipped[i] }.sorted()
-        if (free.size < MIN_TAIL) return 0.0
-        val from = free[((free.size - 1) * TAIL_FROM).toInt()]
-        val tail = free.filter { it >= from }
-        return (tail.average() - from).coerceIn(0.0, MAX_BONUS)
     }
 
     /** Korekta EV mediany skóry do docelowej jasności twarzy (skalowanej szarością filmu) albo null. */
@@ -288,5 +272,21 @@ object AutoEnhance {
             else -> -((chroma - 0.16f) * 3f).coerceIn(0f, 0.2f)
         }
         return if (scene.scene == AutoScene.Portrait) value.coerceAtMost(0.15f) else value
+    }
+}
+
+/**
+ * Średnia nadwyżka log-jasności ponad próg w górnym ogonie nieprzepalonych (od [TAIL_FROM] percentyla):
+ * jeśli rozkład jest wykładniczy w ogonie, oczekiwana nadwyżka nad progiem cenzury jest stała (bez pamięci).
+ */
+internal object CensoredTail {
+    private const val TAIL_FROM = 0.9f
+    private const val MIN_TAIL = 20
+    private const val MAX_BONUS = 0.1 // ln: ≤ 0,14 EV; większe przestrzeliwuje ColorChecker +1 EV (0,2 → 0,24 EV)
+    fun bonus(logs: DoubleArray, clipped: BooleanArray): Double {
+        val free = logs.filterIndexed { i, _ -> !clipped[i] }.sorted()
+        if (clipped.none { it } || free.size < MIN_TAIL) return 0.0
+        val from = free[((free.size - 1) * TAIL_FROM).toInt()]
+        return (free.filter { it >= from }.average() - from).coerceIn(0.0, MAX_BONUS)
     }
 }
