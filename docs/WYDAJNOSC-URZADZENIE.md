@@ -37,3 +37,11 @@ Pomiar: `PerfTimingTest.firstOpen` (syntetyczny 12 MP + 9 MB „wideo” za JPEG
 
 DNG: `RawLoader` (ImageDecoder, API 28+) – dekodowanie od razu do rozmiaru podglądu, orientacja z dekodera,
 neutralne renderowanie platformy (balans bieli z pliku, bazowa krzywa DNG) jako płaski punkt startu.
+
+### DNG z natywnego aparatu realme RMX5085 (GT 7T) — plik prywatny, poza repo
+- DNG 1.4, Make `realme`, 3264×2448, Bayer CFA **10-bit nieskompresowany** (Compression 1, WhiteLevel 1023, BlackLevel 64), ~16 MB.
+- **Brak osadzonego podglądu** (jedna strona IFD) → miniatura EXIF niedostępna; pierwszy podgląd dopiero po dekodzie RAW (ImageDecoder, cel 2560).
+- **Orientation = 9 (niepoprawna wartość EXIF)** → traktowana jak 1 (Normal), `applyOrientation` nie obraca. Prawdziwej orientacji nie da się odczytać z pliku.
+- BaselineExposure −0,40 EV, tylko ColorMatrix1 (D65), AsShotNeutral ≈ (1,0 / 0,572 / 0,610) → WB kamery ≈ R×1,75 B×1,64; brak ProfileToneCurve i opcodów (brak korekcji winiety/dystorsji w pliku).
+- Referencja rawpy (WB kamery, bez auto-jasności) na boxie: 0,19 s, średnia 52/255, kanały R/G/B 59/53/46 — neutralny, lekko ciepły, płaski; ciemniej niż JPEG z aparatu (oczekiwane dla „flat”).
+- Ryzyko: render platformowy (Skia/dng_sdk) na urządzeniu niezweryfikowany — brak emulatora/urządzenia na boxie.
