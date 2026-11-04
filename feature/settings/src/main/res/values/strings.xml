@@ -112,4 +112,11 @@
     <string name="perf_log_count">Wpisy w logu: %1$d</string>
     <string name="perf_log_share_subtitle">Wyślij CSV jako tekst wybraną aplikacją</string>
     <string name="perf_log_clear_subtitle">Usuwa zapisane pomiary z pamięci</string>
+    <string name="settings_frame_mode">Tryb ramki</string>
+    <string name="settings_frame_outward">Ramka na zewnątrz</string>
+    <string name="settings_frame_original">Oryginalny rozmiar pliku</string>
+    <string name="settings_frame_outward_subtitle">Zdjęcie bez skalowania (1:1), plik większy o ramkę. Najszybszy zapis.</string>
+    <string name="settings_frame_original_subtitle">Zdjęcie zmniejszone do okna ramki (Lanczos), plik zachowuje dłuższy bok oryginału.</string>
+    <string name="gpu_save">Zapis na GPU (eksperymentalny)</string>
+    <string name="gpu_save_subtitle">Filtr kliszy liczony na GPU w zapisie. Przy każdym błędzie automatycznie wraca na CPU. Backend widać w logu czasów.</string>
 </resources>

@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.Memory
 import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Share
@@ -48,6 +49,8 @@ enum class ToolsNotice(@StringRes val title: Int, @StringRes val body: Int) {
 @Immutable
 data class SettingsToolsState(
     val perfLogEnabled: Boolean = false,
+    /** K: „Zapis na GPU (eksperymentalny)”, domyślnie włączony (z automatycznym powrotem na CPU). */
+    val gpuSave: Boolean = true,
     val perfLogCount: Int = 0,
     val restorePrompt: RestorePrompt? = null,
     val notice: ToolsNotice? = null
@@ -57,6 +60,7 @@ data class SettingsToolsState(
 @Immutable
 data class SettingsToolsActions(
     val onPerfLogChange: (Boolean) -> Unit = {},
+    val onGpuSaveChange: (Boolean) -> Unit = {},
     val onExportPerfLog: () -> Unit = {},
     val onSharePerfLog: () -> Unit = {},
     val onClearPerfLog: () -> Unit = {},
@@ -99,6 +103,16 @@ private fun LazyListScope.diagnosticsSection(tools: SettingsToolsState, actions:
             subtitle = R.string.perf_log_subtitle,
             modifier = Modifier.testTag("perf-log-switch"),
             icon = { Icon(Icons.Outlined.Timer, contentDescription = null) }
+        )
+    }
+    item {
+        SwitchRow(
+            checked = tools.gpuSave,
+            onChange = actions.onGpuSaveChange,
+            title = R.string.gpu_save,
+            subtitle = R.string.gpu_save_subtitle,
+            modifier = Modifier.testTag("gpu-save-switch"),
+            icon = { Icon(Icons.Outlined.Memory, contentDescription = null) }
         )
     }
     val count: @Composable () -> String = { stringResource(R.string.perf_log_count, tools.perfLogCount) }

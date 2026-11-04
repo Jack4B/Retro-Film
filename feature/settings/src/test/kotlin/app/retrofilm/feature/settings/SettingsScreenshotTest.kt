@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -204,5 +205,60 @@ class SettingsScreenshotTest {
     @Test fun bladKopii() {
         tools(dark = true, SettingsToolsState(notice = ToolsNotice.NewerSchema))
         compose.onNodeWithText("Kopia pochodzi z nowszej wersji", substring = true).assertIsDisplayed()
+    }
+
+    private fun frameAndGpu(dark: Boolean, outward: Boolean, gpu: Boolean, onFrame: (Boolean) -> Unit = {}) {
+        compose.setContent {
+            RetroFilmTheme(dynamicColor = false, darkTheme = dark) {
+                SettingsScreen(
+                    SettingsUiState(
+                        defaultHdrFromPhoto = false,
+                        frameOutward = outward,
+                        tools = SettingsToolsState(gpuSave = gpu),
+                        versionName = VERSION
+                    ),
+                    {},
+                    {},
+                    {},
+                    {},
+                    onFrameOutwardChange = onFrame
+                )
+            }
+        }
+    }
+
+    @Test fun trybRamkiCiemny() {
+        var picked: Boolean? = null
+        frameAndGpu(dark = true, outward = true, gpu = true) { picked = it }
+        scrollTo("frame-mode-original")
+        compose.onNodeWithTag("frame-mode-outward").assertIsSelected()
+        compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-tryb-ramki.png")
+        compose.onNodeWithTag("frame-mode-original").performClick()
+        assertEquals(false, picked)
+    }
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-notnight-xxhdpi")
+    fun trybRamkiJasny() {
+        frameAndGpu(dark = false, outward = false, gpu = true)
+        scrollTo("frame-mode-original")
+        compose.onNodeWithTag("frame-mode-original").assertIsSelected()
+        compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-tryb-ramki-jasne.png")
+    }
+
+    @Test fun zapisGpuCiemny() {
+        frameAndGpu(dark = true, outward = true, gpu = true)
+        scrollTo("gpu-save-switch")
+        compose.onNodeWithTag("gpu-save-switch").assertIsOn()
+        compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-zapis-gpu.png")
+    }
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-notnight-xxhdpi")
+    fun zapisGpuJasny() {
+        frameAndGpu(dark = false, outward = true, gpu = false)
+        scrollTo("gpu-save-switch")
+        compose.onNodeWithTag("gpu-save-switch").assertIsOff()
+        compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-zapis-gpu-jasne.png")
     }
 }

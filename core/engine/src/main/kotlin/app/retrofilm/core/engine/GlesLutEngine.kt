@@ -342,7 +342,7 @@ private class EglSession : AutoCloseable {
     }
 }
 
-private object GlProgram {
+internal object GlProgram {
     fun build(vertex: String, fragment: String): Int {
         val vs = compile(GLES30.GL_VERTEX_SHADER, vertex)
         val fs = compile(GLES30.GL_FRAGMENT_SHADER, fragment)

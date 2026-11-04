@@ -63,7 +63,8 @@ object FloatExport {
         trace: SaveTrace? = null,
         fused: Boolean = true
     ): Bitmap {
-        val stage = lut?.let { LutStage(it, intensity, space == OutputSpace.DisplayP3) }
+        val wide = space == OutputSpace.DisplayP3
+        val stage = lut?.let { SaveBackend.stage(it, intensity, LutStage(it, intensity, wide), wide, trace) }
         val finishing = adjustments.finishing()
         // maski są mieszane na 8 bitach po pasach – wtedy korekty osobno (jak dotąd), LUT dalej w potoku float
         val masked = adjustments.corrections().masks.isNotEmpty()

@@ -243,6 +243,12 @@ class MainState(
 
     suspend fun observeDefaults() = graph.appSettings.editDefaults.collect { defaults = it }
 
+    /** K: tryb ramki z Ustawień (true „Ramka na zewnątrz”, false „Oryginalny rozmiar pliku”), tylko dla zapisu. */
+    var frameOutward by mutableStateOf(true)
+        private set
+
+    suspend fun observeFrameMode() = graph.appSettings.frameOutward.collect { frameOutward = it }
+
     /** Bieżąca jakość, rozmiar i ramka z podpisem jako domyślne dla kolejnych edycji. */
     fun currentAsDefaults(): EditDefaults = EditDefaults(
         quality = exportQuality,
@@ -578,7 +584,7 @@ class MainState(
             val job = ExportJob(
                 ExportLook(edit.geometry, lutFor(edit.film), edit.intensity, edit.adjustments),
                 graph.filmEngine.renderer,
-                photoFrame,
+                photoFrame.copy(outward = frameOutward),
                 face,
                 exportMaxSide,
                 exportFormat.copy(hdr = hdrFor(photoIndex))
@@ -811,7 +817,7 @@ class MainState(
             val job = ExportJob(
                 ExportLook(geometry, lut(), intensity, adjustments),
                 graph.filmEngine.renderer,
-                frame,
+                frame.copy(outward = frameOutward),
                 signatureTypeface(),
                 exportMaxSide,
                 exportFormat

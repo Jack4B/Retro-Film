@@ -105,4 +105,23 @@ class AppSettingsRepositoryTest {
         assertTrue(withRepo { it.dynamicColor.first() })
         assertEquals(ThemeMode.Light, withRepo { it.themeMode.first() })
     }
+
+    @Test
+    fun frameOutwardIsOnByDefaultPersistedAndBackedUp() {
+        assertTrue(withRepo { it.frameOutward.first() })
+        withRepo { it.setFrameOutward(false) }
+        assertFalse(withRepo { it.frameOutward.first() })
+        val snap = withRepo { it.snapshot() }
+        assertEquals(false, snap["frame_outward"])
+        withRepo { it.restore(mapOf("frame_outward" to true), replace = true) }
+        assertTrue(withRepo { it.frameOutward.first() })
+    }
+
+    @Test
+    fun gpuSaveIsOnByDefaultPersistedAndBackedUp() {
+        assertTrue(withRepo { it.gpuSave.first() })
+        withRepo { it.setGpuSave(false) }
+        assertFalse(withRepo { it.gpuSave.first() })
+        assertEquals(false, withRepo { it.snapshot() }["gpu_save"])
+    }
 }
