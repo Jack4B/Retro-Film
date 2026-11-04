@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * ([MAX_WORKERS]), bo każdy kawałek ma własne bufory robocze (pamięć na telefonie).
  */
 internal object Parallel {
-    private const val MAX_WORKERS = 4
+    private const val MAX_WORKERS = 8
     private const val CHUNK = 1 shl 18
     internal const val REDUCE_GROUPS = 8
 
