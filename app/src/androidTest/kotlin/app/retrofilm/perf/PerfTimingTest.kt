@@ -11,7 +11,11 @@ import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
+import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.UltraHdrJpeg
+import app.retrofilm.ui.IDENTITY_ID
 import app.retrofilm.ui.MainState
+import java.io.File
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -92,8 +96,78 @@ class PerfTimingTest {
         report("film_tap_quick512_ms", (System.nanoTime() - q) / NS)
     }
 
+    /** Pierwsze otwarcie zdjęcia 12 MP: stara vs nowa ścieżka. */
+    @Test
+    fun firstOpen(): Unit = runBlocking {
+        val file = File(context.cacheDir, "first-open.jpg")
+        file.outputStream().use {
+            photo().compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it)
+            it.write(ByteArray(MOTION_TAIL)) // jak Motion Photo: ~9 MB wideo doklejone za JPEG-iem
+        }
+        val open = { file.inputStream() }
+        var t = System.nanoTime()
+        val old = PhotoLoader.load(open, PhotoLoader.DEFAULT_MAX_SIDE)
+        report("open_decode_4096_ms", (System.nanoTime() - t) / NS)
+        t = System.nanoTime()
+        PhotoLoader.thumbnail(open)
+        report("open_thumbnail_ms", (System.nanoTime() - t) / NS)
+        t = System.nanoTime()
+        val loaded = PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE)
+        report("open_decode_preview_ms", (System.nanoTime() - t) / NS)
+        assertTrue(loaded.sourceWidth == old.width && loaded.bitmap.width <= old.width)
+        val engine = AppGraph(context).filmEngine
+        t = System.nanoTime()
+        val small = MainState.scaleDown(loaded.bitmap, PREVIEW)
+        val lut = checkNotNull(engine.load(engine.availableLuts().first { it.id != IDENTITY_ID }.id))
+        engine.renderer.apply(small, lut, 1f)
+        report("open_first_preview_cold_ms", (System.nanoTime() - t) / NS)
+        // Po rozgrzewce (AppGraph.warmUp przy starcie): drugi film + nowe zdjęcie, tak jak widzi to użytkownik.
+        t = System.nanoTime()
+        val again = PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE)
+        engine.renderer.apply(MainState.scaleDown(again.bitmap, PREVIEW), lut, 1f)
+        report("open_first_preview_warm_ms", (System.nanoTime() - t) / NS)
+        file.delete()
+    }
+
+    @Test
+    fun ultraHdrSkip(): Unit = runBlocking {
+        // Syntetyczny Ultra HDR: JPEG z segmentem MPF + doklejona druga klatka 2048×1536 (jak gain mapa realme).
+        val primary = java.io.ByteArrayOutputStream().also { photo().compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it) }
+        val gain = java.io.ByteArrayOutputStream().also {
+            Bitmap.createScaledBitmap(photo(), GAIN_W, GAIN_H, true).compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it)
+        }
+        val p = primary.toByteArray()
+        val mpf =
+            byteArrayOf(
+                0xFF.toByte(),
+                0xE2.toByte(),
+                0,
+                MPF_LEN,
+                'M'.code.toByte(),
+                'P'.code.toByte(),
+                'F'.code.toByte(),
+                0
+            )
+        val bytes = p.copyOfRange(0, 2) + mpf + p.copyOfRange(2, p.size) + gain.toByteArray() + ByteArray(MOTION_TAIL)
+        assertTrue(UltraHdrJpeg.hasGainMap(bytes))
+        var t = System.nanoTime()
+        PhotoLoader.open({ java.io.ByteArrayInputStream(bytes) }, PhotoLoader.PREVIEW_MAX_SIDE)
+        report("open_ultrahdr_hdr_on_ms", (System.nanoTime() - t) / NS)
+        t = System.nanoTime()
+        val sdr = UltraHdrJpeg.sdrOnly(bytes)
+        PhotoLoader.open({ java.io.ByteArrayInputStream(sdr) }, PhotoLoader.PREVIEW_MAX_SIDE)
+        report("open_ultrahdr_hdr_off_ms", (System.nanoTime() - t) / NS)
+        Log.i(TAG, "ultrahdr_bytes_on_off=${bytes.size}/${sdr.size}")
+        assertTrue(sdr.size < bytes.size && !UltraHdrJpeg.hasGainMap(sdr))
+    }
+
     private companion object {
+        const val GAIN_W = 2048
+        const val GAIN_H = 1536
+        const val MPF_LEN: Byte = 6
         const val TAG = "RetroPerf"
+        const val JPEG_Q = 90
+        const val MOTION_TAIL = 9 * 1024 * 1024
         const val GRID = 12
         const val APPLY = 3
         const val PREVIEW = 1280

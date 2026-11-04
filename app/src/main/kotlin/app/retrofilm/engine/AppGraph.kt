@@ -1,6 +1,7 @@
 package app.retrofilm.engine
 
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.ui.graphics.ImageBitmap
 import app.retrofilm.core.engine.LutCatalog
 import app.retrofilm.core.engine.LutEngineFactory
@@ -12,11 +13,13 @@ import app.retrofilm.lut.PackDownloadedFiles
 import app.retrofilm.lut.PrefsLutDownloadSettings
 import app.retrofilm.lut.WorkLutPackRepository
 import app.retrofilm.settings.AppSettingsRepository
+import app.retrofilm.ui.IDENTITY_ID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 /** Prosta fabryka zależności aplikacji (bez frameworka DI). Jedna instancja na proces. */
 class AppGraph(context: Context) {
@@ -34,6 +37,22 @@ class AppGraph(context: Context) {
     /** Pobrane filmy dla silnika: tylko pliki, bez WorkManagera (zob. [PackDownloadedFiles]). */
     private val downloadedFiles: PackDownloadedFiles by lazy {
         PackDownloadedFiles(context.applicationContext, lutRawCache)
+    }
+
+    /**
+     * Rozgrzewka w tle przy starcie: katalog LUT, pierwszy film (dekodowanie PNG + atlas/tekstura) i jeden mini-render,
+     * żeby pierwsze otwarcie zdjęcia nie płaciło za zimny shader AGSL/EGL. Błędy ignorowane (to tylko optymalizacja).
+     */
+    fun warmUp() {
+        appScope.launch {
+            runCatching {
+                val engine = filmEngine
+                val lut = engine.availableLuts().firstOrNull { it.id != IDENTITY_ID }?.let { engine.load(it.id) }
+                    ?: return@runCatching
+                engine.renderer.warm(lut)
+                engine.renderer.apply(Bitmap.createBitmap(WARM_PX, WARM_PX, Bitmap.Config.ARGB_8888), lut, 1f)
+            }
+        }
     }
 
     private val lutCacheBytes = MutableStateFlow(0L)
@@ -75,6 +94,8 @@ class AppGraph(context: Context) {
     }
 
     companion object {
+        private const val WARM_PX = 8
+
         @Volatile private var instance: AppGraph? = null
 
         fun get(context: Context): AppGraph =

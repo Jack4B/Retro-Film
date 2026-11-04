@@ -14,8 +14,10 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -23,6 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+import kotlinx.coroutines.launch
 
 private val Gap = 8.dp
 private val MinTouch = 48.dp
@@ -88,8 +91,20 @@ private fun ExportFileOptions(state: MainState) {
         )
     }
     OptionRow(R.string.export_space_label) {
-        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.export_space_srgb)) })
+        FilterChip(
+            selected = !state.exportP3,
+            onClick = { state.exportP3 = false },
+            label = { Text(stringResource(R.string.export_space_srgb)) },
+            modifier = Modifier.testTag("export-space-srgb")
+        )
+        FilterChip(
+            selected = state.exportP3,
+            onClick = { state.exportP3 = true },
+            label = { Text(stringResource(R.string.export_space_p3)) },
+            modifier = Modifier.testTag("export-space-p3")
+        )
     }
+    if (state.photoHasGainMap) HdrOption(state)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -105,6 +120,28 @@ private fun ExportFileOptions(state: MainState) {
         Text(stringResource(R.string.export_exif), modifier = Modifier.weight(1f))
         Switch(checked = state.exportKeepExif, onCheckedChange = null)
     }
+}
+
+/** „HDR ze zdjęcia: Wł./Wył.” – tylko dla zdjęć z gain mapą; Wł. wymusza 4:2:0 i zapis bez ramki (Gainmap API). */
+@Composable
+private fun HdrOption(state: MainState) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    OptionRow(R.string.hdr_from_photo_label) {
+        FilterChip(
+            selected = !state.hdrFromPhoto,
+            onClick = { scope.launch { state.setHdrFromPhoto(context, false) } },
+            label = { Text(stringResource(R.string.hdr_off)) },
+            modifier = Modifier.testTag("hdr-off")
+        )
+        FilterChip(
+            selected = state.hdrFromPhoto,
+            onClick = { scope.launch { state.setHdrFromPhoto(context, true) } },
+            label = { Text(stringResource(R.string.hdr_on)) },
+            modifier = Modifier.testTag("hdr-on")
+        )
+    }
+    if (state.hdrFromPhoto) Text(stringResource(R.string.hdr_note), style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable

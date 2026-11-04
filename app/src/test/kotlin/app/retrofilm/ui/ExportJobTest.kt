@@ -6,10 +6,12 @@ import android.graphics.Typeface
 import android.media.ExifInterface
 import app.retrofilm.core.engine.CpuLutEngine
 import app.retrofilm.core.export.ExifData
+import app.retrofilm.core.export.IccProfiles
 import app.retrofilm.core.export.JpegInspector
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.Geometry
+import app.retrofilm.pipeline.OutputSpace
 import java.io.ByteArrayInputStream
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -76,5 +78,16 @@ class ExportJobTest {
     fun exifCanBeDisabled() = runBlocking {
         val jpeg = job(format = ExportFormat(keepExif = false)).encode(photo(64, 48), ExifData(make = "Fuji"))
         assertNull(JpegInspector.exifTiff(jpeg))
+    }
+
+    @Test
+    fun displayP3GetsP3ProfileAndUncalibratedExif() = runBlocking {
+        val jpeg = job(format = ExportFormat(space = OutputSpace.DisplayP3)).encode(photo(64, 48), ExifData(make = "X"))
+        assertEquals(
+            IccProfiles.description(IccProfiles.displayP3()),
+            IccProfiles.description(JpegInspector.icc(jpeg)!!)
+        )
+        val read = ExifInterface(ByteArrayInputStream(jpeg))
+        assertEquals(0xFFFF, read.getAttributeInt(ExifInterface.TAG_COLOR_SPACE, 0))
     }
 }

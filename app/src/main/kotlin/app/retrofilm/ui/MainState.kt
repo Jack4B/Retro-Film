@@ -29,11 +29,14 @@ import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
 import app.retrofilm.pipeline.LocalMask
+import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
+import app.retrofilm.pipeline.UltraHdrJpeg
 import app.retrofilm.settings.EditDefaults
 import java.io.IOException
+import java.io.InputStream
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -66,10 +69,17 @@ class MainState(
     private val fonts: (SignatureFont) -> Typeface = { typeface }
 ) {
     var photo by mutableStateOf<Bitmap?>(null)
+
+    /** Wymiary oryginału (po orientacji); [photo] jest pomniejszonym podglądem, oryginał dekoduje dopiero eksport. */
+    var sourceSize by mutableStateOf(0 to 0)
         private set
     var preview by mutableStateOf<Bitmap?>(null)
         private set
     var busy by mutableStateOf(false)
+        private set
+
+    /** Trwa dekodowanie RAW/DNG bez osadzonego podglądu — Edytor pokazuje zastępczy napis z postępem. */
+    var loadingRaw by mutableStateOf(false)
         private set
 
     /** Podgląd oryginału (to samo skalowanie co [preview]) – pokazywany po przytrzymaniu zdjęcia. */
@@ -153,7 +163,22 @@ class MainState(
     /** Przenoszenie danych aparatu (EXIF z białej listy, nigdy GPS). */
     var exportKeepExif by mutableStateOf(true)
 
-    val exportFormat: ExportFormat get() = ExportFormat(exportQuality, exportChroma444, exportKeepExif)
+    /** Zapis w Display P3 (szerszy gamut, profil P3) zamiast sRGB. */
+    var exportP3 by mutableStateOf(false)
+
+    /** „HDR ze zdjęcia”: Wył. = dekodowany i zapisywany tylko obraz bazowy SDR (bez gain mapy). */
+    var hdrFromPhoto by mutableStateOf(false)
+
+    /** Czy bieżące zdjęcie ma gain mapę Ultra HDR (pokazuje chip „HDR”). */
+    var photoHasGainMap by mutableStateOf(false)
+
+    val exportFormat: ExportFormat
+        get() = ExportFormat(
+            exportQuality,
+            exportChroma444,
+            exportKeepExif,
+            if (exportP3) OutputSpace.DisplayP3 else OutputSpace.Srgb
+        )
 
     /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
     var exportMaxSide by mutableIntStateOf(0)
@@ -187,6 +212,8 @@ class MainState(
         maxSide = exportMaxSide,
         chroma444 = exportChroma444,
         keepExif = exportKeepExif,
+        displayP3 = exportP3,
+        hdrFromPhoto = hdrFromPhoto,
         frameEnabled = frame.enabled,
         frameAspect = frame.aspect.name,
         frameMargin = frame.margin,
@@ -205,6 +232,8 @@ class MainState(
         exportMaxSide = d.maxSide
         exportChroma444 = d.chroma444
         exportKeepExif = d.keepExif
+        exportP3 = d.displayP3
+        hdrFromPhoto = d.hdrFromPhoto
         val base = FrameOptions()
         frame = base.copy(
             enabled = d.frameEnabled,
@@ -395,17 +424,34 @@ class MainState(
     /** Status podpisu dla bieżącego zdjęcia i ramki (blokada eksportu przy TooLong). */
     fun signatureStatus(): SignatureFitStatus {
         val p = photo ?: return SignatureFitStatus.None
-        val (w, h) = GeometryMath.outputSize(p.width, p.height, geometry)
+        val (sw, sh) = sourceOf(p)
+        val (w, h) = GeometryMath.outputSize(sw, sh, geometry)
         return FrameRenderer.status(frame, w, h, signatureTypeface())
     }
 
+    /** Wymiary oryginału dla [p] (gdy nieznane: wymiary bitmapy). */
+    fun sourceOf(p: Bitmap): Pair<Int, Int> = sourceSize.takeIf { it.first > 0 } ?: (p.width to p.height)
+
     suspend fun load(context: Context, uri: Uri): UiMessage? = withBusy {
         try {
-            val bmp = withContext(Dispatchers.IO) {
-                PhotoLoader.load({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") })
+            // Jeden odczyt pliku zamiast 4 (EXIF, miniatura, wymiary, dekodowanie przez ContentResolver); zdjęcia
+            // „ruchome” (Motion/Live Photo) mają za JPEG-iem ~10 MB wideo i gain mapę, więc każdy odczyt był drogi.
+            val bytes = withContext(Dispatchers.IO) {
+                context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw IOException("Brak pliku")
             }
-            photo = bmp
-            preview = null
+            photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
+            val decodeBytes = if (hdrFromPhoto) bytes else UltraHdrJpeg.sdrOnly(bytes)
+            val open = { java.io.ByteArrayInputStream(decodeBytes) }
+            // Najpierw osadzona miniatura (ms), potem dekodowanie pomniejszone do rozmiaru podglądu (nie pełne MP).
+            withContext(Dispatchers.IO) { PhotoLoader.thumbnail(open) }.let { preview = it }
+            loadingRaw = preview == null && PhotoLoader.isTiffRaw(open)
+            val loaded = try {
+                withContext(Dispatchers.IO) { PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE) }
+            } finally {
+                loadingRaw = false
+            }
+            sourceSize = loaded.sourceWidth to loaded.sourceHeight
+            photo = loaded.bitmap
             before = null
             thumbnails.switchTo(uri)
             null
@@ -465,7 +511,7 @@ class MainState(
                 exportFormat
             )
             val out = withContext(Dispatchers.Default) {
-                job.run({ context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }, null)
+                job.run(exportSource(context, uri), null)
             }
             if (out.reduced) reducedCount++
             val jpeg = out.jpeg
@@ -475,6 +521,21 @@ class MainState(
         failedIndices = result.failedIndices.map { only[it] }
         markSaved()
         UiMessage.SavedMany(result.saved, result.failed, reducedCount)
+    }
+
+    /** Źródło eksportu: przy wyłączonym „HDR ze zdjęcia” sam obraz bazowy SDR (gain mapa i wideo odcięte). */
+    private fun exportSource(context: Context, uri: Uri): () -> InputStream {
+        val open = { context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }
+        if (hdrFromPhoto) return open
+        val bytes by lazy { UltraHdrJpeg.sdrOnly(open().use { it.readBytes() }) }
+        return { java.io.ByteArrayInputStream(bytes) }
+    }
+
+    /** Przełącza „HDR ze zdjęcia” i wczytuje bieżące zdjęcie ponownie. */
+    suspend fun setHdrFromPhoto(context: Context, on: Boolean): UiMessage? {
+        if (on == hdrFromPhoto) return null
+        hdrFromPhoto = on
+        return uris.getOrNull(index)?.let { load(context, it) }
     }
 
     /** Podgląd: ta sama ścieżka co eksport, na pomniejszonej kopii. */
@@ -533,7 +594,9 @@ class MainState(
         val i = ids.indexOf(film)
         if (i < 0) return
         listOf(i + 1, i - 1).mapNotNull { ids.getOrNull(it) }.filter { it != IDENTITY_ID }
-            .forEach { runCatching { graph.filmEngine.load(it) } }
+            .forEach { id ->
+                runCatching { graph.filmEngine.load(id)?.let { graph.filmEngine.renderer.warm(it) } }
+            }
     }
 
     /** „Popraw światło i kolor”: przełącza propozycję z analizy zdjęcia (włącza albo wyłącza). */

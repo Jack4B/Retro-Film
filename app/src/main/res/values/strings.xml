@@ -129,6 +129,14 @@
     <string name="export_chroma_420">4:2:0 (mniejszy plik)</string>
     <string name="export_space_label">Przestrzeń barw</string>
     <string name="export_space_srgb">sRGB</string>
+    <string name="hdr_badge">HDR</string>
+    <string name="hdr_badge_cd">Zdjęcie ma gain mapę Ultra HDR</string>
+    <string name="hdr_from_photo_label">HDR ze zdjęcia</string>
+    <string name="hdr_on">Wł.</string>
+    <string name="hdr_off">Wył.</string>
+    <string name="raw_loading">Wczytywanie RAW…</string>
+    <string name="hdr_note">HDR: zapis 4:2:0 i bez ramki (ograniczenie gain mapy).</string>
+    <string name="export_space_p3">Display P3 (szerszy gamut)</string>
     <string name="export_exif">Dane aparatu (EXIF, bez GPS)</string>
     <string name="save_reduced">Za mało pamięci na pełną rozdzielczość – zapisano w mniejszej.</string>
     <string name="save_sheet_reduced_many">W mniejszej rozdzielczości (za mało pamięci): %1$d</string>

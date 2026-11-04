@@ -316,7 +316,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
         }
         if (shown != null && cropMode) ThirdsGrid(shown.width, shown.height)
         if (shown != null) PreviewInfo(state, shown.width, shown.height, zoom, showInfo) { showInfo = !showInfo }
-        if (shown == null || state.busy) CircularProgressIndicator()
+        LoadingIndicator(shown == null || state.busy, state.loadingRaw)
         PreviewBadges(state, showBefore)
         if (mode.filmActions && shown != null) {
             FilmActions(state, mode.onOpenLibrary, Modifier.align(Alignment.TopEnd).padding(top = MinTouch))
@@ -362,7 +362,8 @@ private fun BoxScope.PreviewInfo(
     onToggleInfo: () -> Unit
 ) {
     val photo = state.photo ?: return
-    val (outW, outH) = GeometryMath.outputSize(photo.width, photo.height, state.geometry)
+    val (srcW, srcH) = state.sourceOf(photo)
+    val (outW, outH) = GeometryMath.outputSize(srcW, srcH, state.geometry)
     val exportLong = maxOf(outW, outH)
     val (w, h) = ZoomMath.exportSize(shownW, shownH, exportLong)
     val percent = ZoomMath.percent(Dim(zoom.size.width, zoom.size.height), Dim(shownW, shownH), exportLong, zoom.scale)
@@ -386,6 +387,14 @@ private fun BoxScope.PreviewInfo(
             )
             if (state.preview != null) FilmCaption(state, Modifier)
         }
+    }
+    if (state.photoHasGainMap) {
+        ZoomReadout(
+            text = stringResource(R.string.hdr_badge),
+            description = stringResource(R.string.hdr_badge_cd),
+            modifier = Modifier.align(Alignment.TopStart).padding(EdgePad).testTag("hdr-badge"),
+            subtle = true
+        )
     }
     InfoButton(showInfo, onToggleInfo, Modifier.align(Alignment.TopEnd))
 }
