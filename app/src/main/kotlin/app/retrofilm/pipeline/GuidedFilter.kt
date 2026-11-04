@@ -115,7 +115,7 @@ internal class Lowres(val width: Int, val height: Int, val factor: Int) {
      * mają własne instancje, które łączy [merge]; [mean] daje średnią kanału jak [down].
      */
     class Accumulator(val low: Lowres) {
-        private val sums = FloatArray(ACC_CHANNELS * low.w * low.h)
+        private val sums = DoubleArray(ACC_CHANNELS * low.w * low.h)
         private val counts = IntArray(low.w * low.h)
 
         fun add(x: Int, y: Int, a: Float, b: Float = 0f, c: Float = 0f) {
@@ -137,7 +137,7 @@ internal class Lowres(val width: Int, val height: Int, val factor: Int) {
             val out = FloatArray(counts.size)
             for (i in out.indices) {
                 out[i] = when {
-                    counts[i] > 0 -> sums[ACC_CHANNELS * i + k] / counts[i]
+                    counts[i] > 0 -> (sums[ACC_CHANNELS * i + k] / counts[i]).toFloat()
                     i > 0 -> out[i - 1]
                     else -> 0f
                 }

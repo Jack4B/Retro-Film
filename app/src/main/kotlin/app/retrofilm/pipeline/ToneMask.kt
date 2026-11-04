@@ -50,7 +50,7 @@ class ToneMask private constructor(
         private val cell = max(1, max(width, height) / GRID_LONG)
         private val gridW = ceil(width / cell.toFloat()).toInt()
         private val gridH = ceil(height / cell.toFloat()).toInt()
-        private val sums = FloatArray(gridW * gridH)
+        private val sums = DoubleArray(gridW * gridH)
         private val counts = IntArray(gridW * gridH)
 
         /** Rozmiar komórki siatki w pikselach obrazu. */
@@ -85,7 +85,7 @@ class ToneMask private constructor(
             val avg = FloatArray(sums.size)
             for (i in avg.indices) {
                 avg[i] = when {
-                    counts[i] > 0 -> sums[i] / counts[i]
+                    counts[i] > 0 -> (sums[i] / counts[i]).toFloat()
                     i > 0 -> avg[i - 1]
                     else -> 0f
                 }

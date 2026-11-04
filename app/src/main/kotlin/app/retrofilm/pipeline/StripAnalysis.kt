@@ -1,7 +1,6 @@
 package app.retrofilm.pipeline
 
 import android.graphics.Bitmap
-import java.util.Collections
 import kotlin.math.max
 import kotlin.math.min
 
@@ -88,13 +87,10 @@ internal class StripAnalysis(
         val dehazeLow = if (adj.dehaze > 0f) Lowres.forSize(w, h, Dehaze.TARGET) else null
         if (chromaLow == null && dehazeLow == null) return null
         val sampler = Sampler(src, 1)
-        val all = Collections.synchronizedList(ArrayList<Sums>())
-        Parallel.forEach(
+        return Parallel.reduce(
             sampler.chunks,
-            {
-                Sums(chromaLow?.let { Lowres.Accumulator(it) }, dehazeLow?.let { Lowres.Accumulator(it) })
-                    .also { all.add(it) }
-            }
+            { Sums(chromaLow?.let { Lowres.Accumulator(it) }, dehazeLow?.let { Lowres.Accumulator(it) }) },
+            { into, other -> into.merge(other) }
         ) { sums, chunk ->
             sampler.rows(chunk) { y, p ->
                 for (i in 0 until p.size) {
@@ -103,16 +99,16 @@ internal class StripAnalysis(
                 }
             }
         }
-        val first = all[0]
-        for (i in 1 until all.size) first.merge(all[i])
-        return first
     }
 
     /** Kompensacja jasności po dehaze z podpróbkowania (średnia jasność przed i po usunięciu mgły). */
     private fun dehazeGain(plan: Dehaze.Plan): Float {
         val sampler = Sampler(src, GAIN_STRIDE)
-        val all = Collections.synchronizedList(ArrayList<DoubleArray>())
-        Parallel.forEach(sampler.chunks, { DoubleArray(RGB).also { all.add(it) } }) { sums, chunk ->
+        val total = Parallel.reduce(
+            sampler.chunks,
+            { DoubleArray(RGB) },
+            { into, other -> for (k in 0 until RGB) into[k] += other[k] }
+        ) { sums, chunk ->
             val px = FloatArray(RGB)
             sampler.rows(chunk) { y, p ->
                 for (i in 0 until p.size) {
@@ -123,8 +119,6 @@ internal class StripAnalysis(
                 }
             }
         }
-        val total = DoubleArray(RGB)
-        for (s in all) for (k in 0 until RGB) total[k] += s[k]
         return Dehaze.gainOf(total)
     }
 
@@ -147,14 +141,12 @@ internal class StripAnalysis(
         val low = Lowres.forSize(w, h, SemanticSharpen.TARGET)
         val stride = min(SEMANTIC_STRIDE, low.factor)
         val sampler = Sampler(src, stride)
-        val all = Collections.synchronizedList(ArrayList<Lowres.Accumulator>())
-        Parallel.forEach(sampler.chunks, { Lowres.Accumulator(low).also { all.add(it) } }) { acc, chunk ->
+        val acc0 = Parallel.reduce(sampler.chunks, { Lowres.Accumulator(low) }, { a, b -> a.merge(b) }) { acc, chunk ->
             sampler.rows(chunk) { y, p ->
                 for (i in 0 until p.size) acc.add(i * stride, y, LUMA_R * p.r[i] + LUMA_G * p.g[i] + LUMA_B * p.b[i])
             }
         }
-        for (i in 1 until all.size) all[0].merge(all[i])
-        return SemanticSharpen.build(low, all[0].mean(0), faces)
+        return SemanticSharpen.build(low, acc0.mean(0), faces)
     }
 
     /** Odszumianie koloru i dehaze na próbkach wiersza [y] (co [stride]-ty piksel), jak na pasach. */
@@ -168,8 +160,11 @@ internal class StripAnalysis(
     private fun toneMask(chroma: ChromaDenoise.Plan?, dehaze: Dehaze.Plan?): ToneMask {
         val stride = min(SAMPLE_STRIDE, ToneMask.Builder(w, h).cellSize)
         val sampler = Sampler(src, stride)
-        val all = Collections.synchronizedList(ArrayList<ToneMask.Builder>())
-        Parallel.forEach(sampler.chunks, { ToneMask.Builder(w, h).also { all.add(it) } }) { builder, chunk ->
+        val tone = Parallel.reduce(
+            sampler.chunks,
+            { ToneMask.Builder(w, h) },
+            { a, b -> a.merge(b) }
+        ) { builder, chunk ->
             sampler.rows(chunk) { y, p ->
                 restoreRow(chroma, dehaze, p, y, stride)
                 for (i in 0 until p.size) {
@@ -177,8 +172,7 @@ internal class StripAnalysis(
                 }
             }
         }
-        for (i in 1 until all.size) all[0].merge(all[i])
-        return all[0].build()
+        return tone.build()
     }
 
     /** Baza wyrazistości z jasności obrazu po odszumianiu, dehaze i korektach (bez ziarna i winiety). */
@@ -190,10 +184,10 @@ internal class StripAnalysis(
         val low = Lowres.forSize(w, h, DetailFilter.CLARITY_TARGET)
         val stride = min(SAMPLE_STRIDE, low.factor)
         val sampler = Sampler(src, stride)
-        val all = Collections.synchronizedList(ArrayList<ClarityState>())
-        Parallel.forEach(
+        val clarity = Parallel.reduce(
             sampler.chunks,
-            { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)).also { all.add(it) } }
+            { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
+            { a, b -> a.acc.merge(b.acc) }
         ) { state, chunk ->
             sampler.rows(chunk) { y, p ->
                 restoreRow(chroma, dehaze, p, y, stride)
@@ -203,8 +197,7 @@ internal class StripAnalysis(
                 }
             }
         }
-        for (i in 1 until all.size) all[0].acc.merge(all[i].acc)
-        return DetailFilter.clarityMap(low, all[0].acc.mean(0))
+        return DetailFilter.clarityMap(low, clarity.acc.mean(0))
     }
 
     private companion object {
