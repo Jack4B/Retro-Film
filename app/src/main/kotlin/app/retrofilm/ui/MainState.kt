@@ -342,6 +342,10 @@ class MainState(
     var exportProgress by mutableIntStateOf(0)
         private set
 
+    /** Postęp bieżącej sesji zapisu (J); null poza zapisem. */
+    var saveProgress: SaveProgress? by mutableStateOf(null)
+        private set
+
     /** Moc filmu 0..1 (miks z oryginałem); 1 = pełny film. */
     var intensity by mutableFloatStateOf(1f)
 
@@ -552,7 +556,6 @@ class MainState(
         var reducedCount = 0
         val result = exportBatch(only, {
             current = only[it]
-            SaveProgress.reset()
             exportProgress = it + 1
         }) { photoIndex ->
             val uri = uris[photoIndex]
@@ -566,7 +569,7 @@ class MainState(
                 face,
                 exportMaxSide,
                 exportFormat.copy(hdr = hdrFor(photoIndex))
-            ).apply { trace = SaveTrace() }
+            ).apply { trace = SaveTrace().also { saveProgress = it.progress } }
             val out = withContext(Dispatchers.Default) {
                 job.run(exportSource(context, uri, hdrFor(photoIndex)), null)
             }
@@ -790,7 +793,6 @@ class MainState(
     suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val start = PerfLog.now()
         val p = photo ?: return@withBusy UiMessage.LoadFailed
-        SaveProgress.reset()
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val job = ExportJob(
@@ -800,7 +802,7 @@ class MainState(
                 signatureTypeface(),
                 exportMaxSide,
                 exportFormat
-            ).apply { trace = SaveTrace() }
+            ).apply { trace = SaveTrace().also { saveProgress = it.progress } }
             val uri = uris.getOrNull(index)
             val open: (() -> java.io.InputStream)? = if (context != null &&
                 uri != null
@@ -845,6 +847,7 @@ class MainState(
             block()
         } finally {
             busy = false
+            saveProgress = null
         }
     }
 

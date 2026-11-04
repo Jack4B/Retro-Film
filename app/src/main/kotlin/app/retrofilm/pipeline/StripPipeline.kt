@@ -73,7 +73,7 @@ internal object StripPipeline {
             val y = row * core
             val x = col * coreW
             worker.run(src, out, Tile(x, y, min(w, x + coreW), min(h, y + core)))
-            SaveProgress.tiles(done.incrementAndGet(), chunks)
+            io.progress?.tiles(done.incrementAndGet(), chunks)
         }
         PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
         PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS
@@ -343,9 +343,11 @@ internal class StripIo(
     /** Wykończenie po [stage] w tym samym przebiegu (G): LUT na całym pasie, potem wyostrzanie, ziarno i winieta. */
     val finish: Adjustments? = null,
     /** Limit pamięci buforów pasów (H); null = [StripBudget.bytes]. */
-    val budget: Long? = null
+    val budget: Long? = null,
+    /** Sesja zapisu raportująca ukończone kafle (J); null = podgląd. */
+    val progress: SaveProgress? = null
 ) {
-    fun copyWith(budget: Long) = StripIo(fracIn, fracOut, stage, dither, finish, budget)
+    fun copyWith(budget: Long) = StripIo(fracIn, fracOut, stage, dither, finish, budget, progress)
 
     companion object {
         val Default = StripIo()
