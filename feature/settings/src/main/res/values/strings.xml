@@ -81,4 +81,35 @@
     <string name="settings_section_photos">Zdjęcia</string>
     <string name="settings_hdr_default">HDR ze zdjęcia</string>
     <string name="settings_hdr_default_subtitle">Domyślnie dla nowo otwieranych zdjęć z gain mapą Ultra HDR. Wył. = szybsze otwieranie i zapis. Wł. zapisuje 4:2:0 i bez ramki. Zmienisz to też chipem „HDR” w edytorze.</string>
+    <string name="settings_section_backup">Kopia zapasowa</string>
+    <string name="backup_export">Eksportuj kopię</string>
+    <string name="backup_export_subtitle">Ustawienia, presety i ulubione filmy w jednym pliku JSON. Filmy zapisywane po id – pobrane paczki pobierzesz ponownie.</string>
+    <string name="backup_restore">Przywróć z pliku</string>
+    <string name="backup_restore_subtitle">Wczytaj plik kopii RetroFilm i scal albo zastąp obecne dane</string>
+    <string name="backup_restore_title">Przywrócić kopię?</string>
+    <string name="backup_restore_summary">Kopia z wersji %1$s: ustawienia %2$d, presety %3$d, ulubione filmy %4$d.\n\nScal – dodaje presety i ulubione, ustawienia z kopii mają pierwszeństwo.\nZastąp – usuwa obecne ustawienia i presety.</string>
+    <string name="backup_merge">Scal</string>
+    <string name="backup_replace">Zastąp</string>
+    <string name="backup_cancel">Anuluj</string>
+    <string name="backup_ok">OK</string>
+    <string name="backup_title_done">Gotowe</string>
+    <string name="backup_title_error">Nie udało się</string>
+    <string name="backup_saved">Kopia zapisana.</string>
+    <string name="backup_restored">Kopia przywrócona.</string>
+    <string name="backup_error_not_json">To nie jest plik kopii (uszkodzony lub niepełny JSON).</string>
+    <string name="backup_error_not_retrofilm">Ten plik nie jest kopią RetroFilm.</string>
+    <string name="backup_error_newer">Kopia pochodzi z nowszej wersji aplikacji. Zaktualizuj RetroFilm.</string>
+    <string name="backup_error_corrupt">Plik kopii jest uszkodzony.</string>
+    <string name="backup_error_io">Nie można odczytać ani zapisać pliku.</string>
+    <string name="settings_section_diagnostics">Diagnostyka</string>
+    <string name="perf_log">Logi czasów</string>
+    <string name="perf_log_subtitle">Zapisuje lokalnie czasy otwierania, podglądu i zapisu (ostatnie 200). Nic nie jest wysyłane.</string>
+    <string name="perf_log_export">Eksportuj log czasów</string>
+    <string name="perf_log_share">Udostępnij log czasów</string>
+    <string name="perf_log_clear">Wyczyść log</string>
+    <string name="perf_log_title_done">Gotowe</string>
+    <string name="perf_log_saved">Log czasów zapisany (CSV).</string>
+    <string name="perf_log_count">Wpisy w logu: %1$d</string>
+    <string name="perf_log_share_subtitle">Wyślij CSV jako tekst wybraną aplikacją</string>
+    <string name="perf_log_clear_subtitle">Usuwa zapisane pomiary z pamięci</string>
 </resources>

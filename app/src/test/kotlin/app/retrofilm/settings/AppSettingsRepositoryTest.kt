@@ -80,4 +80,29 @@ class AppSettingsRepositoryTest {
         assertTrue(withRepo { it.defaultHdrFromPhoto.first() })
         assertTrue(withRepo { it.editDefaults.first().hdrFromPhoto })
     }
+
+    @Test
+    fun perfLogIsOffByDefaultAndPersisted() {
+        assertFalse(withRepo { it.perfLogEnabled.first() })
+        withRepo { it.setPerfLogEnabled(true) }
+        assertTrue(withRepo { it.perfLogEnabled.first() })
+    }
+
+    @Test
+    fun snapshotAndRestoreRoundTrip() {
+        withRepo {
+            it.setDynamicColor(true)
+            it.setThemeMode(ThemeMode.Light)
+            it.setFavorite("bw/kodak_tri_x_400", true)
+        }
+        val snap = withRepo { it.snapshot() }
+        assertEquals(true, snap["dynamic_color"])
+        assertEquals(setOf("bw/kodak_tri_x_400"), snap["favorite_films"])
+        withRepo { it.restore(mapOf("theme_mode" to "Dark", "unknown_key" to 5), replace = true) }
+        assertFalse(withRepo { it.dynamicColor.first() })
+        assertEquals(ThemeMode.Dark, withRepo { it.themeMode.first() })
+        withRepo { it.restore(snap, replace = false) }
+        assertTrue(withRepo { it.dynamicColor.first() })
+        assertEquals(ThemeMode.Light, withRepo { it.themeMode.first() })
+    }
 }

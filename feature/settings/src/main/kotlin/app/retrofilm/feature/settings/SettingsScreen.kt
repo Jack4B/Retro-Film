@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FilterVintage
+import androidx.compose.material.icons.outlined.HdrOn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
@@ -61,8 +62,10 @@ fun SettingsScreen(
     onOpenLicense: (ThirdPartyLicense) -> Unit,
     modifier: Modifier = Modifier,
     onThemeModeChange: (ThemeMode) -> Unit = {},
-    onDefaultHdrChange: (Boolean) -> Unit = {}
+    onDefaultHdrChange: (Boolean) -> Unit = {},
+    toolsActions: SettingsToolsActions = SettingsToolsActions()
 ) {
+    state.tools?.let { ToolsDialogs(it, toolsActions) }
     Scaffold(
         modifier = modifier,
         topBar = { SettingsTopBar(stringResource(R.string.settings_title), onBack) }
@@ -87,7 +90,8 @@ fun SettingsScreen(
                         onChange = onDefaultHdrChange,
                         title = R.string.settings_hdr_default,
                         subtitle = R.string.settings_hdr_default_subtitle,
-                        modifier = Modifier.testTag("settings-hdr-default")
+                        modifier = Modifier.testTag("settings-hdr-default"),
+                        icon = { Icon(Icons.Outlined.HdrOn, contentDescription = null) }
                     )
                 }
             }
@@ -100,6 +104,7 @@ fun SettingsScreen(
                     onClick = onOpenFilters
                 )
             }
+            state.tools?.let { toolsSections(it, toolsActions) }
             item { SectionHeader(stringResource(R.string.settings_section_licenses)) }
             items(ThirdPartyLicense.entries, key = { it.name }) { lic ->
                 NavRow(
@@ -164,7 +169,7 @@ private fun DynamicColorRow(checked: Boolean, onChange: (Boolean) -> Unit) = Swi
 )
 
 @Composable
-private fun SwitchRow(
+internal fun SwitchRow(
     checked: Boolean,
     onChange: (Boolean) -> Unit,
     @StringRes title: Int,

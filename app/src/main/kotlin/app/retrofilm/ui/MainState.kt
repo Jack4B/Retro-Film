@@ -16,6 +16,7 @@ import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.perf.PerfContext
 import app.retrofilm.perf.PerfLog
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
@@ -450,6 +451,7 @@ class MainState(
     suspend fun load(context: Context, uri: Uri): UiMessage? = withBusy {
         val start = PerfLog.now()
         openStart = start
+        updatePerfContext()
         try {
             // Jeden odczyt pliku zamiast 4 (EXIF, miniatura, wymiary, dekodowanie przez ContentResolver); zdjęcia
             // „ruchome” (Motion/Live Photo) mają za JPEG-iem ~10 MB wideo i gain mapę, więc każdy odczyt był drogi.
@@ -475,6 +477,7 @@ class MainState(
                 loadingRaw = false
             }
             sourceSize = loaded.sourceWidth to loaded.sourceHeight
+            updatePerfContext()
             photo = loaded.bitmap
             before = null
             thumbnails.switchTo(uri)
@@ -560,6 +563,17 @@ class MainState(
         return { java.io.ByteArrayInputStream(bytes) }
     }
 
+    /** Kontekst wpisów „Logów czasów” (tylko gdy włączone – inaczej bez kosztu). */
+    private fun updatePerfContext() {
+        if (PerfLog.recorder == null) return
+        PerfLog.context = PerfContext(
+            backend = graph.filmEngine.renderer.javaClass.simpleName,
+            width = sourceSize.first,
+            height = sourceSize.second,
+            hdr = hdrFromPhoto
+        )
+    }
+
     /**
      * Przełącza „HDR ze zdjęcia” dla bieżącego zdjęcia (chip „HDR”). Bez ponownego dekodowania: podgląd i tak
      * pokazuje obraz bazowy SDR, a etapy podglądu są w pamięci – zmienia się tylko sposób zapisu.
@@ -569,6 +583,7 @@ class MainState(
         val start = PerfLog.now()
         hdrFromPhoto = on
         hdrOverrides[index] = on
+        updatePerfContext()
         refreshPreview()
         PerfLog.since("hdr_toggle_reapply", start)
     }

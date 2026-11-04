@@ -2,6 +2,7 @@ package app.retrofilm.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +17,7 @@ import app.retrofilm.feature.settings.SettingsScreen
 import app.retrofilm.feature.settings.SettingsUiState
 import app.retrofilm.feature.settings.ThirdPartyLicense
 import app.retrofilm.feature.settings.lut.LutDownloadScreen
+import app.retrofilm.perf.PerfLog
 import kotlinx.coroutines.launch
 
 /** Trasy aplikacji. Nazwy tras są stałe (deep linki / testy); podtrasy ustawień z feature:settings. */
@@ -47,6 +49,8 @@ fun RetroFilmNavHost(
     var filtersParent by rememberSaveable { mutableStateOf(Route.Settings) }
     val scope = rememberCoroutineScope()
     val defaultHdr by graph.appSettings.defaultHdrFromPhoto.collectAsState(initial = false)
+    val perfLogOn by graph.appSettings.perfLogEnabled.collectAsState(initial = false)
+    LaunchedEffect(perfLogOn) { PerfLog.recorder = if (perfLogOn) PerfLog.ring else null }
     val parent = when (route) {
         Route.Licenses -> licensesParent
         Route.Filters -> filtersParent
@@ -60,26 +64,14 @@ fun RetroFilmNavHost(
             route = it
         }
 
-        Route.Settings -> SettingsScreen(
-            state = SettingsUiState(
-                dynamicColor = dynamicColor,
-                themeMode = themeMode,
-                defaultHdrFromPhoto = defaultHdr
-            ),
-            onDefaultHdrChange = { scope.launch { graph.appSettings.setDefaultHdrFromPhoto(it) } },
-            onBack = back,
-            onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },
-            onThemeModeChange = { scope.launch { graph.appSettings.setThemeMode(it) } },
-            onOpenFilters = {
-                filtersParent = Route.Settings
-                route = Route.Filters
-            },
-            onOpenLicense = {
-                license = it
-                licensesParent = Route.Settings
-                route = Route.Licenses
-            }
-        )
+        Route.Settings -> SettingsRoute(graph, dynamicColor, themeMode, defaultHdr, perfLogOn, back, onOpenFilters = {
+            filtersParent = Route.Settings
+            route = Route.Filters
+        }, onOpenLicense = {
+            license = it
+            licensesParent = Route.Settings
+            route = Route.Licenses
+        })
 
         Route.Licenses -> LicensesScreen(
             selected = license,
@@ -92,6 +84,37 @@ fun RetroFilmNavHost(
             route = Route.Licenses
         })
     }
+}
+
+@Composable
+@Suppress("LongParameterList") // trasa spina stan z kilku źródeł; ekran pozostaje bezstanowy
+private fun SettingsRoute(
+    graph: AppGraph,
+    dynamicColor: Boolean,
+    themeMode: ThemeMode,
+    defaultHdr: Boolean,
+    perfLogOn: Boolean,
+    onBack: () -> Unit,
+    onOpenFilters: () -> Unit,
+    onOpenLicense: (ThirdPartyLicense) -> Unit
+) {
+    val scope = rememberCoroutineScope()
+    val tools = rememberSettingsTools(graph, perfLogOn)
+    SettingsScreen(
+        state = SettingsUiState(
+            dynamicColor = dynamicColor,
+            themeMode = themeMode,
+            defaultHdrFromPhoto = defaultHdr,
+            tools = tools.state
+        ),
+        onDefaultHdrChange = { scope.launch { graph.appSettings.setDefaultHdrFromPhoto(it) } },
+        onBack = onBack,
+        onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },
+        onThemeModeChange = { scope.launch { graph.appSettings.setThemeMode(it) } },
+        onOpenFilters = onOpenFilters,
+        onOpenLicense = onOpenLicense,
+        toolsActions = tools.actions
+    )
 }
 
 /** Ekran filtrów (#16) zasilany stanem z [AppGraph.lutDownloadStateHolder]. Pobieranie: LutDownloadFeature. */
