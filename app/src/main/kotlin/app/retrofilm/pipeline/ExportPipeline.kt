@@ -57,8 +57,8 @@ object ExportPipeline {
 
     /**
      * Zmniejsza wynik do [maxSide] px dłuższego boku (0 = oryginalny rozmiar) filtrem Lanczosa ([Resampler], bez
-     * aliasingu, w świetle liniowym, pasami), a potem łagodnie wyostrza wyjściowo, żeby oddać ostrość utraconą przy zmniejszaniu. Powiększać nie
-     * wolno – większy wymiar niż źródło zostaje jak jest.
+     * aliasingu, w świetle liniowym, pasami), a potem łagodnie wyostrza wyjściowo, żeby oddać ostrość utraconą
+     * przy zmniejszaniu. Powiększać nie wolno – większy wymiar niż źródło zostaje jak jest.
      */
     fun resize(rendered: Bitmap, maxSide: Int): Bitmap {
         val long = maxOf(rendered.width, rendered.height)

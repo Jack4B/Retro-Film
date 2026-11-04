@@ -24,6 +24,7 @@ import kotlin.math.sin
  * potrzebne wiersze źródła i trzyma ich poziomo przeskalowaną kopię (float), więc nie ma pełnej kopii źródła ani
  * bufora pośredniego dw×sh.
  */
+@Suppress("TooManyFunctions")
 internal object Resampler {
     private const val LOBES = 3
     private const val MASK = 0xFF
@@ -47,19 +48,37 @@ internal object Resampler {
     }
     private val identity = FloatArray(LEVEL_MAX + 1) { it.toFloat() }
 
-    /** Wynik jako spakowane ARGB (alfa 255) o wymiarach [dw]×[dh]. */
-    fun resize(src: IntArray, sw: Int, sh: Int, dw: Int, dh: Int, linear: Boolean = true): IntArray {
+    /** Wynik jako spakowane ARGB (alfa 255) o wymiarach [dw]×[dh], filtrowanie w świetle liniowym. */
+    fun resize(src: IntArray, sw: Int, sh: Int, dw: Int, dh: Int): IntArray = resize(src, Size(sw, sh), dw, dh, true)
+
+    /** Jak [resize], ale filtrowanie wprost na wartościach sRGB (dawne zachowanie; do porównań w testach). */
+    fun resizeEncoded(src: IntArray, sw: Int, sh: Int, dw: Int, dh: Int): IntArray =
+        resize(src, Size(sw, sh), dw, dh, false)
+
+    private class Size(val w: Int, val h: Int)
+
+    private fun resize(src: IntArray, size: Size, dw: Int, dh: Int, linear: Boolean): IntArray {
+        val sw = size.w
+        val sh = size.h
         require(src.size >= sw * sh) { "Za mało pikseli" }
         if (sw == dw && sh == dh) return src.copyOf()
-        return resize(sw, sh, dw, dh, linear) { y0, rows, buf -> System.arraycopy(src, y0 * sw, buf, 0, rows * sw) }
+        return resize(
+            Source(sw, sh) { y0, rows, buf ->
+                System.arraycopy(src, y0 * sw, buf, 0, rows * sw)
+            },
+            dw,
+            dh,
+            linear
+        )
     }
 
     /** Jak wyżej, ale czyta [src] pasami (bez pełnej kopii pikseli w pamięci). */
     fun resize(src: Bitmap, dw: Int, dh: Int, linear: Boolean = true): IntArray {
         val sw = src.width
-        return resize(sw, src.height, dw, dh, linear) { y0, rows, buf ->
+        val source = Source(sw, src.height) { y0, rows, buf ->
             synchronized(src) { src.getPixels(buf, 0, sw, 0, y0, sw, rows) }
         }
+        return resize(source, dw, dh, linear)
     }
 
     /** Szacowana pamięć robocza jednego wątku (bajty) dla pasa – do testów i raportu. */
@@ -74,14 +93,13 @@ internal object Resampler {
         return min(sh, ceil(BAND_ROWS * scale + 2 * support).toInt() + 2)
     }
 
-    private fun resize(
-        sw: Int,
-        sh: Int,
-        dw: Int,
-        dh: Int,
-        linear: Boolean,
-        read: (y0: Int, rows: Int, buf: IntArray) -> Unit
-    ): IntArray {
+    /** Źródło pasami: [read] wypełnia bufor wierszami od y0. */
+    private class Source(val w: Int, val h: Int, val read: (y0: Int, rows: Int, buf: IntArray) -> Unit)
+
+    private fun resize(source: Source, dw: Int, dh: Int, linear: Boolean): IntArray {
+        val sw = source.w
+        val sh = source.h
+        val read = source.read
         require(sw > 0 && sh > 0 && dw > 0 && dh > 0) { "Wymiary muszą być dodatnie" }
         val across = taps(sw, dw)
         val down = taps(sh, dh)
@@ -102,22 +120,17 @@ internal object Resampler {
             val px = IntArray(rows * sw)
             read(lo, rows, px)
             val wide = FloatArray(rows * dw * RGB)
-            for (r in 0 until rows) horizontal(px, r * sw, sw, wide, r * dw * RGB, dw, across, decode)
+            for (r in 0 until rows) horizontal(px, r, wide, across, decode)
             for (oy in oy0 until oy1) vertical(wide, lo, rows, dw, out, oy, down, linear)
         }
         return out
     }
 
-    private fun horizontal(
-        px: IntArray,
-        base: Int,
-        sw: Int,
-        dst: FloatArray,
-        dstBase: Int,
-        dw: Int,
-        taps: Taps,
-        decode: FloatArray
-    ) {
+    private fun horizontal(px: IntArray, row: Int, dst: FloatArray, taps: Taps, decode: FloatArray) {
+        val dw = taps.start.size
+        val sw = px.size / (dst.size / (dw * RGB)) // pas ma tyle samo wierszy w px i dst
+        val base = row * sw
+        val dstBase = row * dw * RGB
         val last = sw - 1
         for (i in 0 until dw) {
             var r = 0f

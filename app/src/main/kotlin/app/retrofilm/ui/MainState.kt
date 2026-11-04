@@ -34,6 +34,7 @@ import app.retrofilm.pipeline.SignatureFont
 import app.retrofilm.settings.EditDefaults
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /** Film do wyboru; [id] = [IDENTITY_ID] to wbudowany LUT tożsamościowy. [category] = pierwszy człon id. */
@@ -384,7 +385,7 @@ class MainState(
             photo = bmp
             preview = null
             before = null
-            thumbnails.reset()
+            thumbnails.switchTo(uri)
             null
         } catch (_: IOException) {
             UiMessage.LoadFailed
@@ -469,8 +470,10 @@ class MainState(
         if (signatureStatus() == SignatureFitStatus.TooLong) return
         val (orig, shown) = withContext(Dispatchers.Default) {
             val small = GeometryApplier.apply(previewBase(p), geometry)
+            ensureActive() // nowsza zmiana już czeka: porzuć przestarzały render (latest-wins)
             val orig = before
                 ?: ExportPipeline.render(small, null, graph.filmEngine.renderer, FrameOptions(), typeface)
+            ensureActive()
             orig to
                 ExportPipeline.render(
                     small,
@@ -613,7 +616,7 @@ class MainState(
             } else {
                 Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
             }
-            out.setPixels(Resampler.resize(px, src.width, src.height, w, h), 0, w, 0, 0, w, h)
+            out.setPixels(Resampler.resizeEncoded(px, src.width, src.height, w, h), 0, w, 0, 0, w, h)
             return out
         }
     }

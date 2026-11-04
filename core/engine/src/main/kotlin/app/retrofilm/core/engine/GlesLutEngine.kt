@@ -29,7 +29,12 @@ class GlesLutEngine(private val tileLimit: Int = Int.MAX_VALUE) : LutEngine {
 
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = withContext(glDispatcher) {
         val pixels = BitmapPixels.read(src)
-        val out = session().render(pixels, src.width, src.height, lut, intensity.coerceIn(0f, 1f), tileLimit)
+        val out = session().render(
+            EglSession.Frame(pixels, src.width, src.height),
+            lut,
+            intensity.coerceIn(0f, 1f),
+            tileLimit
+        )
         BitmapPixels.write(out, src.width, src.height)
     }
 
@@ -58,6 +63,11 @@ class GlesLutEngine(private val tileLimit: Int = Int.MAX_VALUE) : LutEngine {
 
 /** Podział obrazu [width]×[height] na kafle o boku ≤ [max]: lista (x, y, w, h). Czysta logika – test na JVM. */
 internal object GlTiles {
+    const val X = 0
+    const val Y = 1
+    const val W = 2
+    const val H = 3
+
     fun plan(width: Int, height: Int, max: Int): List<IntArray> {
         require(max > 0)
         val out = ArrayList<IntArray>()
@@ -117,72 +127,89 @@ private class EglSession : AutoCloseable {
     private val program: Int by lazy { GlProgram.build(VERTEX, FRAGMENT) }
     private val luts = LinkedHashMap<Lut, Int>(LUT_CACHE, LOAD, true)
 
-    fun render(pixels: IntArray, width: Int, height: Int, lut: Lut, intensity: Float, tileLimit: Int): IntArray {
+    fun render(frame: Frame, lut: Lut, intensity: Float, tileLimit: Int): IntArray {
         check(EGL14.eglMakeCurrent(display, surface, surface, context)) { "eglMakeCurrent" }
         check(ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) { "Wymagany little-endian" }
         val maxSize = IntArray(1)
         GLES30.glGetIntegerv(GLES30.GL_MAX_TEXTURE_SIZE, maxSize, 0)
-        val tile = minOf(maxSize[0], tileLimit, width.coerceAtLeast(height)).coerceAtLeast(1)
-        val tw = minOf(tile, width)
-        val th = minOf(tile, height)
-        val lutTex = lutTexture(lut)
+        val tile = minOf(maxSize[0], tileLimit, frame.width.coerceAtLeast(frame.height)).coerceAtLeast(1)
+        val io = TileIo(frame, minOf(tile, frame.width), minOf(tile, frame.height))
         val textures = IntArray(2)
         GLES30.glGenTextures(2, textures, 0)
         val fbo = IntArray(1)
         GLES30.glGenFramebuffers(1, fbo, 0)
-        val out = IntArray(pixels.size)
-        val bytes = ByteBuffer.allocateDirect(tw * th * RGBA).order(ByteOrder.LITTLE_ENDIAN)
-        val ints = bytes.asIntBuffer()
-        val row = IntArray(tw)
         try {
-            allocate2d(textures[0], tw, th, GLES30.GL_NEAREST)
-            allocate2d(textures[1], tw, th, GLES30.GL_NEAREST)
-            GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, fbo[0])
-            GLES30.glFramebufferTexture2D(
-                GLES30.GL_FRAMEBUFFER, GLES30.GL_COLOR_ATTACHMENT0, GLES30.GL_TEXTURE_2D, textures[1], 0
-            )
-            check(GLES30.glCheckFramebufferStatus(GLES30.GL_FRAMEBUFFER) == GLES30.GL_FRAMEBUFFER_COMPLETE) {
-                "FBO niekompletny"
-            }
-            GLES30.glUseProgram(program)
-            GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
-            GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, lutTex)
-            GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uImage"), 0)
-            GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uLut"), 1)
-            GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uSize"), lut.size.toFloat())
-            GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uIntensity"), intensity)
+            prepare(io, textures, fbo[0], lut, intensity)
             val uScale = GLES30.glGetUniformLocation(program, "uScale")
-            GLES30.glPixelStorei(GLES30.GL_UNPACK_ALIGNMENT, 1)
-            GLES30.glPixelStorei(GLES30.GL_PACK_ALIGNMENT, 1)
-            for ((x0, y0, w, h) in GlTiles.plan(width, height, tile).map { it.toList() }) {
-                ints.clear()
-                for (y in 0 until h) ints.put(pixels, (y0 + y) * width + x0, w)
-                bytes.position(0)
-                GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
-                GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textures[0])
-                GLES30.glTexSubImage2D(
-                    GLES30.GL_TEXTURE_2D, 0, 0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, bytes
-                )
-                GLES30.glUniform2f(uScale, w.toFloat() / tw, h.toFloat() / th)
-                GLES30.glViewport(0, 0, w, h)
-                GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, TRIANGLE_VERTICES)
-                bytes.position(0)
-                GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, bytes)
-                ints.position(0)
-                for (y in 0 until h) {
-                    ints.get(row, 0, w)
-                    val base = (y0 + y) * width + x0
-                    // alfa ze źródła (shader jej nie zmienia, a unikamy straty precyzji)
-                    for (i in 0 until w) out[base + i] = (pixels[base + i] and ALPHA_MASK) or (row[i] and RGB_MASK)
-                }
-            }
+            for (t in GlTiles.plan(frame.width, frame.height, tile)) drawTile(io, t, textures[0], uScale)
             check(GLES30.glGetError() == GLES30.GL_NO_ERROR) { "Błąd GL podczas renderu" }
-            return out
+            return io.out
         } finally {
             GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
             GLES30.glDeleteFramebuffers(1, fbo, 0)
             GLES30.glDeleteTextures(2, textures, 0)
         }
+    }
+
+    private fun prepare(io: TileIo, textures: IntArray, fbo: Int, lut: Lut, intensity: Float) {
+        val lutTex = lutTexture(lut)
+        allocate2d(textures[0], io.tw, io.th, GLES30.GL_NEAREST)
+        allocate2d(textures[1], io.tw, io.th, GLES30.GL_NEAREST)
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, fbo)
+        GLES30.glFramebufferTexture2D(
+            GLES30.GL_FRAMEBUFFER,
+            GLES30.GL_COLOR_ATTACHMENT0,
+            GLES30.GL_TEXTURE_2D,
+            textures[1],
+            0
+        )
+        check(GLES30.glCheckFramebufferStatus(GLES30.GL_FRAMEBUFFER) == GLES30.GL_FRAMEBUFFER_COMPLETE) {
+            "FBO niekompletny"
+        }
+        GLES30.glUseProgram(program)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_3D, lutTex)
+        GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uImage"), 0)
+        GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uLut"), 1)
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uSize"), lut.size.toFloat())
+        GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uIntensity"), intensity)
+        GLES30.glPixelStorei(GLES30.GL_UNPACK_ALIGNMENT, 1)
+        GLES30.glPixelStorei(GLES30.GL_PACK_ALIGNMENT, 1)
+    }
+
+    /** Jeden kafel [t] = (x, y, w, h): hurtowe wysłanie, rysowanie i odczyt; alfa kopiowana ze źródła. */
+    private fun drawTile(io: TileIo, t: IntArray, imageTex: Int, uScale: Int) {
+        val x0 = t[GlTiles.X]
+        val y0 = t[GlTiles.Y]
+        val w = t[GlTiles.W]
+        val h = t[GlTiles.H]
+        val f = io.frame
+        io.ints.clear()
+        for (y in 0 until h) io.ints.put(f.pixels, (y0 + y) * f.width + x0, w)
+        io.bytes.position(0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, imageTex)
+        GLES30.glTexSubImage2D(GLES30.GL_TEXTURE_2D, 0, 0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, io.bytes)
+        GLES30.glUniform2f(uScale, w.toFloat() / io.tw, h.toFloat() / io.th)
+        GLES30.glViewport(0, 0, w, h)
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, TRIANGLE_VERTICES)
+        io.bytes.position(0)
+        GLES30.glReadPixels(0, 0, w, h, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, io.bytes)
+        io.ints.position(0)
+        for (y in 0 until h) {
+            io.ints.get(io.row, 0, w)
+            val base = (y0 + y) * f.width + x0
+            for (i in 0 until w) io.out[base + i] = (f.pixels[base + i] and ALPHA_MASK) or (io.row[i] and RGB_MASK)
+        }
+    }
+
+    class Frame(val pixels: IntArray, val width: Int, val height: Int)
+
+    private class TileIo(val frame: Frame, val tw: Int, val th: Int) {
+        val out = IntArray(frame.pixels.size)
+        val bytes: ByteBuffer = ByteBuffer.allocateDirect(tw * th * RGBA).order(ByteOrder.LITTLE_ENDIAN)
+        val ints: java.nio.IntBuffer = bytes.asIntBuffer()
+        val row = IntArray(tw)
     }
 
     private fun allocate2d(tex: Int, width: Int, height: Int, filter: Int) {

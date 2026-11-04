@@ -33,7 +33,7 @@ class ResamplerTest {
 
     @Test fun checkerboardAveragesToMidGrayWhenHalved() {
         val src = IntArray(64 * 64) { gray(if ((it % 64 + it / 64) % 2 == 0) 0 else 255) }
-        val out = Resampler.resize(src, 64, 64, 32, 32, linear = false)
+        val out = Resampler.resizeEncoded(src, 64, 64, 32, 32)
         val inner = (4 until 28).flatMap { y -> (4 until 28).map { x -> red(out[y * 32 + x]) } }
         assertTrue("szachownica bez aliasingu → szarość", inner.all { it in 118..137 })
     }

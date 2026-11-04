@@ -13,8 +13,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * Miniatury filmów na bieżącym zdjęciu (id → bitmapa). Tworzone na żądanie dla widocznych kafelków
- * z LUT-ów z `EngineFilmEngine.load`, czyli z `LutMemoryCache`. Bez osobnej pamięci podręcznej:
- * mapa żyje tyle co zdjęcie i jest czyszczona przez [reset].
+ * z LUT-ów z `EngineFilmEngine.load`, czyli z `LutMemoryCache`. Gotowe miniatury ostatnich [PHOTOS_KEPT] zdjęć
+ * serii są trzymane w LRU ([switchTo]), więc powrót do zdjęcia nie generuje siatki od nowa (160 px ≈ 100 kB/szt.).
  */
 class FilmThumbnails(private val graph: AppGraph, private val typeface: Typeface) {
     val bitmaps = mutableStateMapOf<String, Bitmap>()
@@ -22,10 +22,31 @@ class FilmThumbnails(private val graph: AppGraph, private val typeface: Typeface
     private var source: Bitmap? = null
     private var generation = 0
 
+    private class Entry(val thumbs: Map<String, Bitmap>, val source: Bitmap?)
+
+    private val recent = object : LinkedHashMap<Any, Entry>(PHOTOS_KEPT, LOAD, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Any, Entry>) = size > PHOTOS_KEPT
+    }
+    private var key: Any? = null
+
     fun reset() {
         generation++
         bitmaps.clear()
         source = null
+        key = null
+        recent.clear()
+    }
+
+    /** Przełącza siatkę na zdjęcie [photoKey]: bieżące miniatury trafiają do LRU, zapamiętane wracają od razu. */
+    fun switchTo(photoKey: Any) {
+        if (photoKey == key) return
+        generation++
+        key?.let { recent[it] = Entry(HashMap(bitmaps), source) }
+        val back = recent.remove(photoKey)
+        bitmaps.clear()
+        back?.let { bitmaps.putAll(it.thumbs) }
+        source = back?.source
+        key = photoKey
     }
 
     /**
@@ -57,5 +78,7 @@ class FilmThumbnails(private val graph: AppGraph, private val typeface: Typeface
 
     private companion object {
         const val THUMB_SIDE = 160
+        const val PHOTOS_KEPT = 3
+        const val LOAD = 0.75f
     }
 }
