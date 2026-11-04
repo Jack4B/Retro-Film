@@ -27,27 +27,39 @@ internal object Deband {
     /** Promień okna (piksele) dla zdjęcia o dłuższym boku [longSide]; to także zapas wierszy wokół pasa. */
     fun radiusFor(longSide: Int): Int = max(MIN_RADIUS, longSide / RADIUS_DIV)
 
-    /** Odbandowuje pas [count] pikseli (całe wiersze o szerokości [width]) oknem o promieniu [radius]. */
-    fun applyPlanes(planes: Planes, count: Int, width: Int, radius: Int) {
-        val rows = count / width
-        val luma = FloatArray(count) { LUMA_R * planes.r[it] + LUMA_G * planes.g[it] + LUMA_B * planes.b[it] }
-        val mean = GuidedFilter.boxMean(luma, width, rows, radius)
-        val square = GuidedFilter.boxMean(FloatArray(count) { luma[it] * luma[it] }, width, rows, radius)
-        val weight = FloatArray(count) { flatness(sqrt(max(square[it] - mean[it] * mean[it], 0f))) }
-        val shape = Window(width, rows, radius)
-        smooth(planes.r, count, shape, weight)
-        smooth(planes.g, count, shape, weight)
-        smooth(planes.b, count, shape, weight)
+    /** Bufory jednego wątku (cztery tablice wielkości pasa) – bez nowych tablic dla każdego pasa (G). */
+    class Scratch(capacity: Int) {
+        internal val a = FloatArray(capacity)
+        internal val mean = FloatArray(capacity)
+        internal val square = FloatArray(capacity)
+        internal val tmp = FloatArray(capacity)
     }
 
-    private class Window(val width: Int, val rows: Int, val radius: Int)
-
-    private fun smooth(plane: FloatArray, count: Int, shape: Window, weight: FloatArray) {
-        val blurred = GuidedFilter.boxMean(plane.copyOf(count), shape.width, shape.rows, shape.radius)
-        for (i in 0 until count) {
-            val d = (weight[i] * (blurred[i] - plane[i])).coerceIn(-MAX_DELTA, MAX_DELTA)
-            plane[i] = (plane[i] + d).coerceIn(0f, MAX)
+    /** Odbandowuje pas [count] pikseli (całe wiersze o szerokości [width]) oknem o promieniu [radius]. */
+    fun applyPlanes(planes: Planes, count: Int, width: Int, radius: Int, scratch: Scratch = Scratch(count)) {
+        val rows = count / width
+        val a = scratch.a
+        val mean = scratch.mean
+        val square = scratch.square
+        for (i in 0 until count) a[i] = LUMA_R * planes.r[i] + LUMA_G * planes.g[i] + LUMA_B * planes.b[i]
+        boxMean(a, mean, scratch.tmp, width, rows, radius)
+        for (i in 0 until count) a[i] = a[i] * a[i]
+        boxMean(a, square, scratch.tmp, width, rows, radius)
+        // a = waga płaskości
+        for (i in 0 until count) a[i] = flatness(sqrt(max(square[i] - mean[i] * mean[i], 0f)))
+        for (plane in arrayOf(planes.r, planes.g, planes.b)) {
+            boxMean(plane, mean, scratch.tmp, width, rows, radius)
+            for (i in 0 until count) {
+                val d = (a[i] * (mean[i] - plane[i])).coerceIn(-MAX_DELTA, MAX_DELTA)
+                plane[i] = (plane[i] + d).coerceIn(0f, MAX)
+            }
         }
+    }
+
+    @Suppress("LongParameterList")
+    private fun boxMean(src: FloatArray, out: FloatArray, tmp: FloatArray, w: Int, h: Int, r: Int) {
+        DetailFilter.blurRows(src, tmp, w, h, r)
+        DetailFilter.blurCols(tmp, out, w, h, r)
     }
 
     /** 1 w płaskim obszarze (σ ≤ [SIGMA_FLAT]), 0 na krawędzi lub teksturze (σ ≥ [SIGMA_EDGE]), płynnie pomiędzy. */

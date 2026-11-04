@@ -32,6 +32,7 @@ data class SharpenParams(
  * z gaussowskim PSF oraz maska krawędzi (jak „Masking” w Lightroomie). Liczone paskami wierszy z zapasem na
  * rozmycie, więc pamięć nie rośnie z rozmiarem zdjęcia. Wynik to różnica jasności do dodania do kanałów.
  */
+@Suppress("TooManyFunctions") // jądro Gaussa, RL i maska w jednym miejscu (wspólne bufory)
 internal object Sharpener {
     private const val REF_SIDE = 4000f
     private const val MIN_SIGMA = 0.5f
@@ -133,14 +134,21 @@ internal object Sharpener {
         return if (a <= NOISE_FLOOR) 0f else (a - NOISE_FLOOR) * (if (d < 0f) -1f else 1f)
     }
 
-    /** Dekonwolucja Richardsona–Lucy'ego: u ← u · (PSF ⊗ (obraz / (PSF ⊗ u))), z ograniczeniem stosunku (szum). */
+    /**
+     * Dekonwolucja Richardsona–Lucy'ego: u ← u · (PSF ⊗ (obraz / (PSF ⊗ u))), z ograniczeniem stosunku (szum).
+     * Cztery bufory na cały przebieg zamiast nowych tablic w każdej iteracji (G: mniej pamięci w pasach 12 MP).
+     */
     private fun richardsonLucy(src: FloatArray, w: Int, h: Int, sigma: Float, iterations: Int): FloatArray {
-        var u = src.copyOf()
+        val u = src.copyOf()
+        val est = FloatArray(src.size)
+        val ratio = FloatArray(src.size)
+        val tmp = FloatArray(src.size)
+        val kernel = kernelFor(sigma)
         repeat(iterations) {
-            val est = gauss(u, w, h, sigma)
-            val ratio = FloatArray(src.size) { ((src[it] + 1f) / (est[it] + 1f)).coerceIn(RATIO_MIN, RATIO_MAX) }
-            val corr = gauss(ratio, w, h, sigma)
-            u = FloatArray(src.size) { (u[it] * corr[it]).coerceIn(0f, LUMA_MAX) }
+            gaussInto(u, est, tmp, w, h, kernel)
+            for (i in src.indices) ratio[i] = ((src[i] + 1f) / (est[i] + 1f)).coerceIn(RATIO_MIN, RATIO_MAX)
+            gaussInto(ratio, est, tmp, w, h, kernel)
+            for (i in src.indices) u[i] = (u[i] * est[i]).coerceIn(0f, LUMA_MAX)
         }
         return u
     }
@@ -172,15 +180,23 @@ internal object Sharpener {
 
     /** Rozmycie gaussowskie rozdzielne z brzegami przedłużanymi (clamp). */
     fun gauss(src: FloatArray, w: Int, h: Int, sigma: Float): FloatArray {
+        val out = FloatArray(src.size)
+        gaussInto(src, out, FloatArray(src.size), w, h, kernelFor(sigma))
+        return out
+    }
+
+    private fun kernelFor(sigma: Float): FloatArray {
         val radius = kotlin.math.ceil(KERNEL_SPAN * sigma).toInt().coerceAtLeast(1)
         val kernel = FloatArray(2 * radius + 1) { exp(-((it - radius) * (it - radius)) / (2f * sigma * sigma)) }
         val sum = kernel.sum()
         for (i in kernel.indices) kernel[i] /= sum
-        val tmp = FloatArray(src.size)
+        return kernel
+    }
+
+    @Suppress("LongParameterList") // bufory wyniku i pośredni podawane z zewnątrz (bez alokacji w pętli)
+    private fun gaussInto(src: FloatArray, out: FloatArray, tmp: FloatArray, w: Int, h: Int, kernel: FloatArray) {
         Convolution.rows(src, tmp, w, h, kernel)
-        val out = FloatArray(src.size)
         Convolution.columns(tmp, out, w, h, kernel)
-        return out
     }
 
     private const val HALF = 0.5f

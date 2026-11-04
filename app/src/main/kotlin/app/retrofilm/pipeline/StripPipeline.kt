@@ -16,7 +16,9 @@ internal class StripPlans(
     val semantic: SemanticSharpen.Map?,
     val halo: Int,
     val longSide: Int,
-    val debandRadius: Int = 0
+    val debandRadius: Int = 0,
+    /** Zapas wierszy samego wyostrzania (część [halo]); jasność do wyostrzania tylko z rdzenia ± tego zapasu. */
+    val sharpMargin: Int = 0
 )
 
 /**
@@ -43,7 +45,7 @@ internal object StripPipeline {
         val w = src.width
         val h = src.height
         val t0 = System.nanoTime()
-        val plans = StripAnalysis(src, adj, deband, faces).plans()
+        val plans = StripAnalysis(src, adj, deband, faces, io.finish, io.stage).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
@@ -76,8 +78,11 @@ internal class StripWorker(
 ) {
     private val processor = AdjustmentProcessor(adj)
     private val neutral = adj.isNeutral
+    private val finish = io.finish
+    private val finisher = finish?.let { AdjustmentProcessor(it) }
     private val ints = IntArray(w * capRows)
     private val planes = Planes.of(w * capRows)
+    private val debandScratch = if (plans.debandRadius > 0) Deband.Scratch(w * capRows) else null
 
     /** Przetwarza wiersze [y0, y1) obrazu [src] i zapisuje je do [out]. */
     fun run(src: Bitmap, out: Bitmap, y0: Int, y1: Int) {
@@ -98,12 +103,20 @@ internal class StripWorker(
         plans.luma?.let { LumaDenoise.applyPlanes(it, planes, count, w) }
         plans.dehaze?.let { Dehaze.restorePlanes(it, planes, count, span) }
         if (!neutral) processor.processPlanes(planes, count, span, plans.tone)
-        if (plans.debandRadius > 0) Deband.applyPlanes(planes, count, w, plans.debandRadius)
+        if (plans.debandRadius >
+            0
+        ) {
+            Deband.applyPlanes(planes, count, w, plans.debandRadius, debandScratch ?: Deband.Scratch(count))
+        }
         val core = (y0 - a) * w
         val coreCount = (y1 - y0) * w
-        if (adj.hasDetail) sharpen(count, a, core, coreCount)
-        processor.effectsPlanes(planes, core, coreCount, PixelSpan(w, y0, h))
-        io.stage?.apply(planes, core, coreCount)
+        if (finisher != null && finish != null) {
+            filmAndFinish(count, a, y0, y1)
+        } else {
+            if (adj.hasDetail) sharpen(count, a, core, coreCount, adj)
+            processor.effectsPlanes(planes, core, coreCount, PixelSpan(w, y0, h))
+            io.stage?.apply(planes, core, coreCount)
+        }
         val fracOut = io.fracOut
         if (fracOut != null) {
             Frac.split(planes, core, coreCount, fracOut, y0 * w)
@@ -114,13 +127,33 @@ internal class StripWorker(
         synchronized(out) { out.setPixels(ints, core, w, 0, y0, w, y1 - y0) }
     }
 
-    /** Wyostrzanie i wyrazistość na jasności całego pasa; wynik dodawany tylko do wierszy właściwych (bez zapasu). */
-    private fun sharpen(count: Int, firstRow: Int, core: Int, coreCount: Int) {
-        val luma = FloatArray(count) { LUMA_R * planes.r[it] + LUMA_G * planes.g[it] + LUMA_B * planes.b[it] }
+    /** Jak dawny drugi przebieg: film na całym pasie (z zapasem dla wyostrzania), potem wykończenie. */
+    private fun filmAndFinish(count: Int, a: Int, y0: Int, y1: Int) {
+        val finisher = finisher ?: return
+        val finish = finish ?: return
+        val core = (y0 - a) * w
+        val coreCount = (y1 - y0) * w
+        io.stage?.apply(planes, 0, count)
+        if (!finish.isNeutral) finisher.processPlanes(planes, count, PixelSpan(w, a, h), null)
+        if (finish.hasDetail) sharpen(count, a, core, coreCount, finish)
+        finisher.effectsPlanes(planes, core, coreCount, PixelSpan(w, y0, h))
+    }
+
+    /**
+     * Wyostrzanie i wyrazistość na jasności rdzenia pasa z zapasem [StripPlans.sharpMargin] (reszta zapasu służy
+     * odszumianiu i odbandowaniu); wynik dodawany tylko do wierszy właściwych.
+     */
+    private fun sharpen(count: Int, firstRow: Int, core: Int, coreCount: Int, adj: Adjustments) {
+        val from = max(0, core - plans.sharpMargin * w)
+        val to = min(count, core + coreCount + plans.sharpMargin * w)
+        val luma = FloatArray(to - from) {
+            val i = from + it
+            LUMA_R * planes.r[i] + LUMA_G * planes.g[i] + LUMA_B * planes.b[i]
+        }
         val delta = DetailFilter.planeDelta(
             luma,
             w,
-            firstRow,
+            firstRow + from / w,
             plans.longSide,
             adj.sharpenParams,
             adj.clarity,
@@ -128,7 +161,7 @@ internal class StripWorker(
             plans.semantic
         )
         for (i in core until core + coreCount) {
-            val d = delta[i]
+            val d = delta[i - from]
             planes.r[i] = (planes.r[i] + d).coerceIn(0f, MAX)
             planes.g[i] = (planes.g[i] + d).coerceIn(0f, MAX)
             planes.b[i] = (planes.b[i] + d).coerceIn(0f, MAX)
@@ -180,7 +213,9 @@ internal class StripIo(
     val fracIn: ByteArray? = null,
     val fracOut: ByteArray? = null,
     val stage: PlaneStage? = null,
-    val dither: Boolean = true
+    val dither: Boolean = true,
+    /** Wykończenie po [stage] w tym samym przebiegu (G): LUT na całym pasie, potem wyostrzanie, ziarno i winieta. */
+    val finish: Adjustments? = null
 ) {
     companion object {
         val Default = StripIo()

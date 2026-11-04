@@ -68,8 +68,10 @@ object LutEngineFactory {
 }
 
 /**
- * Backend GPU z awaryjnym CPU. Po pierwszej awarii zostaje na CPU (ponowne próby GPU przy każdej klatce tylko by
- * dokładały czas wyjątku); [activeBackend] i [fallbackReason] mówią logowi czasów, co naprawdę liczy.
+ * Backend GPU z awaryjnym CPU. Awaria zapamiętuje rozmiar bitmapy: bitmapy co najmniej tak duże od razu idą na
+ * CPU (bez ponawiania wyjątku przy każdej klatce), a mniejsze (szybki i pełny podgląd) dalej na GPU – wcześniej
+ * jedna awaria na dużym obrazie przełączała na CPU cały podgląd (regresja `open_full_preview` w wydaniu E).
+ * [activeBackend] i [fallbackReason] mówią logowi czasów, co naprawdę liczy.
  */
 class FallbackLutEngine(private val primary: LutEngine, private val fallback: LutEngine) : LutEngine {
     override val name: String get() = primary.name
@@ -77,20 +79,32 @@ class FallbackLutEngine(private val primary: LutEngine, private val fallback: Lu
     @Volatile override var fallbackReason: String? = null
         private set
 
-    override val activeBackend: String get() = if (fallbackReason == null) primary.activeBackend else fallback.name
+    /** Najmniejsza liczba pikseli, przy której GPU zawiodło; [Long.MAX_VALUE] = bez awarii. */
+    @Volatile private var failedPixels = Long.MAX_VALUE
+
+    @Volatile private var lastOnCpu = false
+
+    override val activeBackend: String get() = if (lastOnCpu) fallback.name else primary.activeBackend
 
     @Suppress("TooGenericExceptionCaught")
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap {
-        if (fallbackReason != null) return fallback.apply(src, lut, intensity)
+        val pixels = src.width.toLong() * src.height
+        if (pixels >= failedPixels) return onCpu(src, lut, intensity)
         return try {
-            primary.apply(src, lut, intensity)
+            primary.apply(src, lut, intensity).also { lastOnCpu = false }
         } catch (e: CancellationException) {
             throw e
         } catch (e: RuntimeException) {
+            failedPixels = minOf(failedPixels, pixels)
             fallbackReason = "${primary.name}: ${e.javaClass.simpleName}: ${e.message.orEmpty()}"
-            Log.w("LutEngine", "Backend ${primary.name} zawiódł, używam CPU", e)
-            fallback.apply(src, lut, intensity)
+            Log.w("LutEngine", "Backend ${primary.name} zawiódł przy $pixels px, używam CPU", e)
+            onCpu(src, lut, intensity)
         }
+    }
+
+    private suspend fun onCpu(src: Bitmap, lut: Lut, intensity: Float): Bitmap {
+        lastOnCpu = true
+        return fallback.apply(src, lut, intensity)
     }
 
     override fun warm(lut: Lut) = primary.warm(lut)

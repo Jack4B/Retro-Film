@@ -60,8 +60,13 @@ internal class StripAnalysis(
     private val src: Bitmap,
     private val adj: Adjustments,
     private val deband: Boolean = false,
-    private val faces: List<FaceBox> = emptyList()
+    private val faces: List<FaceBox> = emptyList(),
+    /** Wykończenie w tym samym przebiegu: ostrość i mapa semantyczna z próbek po korektach i [stage] (filmie). */
+    private val finish: Adjustments? = null,
+    private val stage: PlaneStage? = null
 ) {
+    private val sharp = finish ?: adj
+
     private val w = src.width
     private val h = src.height
 
@@ -73,12 +78,24 @@ internal class StripAnalysis(
         val luma = LumaDenoise.plan(w, h, adj.lumaDenoise, if (adj.lumaDenoise > 0f) noiseSigma() else 0f)
         val tone = if (adj.usesToneMask) toneMask(chroma, dehaze) else null
         val clarity = if (adj.clarity != 0f) clarityMap(chroma, dehaze, tone) else null
-        val sharpMargin = if (adj.sharpness > 0f) Sharpener.marginFor(adj.sharpenParams, max(w, h)) else 0
+        val sharpMargin = if (sharp.sharpness > 0f) Sharpener.marginFor(sharp.sharpenParams, max(w, h)) else 0
         val debandRadius = if (deband) Deband.radiusFor(max(w, h)) else 0
-        val semantic = if (adj.sharpness > 0f && adj.sharpSmart) semanticMap() else null
+        val semantic = if (sharp.sharpness > 0f && sharp.sharpSmart) semanticMap(chroma, dehaze, tone) else null
         val edge = ChromaEdge.plan(w, h, adj.chromaEdges)
         val halo = sharpMargin + max(luma?.margin ?: 0, edge?.margin ?: 0) + debandRadius
-        return StripPlans(chroma, edge, luma, dehaze, tone, clarity, semantic, halo, max(w, h), debandRadius)
+        return StripPlans(
+            chroma = chroma,
+            chromaEdge = edge,
+            luma = luma,
+            dehaze = dehaze,
+            tone = tone,
+            clarity = clarity,
+            semantic = semantic,
+            halo = halo,
+            longSide = max(w, h),
+            debandRadius = debandRadius,
+            sharpMargin = sharpMargin
+        )
     }
 
     /** Sumy w komórkach dla odszumiania koloru i dehaze z całego obrazu (bez podpróbkowania); null = niepotrzebne. */
@@ -137,16 +154,27 @@ internal class StripAnalysis(
     }
 
     /** Mapa wyostrzania świadomego treści ([SemanticSharpen]) z jasności zmniejszonego obrazu (próbki co 2 piksele). */
-    private fun semanticMap(): SemanticSharpen.Map {
+    private fun semanticMap(chroma: ChromaDenoise.Plan?, dehaze: Dehaze.Plan?, tone: ToneMask?): SemanticSharpen.Map {
         val low = Lowres.forSize(w, h, SemanticSharpen.TARGET)
         val stride = min(SEMANTIC_STRIDE, low.factor)
         val sampler = Sampler(src, stride)
-        val acc0 = Parallel.reduce(sampler.chunks, { Lowres.Accumulator(low) }, { a, b -> a.merge(b) }) { acc, chunk ->
+        val filmed = finish != null
+        val acc0 = Parallel.reduce(
+            sampler.chunks,
+            { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
+            { a, b -> a.acc.merge(b.acc) }
+        ) { state, chunk ->
+            val acc = state.acc
             sampler.rows(chunk) { y, p ->
+                if (filmed) {
+                    restoreRow(chroma, dehaze, p, y, stride)
+                    if (!adj.isNeutral) state.processor.processPlanes(p, p.size, PixelSpan(p.size, y, h), tone, stride)
+                    stage?.apply(p, 0, p.size)
+                }
                 for (i in 0 until p.size) acc.add(i * stride, y, LUMA_R * p.r[i] + LUMA_G * p.g[i] + LUMA_B * p.b[i])
             }
         }
-        return SemanticSharpen.build(low, acc0.mean(0), faces)
+        return SemanticSharpen.build(low, acc0.acc.mean(0), faces)
     }
 
     /** Odszumianie koloru i dehaze na próbkach wiersza [y] (co [stride]-ty piksel), jak na pasach. */

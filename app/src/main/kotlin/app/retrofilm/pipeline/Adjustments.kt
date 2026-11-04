@@ -426,6 +426,8 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         return FilmGrain.colorfulness(hi - lo)
     }
 
+    private val grainNoise = FloatArray(GRAIN_LAYERS)
+
     private fun effects(x: Int, y: Int, width: Int, rows: Int, cell: Float) {
         if (adj.vignette > 0f) {
             val nx = (x + HALF) / width * 2f - 1f
@@ -435,9 +437,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         }
         if (adj.grain > 0f) {
             val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
-            val common = FilmGrain.luma(x, y, cell)
+            FilmGrain.pixel(x, y, cell, grainNoise)
             for (k in 0..2) {
-                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(common, FilmGrain.chroma(x, y, cell, k), grainColorful))
+                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(grainNoise[0], grainNoise[k + 1], grainColorful))
             }
         }
     }
@@ -450,6 +452,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private fun to8(v: Float): Int = (v * BYTE_MAX + HALF).toInt().coerceIn(0, BYTE_LEVELS - 1)
 
     companion object {
+        private const val GRAIN_LAYERS = 4
         const val KNEE = 0.8f
         private const val SHADOW_EV = 2.0f
         internal const val HIGHLIGHT_EV = 1.2f

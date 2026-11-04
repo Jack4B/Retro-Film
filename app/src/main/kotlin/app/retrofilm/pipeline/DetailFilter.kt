@@ -90,7 +90,9 @@ object DetailFilter {
     ): FloatArray {
         val rows = luma.size / w
         val delta = if (sharp.amount > 0f) {
-            Sharpener.delta(luma, w, rows, sharp, longSide = longSide)
+            // pas z [StripPipeline] ma już zapas wierszy: bez dzielenia na podpasy (G – bez zagnieżdżonych wątków i
+            // powtórnych marginesów)
+            Sharpener.delta(luma, w, rows, sharp, stripRows = rows, longSide = longSide)
         } else {
             FloatArray(luma.size)
         }
@@ -164,14 +166,21 @@ object DetailFilter {
         }
     }
 
+    /** Jak [blurRows] w pionie; wiersz po wierszu z sumami kolumn (kolejność sum ta sama, wynik identyczny, G). */
     internal fun blurCols(src: FloatArray, dst: FloatArray, w: Int, h: Int, r: Int) {
         val window = (2 * r + 1).toFloat()
-        for (x in 0 until w) {
-            var sum = 0f
-            for (k in -r..r) sum += src[k.coerceIn(0, h - 1) * w + x]
-            for (y in 0 until h) {
-                dst[y * w + x] = sum / window
-                sum += src[(y + r + 1).coerceAtMost(h - 1) * w + x] - src[(y - r).coerceAtLeast(0) * w + x]
+        val sums = FloatArray(w)
+        for (k in -r..r) {
+            val row = k.coerceIn(0, h - 1) * w
+            for (x in 0 until w) sums[x] += src[row + x]
+        }
+        for (y in 0 until h) {
+            val out = y * w
+            val add = (y + r + 1).coerceAtMost(h - 1) * w
+            val sub = (y - r).coerceAtLeast(0) * w
+            for (x in 0 until w) {
+                dst[out + x] = sums[x] / window
+                sums[x] += src[add + x] - src[sub + x]
             }
         }
     }
