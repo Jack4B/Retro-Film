@@ -92,6 +92,9 @@ object AutoEnhance {
     private const val MIN_LUMA = 1e-4f
     private const val MIN_EV = 0.05f
     private const val CLIP_LEVEL = 0.98f
+    private const val TAIL_FROM = 0.9f
+    private const val MIN_TAIL = 20
+    private const val MAX_BONUS = 0.1 // ln: ≤ 0,14 EV; większe przestrzeliwuje ColorChecker +1 EV (0,2 → 0,24 EV)
     private const val CENTER_SIGMA = 0.35f
     private const val FACE_WEIGHT = 0.6f
 
@@ -218,8 +221,15 @@ object AutoEnhance {
         return ev.coerceIn(-EXPOSURE_LIMIT, EXPOSURE_LIMIT).let { if (abs(it) < MIN_EV) 0f else it }
     }
 
-    /** Średnia logarytmiczna jasności ważona do środka kadru (gaussowsko), z przepalonymi blokami włącznie. */
-    private fun key(lumas: FloatArray, s: Sample): Float {
+    /**
+     * Klucz sceny (J): średnia logarytmiczna ważona do środka kadru (gaussowsko) z cenzurą przepalonych bloków.
+     * Przepalony blok to wiadomo tylko „≥ obserwowanej”, więc nie jest ani odrzucany (zaniża klucz), ani brany
+     * wprost: jego log-jasność zastępuje oczekiwana wartość ogona powyżej progu, oszacowana z jasnych
+     * nieprzepalonych bloków (estymator typu Tobit, jednostronny). Bez przepalonych = dawna średnia.
+     */
+    internal fun key(lumas: FloatArray, s: Sample): Float {
+        val logs = DoubleArray(lumas.size) { ln(lumas[it].coerceAtLeast(MIN_LUMA).toDouble()) }
+        val bonus = censoredBonus(logs, s.clipped)
         var sumW = 0.0
         var sumL = 0.0
         for (i in lumas.indices) {
@@ -227,9 +237,22 @@ object AutoEnhance {
             val dy = ((i / s.gw) + 0.5f) / s.gh - 0.5f
             val wgt = exp(-(dx * dx + dy * dy) / (2f * CENTER_SIGMA * CENTER_SIGMA)).toDouble()
             sumW += wgt
-            sumL += wgt * ln(lumas[i].coerceAtLeast(MIN_LUMA).toDouble())
+            sumL += wgt * (logs[i] + if (s.clipped[i]) bonus else 0.0)
         }
         return kotlin.math.exp(sumL / sumW).toFloat()
+    }
+
+    /**
+     * Średnia nadwyżka log-jasności ponad próg w górnym ogonie nieprzepalonych (od [TAIL_FROM] percentyla):
+     * jeśli rozkład jest wykładniczy w ogonie, oczekiwana nadwyżka nad progiem cenzury jest stała (bez pamięci).
+     */
+    private fun censoredBonus(logs: DoubleArray, clipped: BooleanArray): Double {
+        if (clipped.none { it }) return 0.0
+        val free = logs.filterIndexed { i, _ -> !clipped[i] }.sorted()
+        if (free.size < MIN_TAIL) return 0.0
+        val from = free[((free.size - 1) * TAIL_FROM).toInt()]
+        val tail = free.filter { it >= from }
+        return (tail.average() - from).coerceIn(0.0, MAX_BONUS)
     }
 
     /** Korekta EV mediany skóry do docelowej jasności twarzy (skalowanej szarością filmu) albo null. */
