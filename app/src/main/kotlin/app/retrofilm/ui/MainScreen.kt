@@ -1,6 +1,5 @@
 package app.retrofilm.ui
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -21,16 +20,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.retrofilm.R
-import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.ui.library.FilmLibraryScreen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val MAX_PICKED = 30
+private const val HISTORY_DEBOUNCE_MS = 400L
 
 /**
  * Korzeń ścieżki: Start (przyciski: galeria albo pliki; wybór zdjęć nie otwiera się sam) → Edytor → zapis jednym
- * dotknięciem. Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
+ * arkusz zapisu. Photo Picker i zapis bez uprawnień do pamięci (MediaStore od API 29, SAF na API 26–28).
  */
+@Suppress("LongMethod") // tylko okablowanie stanu i launcher-ów, bez logiki
 @Composable
 fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> Unit) {
     val context = LocalContext.current
@@ -50,7 +51,8 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
     }
     val onPick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     val onPickFiles = { filesPicker.launch(arrayOf("image/*")) }
-    val onSave = rememberSaveAction(state, ::show)
+    val onSave = rememberSaveFlow(state, ::show)
+    LaunchedEffect(Unit) { state.observeDefaults() }
     LaunchedEffect(Unit) { state.library.observeFavorites() }
     LaunchedEffect(Unit) { state.presetBook.load(context) }
     LaunchedEffect(Unit) { state.library.observeDownloads() }
@@ -64,6 +66,11 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
         state.geometry
     ) {
         state.refreshPreview()
+    }
+    // Cofnij/Ponów: stan trafia do historii po krótkiej przerwie, więc przeciągnięcie suwaka to jeden krok
+    LaunchedEffect(state.film, state.frame, state.intensity, state.adjustments, state.geometry) {
+        delay(HISTORY_DEBOUNCE_MS)
+        state.recordHistory()
     }
     val editing = state.photo != null
     var showLibrary by rememberSaveable { mutableStateOf(false) }
@@ -89,33 +96,6 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
             onDownloadFilms = onDownloadFilms,
             snackbar = { SnackbarHost(snackbar) }
         )
-    }
-}
-
-/** Zapis jednym dotknięciem: MediaStore od API 29 (seria, gdy jest kilka zdjęć), SAF na API 26-28. */
-@Composable
-private fun rememberSaveAction(state: MainState, show: (UiMessage?) -> Unit): () -> Unit {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val createDoc = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(ExportPipeline.MIME)
-    ) { uri ->
-        if (uri != null) {
-            scope.launch { show(state.export { ExportPipeline.saveToUri(context.contentResolver, it, uri) }) }
-        }
-    }
-    return {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val toMediaStore: suspend (ByteArray) -> Unit = {
-                val name = ExportPipeline.fileName(System.currentTimeMillis())
-                ExportPipeline.saveToMediaStore(context.contentResolver, it, name)
-            }
-            scope.launch {
-                show(if (state.uris.size > 1) state.exportAll(context, toMediaStore) else state.export(toMediaStore))
-            }
-        } else {
-            createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))
-        }
     }
 }
 

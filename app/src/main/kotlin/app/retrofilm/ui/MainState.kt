@@ -149,6 +149,10 @@ class MainState(
     var failedIndices by mutableStateOf(emptyList<Int>())
         private set
 
+    /** Liczba zdjęć w trwającym zapisie (pasek postępu arkusza zapisu). */
+    var saveTotal by mutableIntStateOf(0)
+        private set
+
     /** Adresy zapisanych plików z ostatniego zapisu (do „Udostępnij”). */
     val savedUris = mutableStateListOf<Uri>()
 
