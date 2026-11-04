@@ -7,9 +7,16 @@ import app.retrofilm.R
 class UiTexts private constructor(private val context: Context) {
     fun of(msg: UiMessage): String = when (msg) {
         UiMessage.SignatureTooLong -> context.getString(R.string.signature_too_long)
+
         UiMessage.Saved -> context.getString(R.string.export_done)
+
+        UiMessage.SavedReduced -> context.getString(R.string.export_done) + " " +
+            context.getString(R.string.save_reduced)
+
         is UiMessage.SavedMany -> saved(msg)
+
         UiMessage.LoadFailed -> context.getString(R.string.load_failed)
+
         is UiMessage.ExportFailed -> context.getString(R.string.export_failed, msg.reason)
     }
 

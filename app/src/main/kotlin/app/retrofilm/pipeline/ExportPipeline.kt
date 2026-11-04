@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.LutEngine
 import app.retrofilm.core.export.JpegExporter
+import app.retrofilm.core.export.JpegOptions
 import java.io.IOException
 
 /** Pełna ścieżka: zdjęcie (już z orientacją) → film (LUT) → ramka + podpis → JPEG bez metadanych. */
@@ -21,7 +22,7 @@ object ExportPipeline {
 
     /**
      * Konwertuje zdjęcie do sRGB ([ColorPolicy]), nakłada korekty, LUT (null = oryginał), wykończenie i ramkę.
-     * Wynik jest zawsze w sRGB, więc `Bitmap.compress` zapisze profil zgodny z pikselami.
+     * Wynik jest zawsze w sRGB; koder dołącza zgodny profil ICC (sRGB).
      */
     @Suppress("LongParameterList") // intensywność dochodzi do istniejących parametrów; grupowanie później
     suspend fun render(
@@ -35,10 +36,23 @@ object ExportPipeline {
         faces: List<FaceBox> = emptyList()
     ): Bitmap {
         val srgb = ColorPolicy.toSrgb(photo)
-        // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie
+        // kolejność jak w programach do obróbki RAW (D15): najpierw korekty, potem film (look), na końcu wykończenie.
+        // Etapy pośrednie są zwalniane od razu – przy pełnej rozdzielczości (50 MP = 200 MB na kopię) to różnica
+        // między eksportem a brakiem pamięci. Wejście [photo] należy do wywołującego i nie jest zwalniane.
         val corrected = correct(srgb, adjustments, lut != null)
-        val finished = look(corrected, lut, engine, intensity, adjustments, faces)
-        return FrameRenderer.render(finished, frame, typeface, colorSpaceSource = srgb)
+        release(srgb, corrected, photo)
+        val filmed = if (lut == null) corrected else engine.apply(corrected, lut, intensity)
+        release(corrected, filmed, photo)
+        val finishing = adjustments.finishing()
+        val finished = if (finishing.isNeutral) filmed else AdjustmentsApplier.apply(filmed, finishing, faces = faces)
+        release(filmed, finished, photo)
+        val framed = FrameRenderer.render(finished, frame, typeface, colorSpaceSource = finished)
+        release(finished, framed, photo)
+        return framed
+    }
+
+    private fun release(old: Bitmap, next: Bitmap, keep: Bitmap) {
+        if (old !== next && old !== keep && !old.isRecycled) old.recycle()
     }
 
     /**
@@ -48,7 +62,7 @@ object ExportPipeline {
     fun correct(srgb: Bitmap, adjustments: Adjustments, hasLut: Boolean): Bitmap =
         AdjustmentsApplier.apply(srgb, adjustments.corrections(), deband = hasLut)
 
-    /** Etap 2: film (LUT, null = bez filmu) i wykończenie (ziarno, winieta); bez ramki. */
+    /** Etap 2 (podgląd): film (LUT, null = bez filmu) i wykończenie (ziarno, winieta); bez ramki. */
     @Suppress("LongParameterList") // etapy potoku dostają te same parametry co [render]
     suspend fun look(
         corrected: Bitmap,
@@ -73,8 +87,16 @@ object ExportPipeline {
         frame: FrameOptions,
         typeface: Typeface,
         quality: Int = JpegExporter.DEFAULT_QUALITY
+    ): ByteArray = encode(photo, rendered, frame, typeface, JpegOptions(quality))
+
+    fun encode(
+        photo: Bitmap,
+        rendered: Bitmap,
+        frame: FrameOptions,
+        typeface: Typeface,
+        options: JpegOptions
     ): ByteArray =
-        JpegExporter.encode(rendered, quality, FrameRenderer.status(frame, photo.width, photo.height, typeface))
+        JpegExporter.encode(rendered, options, FrameRenderer.status(frame, photo.width, photo.height, typeface))
 
     /**
      * Zmniejsza wynik do [maxSide] px dłuższego boku (0 = oryginalny rozmiar) filtrem Lanczosa ([Resampler], bez

@@ -50,4 +50,24 @@ class JpegExporterTest {
         assertEquals(0, out.size())
         assertTrue(JpegExporter.encode(bmp, 90, SignatureFitStatus.Fits).isNotEmpty())
     }
+
+    @Test
+    fun defaultIs444WithSrgbProfile() {
+        val bmp = Bitmap.createBitmap(40, 30, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(220, 30, 30)) }
+        val jpeg = JpegExporter.encode(bmp)
+        assertEquals(listOf(0x11, 0x11, 0x11), JpegInspector.samplingFactors(jpeg))
+        assertTrue(IccProfiles.description(JpegInspector.icc(jpeg)!!)!!.startsWith("sRGB"))
+        assertEquals(40, BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size).width)
+    }
+
+    @Test
+    fun option420KeepsProfileAndExif() {
+        val bmp = Bitmap.createBitmap(40, 30, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.rgb(20, 130, 30)) }
+        val tiff = ExifWriter.write(ExifData(make = "Test"), 40, 30, "Retro Film")
+        val jpeg = JpegExporter.encode(bmp, JpegOptions(90, ChromaSubsampling.Half420, tiff), SignatureFitStatus.None)
+        assertEquals(0x22, JpegInspector.samplingFactors(jpeg)[0])
+        assertTrue(JpegMetadata.hasIcc(jpeg))
+        assertTrue(JpegMetadata.hasExif(jpeg))
+        assertNotNull(BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size))
+    }
 }

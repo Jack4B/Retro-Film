@@ -23,11 +23,16 @@ import kotlinx.coroutines.withContext
  * tiles = ceil(sqrt(size)). Dla 33 → 6×6 kafli = 198×198 px, 65 → 9×9 = 585×585,
  * 144 → 12×12 = 1728×1728 (pasek 1D miałby 20736 px szerokości – ponad typowy limit 16384).
  * Tekstura próbkowana bez filtrowania; interpolacja trójliniowa (także między plastrami b)
- * liczona w shaderze (8 odczytów), identycznie jak w [CpuLut]. Ostatnie 2 tekstury LUT są
+ * liczona w shaderze (8 odczytów) albo – domyślnie – czworościenna (4 odczyty, wierniejsza
+ * na przekątnej szarości), identycznie jak w [CpuLut]. Siła LUT-a mieszana w świetle liniowym,
+ * na koniec dither TPDF. Ostatnie 2 tekstury LUT są
  * buforowane (LRU).
  */
 @TargetApi(Build.VERSION_CODES.TIRAMISU)
-class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRILINEAR) : LutEngine {
+class AgslLutEngine(
+    private val interpolation: Interpolation = Interpolation.TETRAHEDRAL,
+    private val dither: Boolean = true
+) : LutEngine {
     override val name: String = if (interpolation == Interpolation.TRILINEAR) "agsl" else "agsl-tetra"
 
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = withContext(Dispatchers.Default) {
@@ -46,6 +51,7 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
             setFloatUniform("tiles", tilesPerRow(lut.size).toFloat())
             setFloatUniform("intensity", intensity.coerceIn(0f, 1f))
             setFloatUniform("tetra", if (interpolation == Interpolation.TETRAHEDRAL) 1f else 0f)
+            setFloatUniform("dither", if (dither) 1f else 0f)
         }
         val paint = Paint().apply {
             this.shader = shader
@@ -142,6 +148,20 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
             uniform float tiles;
             uniform float intensity;
             uniform float tetra;
+            uniform float dither;
+
+            float3 toLinear(float3 c) {
+                return mix(c / 12.92, pow((c + 0.055) / 1.055, float3(2.4)), step(float3(0.04045), c));
+            }
+
+            float3 toSrgb(float3 c) {
+                return mix(c * 12.92, 1.055 * pow(c, float3(1.0 / 2.4)) - 0.055, step(float3(0.0031308), c));
+            }
+
+            // Szum przeplatanego gradientu (Jimenez) – tani, bez tekstury.
+            float ign(float2 p) {
+                return fract(52.9829189 * fract(dot(p, float2(0.06711056, 0.00583715))));
+            }
 
             float3 node(float r, float g, float b) {
                 float ty = floor(b / tiles);
@@ -187,7 +207,12 @@ class AgslLutEngine(private val interpolation: Interpolation = Interpolation.TRI
                 float3 c11 = mix(node(i0.r, i1.g, i1.b), node(i1.r, i1.g, i1.b), f.r);
                 graded = mix(mix(c00, c10, f.g), mix(c01, c11, f.g), f.b);
                 }
-                float3 outRgb = mix(rgb, graded, intensity);
+                // Mieszanie siły LUT-a w świetle liniowym (bez przyciemniania półtonów).
+                float3 outRgb = intensity >= 1.0 ? graded
+                    : toSrgb(mix(toLinear(rgb), toLinear(clamp(graded, 0.0, 1.0)), intensity));
+                // Dither TPDF ±1 LSB przed kwantyzacją do 8 bit – rozbija pasmowanie gradientów.
+                float n = ign(xy) + ign(xy + float2(37.0, 17.0)) - 1.0;
+                outRgb = clamp(outRgb + dither * n / 255.0, 0.0, 1.0);
                 return half4(half3(outRgb * a), half(a));
             }
         """.trimIndent()

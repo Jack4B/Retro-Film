@@ -26,7 +26,7 @@ class AppGraph(context: Context) {
         // D9: startowe PNG 144³ dekodowane raz i trzymane w tym samym LRU co pakiety pobierane.
         EngineFilmEngine(
             LutCatalog(context.applicationContext.assets, lutRawCache),
-            LutEngineFactory.create(),
+            LutEngineFactory.defaultAuto(),
             downloaded = { downloadedFiles }
         )
     }

@@ -5,20 +5,23 @@ import java.io.ByteArrayOutputStream
 /** Operacje na segmentach JPEG (czysty Kotlin, bez Androida). */
 @Suppress("MagicNumber", "LoopWithTooManyJumpStatements")
 object JpegMetadata {
-    private const val MARKER = 0xFF
+    internal const val MARKER = 0xFF
     private const val SOI = 0xD8
-    private const val SOS = 0xDA
-    private const val EOI = 0xD9
-    private const val APP0 = 0xE0
-    private const val APP2 = 0xE2
+    internal const val SOS = 0xDA
+    internal const val EOI = 0xD9
+    internal const val APP0 = 0xE0
+    internal const val APP2 = 0xE2
     private const val APP14 = 0xEE
     private const val APP15 = 0xEF
     private const val COM = 0xFE
+    internal const val SOF0 = 0xC0
+    private const val MAX_SEGMENT = 65533
+    internal const val SOF2 = 0xC2
     private const val TEM = 0x01
     private const val RST0 = 0xD0
     private const val RST7 = 0xD7
-    private const val BYTE = 0xFF
-    private const val SHIFT = 8
+    internal const val BYTE = 0xFF
+    internal const val SHIFT = 8
 
     /**
      * Biała lista: z segmentów APPn zostają tylko APP0 (JFIF), APP2 `ICC_PROFILE` (profil koloru,
@@ -71,6 +74,36 @@ object JpegMetadata {
         marker == APP2 && startsWith(jpeg, start, jpeg.size, ICC)
     }
 
+    /** Wstawia po APP0 (albo po SOI) segment EXIF i profil ICC; plik wejściowy nie powinien mieć własnych. */
+    fun withMetadata(jpeg: ByteArray, icc: ByteArray?, exifTiff: ByteArray?): ByteArray {
+        val at = segments(jpeg).firstOrNull()?.takeIf { it.first == APP0 }?.let { (_, s) ->
+            s - 2 + ((u(jpeg, s - 2) shl SHIFT) or u(jpeg, s - 1))
+        } ?: 2
+        val out = ByteArrayOutputStream(jpeg.size + (icc?.size ?: 0) + (exifTiff?.size ?: 0) + 64)
+        out.write(jpeg, 0, at)
+        if (exifTiff != null) segment(out, APP0 + 1, EXIF + exifTiff)
+        if (icc != null) {
+            val chunk = MAX_SEGMENT - ICC.size - 2
+            val parts = (icc.size + chunk - 1) / chunk
+            for (i in 0 until parts) {
+                val body = ICC + byteArrayOf((i + 1).toByte(), parts.toByte()) +
+                    icc.copyOfRange(i * chunk, minOf(icc.size, (i + 1) * chunk))
+                segment(out, APP2, body)
+            }
+        }
+        out.write(jpeg, at, jpeg.size - at)
+        return out.toByteArray()
+    }
+
+    internal fun segment(out: ByteArrayOutputStream, marker: Int, body: ByteArray) {
+        val len = body.size + 2
+        out.write(MARKER)
+        out.write(marker)
+        out.write(len shr SHIFT)
+        out.write(len and BYTE)
+        out.write(body)
+    }
+
     private fun allowed(a: ByteArray, marker: Int, start: Int, end: Int): Boolean = when (marker) {
         APP0 -> true
         APP2 -> startsWith(a, start, end, ICC)
@@ -78,11 +111,8 @@ object JpegMetadata {
         else -> false
     }
 
-    private fun startsWith(a: ByteArray, start: Int, end: Int, p: ByteArray): Boolean =
-        start + p.size <= minOf(end, a.size) && p.indices.all { a[start + it] == p[it] }
-
     /** Pary (marker, początek danych segmentu) aż do SOS. */
-    private fun segments(jpeg: ByteArray): List<Pair<Int, Int>> {
+    internal fun segments(jpeg: ByteArray): List<Pair<Int, Int>> {
         val list = mutableListOf<Pair<Int, Int>>()
         var i = 2
         while (i + 3 < jpeg.size && u(jpeg, i) == MARKER) {
@@ -99,9 +129,12 @@ object JpegMetadata {
         return list
     }
 
-    private fun u(a: ByteArray, i: Int): Int = a[i].toInt() and BYTE
-
-    private val EXIF = byteArrayOf(0x45, 0x78, 0x69, 0x66, 0, 0)
-    private val ICC = "ICC_PROFILE".toByteArray(Charsets.US_ASCII) + 0
+    internal val EXIF = byteArrayOf(0x45, 0x78, 0x69, 0x66, 0, 0)
+    internal val ICC = "ICC_PROFILE".toByteArray(Charsets.US_ASCII) + 0
     private val ADOBE = "Adobe".toByteArray(Charsets.US_ASCII)
 }
+
+internal fun startsWith(a: ByteArray, start: Int, end: Int, p: ByteArray): Boolean =
+    start + p.size <= minOf(end, a.size) && p.indices.all { a[start + it] == p[it] }
+
+internal fun u(a: ByteArray, i: Int): Int = a[i].toInt() and JpegMetadata.BYTE

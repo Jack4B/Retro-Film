@@ -2,6 +2,7 @@ package app.retrofilm.core.engine
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class CpuLutTest {
@@ -54,10 +55,18 @@ class CpuLutTest {
     }
 
     @Test
-    fun halfIntensityMixes() {
+    fun halfIntensityMixesInLinearLight() {
         val black = Lut.generate(Lut.DEFAULT_SIZE) { _, _, _ -> Triple(0f, 0f, 0f) }
         val out = CpuLut.applyToPixels(intArrayOf(0xFFC8C8C8.toInt()), black, 0.5f)
-        assertEquals(0xFF646464.toInt(), out[0])
+        // 200/255 → liniowo 0,578 → połowa 0,289 → sRGB 0,573 = 146 (w gamma wyszłoby 100 – za ciemno)
+        val expected = Math.round(Srgb.fromLinear(Srgb.toLinear(200f / 255f) * 0.5f) * 255f)
+        assertEquals(146, expected)
+        assertEquals(0xFF000000.toInt() or (expected shl 16) or (expected shl 8) or expected, out[0])
+    }
+
+    @Test
+    fun srgbRoundTrip() {
+        for (i in 0..255) assertEquals(i / 255f, Srgb.fromLinear(Srgb.toLinear(i / 255f)), 1e-5f)
     }
 
     @Test
@@ -113,5 +122,39 @@ class CpuLutTest {
 
     private companion object {
         const val PIXEL_COUNT = 4096
+    }
+
+    @Test
+    fun tetrahedralMatchesAnalyticReference() {
+        // Dla LUT-a liniowego interpolacja czworościenna jest dokładna; porównanie z funkcją wzorcową.
+        val f = { r: Float, g: Float, b: Float -> Triple(0.2f + 0.5f * g, 0.9f - 0.6f * b, 0.3f * r + 0.4f * b) }
+        val lut = Lut.generate(17, f)
+        val out = FloatArray(3)
+        val rnd = java.util.Random(7)
+        var maxErr = 0f
+        repeat(2000) {
+            val r = rnd.nextFloat()
+            val g = rnd.nextFloat()
+            val b = rnd.nextFloat()
+            CpuLut.sample(lut, r, g, b, out, Interpolation.TETRAHEDRAL)
+            val e = f(r, g, b)
+            maxErr = maxOf(maxErr, kotlin.math.abs(out[0] - e.first), kotlin.math.abs(out[1] - e.second))
+            maxErr = maxOf(maxErr, kotlin.math.abs(out[2] - e.third))
+        }
+        // węzły LUT-a są 8-bitowe: błąd ≤ pół poziomu + zaokrąglenia
+        assertTrue("max błąd $maxErr", maxErr <= 1f / 255f)
+    }
+
+    @Test
+    fun tetrahedralKeepsGrayNeutral() {
+        // Na przekątnej szarości czworościenna używa tylko węzłów szarych → szarość zostaje szara.
+        val lut = Lut.generate(9) { r, g, b -> Triple(r * r, g * g, b * b) }
+        val out = FloatArray(3)
+        for (i in 0..100) {
+            val v = i / 100f
+            CpuLut.sample(lut, v, v, v, out, Interpolation.TETRAHEDRAL)
+            assertEquals(out[0], out[1], 1e-6f)
+            assertEquals(out[1], out[2], 1e-6f)
+        }
     }
 }

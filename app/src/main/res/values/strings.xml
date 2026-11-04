@@ -122,6 +122,16 @@
     <string name="export_quality_label">Jakość JPEG: %1$d%%</string>
     <string name="export_quality_cd">Jakość JPEG przy zapisie</string>
     <string name="export_size_original">Oryginalny rozmiar</string>
+    <string name="export_format_label">Format pliku</string>
+    <string name="export_format_jpeg">JPEG</string>
+    <string name="export_chroma_label">Kolor w pliku</string>
+    <string name="export_chroma_444">4:4:4 (pełny kolor)</string>
+    <string name="export_chroma_420">4:2:0 (mniejszy plik)</string>
+    <string name="export_space_label">Przestrzeń barw</string>
+    <string name="export_space_srgb">sRGB</string>
+    <string name="export_exif">Dane aparatu (EXIF, bez GPS)</string>
+    <string name="save_reduced">Za mało pamięci na pełną rozdzielczość – zapisano w mniejszej.</string>
+    <string name="save_sheet_reduced_many">W mniejszej rozdzielczości (za mało pamięci): %1$d</string>
     <string name="film_presets">Presety</string>
     <string name="preset_add_cd">Zapisz jako preset: film, moc i wszystkie korekty</string>
     <string name="preset_save_title">Zapisz preset</string>

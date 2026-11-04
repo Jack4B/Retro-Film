@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
  * - Kontekst EGL żyje na jednym wątku GL przez cały czas działania aplikacji, a wysłane tekstury LUT są
  *   cache'owane ([LUT_CACHE] ostatnich), więc film 144³ nie jest wysyłany przy każdym renderze (287–603 ms).
  */
-class GlesLutEngine(private val tileLimit: Int = Int.MAX_VALUE) : LutEngine {
+class GlesLutEngine(private val tileLimit: Int = Int.MAX_VALUE, private val dither: Boolean = true) : LutEngine {
     override val name: String = "gles3"
 
     override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = withContext(glDispatcher) {
@@ -33,7 +33,8 @@ class GlesLutEngine(private val tileLimit: Int = Int.MAX_VALUE) : LutEngine {
             EglSession.Frame(pixels, src.width, src.height),
             lut,
             intensity.coerceIn(0f, 1f),
-            tileLimit
+            tileLimit,
+            dither
         )
         BitmapPixels.write(out, src.width, src.height)
     }
@@ -127,7 +128,7 @@ private class EglSession : AutoCloseable {
     private val program: Int by lazy { GlProgram.build(VERTEX, FRAGMENT) }
     private val luts = LinkedHashMap<Lut, Int>(LUT_CACHE, LOAD, true)
 
-    fun render(frame: Frame, lut: Lut, intensity: Float, tileLimit: Int): IntArray {
+    fun render(frame: Frame, lut: Lut, intensity: Float, tileLimit: Int, dither: Boolean = false): IntArray {
         check(EGL14.eglMakeCurrent(display, surface, surface, context)) { "eglMakeCurrent" }
         check(ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN) { "Wymagany little-endian" }
         val maxSize = IntArray(1)
@@ -140,6 +141,7 @@ private class EglSession : AutoCloseable {
         GLES30.glGenFramebuffers(1, fbo, 0)
         try {
             prepare(io, textures, fbo[0], lut, intensity)
+            GLES30.glUniform1f(GLES30.glGetUniformLocation(program, "uDither"), if (dither) 1f else 0f)
             val uScale = GLES30.glGetUniformLocation(program, "uScale")
             for (t in GlTiles.plan(frame.width, frame.height, tile)) drawTile(io, t, textures[0], uScale)
             check(GLES30.glGetError() == GLES30.GL_NO_ERROR) { "Błąd GL podczas renderu" }
@@ -313,13 +315,27 @@ private class EglSession : AutoCloseable {
             uniform sampler3D uLut;
             uniform float uSize;
             uniform float uIntensity;
+            uniform float uDither;
             out vec4 outColor;
+            vec3 toLinear(vec3 c) {
+                return mix(c / 12.92, pow((c + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
+            }
+            vec3 toSrgb(vec3 c) {
+                return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+            }
+            float ign(vec2 p) {
+                return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+            }
             void main() {
                 // bajty ARGB little-endian = B,G,R,A: kanały zamieniane tutaj, nie na CPU
                 vec4 c = texture(uImage, vUv);
                 vec3 rgb = c.bgr;
                 vec3 coord = (clamp(rgb, 0.0, 1.0) * (uSize - 1.0) + 0.5) / uSize;
-                vec3 graded = mix(rgb, texture(uLut, coord).rgb, uIntensity);
+                vec3 lut = texture(uLut, coord).rgb;
+                vec3 graded = uIntensity >= 1.0 ? lut
+                    : toSrgb(mix(toLinear(clamp(rgb, 0.0, 1.0)), toLinear(lut), uIntensity));
+                float n = ign(gl_FragCoord.xy) + ign(gl_FragCoord.xy + vec2(37.0, 17.0)) - 1.0;
+                graded = clamp(graded + uDither * n / 255.0, 0.0, 1.0);
                 outColor = vec4(graded.bgr, c.a);
             }
         """.trimIndent()

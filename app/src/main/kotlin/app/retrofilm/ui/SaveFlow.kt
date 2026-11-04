@@ -35,8 +35,8 @@ internal fun rememberSaveFlow(state: MainState, show: (UiMessage?) -> Unit): () 
         if (uri != null) {
             scope.launch {
                 state.savedUris.clear()
-                result = state.export { ExportPipeline.saveToUri(context.contentResolver, it, uri) }
-                if (result == UiMessage.Saved) state.savedUris += uri
+                result = state.export(context) { ExportPipeline.saveToUri(context.contentResolver, it, uri) }
+                if (result == UiMessage.Saved || result == UiMessage.SavedReduced) state.savedUris += uri
             }
         }
     }
@@ -51,7 +51,14 @@ internal fun rememberSaveFlow(state: MainState, show: (UiMessage?) -> Unit): () 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             scope.launch {
                 state.savedUris.clear()
-                result = if (state.uris.size > 1) state.exportAll(context, toMediaStore) else state.export(toMediaStore)
+                result =
+                    if (state.uris.size >
+                        1
+                    ) {
+                        state.exportAll(context, toMediaStore)
+                    } else {
+                        state.export(context, toMediaStore)
+                    }
             }
         } else {
             createDoc.launch(ExportPipeline.fileName(System.currentTimeMillis()))

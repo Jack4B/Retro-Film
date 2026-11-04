@@ -131,7 +131,7 @@ object FrameRenderer {
         val canvas = Canvas(out)
         canvas.drawColor(Color.WHITE)
         val p = layout.photo
-        canvas.drawBitmap(photo, null, AndroidRectF(p.left, p.top, p.right, p.bottom), Paint(Paint.FILTER_BITMAP_FLAG))
+        drawPhoto(canvas, photo, AndroidRectF(p.left, p.top, p.right, p.bottom))
         if (options.drawsSignature) drawSignature(canvas, layout, options, typeface)
         if (options.watermark) Watermark.draw(canvas, AndroidRectF(p.left, p.top, p.right, p.bottom))
         return out
@@ -179,5 +179,26 @@ object FrameRenderer {
         val out = blank(w, h, csSource)
         Canvas(out).drawBitmap(photo, 0f, 0f, null)
         return out
+    }
+
+    /**
+     * Zdjęcie w oknie ramki. Gdy okno ma (po zaokrągleniu) rozmiar zdjęcia – kopia piksel w piksel w całkowitym
+     * położeniu, bez filtrowania; gdy trzeba skalować – Lanczos w świetle liniowym ([Resampler]) zamiast
+     * dwuliniowego filtra Canvas, który rozmywa szczegóły.
+     */
+    private fun drawPhoto(canvas: Canvas, photo: Bitmap, rect: AndroidRectF) {
+        val w = rect.width().roundToInt().coerceAtLeast(1)
+        val h = rect.height().roundToInt().coerceAtLeast(1)
+        val left = rect.left.roundToInt().toFloat()
+        val top = rect.top.roundToInt().toFloat()
+        if (w == photo.width && h == photo.height) {
+            canvas.drawBitmap(photo, left, top, null)
+            return
+        }
+        val px = Resampler.resize(photo, w, h)
+        val scaled = blank(w, h, photo)
+        scaled.setPixels(px, 0, w, 0, 0, w, h)
+        canvas.drawBitmap(scaled, left, top, null)
+        scaled.recycle()
     }
 }

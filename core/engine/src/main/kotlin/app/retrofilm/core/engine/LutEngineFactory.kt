@@ -13,8 +13,15 @@ object LutEngineFactory {
 
     /**
      * [interpolation] dotyczy AGSL i CPU; GLES zawsze używa sprzętowej trójliniowej
-     * (przy TETRAHEDRAL tryb AUTO pomija GLES i spada do CPU).
+     * (przy TETRAHEDRAL tryb AUTO pomija GLES i spada do CPU). [defaultAuto] = AGSL czworościenny (API 33+),
+     * poniżej – GLES/CPU trójliniowe; backendy GPU z ditheringiem TPDF.
      */
+    fun defaultAuto(): LutEngine = if (Build.VERSION.SDK_INT >= AGSL_MIN_API) {
+        withCpuFallback(createAgsl(Interpolation.TETRAHEDRAL), Interpolation.TETRAHEDRAL)
+    } else {
+        create(Backend.AUTO, Interpolation.TRILINEAR)
+    }
+
     fun create(backend: Backend = Backend.AUTO, interpolation: Interpolation = Interpolation.TRILINEAR): LutEngine =
         when (backend) {
             Backend.CPU -> CpuLutEngine(interpolation)
@@ -33,18 +40,27 @@ object LutEngineFactory {
             }
         }
 
-    /** Backend bez awaryjnego CPU – do testów porównawczych (błąd backendu nie jest maskowany). */
+    /**
+     * Backend bez awaryjnego CPU i bez ditheru – do testów porównawczych (błąd backendu nie jest maskowany,
+     * wynik deterministyczny względem CPU).
+     */
     fun createStrict(backend: Backend, interpolation: Interpolation = Interpolation.TRILINEAR): LutEngine =
         when (backend) {
-            Backend.AGSL -> createAgsl(interpolation)
-            Backend.GLES -> GlesLutEngine()
+            Backend.AGSL -> {
+                check(Build.VERSION.SDK_INT >= AGSL_MIN_API) { "AGSL wymaga API $AGSL_MIN_API" }
+                AgslLutEngine(interpolation, dither = false)
+            }
+
+            Backend.GLES -> GlesLutEngine(dither = false)
+
             Backend.CPU -> CpuLutEngine(interpolation)
+
             Backend.AUTO -> create(Backend.AUTO, interpolation)
         }
 
     private fun createAgsl(interpolation: Interpolation): LutEngine {
         check(Build.VERSION.SDK_INT >= AGSL_MIN_API) { "AGSL wymaga API $AGSL_MIN_API" }
-        return AgslLutEngine(interpolation)
+        return AgslLutEngine(interpolation, dither = true)
     }
 
     private fun withCpuFallback(primary: LutEngine, interpolation: Interpolation): LutEngine =
