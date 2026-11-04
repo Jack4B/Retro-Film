@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -34,6 +35,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -59,6 +61,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -72,6 +75,7 @@ import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.pipeline.GeometryMath
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 private val MinTouch = 48.dp
 private const val CAPTION_ALPHA = 0.55f
@@ -332,6 +336,7 @@ private class PreviewMode(
 @Composable
 private fun BoxScope.PreviewBadges(state: MainState, showBefore: Boolean) {
     if (showBefore) Badge(stringResource(R.string.editor_badge_before), Modifier.align(Alignment.BottomStart))
+    RenderingIndicator(state.rendering && state.preview != null, Modifier.align(Alignment.TopCenter))
     if (state.signatureStatus() == SignatureFitStatus.TooLong) {
         Badge(
             stringResource(R.string.signature_too_long),
