@@ -9,7 +9,13 @@ data class FaceBox(val left: Float, val top: Float, val right: Float, val bottom
 enum class AutoScene { General, Portrait, Landscape, Dominant }
 
 /** Siatka próbek obrazu: liniowe RGB (trójki) w układzie [gw]×[gh]. */
-class Sample(val rgb: FloatArray, val gw: Int, val gh: Int) {
+class Sample(
+    val rgb: FloatArray,
+    val gw: Int,
+    val gh: Int,
+    /** Próbki, w których choć jeden piksel bloku miał kanał przepalony (≥ 0,98) – pomijane w pomiarach. */
+    val clipped: BooleanArray = BooleanArray(gw * gh)
+) {
     val count: Int get() = gw * gh
 }
 

@@ -18,6 +18,14 @@ data class Adjustments(
     val temperature: Float = 0f,
     /** Tint −1..1: zielony ↔ magenta (druga oś balansu bieli). */
     val tint: Float = 0f,
+    /**
+     * Reszta automatycznego balansu bieli poza krzywą dzienną: przesunięcie założonej barwy oświetlenia w xy
+     * (zob. [WhiteBalance.matrix]); bez suwaka, zerowana przy ręcznej zmianie temperatury/tintu.
+     */
+    val whiteDx: Float = 0f,
+    val whiteDy: Float = 0f,
+    /** Odwrócenie krzywej tonalnej telefonu 0..1 ([PhoneCurve]) – w trybie „Przygotuj pod film”. */
+    val toneInversion: Float = 0f,
     /** Światła −1..1: minus przywraca szczegóły w jasnych partiach, plus je rozjaśnia. */
     val highlights: Float = 0f,
     /** Cienie −1..1: plus rozjaśnia ciemne partie, minus je pogłębia. */
@@ -168,7 +176,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     private val m20: Float
     private val m21: Float
     private val m22: Float
-    private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(it / BYTE_MAX) }
+    private val toLinear = FloatArray(BYTE_LEVELS) { srgbToLinear(PhoneCurve.invert(it / BYTE_MAX, adj.toneInversion)) }
     private val encode: FloatArray
 
     private val maskLut: FloatArray
@@ -178,7 +186,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 
     init {
         val exposure = 2.0.pow(adj.exposure.toDouble()).toFloat()
-        val wb = WhiteBalance.matrix(adj.temperature, adj.tint)
+        val wb = WhiteBalance.matrix(adj.temperature, adj.tint, adj.whiteDx, adj.whiteDy)
         val m = FloatArray(MATRIX_SIZE) { wb[it] * exposure }
         m00 = m[IDX_00]
         m01 = m[IDX_01]
