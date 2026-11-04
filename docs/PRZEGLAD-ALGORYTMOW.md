@@ -1,3 +1,75 @@
+# Przegląd algorytmów: redesign UI (2026-11-04)
+
+> Przegląd na gałęzi `redesign/ui-implementation`. **Żaden algorytm nie został zmieniony**: redesign dotyka tylko UI
+> i stanu (`ui/`, `settings/`); `exportAll` dostał tylko listę indeksów do ponowienia. To przegląd statyczny kodu
+> (czytanie źródeł i KDoc), bez nowych pomiarów. Starsze sekcje (§0 i dalej, stan 1.1.12) zostają bez zmian, niżej.
+
+## R1. Pięć najważniejszych ustaleń
+
+| # | Ustalenie | Plik | Waga | Rekomendacja (do decyzji, nie wdrożone) |
+|---|---|---|---|---|
+| 1 | `LutMemoryCache` to `LinkedHashMap(accessOrder = true)` bez synchronizacji. `get()` w trybie dostępu **modyfikuje** mapę. `EngineFilmEngine.load` woła go z podglądu, miniatur i eksportu (różne korutyny na `Dispatchers.Default`). | core/engine/LutMemoryCache.kt | wysoka (rzadki crash `ConcurrentModificationException` / uszkodzone LRU) | `@Synchronized` na metodach albo `Mutex` w `EngineFilmEngine.load` |
+| 2 | Analiza pasmowa (`StripAnalysis.globalSums`, `dehazeGain`, maski) zbiera sumy `Float` w akumulatorach na wątek. Kawałki są przydzielane dynamicznie (`AtomicInteger`), więc skład sum i kolejność `merge` zależą od harmonogramu. To przeczy zapewnieniu „wynik nie zależy od liczby wątków” w `Parallel`. | pipeline/StripAnalysis.kt, GuidedFilter.kt (Accumulator) | średnia (różnice na najmłodszych bitach, niedeterministyczne goldeny na wielu rdzeniach) | akumulator na kawałek (nie na wątek) i scalanie w kolejności indeksu albo sumy `Double` |
+| 3 | Eksport ze zmniejszaniem (`ExportPipeline.resize`) robi pełną kopię `IntArray` źródła, a `Resampler` dokłada bufor pośredni `dw×sh` i wynik. Dla 50 MP to ~200 MB + ~100 MB. `Resampler` działa jednowątkowo, a wagi budowane przez `ArrayList<Float>` (boxing). Skalowanie odbywa się w gamma sRGB, nie w świetle liniowym. | pipeline/ExportPipeline.kt, Resampler.kt | średnia (OOM i czas zapisu serii na słabszych telefonach) | pasy przez `Parallel.rows`, `FloatArray` na wagi, opcjonalnie liniowe światło (było w planie §0 p. 4) |
+| 4 | GLES ładuje cały obraz jako jedną teksturę 2D. `check(width <= GL_MAX_TEXTURE_SIZE)` rzuca wyjątek i dopiero fallback przechodzi na CPU (wolno), bez kafelkowania. Sprzętowe `GL_LINEAR` na teksturze 3D RGBA8 ma na wielu GPU wagi 8-bitowe, więc wynik ≠ CPU/AGSL (trójliniowa float) i nie ma trybu czworościennego. | core/engine/GlesLutEngine.kt | średnia (API 26–32: duże zdjęcia → wolny CPU; drobne różnice podgląd ↔ zapis między backendami) | kafelkowanie po `GL_MAX_TEXTURE_SIZE`, interpolacja w shaderze (`texelFetch`) jak w AGSL |
+| 5 | `FaceFinder` używa przestarzałego `android.media.FaceDetector`: tylko twarze frontalne, RGB_565, 480 px. Pośrednie bitmapy (`scaled`, `small`) nie są zwalniane. Od twarzy zależą wyostrzanie semantyczne i ochrona skóry w Auto WB, więc pominięte twarze (profil, małe) dają mocniejsze wyostrzenie skóry. | ui/FaceFinder.kt | niska–średnia (jakość portretów) | `recycle()` pośrednich bitmap; rozważyć ML Kit Face Detection (offline, bundled) jako opcję |
+
+## R2. Przegląd modułów
+
+Kolumny: plik, jak działa, poprawność, wydajność, ryzyka, rekomendacje. Ocena poprawności dotyczy logiki widocznej
+w kodzie i istniejących testów (goldeny silnika, straż regresji suwaków w CI).
+
+### Silnik filmów (LUT)
+
+| Plik | Jak działa | Poprawność | Wydajność | Ryzyka | Rekomendacje |
+|---|---|---|---|---|---|
+| core/engine/Lut.kt, LutCatalog.kt | Surowa siatka RGB8/RGB16 (r najszybciej); katalog JSON, HaldCLUT PNG 144³ | dobra; rozmiar weryfikowany z długości | 144³ RGB8 ≈ 9 MB/film | RGB16 dwukrotnie więcej RAM | — |
+| core/engine/CpuLut.kt | Trójliniowa (domyślnie) lub czworościenna na float, mieszanie z intensywnością, zaokrąglenie | poprawna; czworościenna ma 6 przypadków i jest kompletna | jednowątkowa pętla; indeksy liczone 3× (na kanał) | wolny fallback dla dużych zdjęć | policzyć indeksy raz na piksel; pasy przez `Parallel` |
+| core/engine/AgslLutEngine.kt | LUT spakowany w kafle 2D (AGSL bez 3D), interpolacja w shaderze, cache kafli | poprawna (środki tekseli +0,5) | GPU, szybka | API 33+ | — |
+| core/engine/GlesLutEngine.kt | EGL pbuffer + FBO, tekstura 3D RGBA8, `GL_LINEAR` | poprawna z dokładnością sprzętu | szybka, ale kontekst EGL tworzony na każde wywołanie | zob. R1 #4 | kafle, reuse kontekstu |
+| core/engine/LutEngineFactory.kt | AUTO: AGSL → GLES → CPU, `FallbackLutEngine` | dobra | — | ciche przejście na CPU bez telemetrii | log/stat backendu w raporcie wydajności |
+| core/engine/LutMemoryCache.kt | LRU bajtowy (3 filmy 144³) | logika LRU dobra | — | **brak synchronizacji** (R1 #1) | synchronizacja |
+| core/engine/LutAffineFit.kt | MNK: LUT → macierz afiniczna 3×4 do taniego podglądu | poprawna | tania | podgląd ≠ wynik dla filmów nieliniowych (z założenia) | — |
+
+### Potok korekt (pasy)
+
+| Plik | Jak działa | Poprawność | Wydajność | Ryzyka | Rekomendacje |
+|---|---|---|---|---|---|
+| pipeline/StripPipeline.kt, StripAnalysis.kt | Analiza w niskiej rozdzielczości → pasy z zapasem (halo) → wszystkie etapy na float → jedna kwantyzacja z ditheringiem | koncepcja bardzo dobra (brak pośrednich zaokrągleń) | pamięć stała względem rozmiaru; `synchronized(src)` na `getPixels` serializuje odczyt | niedeterminizm sum (R1 #2) | akumulator na kawałek |
+| pipeline/Parallel.kt | Pula ≤ 4 wątków, dynamiczny przydział, wywołania zagnieżdżone sekwencyjnie | poprawna, czeka na wszystkie po błędzie | dobra | pula `workers − 1` przy 1 rdzeniu: `newFixedThreadPool(0)` rzuci wyjątek, ale ścieżka `threads <= 1` omija pulę (lazy) – OK | — |
+| pipeline/Adjustments.kt (AdjustmentProcessor) | Ekspozycja, kontrast, światła/cienie, biele/czernie, temperatura, HSL, krzywa, maski na planach float | dobra; neutralne omijane (goldeny filmu bez zmian) | największy plik (688 linii), liczne tablice | złożoność utrzymania | dalszy podział na etapy |
+| pipeline/ToneMask.kt, HighlightRecovery.kt, TextureBoost.kt | Baza jasności filtrem prowadzonym; kompresja bazy w log-jasności + detal w 2 skalach (Durand–Dorsey / local Laplacian) | dobra; brak halo dzięki filtrowi prowadzonemu | niska rozdzielczość bazy, tanio | — | — |
+| pipeline/ToneCurve.kt | PCHIP (Fritsch–Carlson), monotoniczny | poprawna | tablica LUT 1D | — | — |
+| pipeline/WhiteBalance.kt | Bradford w liniowym świetle, mired względem D65, tint prostopadle | poprawna | macierz 3×3 | — | — |
+| pipeline/AutoWhiteBalance.kt, AutoEnhance.kt, SceneAnalysis.kt | Shades of gray (p = 2) na pikselach „usable”, siła 50% z pewnością i dominacją, ochrona odcienia skóry, siatka temp/tint | rozsądna heurystyka; `hueOf` bez zawijania 0/360° (skóra ~55°, więc bez skutku) | próbka niskiej rozdzielczości | dominanty barwne (zachód słońca) tłumione heurystyką | Grey-Edge jako opcja (w planie) |
+| pipeline/ColorGrade.kt, OkLab.kt, SplitToning.kt, HslMixer.kt | Nasycenie/vibrance, tonowanie i mikser w OKLab, mapowanie gamutu przez bisekcję chromy | poprawna, percepcyjnie stała jasność | tablice gamma | — | — |
+| pipeline/GamutMapper.kt, ColorPolicy.kt | P3 → sRGB z mapowaniem w OKLab, surowe bajty z `copyPixelsToBuffer`, wykrycie kolejności bajtów | poprawna (pomiar A0: odcień 0°) | pasy po 64 wiersze | zależność od kolejności bajtów (sprawdzana sondą) | — |
+| pipeline/ChromaDenoise.kt, LumaDenoise.kt, GuidedFilter.kt | YCbCr, filtr prowadzony w niskiej skali; luma z progiem z szumu Immerkaera | poprawna; luma to najsłabszy moduł (znane) | liniowa | wygładza drobną teksturę | (plan B3, odłożony) |
+| pipeline/ChromaEdge.kt | Odtworzenie krawędzi chromy po 4:2:0 | dobra | tania | — | — |
+| pipeline/Dehaze.kt | Dark channel prior + filtr prowadzony transmisji, kompensacja jasności | poprawna | niska rozdzielczość | niebo/jasne płaszczyzny (znana słabość DCP) | haze-lines (plan) |
+| pipeline/Deband.kt, Dither.kt | Odbandowanie przed filmem; TPDF ±0,5 poziomu | poprawne, deterministyczne | tanie | — | — |
+| pipeline/Sharpener.kt, SharpenPlanner.kt, SemanticSharpen.kt, DetailFilter.kt, Convolution.kt | USM/dekonwolucja na jasności, promień od dłuższego boku, maska krawędzi, tensor struktury (włosy), twarze | dobra; podgląd = zapis | rozdzielne sploty | zależność od `FaceFinder` (R1 #5) | — |
+| pipeline/FilmGrain.kt | Szum Gaussa filtrowany na torusie 512², 2 oktawy, amplituda Selwyna p(1−p), mnożnik w świetle liniowym, skorelowane kanały | poprawna i deterministyczna | kafle lazy (2×1 MB) | — | — |
+| pipeline/LocalMask.kt | Maski liniowa/radialna z własnymi korektami | poprawna | tania | brak pędzla (znane) | — |
+
+### Geometria, rozmiar, ramka, zapis
+
+| Plik | Jak działa | Poprawność | Wydajność | Ryzyka | Rekomendacje |
+|---|---|---|---|---|---|
+| pipeline/Geometry.kt, Perspective.kt, BicubicWarp.kt, CropFit.kt | Kamera otworkowa (pion/poziom), Catmull–Rom 16 próbek, największy kadr w czworokącie | poprawna | 16 próbek/piksel – najdroższy etap geometrii | nadstrzał przycinany | — |
+| pipeline/Resampler.kt | Lanczos-3 rozdzielny, jądro rozciągnięte przy zmniejszaniu | poprawny (bez aliasingu) | jednowątkowy, boxing wag | R1 #3 | R1 #3 |
+| pipeline/ExportPipeline.kt | sRGB → korekty → film → wykończenie → ramka → (rozmiar + lekkie wyostrzenie) → JPEG, MediaStore z `IS_PENDING` | poprawna kolejność; sprzątanie wpisu po błędzie | pełne kopie bitmap między etapami | pamięć przy 50 MP; przy `SecurityException` wpis zostaje pending | łapać też `RuntimeException` przy usuwaniu |
+| pipeline/PhotoLoader.kt, ExifOrientation.kt | Dekodowanie z próbkowaniem do maxSide, orientacja EXIF na pikselach, zachowany profil | poprawna | — | — | — |
+| pipeline/FrameRenderer.kt, core/frame/FrameGeometry.kt, TightFrame.kt, Watermark.kt | Płótno ramki, podpis z kontrolą długości, znak wodny z QR v3-M | poprawna | rysowanie Canvas | QR stałego rozmiaru | — |
+| core/export/JpegMetadata.kt | Przepisywanie segmentów APP (EXIF/ICC) w JPEG | poprawna dla typowych plików | strumieniowo | nietypowe markery (np. bez EOI) | testy z plikami brzegowymi |
+
+## R3. Czego ten przegląd nie obejmuje
+
+Nie mierzono czasu ani jakości na urządzeniach (§0 i dalej mają wcześniejsze pomiary). Nie zmieniono żadnego progu ani
+stałej. Rekomendacje z R1 wymagają osobnego PR z testami goldenów.
+
+---
+
 # Przegląd algorytmów: ocena jakości i plan ulepszeń
 
 Pierwotny przegląd: wersja 1.0.3 (potok pasmowy), autor: Claude, na prośbę Jack4B po uwadze, że światła „nadal wyglądają
