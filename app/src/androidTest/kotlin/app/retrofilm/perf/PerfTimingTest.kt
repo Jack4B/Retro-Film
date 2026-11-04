@@ -97,7 +97,7 @@ class PerfTimingTest {
 
     /** Pierwsze otwarcie zdjęcia 12 MP: stara vs nowa ścieżka. */
     @Test
-    fun firstOpen() = runBlocking {
+    fun firstOpen(): Unit = runBlocking {
         val file = File(context.cacheDir, "first-open.jpg")
         file.outputStream().use {
             photo().compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it)

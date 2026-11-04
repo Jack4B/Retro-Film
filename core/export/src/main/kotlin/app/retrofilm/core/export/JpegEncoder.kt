@@ -8,12 +8,17 @@ import kotlin.math.sqrt
 /**
  * Koder JPEG baseline w czystym Kotlinie, bez podpróbkowania chromy (4:4:4) – `Bitmap.compress` zawsze robi 4:2:0,
  * co rozmywa ostre krawędzie koloru (czerwień, napisy, ramki). Tablice kwantyzacji i Huffmana ze standardu (aneks K,
- * skalowanie jakości jak w IJG), DCT zmiennoprzecinkowe AAN. Obraz jest czytany pasami ([rows]), DCT liczy się
- * równolegle na pasie, a kodowanie entropijne idzie po kolei – pamięć nie zależy od rozmiaru zdjęcia.
+ * skalowanie jakości jak w IJG), DCT zmiennoprzecinkowe AAN. Obraz jest czytany pasami ([rows]) po 64 wiersze;
+ * każdy pas to interwał restartu (DRI/RSTn), więc DCT i Huffman kilku pasów liczą się równolegle – pamięć zależy
+ * tylko od szerokości i liczby rdzeni.
  */
 @Suppress("MagicNumber", "TooManyFunctions") // stałe i prymitywy formatu JPEG (ITU T.81)
 object JpegEncoder {
-    private const val BAND_BLOCKS = 32
+    private const val BAND_BLOCKS = 8
+    private const val MAX_RESTART = 65535
+    private const val MAX_GROUP = 8
+    private const val RST0 = 0xD0
+    private const val RST_COUNT = 8
     private const val BLOCK = 8
     private const val COEFS = 64
 
@@ -37,32 +42,71 @@ object JpegEncoder {
             out,
             width,
             height,
+            minOf(BAND_BLOCKS, MAX_RESTART / ((width + 7) / 8)) * ((width + 7) / 8),
             q,
             JpegMetadata.withMetadata(byteArrayOf(0xFF.toByte(), 0xD8.toByte()), icc, exif)
         )
-        val bits = BitWriter(out)
         val bw = (width + 7) / 8
-        val bandRows = BLOCK * BAND_BLOCKS
-        val buf = IntArray(width * bandRows)
-        val coefs = Array(3) { ShortArray(bw * BAND_BLOCKS * COEFS) }
-        val dc = IntArray(3)
-        var y0 = 0
-        while (y0 < height) {
-            val count = minOf(bandRows, height - y0)
-            rows(y0, count, buf)
-            val bh = (count + 7) / 8
-            IntStream.range(0, bh * bw).parallel().forEach { b ->
-                transformBlock(buf, width, count, b % bw * BLOCK, b / bw * BLOCK, q, coefs, b * COEFS)
+        val bandBlocks = minOf(BAND_BLOCKS, MAX_RESTART / bw)
+        val bandRows = BLOCK * bandBlocks
+        val bands = (height + bandRows - 1) / bandRows
+        val group = Runtime.getRuntime().availableProcessors().coerceIn(1, MAX_GROUP)
+        val bufs = Array(minOf(group, bands)) { IntArray(width * bandRows) }
+        val coefs = Array(bufs.size) { Array(3) { ShortArray(bw * bandBlocks * COEFS) } }
+        val encoded = arrayOfNulls<ByteBuf>(bufs.size)
+        var first = 0
+        while (first < bands) {
+            val n = minOf(bufs.size, bands - first)
+            for (g in 0 until n) {
+                val y0 = (first + g) * bandRows
+                rows(y0, minOf(bandRows, height - y0), bufs[g])
             }
-            for (b in 0 until bh * bw) {
-                for (c in 0..2) dc[c] = bits.block(coefs[c], b * COEFS, dc[c], if (c == 0) LUMA else CHROMA)
+            // Każdy pas to osobny interwał restartu (DRI): DCT i Huffman liczone równolegle, łączenie po kolei.
+            IntStream.range(0, n).parallel().forEach { g ->
+                val y0 = (first + g) * bandRows
+                encoded[g] = encodeBand(bufs[g], width, minOf(bandRows, height - y0), bw, q, coefs[g])
             }
-            y0 += count
+            for (g in 0 until n) {
+                val band = checkNotNull(encoded[g])
+                out.write(band.data, 0, band.size)
+                val index = first + g
+                if (index < bands - 1) {
+                    out.write(0xFF)
+                    out.write(RST0 + index % RST_COUNT)
+                }
+            }
+            first += n
         }
-        bits.flush()
         out.write(0xFF)
         out.write(0xD9)
         return out.toByteArray()
+    }
+
+    /** Jeden pas (interwał restartu): DCT + Huffman od zerowego predyktora DC, dopełnienie do bajtu. */
+    @Suppress("LongParameterList")
+    private fun encodeBand(px: IntArray, w: Int, h: Int, bw: Int, q: Tables, coefs: Array<ShortArray>): ByteBuf {
+        val bh = (h + 7) / 8
+        val ycc = Array(3) { FloatArray(COEFS) }
+        for (b in 0 until bh * bw) transformBlock(px, w, h, b % bw * BLOCK, b / bw * BLOCK, q, coefs, b * COEFS, ycc)
+        val buf = ByteBuf(bw * bh * COEFS / 2 + COEFS)
+        val bits = BitWriter(buf)
+        val dc = IntArray(3)
+        for (b in 0 until bh * bw) {
+            for (c in 0..2) dc[c] = bits.block(coefs[c], b * COEFS, dc[c], if (c == 0) LUMA else CHROMA)
+        }
+        bits.flush()
+        return buf
+    }
+
+    /** Niesynchronizowany bufor bajtów (ByteArrayOutputStream synchronizuje każdy zapis). */
+    internal class ByteBuf(initial: Int) {
+        var data = ByteArray(maxOf(initial, COEFS))
+        var size = 0
+
+        fun write(b: Int) {
+            if (size == data.size) data = data.copyOf(data.size * 2)
+            data[size++] = b.toByte()
+        }
     }
 
     @Suppress("LongParameterList")
@@ -74,9 +118,9 @@ object JpegEncoder {
         y0: Int,
         q: Tables,
         out: Array<ShortArray>,
-        at: Int
+        at: Int,
+        ycc: Array<FloatArray>
     ) {
-        val ycc = Array(3) { FloatArray(COEFS) }
         for (j in 0 until BLOCK) {
             val y = minOf(y0 + j, h - 1)
             for (i in 0 until BLOCK) {
@@ -180,7 +224,7 @@ object JpegEncoder {
         }
     }
 
-    private class BitWriter(private val out: ByteArrayOutputStream) {
+    private class BitWriter(private val out: ByteBuf) {
         private var acc = 0L
         private var n = 0
 
@@ -234,7 +278,8 @@ object JpegEncoder {
 
     private object Headers {
         /** [meta] = SOI + segmenty ICC/EXIF (z [JpegMetadata.withMetadata]). */
-        fun write(out: ByteArrayOutputStream, w: Int, h: Int, q: Tables, meta: ByteArray) {
+        @Suppress("LongParameterList")
+        fun write(out: ByteArrayOutputStream, w: Int, h: Int, restart: Int, q: Tables, meta: ByteArray) {
             out.write(byteArrayOf(0xFF.toByte(), 0xD8.toByte()))
             segment(out, 0xE0, byteArrayOf(0x4A, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0))
             out.write(meta, 2, meta.size - 2)
@@ -257,6 +302,7 @@ object JpegEncoder {
                 vals.forEach { dht.write(it) }
             }
             segment(out, 0xC4, dht.toByteArray())
+            segment(out, 0xDD, byteArrayOf((restart shr 8).toByte(), restart.toByte()))
             segment(out, 0xDA, byteArrayOf(3, 1, 0x00, 2, 0x11, 3, 0x11, 0, 63, 0))
         }
 
