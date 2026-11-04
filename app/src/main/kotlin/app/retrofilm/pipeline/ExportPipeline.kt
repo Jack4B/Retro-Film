@@ -35,11 +35,12 @@ object ExportPipeline {
         intensity: Float = 1f,
         adjustments: Adjustments = Adjustments.None,
         faces: List<FaceBox> = emptyList(),
-        space: OutputSpace = OutputSpace.Srgb
+        space: OutputSpace = OutputSpace.Srgb,
+        fracOut: ByteArray? = null
     ): Bitmap {
         // Etapy pośrednie są zwalniane od razu (50 MP = 200 MB na kopię). Wejście [photo] należy do wywołującego.
         val work = FloatExport.working(photo, space)
-        val finished = FloatExport.look(work, lut, intensity, adjustments, space, faces)
+        val finished = FloatExport.look(work, lut, intensity, adjustments, space, faces, fracOut)
         release(work, finished, photo)
         val framed = FrameRenderer.render(finished, frame, typeface, colorSpaceSource = finished)
         release(finished, framed, photo)
@@ -119,14 +120,14 @@ object ExportPipeline {
 
     private val OUTPUT_SHARPEN = SharpenParams(amount = 0.3f, radius = 0.8f, detail = 0.2f, masking = 0.3f)
 
-    fun fileName(timeMillis: Long): String = "RetroFilm_$timeMillis.jpg"
+    fun fileName(timeMillis: Long, type: FileType = FileType.Jpeg): String = "RetroFilm_$timeMillis.${type.extension}"
 
     /** Zapis przez MediaStore do Pictures/RetroFilm (API 29+, bez uprawnień do pamięci). */
     @RequiresApi(Build.VERSION_CODES.Q)
-    fun saveToMediaStore(resolver: ContentResolver, jpeg: ByteArray, name: String): Uri {
+    fun saveToMediaStore(resolver: ContentResolver, jpeg: ByteArray, name: String, mime: String = MIME): Uri {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, name)
-            put(MediaStore.Images.Media.MIME_TYPE, MIME)
+            put(MediaStore.Images.Media.MIME_TYPE, mime)
             put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM")
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }

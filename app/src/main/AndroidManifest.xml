@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- HeifWriter ma minSdk 28; używany tylko za sprawdzeniem SDK_INT >= 28 (HeicExport). -->
+    <uses-sdk tools:overrideLibrary="androidx.heifwriter" />
     <!-- D8: sieć wyłącznie do pobierania filtrów (raw.githubusercontent.com, tag luts-v1). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />

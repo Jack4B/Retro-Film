@@ -23,6 +23,7 @@ import app.retrofilm.pipeline.AutoScene
 import app.retrofilm.pipeline.ColorPolicy
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FaceBox
+import app.retrofilm.pipeline.FileType
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.Geometry
@@ -172,12 +173,17 @@ class MainState(
     /** Czy bieżące zdjęcie ma gain mapę Ultra HDR (pokazuje chip „HDR”). */
     var photoHasGainMap by mutableStateOf(false)
 
+    /** Format pliku: JPEG (domyślnie), PNG 16 bitów albo HEIC (gdy jest koder HEVC). */
+    var exportFileType by mutableStateOf(FileType.Jpeg)
+
     val exportFormat: ExportFormat
         get() = ExportFormat(
             exportQuality,
             exportChroma444,
             exportKeepExif,
-            if (exportP3) OutputSpace.DisplayP3 else OutputSpace.Srgb
+            if (exportP3) OutputSpace.DisplayP3 else OutputSpace.Srgb,
+            exportFileType,
+            hdr = hdrFromPhoto && photoHasGainMap
         )
 
     /** Dłuższy bok zapisanego zdjęcia w px; 0 = oryginalny rozmiar. */
@@ -666,8 +672,10 @@ class MainState(
                 exportFormat
             )
             val uri = uris.getOrNull(index)
-            val open: (() -> java.io.InputStream)? = if (context != null && uri != null) {
-                { context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }
+            val open: (() -> java.io.InputStream)? = if (context != null &&
+                uri != null
+            ) {
+                exportSource(context, uri)
             } else {
                 null
             }

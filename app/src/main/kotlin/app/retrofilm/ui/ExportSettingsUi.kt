@@ -25,6 +25,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
+import app.retrofilm.pipeline.FileType
+import app.retrofilm.pipeline.HeicExport
 import kotlinx.coroutines.launch
 
 private val Gap = 8.dp
@@ -73,9 +75,7 @@ private const val QUALITY_STEP = 5
 /** Format, podpróbkowanie chromy, przestrzeń barw i EXIF. */
 @Composable
 private fun ExportFileOptions(state: MainState) {
-    OptionRow(R.string.export_format_label) {
-        FilterChip(selected = true, onClick = {}, label = { Text(stringResource(R.string.export_format_jpeg)) })
-    }
+    FileTypeOption(state)
     OptionRow(R.string.export_chroma_label) {
         FilterChip(
             selected = state.exportChroma444,
@@ -149,3 +149,40 @@ private fun OptionRow(label: Int, content: @Composable () -> Unit) {
     Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
     Row(horizontalArrangement = Arrangement.spacedBy(Gap)) { content() }
 }
+
+/** JPEG / PNG 16 / HEIC (HEIC tylko z koderem HEVC). PNG 16 i HEIC nie niosą EXIF; HEIC jest 8-bitowy. */
+@Composable
+private fun FileTypeOption(state: MainState) {
+    val types = FileType.entries.filter { it != FileType.Heic || HeicExport.isAvailable }
+    OptionRow(R.string.export_format_label) {
+        types.forEach { t ->
+            FilterChip(
+                selected = state.exportFileType == t,
+                onClick = { state.exportFileType = t },
+                label = { Text(stringResource(t.label)) },
+                modifier = Modifier.testTag("export-type-${t.extension}")
+            )
+        }
+    }
+    if (state.exportFileType != FileType.Jpeg) {
+        Text(
+            stringResource(
+                if (state.exportFileType ==
+                    FileType.Png16
+                ) {
+                    R.string.export_png16_note
+                } else {
+                    R.string.export_heic_note
+                }
+            ),
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+}
+
+private val FileType.label: Int
+    get() = when (this) {
+        FileType.Jpeg -> R.string.export_format_jpeg
+        FileType.Png16 -> R.string.export_format_png16
+        FileType.Heic -> R.string.export_format_heic
+    }
