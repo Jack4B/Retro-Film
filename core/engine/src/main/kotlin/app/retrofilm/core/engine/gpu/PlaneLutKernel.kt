@@ -15,7 +15,36 @@ interface PlaneLutKernel : AutoCloseable {
     @Suppress("LongParameterList") // trzy płaszczyzny + zakres + film
     fun apply(r: FloatArray, g: FloatArray, b: FloatArray, from: Int, count: Int, lut: Lut, intensity: Float)
 
+    /** L: skumulowane czasy etapów (wysyłka / rysowanie / odczyt), jeśli backend je mierzy. */
+    val times: KernelTimes? get() = null
+
     override fun close() = Unit
+}
+
+/** L: czasy etapów jądra GPU w nanosekundach, sumowane od [reset]. */
+class KernelTimes {
+    @Volatile var uploadNs = 0L
+
+    @Volatile var drawNs = 0L
+
+    @Volatile var readbackNs = 0L
+
+    @Volatile var calls = 0
+
+    fun reset() {
+        uploadNs = 0
+        drawNs = 0
+        readbackNs = 0
+        calls = 0
+    }
+
+    /** `upload_ms=… draw_ms=… readback_ms=… calls=…` do logu czasów. */
+    fun note(): String =
+        "upload_ms=${uploadNs / NS_MS} draw_ms=${drawNs / NS_MS} readback_ms=${readbackNs / NS_MS} calls=$calls"
+
+    private companion object {
+        const val NS_MS = 1_000_000L
+    }
 }
 
 /** Wspólny układ pikseli: [count] pikseli zawijanych w wiersze o szerokości [width]. */

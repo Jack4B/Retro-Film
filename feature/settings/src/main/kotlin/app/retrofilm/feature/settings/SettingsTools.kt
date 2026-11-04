@@ -50,7 +50,7 @@ enum class ToolsNotice(@StringRes val title: Int, @StringRes val body: Int) {
 data class SettingsToolsState(
     val perfLogEnabled: Boolean = false,
     /** K: „Zapis na GPU (eksperymentalny)”, domyślnie włączony (z automatycznym powrotem na CPU). */
-    val gpuSave: Boolean = true,
+    val gpuSave: Boolean = false,
     val perfLogCount: Int = 0,
     val restorePrompt: RestorePrompt? = null,
     val notice: ToolsNotice? = null

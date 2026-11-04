@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 class SettingsTools(val state: SettingsToolsState, val actions: SettingsToolsActions)
 
 @Composable
-fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean, gpuSave: Boolean = true): SettingsTools {
+fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean, gpuSave: Boolean = false): SettingsTools {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = remember(graph) { BackupStore(context.applicationContext, graph.appSettings) }

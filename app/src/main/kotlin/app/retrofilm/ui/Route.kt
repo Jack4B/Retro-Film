@@ -52,7 +52,7 @@ fun RetroFilmNavHost(
     val defaultHdr by graph.appSettings.defaultHdrFromPhoto.collectAsState(initial = false)
     val perfLogOn by graph.appSettings.perfLogEnabled.collectAsState(initial = false)
     LaunchedEffect(perfLogOn) { PerfLog.recorder = if (perfLogOn) PerfLog.ring else null }
-    val gpuSave by graph.appSettings.gpuSave.collectAsState(initial = true)
+    val gpuSave by graph.appSettings.gpuSave.collectAsState(initial = false)
     LaunchedEffect(gpuSave) { SaveBackend.gpuEnabled = gpuSave }
     val parent = when (route) {
         Route.Licenses -> licensesParent
