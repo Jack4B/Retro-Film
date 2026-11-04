@@ -84,12 +84,17 @@ internal class StripAnalysis(
         val edge = ChromaEdge.plan(w, h, adj.chromaEdges)
         val halo = sharpMargin + max(luma?.margin ?: 0, edge?.margin ?: 0) + debandRadius
         return StripPlans(
-            chroma, edge, luma, dehaze, tone, clarity, semantic, halo,
-            max(
-                w,
-                h
-            ),
-            debandRadius, sharpMargin
+            chroma = chroma,
+            chromaEdge = edge,
+            luma = luma,
+            dehaze = dehaze,
+            tone = tone,
+            clarity = clarity,
+            semantic = semantic,
+            halo = halo,
+            longSide = max(w, h),
+            debandRadius = debandRadius,
+            sharpMargin = sharpMargin
         )
     }
 
