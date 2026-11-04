@@ -41,6 +41,7 @@ import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.RawLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SaveProgress
 import app.retrofilm.pipeline.SignatureFont
@@ -486,6 +487,11 @@ class MainState(
                 // I: zapas z rzeczywistej treści gain mapy (mocno pomniejszony dekod), nie tylko z XMP
                 val raw = { java.io.ByteArrayInputStream(bytes) }
                 runCatching { withContext(Dispatchers.IO) { UltraHdrExport.measuredHeadroom(raw, hdrInfo.headroomEv) } }
+                    .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
+            }
+            if (HdrAnalysis.isTiff(bytes) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                // J: DNG – zapas HDR z pomniejszonego dekodu F16 (po BaselineExposure), nie tylko prior z nagłówka
+                runCatching { withContext(Dispatchers.Default) { RawLoader.analyseHeadroom(bytes) } }
                     .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
             }
             // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
