@@ -545,7 +545,9 @@ class MainState(
         val i = ids.indexOf(film)
         if (i < 0) return
         listOf(i + 1, i - 1).mapNotNull { ids.getOrNull(it) }.filter { it != IDENTITY_ID }
-            .forEach { runCatching { graph.filmEngine.load(it) } }
+            .forEach { id ->
+                runCatching { graph.filmEngine.load(id)?.let { graph.filmEngine.renderer.warm(it) } }
+            }
     }
 
     /** „Popraw światło i kolor”: przełącza propozycję z analizy zdjęcia (włącza albo wyłącza). */

@@ -88,15 +88,26 @@ class AgslLutEngine(
             filterMode = BitmapShader.FILTER_MODE_NEAREST
         }
 
+    /** Atlas LUT-a w cache; od razu jako bitmapa HARDWARE (wysłana na GPU raz, nie przy każdym renderze). */
+    override fun warm(lut: Lut) {
+        cachedTiles(lut)
+    }
+
     private fun cachedTiles(lut: Lut): Bitmap = synchronized(cache) {
         cache.remove(lut)?.also { cache[lut] = it }
-            ?: packTiles(lut).also {
+            ?: toGpu(packTiles(lut)).also {
                 cache[lut] = it
                 while (cache.size > CACHE_SIZE) {
                     val eldest = cache.keys.first()
                     cache.remove(eldest)?.recycle()
                 }
             }
+    }
+
+    private fun toGpu(soft: Bitmap): Bitmap {
+        val hw = runCatching { soft.copy(Bitmap.Config.HARDWARE, false) }.getOrNull() ?: return soft
+        soft.recycle()
+        return hw
     }
 
     /** Czyści bufor tekstur LUT. */
@@ -109,7 +120,7 @@ class AgslLutEngine(
 
     companion object {
         /** Maksymalna liczba buforowanych tekstur LUT. */
-        const val CACHE_SIZE = 2
+        const val CACHE_SIZE = 6
 
         fun tilesPerRow(size: Int): Int = Math.ceil(Math.sqrt(size.toDouble())).toInt()
 

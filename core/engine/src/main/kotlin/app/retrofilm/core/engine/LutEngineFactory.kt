@@ -79,4 +79,6 @@ private class FallbackLutEngine(private val primary: LutEngine, private val fall
         Log.w("LutEngine", "Backend ${primary.name} zawiódł, używam CPU", e)
         fallback.apply(src, lut, intensity)
     }
+
+    override fun warm(lut: Lut) = primary.warm(lut)
 }

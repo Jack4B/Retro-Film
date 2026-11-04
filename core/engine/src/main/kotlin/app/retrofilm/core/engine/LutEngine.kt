@@ -9,4 +9,7 @@ interface LutEngine {
 
     /** [intensity] 0..1: 0 = oryginał, 1 = pełny LUT (liniowe mieszanie). */
     suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap
+
+    /** Przygotowuje [lut] z wyprzedzeniem (np. tekstura sąsiedniego filmu); domyślnie nic. */
+    fun warm(lut: Lut) = Unit
 }
