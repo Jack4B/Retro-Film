@@ -7,11 +7,13 @@ import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.export.JpegExporter
 import app.retrofilm.core.export.SignatureTooLongException
+import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
@@ -29,6 +31,7 @@ import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
+import app.retrofilm.settings.EditDefaults
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -139,15 +142,91 @@ class MainState(
     /** Edycje serii: wspólne ustawienia i zdjęcia edytowane osobno (zob. [EditBook]). */
     val edits = EditBook()
 
+    /** Cofnij/Ponów bieżącego zdjęcia (migawki [PhotoEdit]); zerowana przy wczytaniu i zmianie zdjęcia. */
+    val history = EditHistory(PhotoEdit())
+
+    /** Indeksy zdjęć serii, których ostatni zapis się nie udał („Ponów nieudane”). */
+    var failedIndices by mutableStateOf(emptyList<Int>())
+        private set
+
+    /** Adresy zapisanych plików z ostatniego zapisu (do „Udostępnij”). */
+    val savedUris = mutableStateListOf<Uri>()
+
+    /** Domyślne ustawienia nowej edycji z DataStore ([observeDefaults]); nakładane przy wczytaniu zdjęć. */
+    var defaults by mutableStateOf(EditDefaults())
+        private set
+
+    suspend fun observeDefaults() = graph.appSettings.editDefaults.collect { defaults = it }
+
+    /** Bieżąca jakość, rozmiar i ramka z podpisem jako domyślne dla kolejnych edycji. */
+    fun currentAsDefaults(): EditDefaults = EditDefaults(
+        quality = exportQuality,
+        maxSide = exportMaxSide,
+        frameEnabled = frame.enabled,
+        frameAspect = frame.aspect.name,
+        frameMargin = frame.margin,
+        signatureEnabled = frame.signatureEnabled,
+        signature = frame.signature,
+        signatureFont = frame.font.name
+    )
+
+    suspend fun saveAsDefaults() = graph.appSettings.setEditDefaults(currentAsDefaults())
+
+    suspend fun resetDefaults() = graph.appSettings.clearEditDefaults()
+
+    /** Nakłada [d] na jakość, rozmiar i ramkę (znak wodny zostaje bez zmian). */
+    internal fun applyDefaults(d: EditDefaults) {
+        exportQuality = d.quality
+        exportMaxSide = d.maxSide
+        val base = FrameOptions()
+        frame = base.copy(
+            enabled = d.frameEnabled,
+            aspect = FrameAspect.entries.firstOrNull { it.name == d.frameAspect } ?: base.aspect,
+            margin = d.frameMargin ?: base.margin,
+            signatureEnabled = d.signatureEnabled,
+            signature = d.signature,
+            font = SignatureFont.entries.firstOrNull { it.name == d.signatureFont } ?: base.font,
+            watermark = frame.watermark
+        )
+    }
+
+    /** Dopisuje bieżący stan do historii (wołane z opóźnieniem po zmianach, żeby suwak dawał jeden krok). */
+    fun recordHistory() = history.record(snapshot())
+
+    fun undo() {
+        history.undo()?.let(::restore)
+    }
+
+    fun redo() {
+        history.redo()?.let(::restore)
+    }
+
     /**
      * Czy bieżące zdjęcie ma osobne ustawienia (film, korekty, kadr). W serii zmiana na zdjęciu od razu przypisuje się
      * tylko do niego, więc zdjęcie z niezapisaną jeszcze zmianą też liczy się jako edytowane osobno.
      */
     val individual: Boolean get() = isIndividual(index)
 
+    /**
+     * Zakres „Cała seria”: zmiany bieżącego zdjęcia trafiają do wszystkich zdjęć (osobne edycje są zastępowane).
+     * Wyłączony („To zdjęcie”) = dotychczasowe zachowanie: zmiana w serii przypisuje się tylko do tego zdjęcia.
+     */
+    var scopeAll by mutableStateOf(false)
+        private set
+
+    fun changeScopeAll(on: Boolean) {
+        // włączenie i wyłączenie utrwalają bieżący wygląd jako wspólny dla serii
+        if (on || scopeAll) edits.applyToAll(snapshot())
+        scopeAll = on
+    }
+
+    private fun commitCurrent() {
+        if (scopeAll) edits.applyToAll(snapshot()) else edits.commit(index, snapshot(), uris.size > 1)
+    }
+
     /** Czy zdjęcie [i] z serii ma osobną edycję (dla bieżącego liczy też zmiany robocze). */
-    fun isIndividual(i: Int): Boolean =
-        edits.isIndividual(i) || (i == index && uris.size > 1 && snapshot() != edits.editFor(i))
+    fun isIndividual(i: Int): Boolean = !scopeAll &&
+        (edits.isIndividual(i) || (i == index && uris.size > 1 && snapshot() != edits.editFor(i)))
 
     /** Presety użytkownika (film, moc i korekty) zapisywane w pamięci aplikacji. */
     val presetBook = PresetBook()
@@ -271,6 +350,10 @@ class MainState(
     fun closePhoto() {
         edits.reset(snapshot().copy(geometry = Geometry()))
         geometry = Geometry()
+        history.reset(snapshot())
+        failedIndices = emptyList()
+        savedUris.clear()
+        scopeAll = false
         uris = emptyList()
         index = 0
         photo = null
@@ -309,7 +392,11 @@ class MainState(
         if (picked.isEmpty()) return null
         uris = picked
         index = 0
+        if (!defaults.isFactory) applyDefaults(defaults)
         edits.reset(snapshot())
+        history.reset(snapshot())
+        failedIndices = emptyList()
+        savedUris.clear()
         markSaved()
         return load(context, picked.first()).also { if (it != null) uris = emptyList() }
     }
@@ -317,21 +404,27 @@ class MainState(
     /** Przełącza Edytor na inne zdjęcie z serii, zachowując film, korekty i ramkę. */
     suspend fun select(context: Context, i: Int): UiMessage? {
         if (i == index || i !in uris.indices) return null
-        edits.commit(index, snapshot(), uris.size > 1)
+        commitCurrent()
         index = i
         restore(edits.editFor(i))
+        history.reset(snapshot())
         return load(context, uris[i])
     }
 
     /** Zapisuje wszystkie zdjęcia z serii z bieżącymi ustawieniami; nigdy nie rzuca. */
-    suspend fun exportAll(context: Context, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
-        edits.commit(index, snapshot(), uris.size > 1)
+    suspend fun exportAll(
+        context: Context,
+        save: suspend (ByteArray) -> Unit,
+        only: List<Int> = uris.indices.toList()
+    ): UiMessage = withBusy {
+        commitCurrent()
         val watermark = frame.watermark
         var current = 0
-        val result = exportBatch(uris, {
-            current = it
+        val result = exportBatch(only, {
+            current = only[it]
             exportProgress = it + 1
-        }) { uri ->
+        }) { photoIndex ->
+            val uri = uris[photoIndex]
             val edit = edits.editFor(current)
             val photoFrame = seriesFrame.working(edit.frame, watermark)
             val face = fonts(photoFrame.font)
@@ -361,6 +454,7 @@ class MainState(
             withContext(Dispatchers.IO) { save(jpeg) }
         }
         exportProgress = 0
+        failedIndices = result.failedIndices.map { only[it] }
         markSaved()
         UiMessage.SavedMany(result.saved, result.failed)
     }

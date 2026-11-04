@@ -20,8 +20,13 @@ class BatchExportTest {
     @Test fun oneFailureDoesNotStopTheRest() = runBlocking {
         val done = mutableListOf<Int>()
         val r = exportBatch(listOf(1, 2, 3)) { if (it == 2) throw IOException("brak pliku") else done += it }
-        assertEquals(BatchResult(2, 1), r)
+        assertEquals(BatchResult(2, 1, listOf(1)), r)
         assertEquals(listOf(1, 3), done)
+    }
+
+    @Test fun failedIndicesAllowRetryingOnlyTheFailedPhotos() = runBlocking {
+        val r = exportBatch(listOf("a", "b", "c", "d")) { if (it == "b" || it == "d") throw IOException("x") }
+        assertEquals(listOf(1, 3), r.failedIndices)
     }
 
     @Test fun cancellationIsNotSwallowed() {
