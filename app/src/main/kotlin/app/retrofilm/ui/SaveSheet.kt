@@ -137,6 +137,7 @@ private fun DefaultsRow(state: MainState, actions: SaveActions) {
     }
 }
 
+@Suppress("CyclomaticComplexMethod") // jeden when po stanach zapisu; rozbicie pogorszyłoby czytelność
 @Composable
 private fun Progress(state: MainState, result: UiMessage?) {
     val total = state.saveTotal

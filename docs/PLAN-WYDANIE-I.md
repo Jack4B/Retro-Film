@@ -34,3 +34,10 @@ ramka 442–485, dekodowanie ~180, konwersja ~215, kodowanie ~150, zapis ~60, ca
 - Pełne przeniesienie wyostrzania (dekonwolucja RL), odbandowania i odszumiania do AGSL z dokładnością „w granicach
   ditheringu” to duża zmiana; jeśli nie zmieści się w tym wydaniu, zostaje rezerwa CPU i jest to jawnie opisane.
 - Zmiany wyglądu efektów (etap 5) zmieniają obrazy wzorcowe – aktualizowane świadomie, opisane w audycie.
+
+## Status (aktualizacja)
+- Etap 1a (kafle 2D CPU) ✅; etap 1b (pełny zapis GPU AGSL/GLES) ❌ nie zrobiony – patrz AUDYT-EFEKTOW.md „Nie zrobione”.
+- Etap 2 ✅. Etap 3 (postęp określony) ✅ SaveProgress + SaveSheet.
+- Etap 4: zapas HDR z gain mapy ✅, auto_suggest równolegle ✅, wykluczenie przepalonych z key() ❌ odrzucone (ColorChecker), analiza DNG F16 ❌ nie zrobiona.
+- Etap 5: halacja ✅, winieta kołowa cos⁴ ✅, AUDYT-EFEKTOW.md ✅.
+- Ramka: kopia 1:1 zamiast Lanczosa przy różnicy zaokrąglenia ✅ (do potwierdzenia na telefonie).

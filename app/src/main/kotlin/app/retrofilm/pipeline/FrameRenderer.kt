@@ -17,6 +17,7 @@ import app.retrofilm.core.frame.SignatureMeasurer
 import app.retrofilm.core.frame.SizeF
 import app.retrofilm.core.frame.TextBlock
 import app.retrofilm.core.frame.TightFrame
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -191,8 +192,13 @@ object FrameRenderer {
         val h = rect.height().roundToInt().coerceAtLeast(1)
         val left = rect.left.roundToInt().toFloat()
         val top = rect.top.roundToInt().toFloat()
-        if (w == photo.width && h == photo.height) {
-            canvas.drawBitmap(photo, left, top, null)
+        // I: okno różne od zdjęcia tylko o zaokrąglenie (≤ 2 px) – kopia 1:1 wyśrodkowana i przycięta do okna
+        // zamiast pełnego Lanczosa (~0,4 s na 12 MP); różnica ≤ 1 px brzegu, niewidoczna w białej ramce.
+        if (abs(w - photo.width) <= SNAP_PX && abs(h - photo.height) <= SNAP_PX) {
+            canvas.save()
+            canvas.clipRect(left, top, left + w, top + h)
+            canvas.drawBitmap(photo, left + (w - photo.width) / 2, top + (h - photo.height) / 2, null)
+            canvas.restore()
             return
         }
         val px = Resampler.resize(photo, w, h)
@@ -202,3 +208,5 @@ object FrameRenderer {
         scaled.recycle()
     }
 }
+
+private const val SNAP_PX = 2
