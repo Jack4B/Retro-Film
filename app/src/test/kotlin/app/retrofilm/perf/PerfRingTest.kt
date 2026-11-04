@@ -28,8 +28,8 @@ class PerfRingTest {
         val ring = PerfRing(capacity = 10)
         ring.add(entry(1).copy(device = "realme, GT \"7T\""))
         val lines = ring.toCsv().trim().lines()
-        assertEquals("timestamp,stage,ms,backend,width,height,hdr,device", lines[0])
-        assertTrue(lines[1], lines[1].endsWith(",stage1,1,gpu,4000,3000,off,\"realme, GT \"\"7T\"\"\""))
+        assertEquals("timestamp,stage,ms,backend,width,height,hdr,device,note", lines[0])
+        assertTrue(lines[1], lines[1].endsWith(",stage1,1,gpu,4000,3000,off,\"realme, GT \"\"7T\"\"\","))
         assertTrue(lines[1].startsWith("2023-11-14T"))
     }
 
@@ -52,12 +52,16 @@ class PerfRingTest {
         PerfLog.log("on_stage", 7)
         PerfLog.recorder = null
         PerfLog.log("off_again", 9)
-        val e = ring.entries().single()
+        val e = ring.entries().first()
         assertEquals("on_stage", e.stage)
         assertEquals(7L, e.ms)
         assertEquals("cpu", e.backend)
         assertEquals(100 to 50, e.width to e.height)
         assertTrue(e.hdr)
+        PerfLog.recorder = ring
+        PerfLog.log("with_note", 1, "reason=x")
+        PerfLog.recorder = null
+        assertEquals("reason=x", ring.entries().last().note)
         assertNull(ring.entries().firstOrNull { it.stage.startsWith("off") })
     }
 }

@@ -1,7 +1,6 @@
 package app.retrofilm.pipeline
 
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.ColorSpace
 import java.nio.ByteBuffer
 import kotlin.math.cbrt
@@ -24,12 +23,16 @@ internal object GamutMapper {
     private const val HALF = 0.5f
     private const val CHANNELS = 3
     private const val BYTE_MASK = 0xFF
-    private const val SHIFT_A = 24
     private const val SHIFT_R = 16
     private const val SHIFT_G = 8
-    private const val OFFSET_G = 1
-    private const val OFFSET_B = 2
-    private const val OFFSET_A = 3
+    private const val SHIFT_A = 24
+    private const val PROBE_R = 0x12
+    private const val PROBE_G = 0x34
+    private const val PROBE_B = 0x57
+    private const val PROBE = -0xedcba9 // 0xFF123457: różne bajty w każdym kanale
+    private const val CACHE_BITS = 14
+    private const val CACHE = 1 shl CACHE_BITS
+    private const val HASH = -0x61c88647 // złoty podział (Fibonacci hashing)
 
     // macierz Display P3 (liniowe RGB) → sRGB (liniowe RGB), D65
     private const val M00 = 1.2249401f
@@ -67,58 +70,121 @@ internal object GamutMapper {
     private val toLinear = FloatArray(LEVELS) { AdjustmentProcessor.srgbToLinear(it / BYTE_MAX) }
     private val encode = FloatArray(ENCODE_SIZE + 1) { AdjustmentProcessor.linearToSrgb(it.toFloat() / ENCODE_SIZE) }
 
-    /**
-     * Czy bajty ARGB_8888 leżą w pamięci jako R, G, B, A (urządzenia z Androidem) czy B, G, R, A (Skia hosta w
-     * testach Robolectric); sprawdzone na jednym pikselu zamiast zakładać kolejność.
-     */
-    internal val redFirst: Boolean by lazy {
-        val probe = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        probe.setPixel(0, 0, Color.RED)
-        val buf = ByteBuffer.allocate(BYTES_PER_PIXEL)
-        probe.copyPixelsToBuffer(buf)
-        buf.array()[0] == BYTE_MASK.toByte()
-    }
-
     /** Czy [photo] da się przekonwertować tą ścieżką (Display P3, 8 bitów na kanał). */
     fun supports(photo: Bitmap): Boolean =
         photo.config == Bitmap.Config.ARGB_8888 && photo.colorSpace == ColorSpace.get(ColorSpace.Named.DISPLAY_P3)
 
+    /**
+     * Całość jednym `copyPixelsToBuffer`, konwersja w miejscu (równolegle po paskach) i jednym
+     * `copyPixelsFromBuffer` – bez kopii paska przez `Bitmap.createBitmap` i bez `synchronized setPixels` na każdy
+     * pasek (na telefonie te kopie i blokada dominowały zapis zdjęcia P3). Wynik bit w bit jak wcześniej.
+     */
     fun toSrgb(photo: Bitmap): Bitmap {
         val w = photo.width
         val h = photo.height
-        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, photo.hasAlpha(), ColorPolicy.SRGB)
-        Parallel.forEach((h + ROWS - 1) / ROWS, { OkLab() }) { ok, chunk ->
+        val raw = ByteBuffer.allocate(w * h * BYTES_PER_PIXEL)
+        photo.copyPixelsToBuffer(raw)
+        val bytes = raw.array()
+        Parallel.forEach((h + ROWS - 1) / ROWS, { Worker() }) { worker, chunk ->
             val y = chunk * ROWS
             val rows = min(ROWS, h - y)
-            val strip = Bitmap.createBitmap(photo, 0, y, w, rows)
-            val raw = ByteBuffer.allocate(w * rows * BYTES_PER_PIXEL)
-            strip.copyPixelsToBuffer(raw)
-            val px = convert(raw.array(), w * rows, ok)
-            synchronized(out) { out.setPixels(px, 0, w, 0, y, w, rows) }
+            convert(bytes, y * w, rows * w, worker)
+        }
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888, photo.hasAlpha(), ColorPolicy.SRGB)
+        if (bufferRoundTrip) {
+            raw.rewind()
+            out.copyPixelsFromBuffer(raw)
+        } else {
+            writeInts(bytes, out)
         }
         return out
     }
 
-    private fun convert(raw: ByteArray, count: Int, ok: OkLab): IntArray {
+    /** Położenie bajtów R, G, B, A w pikselu bufora `copyPixelsToBuffer` (zależy od platformy), z jednego piksela. */
+    internal val layout: IntArray by lazy {
+        val probe = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        probe.setPixel(0, 0, PROBE)
+        val buf = ByteBuffer.allocate(BYTES_PER_PIXEL)
+        probe.copyPixelsToBuffer(buf)
+        val b = buf.array().map { it.toInt() and BYTE_MASK }
+        intArrayOf(b.indexOf(PROBE_R), b.indexOf(PROBE_G), b.indexOf(PROBE_B), b.indexOf(BYTE_MASK))
+    }
+
+    /** Czy `copyPixelsFromBuffer` czyta bajty w tej samej kolejności, w jakiej `copyPixelsToBuffer` je oddaje. */
+    private val bufferRoundTrip: Boolean by lazy {
+        val probe = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        probe.setPixel(0, 0, PROBE)
+        val buf = ByteBuffer.allocate(BYTES_PER_PIXEL)
+        probe.copyPixelsToBuffer(buf)
+        val back = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        buf.rewind()
+        back.copyPixelsFromBuffer(buf)
+        back.getPixel(0, 0) == PROBE
+    }
+
+    /** Zapas dla platform bez symetrycznego bufora (Skia hosta w Robolectric): paskami przez `setPixels`. */
+    private fun writeInts(bytes: ByteArray, out: Bitmap) {
+        val w = out.width
+        val ro = layout[0]
+        val go = layout[1]
+        val bo = layout[2]
+        for (y in 0 until out.height step ROWS) {
+            val rows = min(ROWS, out.height - y)
+            val px = IntArray(w * rows) { i ->
+                val o = (y * w + i) * BYTES_PER_PIXEL
+                (BYTE_MASK shl SHIFT_A) or ((bytes[o + ro].toInt() and BYTE_MASK) shl SHIFT_R) or
+                    ((bytes[o + go].toInt() and BYTE_MASK) shl SHIFT_G) or (bytes[o + bo].toInt() and BYTE_MASK)
+            }
+            out.setPixels(px, 0, w, 0, y, w, rows)
+        }
+    }
+
+    /** Stan wątku: [OkLab] i pamięć podręczna kolorów spoza gamutu (dokładne wyniki, klucz = pełne 24 bity RGB). */
+    private class Worker {
+        val ok = OkLab()
         val rgb = FloatArray(CHANNELS)
-        val ro = if (redFirst) 0 else OFFSET_B
-        val bo = OFFSET_B - ro
-        return IntArray(count) { i ->
+        val keys = IntArray(CACHE) { -1 }
+        val values = IntArray(CACHE)
+    }
+
+    /** Konwertuje [count] pikseli od [first] w miejscu (bajty w tej samej kolejności co bitmapa). */
+    private fun convert(raw: ByteArray, first: Int, count: Int, wk: Worker) {
+        val rgb = wk.rgb
+        val ro = layout[0]
+        val go = layout[1]
+        val bo = layout[2]
+        for (i in first until first + count) {
             val o = i * BYTES_PER_PIXEL
-            val lr = toLinear[raw[o + ro].toInt() and BYTE_MASK]
-            val lg = toLinear[raw[o + OFFSET_G].toInt() and BYTE_MASK]
-            val lb = toLinear[raw[o + bo].toInt() and BYTE_MASK]
+            val r8 = raw[o + ro].toInt() and BYTE_MASK
+            val g8 = raw[o + go].toInt() and BYTE_MASK
+            val b8 = raw[o + bo].toInt() and BYTE_MASK
+            val lr = toLinear[r8]
+            val lg = toLinear[g8]
+            val lb = toLinear[b8]
             val r = M00 * lr + M01 * lg + M02 * lb
             val g = M10 * lr + M11 * lg + M12 * lb
             val b = M20 * lr + M21 * lg + M22 * lb
-            if (r in -EPS..1f + EPS && g in -EPS..1f + EPS && b in -EPS..1f + EPS) {
+            val packed = if (r in -EPS..1f + EPS && g in -EPS..1f + EPS && b in -EPS..1f + EPS) {
                 rgb[0] = encodeOf(r)
                 rgb[1] = encodeOf(g)
                 rgb[2] = encodeOf(b)
+                pack(rgb)
             } else {
-                mapOutOfGamut(r, g, b, ok, rgb)
+                val key = (r8 shl SHIFT_R) or (g8 shl SHIFT_G) or b8
+                val slot = (key * HASH) ushr (Int.SIZE_BITS - CACHE_BITS)
+                if (wk.keys[slot] == key) {
+                    wk.values[slot]
+                } else {
+                    mapOutOfGamut(r, g, b, wk.ok, rgb)
+                    pack(rgb).also {
+                        wk.keys[slot] = key
+                        wk.values[slot] = it
+                    }
+                }
             }
-            pack(raw[o + OFFSET_A].toInt() and BYTE_MASK, rgb)
+            raw[o + ro] = (packed ushr SHIFT_R).toByte()
+            raw[o + go] = (packed ushr SHIFT_G).toByte()
+            raw[o + bo] = packed.toByte()
         }
     }
 
@@ -141,8 +207,7 @@ internal object GamutMapper {
         return encode[i] + (encode[i + 1] - encode[i]) * (p - i)
     }
 
-    private fun pack(alpha: Int, rgb: FloatArray): Int =
-        (alpha shl SHIFT_A) or (to8(rgb[0]) shl SHIFT_R) or (to8(rgb[1]) shl SHIFT_G) or to8(rgb[2])
+    private fun pack(rgb: FloatArray): Int = (to8(rgb[0]) shl SHIFT_R) or (to8(rgb[1]) shl SHIFT_G) or to8(rgb[2])
 
     private fun to8(v: Float): Int = (v * BYTE_MAX + HALF).toInt().coerceIn(0, LEVELS - 1)
 }

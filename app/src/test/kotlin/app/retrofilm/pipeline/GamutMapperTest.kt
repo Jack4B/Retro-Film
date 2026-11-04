@@ -20,10 +20,13 @@ class GamutMapperTest {
     private fun p3Bitmap(vararg px: Triple<Int, Int, Int>): Bitmap {
         val bmp = Bitmap.createBitmap(px.size, 1, Bitmap.Config.ARGB_8888, true, p3)
         val buf = ByteBuffer.allocate(px.size * 4)
-        for ((r, g, b) in px) {
-            val bytes = if (GamutMapper.redFirst) listOf(r, g, b) else listOf(b, g, r)
-            bytes.forEach { buf.put(it.toByte()) }
-            buf.put(0xFF.toByte())
+        val at = GamutMapper.layout
+        px.forEachIndexed { i, (r, g, b) ->
+            val o = i * 4
+            buf.put(o + at[0], r.toByte())
+            buf.put(o + at[1], g.toByte())
+            buf.put(o + at[2], b.toByte())
+            buf.put(o + at[3], 0xFF.toByte())
         }
         buf.rewind()
         bmp.copyPixelsFromBuffer(buf)
@@ -67,5 +70,12 @@ class GamutMapperTest {
         assertTrue("zmapowany ${mapped.toList()} = przycięty ${clipped.toList()}", mapped.toList() != clipped.toList())
         assertTrue(mapped.all { it in 0..255 })
         assertEquals(0xFF, (GamutMapper.toSrgb(src).getPixel(0, 0) ushr 24) and 0xFF)
+    }
+
+    @Test fun cachedOutOfGamutColoursEqualFreshMapping() {
+        val green = Triple(0, 255, 0)
+        val fresh = channels(GamutMapper.toSrgb(p3Bitmap(green)), 0).toList()
+        val row = GamutMapper.toSrgb(p3Bitmap(green, Triple(255, 0, 0), green, green))
+        for (x in listOf(0, 2, 3)) assertEquals(fresh, channels(row, x).toList())
     }
 }

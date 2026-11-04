@@ -18,6 +18,7 @@ import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.perf.PerfContext
 import app.retrofilm.perf.PerfLog
+import app.retrofilm.perf.SaveTrace
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.AutoResult
@@ -540,13 +541,14 @@ class MainState(
                 face,
                 exportMaxSide,
                 exportFormat.copy(hdr = hdrFor(photoIndex))
-            )
+            ).apply { trace = SaveTrace() }
             val out = withContext(Dispatchers.Default) {
                 job.run(exportSource(context, uri, hdrFor(photoIndex)), null)
             }
             if (out.reduced) reducedCount++
             val jpeg = out.jpeg
-            withContext(Dispatchers.IO) { save(jpeg) }
+            withContext(Dispatchers.IO) { job.trace?.stage("write") { save(jpeg) } }
+            job.trace?.finish()
         }
         exportProgress = 0
         failedIndices = result.failedIndices.map { only[it] }
@@ -563,11 +565,22 @@ class MainState(
         return { java.io.ByteArrayInputStream(bytes) }
     }
 
+    private var reportedFallback: String? = null
+
+    /** Jednorazowy wpis `backend_fallback` z powodem, gdy GPU podglądu zawiodło i liczy CPU. */
+    private fun reportFallback() {
+        val reason = graph.filmEngine.renderer.fallbackReason ?: return
+        if (reason == reportedFallback) return
+        reportedFallback = reason
+        updatePerfContext()
+        PerfLog.log("backend_fallback", 0, "reason=$reason")
+    }
+
     /** Kontekst wpisów „Logów czasów” (tylko gdy włączone – inaczej bez kosztu). */
     private fun updatePerfContext() {
         if (PerfLog.recorder == null) return
         PerfLog.context = PerfContext(
-            backend = graph.filmEngine.renderer.javaClass.simpleName,
+            backend = graph.filmEngine.renderer.activeBackend,
             width = sourceSize.first,
             height = sourceSize.second,
             hdr = hdrFromPhoto
@@ -595,6 +608,7 @@ class MainState(
         rendering = true
         try {
             withContext(Dispatchers.Default) { renderPreview(p) }
+            reportFallback()
             if (openStart != 0L) {
                 PerfLog.since("open_full_preview", openStart)
                 openStart = 0L
@@ -719,7 +733,7 @@ class MainState(
                 signatureTypeface(),
                 exportMaxSide,
                 exportFormat
-            )
+            ).apply { trace = SaveTrace() }
             val uri = uris.getOrNull(index)
             val open: (() -> java.io.InputStream)? = if (context != null &&
                 uri != null
@@ -729,7 +743,8 @@ class MainState(
                 null
             }
             val out = withContext(Dispatchers.Default) { job.run(open, p) }
-            withContext(Dispatchers.IO) { save(out.jpeg) }
+            withContext(Dispatchers.IO) { job.trace?.stage("write") { save(out.jpeg) } }
+            job.trace?.finish()
             markSaved()
             PerfLog.since("save_total", start)
             if (out.reduced) UiMessage.SavedReduced else UiMessage.Saved

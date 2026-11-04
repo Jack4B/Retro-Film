@@ -13,7 +13,9 @@ data class PerfEntry(
     val width: Int,
     val height: Int,
     val hdr: Boolean,
-    val device: String
+    val device: String,
+    /** Dodatkowe dane etapu, np. powód spadku backendu albo szczyt pamięci. */
+    val note: String = ""
 )
 
 /** Lokalny bufor kołowy ostatnich [capacity] pomiarów (tylko w pamięci; eksport ręczny do pliku CSV). */
@@ -43,7 +45,8 @@ class PerfRing(val capacity: Int = DEFAULT_CAPACITY) {
                     e.width.toString(),
                     e.height.toString(),
                     if (e.hdr) "on" else "off",
-                    e.device
+                    e.device,
+                    e.note
                 ).joinToString(",") { csv(it) }
             )
         }
@@ -57,7 +60,7 @@ class PerfRing(val capacity: Int = DEFAULT_CAPACITY) {
 
     companion object {
         const val DEFAULT_CAPACITY = 200
-        const val HEADER = "timestamp,stage,ms,backend,width,height,hdr,device"
+        const val HEADER = "timestamp,stage,ms,backend,width,height,hdr,device,note"
         private val TIME = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault())
     }
 }

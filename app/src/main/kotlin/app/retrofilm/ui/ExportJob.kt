@@ -11,6 +11,8 @@ import app.retrofilm.core.export.ExifData
 import app.retrofilm.core.export.ExifWriter
 import app.retrofilm.core.export.JpegExporter
 import app.retrofilm.core.export.JpegOptions
+import app.retrofilm.perf.SaveTrace
+import app.retrofilm.perf.SaveTrace.Companion.timed
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.ExportSource
@@ -55,17 +57,20 @@ internal class ExportJob(
     val maxSide: Int,
     val format: ExportFormat
 ) {
+    /** Etapy zapisu do logu czasów; null = bez wpisów (testy, miniatury). */
+    var trace: SaveTrace? = null
+
     /** [open] = plik źródłowy (pełna rozdzielczość); null = tylko [fallback] (np. testy bez pliku). */
     suspend fun run(open: (() -> InputStream)?, fallback: Bitmap?): ExportOutput {
         if (open == null) return ExportOutput(encode(checkNotNull(fallback), null), reduced = false)
         val gain = if (format.hdr && format.type == FileType.Jpeg &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
         ) {
-            UltraHdrExport.gainmapOf(open)
+            trace.timed("gainmap") { UltraHdrExport.gainmapOf(open) }
         } else {
             null
         }
-        return ExportSource.withFallback(open) { src ->
+        return ExportSource.withFallback(open, trace) { src ->
             val jpeg = encode(src.bitmap, src.exif, gain)
             src.bitmap.recycle()
             ExportOutput(jpeg, src.reduced)
@@ -73,14 +78,19 @@ internal class ExportJob(
     }
 
     suspend fun encode(source: Bitmap, exif: ExifData?, gain: Any? = null): ByteArray {
-        val cropped = GeometryApplier.apply(source, look.geometry)
-        val hdr = gain != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+        val cropped = trace.timed("crop") { GeometryApplier.apply(source, look.geometry) }
         // ramka przesuwa piksele, więc ułamki PNG 16 mają sens tylko bez niej (i bez zmiany rozmiaru, niżej)
         val frac = (format.type == FileType.Png16 && !frame.enabled).takeIf { it }?.let {
             ByteArray(cropped.width * cropped.height)
         }
-        val usedFrame = if (hdr) frame.copy(enabled = false) else frame
-        val faces = if (look.adjustments.usesSmartSharpen) FaceFinder.find(cropped) else emptyList()
+        val usedFrame = frameFor(gain)
+        val faces = if (look.adjustments.usesSmartSharpen) {
+            trace.timed("faces") {
+                FaceFinder.find(cropped)
+            }
+        } else {
+            emptyList()
+        }
         val rendered = ExportPipeline.render(
             cropped,
             look.lut,
@@ -91,15 +101,43 @@ internal class ExportJob(
             look.adjustments,
             faces,
             format.space,
-            frac
+            frac,
+            trace
         )
-        val out = ExportPipeline.resize(rendered, maxSide)
+        val out = trace.timed("resize") { ExportPipeline.resize(rendered, maxSide) }
         if (out !== rendered && rendered !== cropped && rendered !== source) rendered.recycle()
-        val special = special(out, if (out === rendered) frac else null, gain)
-        val bytes = special ?: ExportPipeline.encode(cropped, out, usedFrame, typeface, jpegOptions(exif, out))
+        val bytes = encodeFile(cropped, out, if (out === rendered) frac else null, exif, gain)
         if (out !== cropped && out !== source) out.recycle()
         if (cropped !== source) cropped.recycle()
         return bytes
+    }
+
+    private fun encodeFile(cropped: Bitmap, out: Bitmap, frac: ByteArray?, exif: ExifData?, gain: Any?): ByteArray {
+        val usedFrame = frameFor(gain)
+        val kind = formatName(gain)
+        val special = if (kind.startsWith("jpeg")) null else trace.timed("encode_$kind") { special(out, frac, gain) }
+        return special ?: run {
+            val options = trace.timed("exif_icc") { jpegOptions(exif, out) }
+            trace.timed("encode_$kind") { ExportPipeline.encode(cropped, out, usedFrame, typeface, options) }
+        }
+    }
+
+    /** Ultra HDR bez ramki (mapa wzmocnienia odpowiada pikselom zdjęcia). */
+    private fun frameFor(gain: Any?): FrameOptions = if (gain != null &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+    ) {
+        frame.copy(enabled = false)
+    } else {
+        frame
+    }
+
+    /** Nazwa formatu w logu czasów (`save_encode_<format>`). */
+    private fun formatName(gain: Any?): String = when {
+        format.type == FileType.Png16 -> "png16"
+        format.type == FileType.Heic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> "heic"
+        gain != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> "ultrahdr"
+        format.chroma444 -> "jpeg444"
+        else -> "jpeg420"
     }
 
     private fun jpegOptions(exif: ExifData?, out: Bitmap): JpegOptions {
