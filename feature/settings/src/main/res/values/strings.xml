@@ -3,8 +3,8 @@
     <string name="settings_back">Wstecz</string>
     <string name="settings_title">Ustawienia</string>
     <string name="settings_section_appearance">Wygląd</string>
-    <string name="settings_section_filters">Filtry</string>
-    <string name="settings_filters">Filtry</string>
+    <string name="settings_section_filters">Filmy</string>
+    <string name="settings_filters">Filmy: pobieranie i miejsce</string>
     <string name="settings_filters_subtitle">Pobieranie i usuwanie filtrów filmowych</string>
     <string name="settings_section_licenses">Licencje i autorzy</string>
     <string name="settings_section_privacy">Prywatność</string>
@@ -31,7 +31,7 @@
     <string name="license_sacramento_title">Font Sacramento</string>
 
     <string name="lut_back">Wstecz</string>
-    <string name="lut_title">Filtry (LUT)</string>
+    <string name="lut_title">Filmy: pobieranie i miejsce</string>
     <plurals name="lut_ready_count">
         <item quantity="one">%1$d z %2$d filmów gotowych</item>
         <item quantity="few">%1$d z %2$d filmów gotowych</item>

@@ -45,7 +45,7 @@
     <string name="editor_working">Przetwarzanie…</string>
     <string name="tab_film">Film</string>
     <string name="tab_adjust">Korekty</string>
-    <string name="tab_finish">Wykończenie</string>
+    <string name="tab_finish">Efekty</string>
     <string name="finish_reset">Wyzeruj wykończenie</string>
     <string name="exit_title">Zakończyć edycję?</string>
     <string name="exit_message">Zmiany nie zostały zapisane i zostaną utracone.</string>
@@ -270,4 +270,33 @@
     <!-- Zapis -->
     <string name="export_done">Zapisano w Pictures/RetroFilm</string>
     <string name="export_failed">Zapis nie powiódł się: %1$s</string>
+    <!-- Redesign: pasek edytora, seria, zapis, domyślne -->
+    <string name="editor_undo">Cofnij</string>
+    <string name="editor_redo">Ponów</string>
+    <string name="editor_before_cd">Pokaż oryginał (przed)</string>
+    <string name="editor_title_series">%1$d z %2$d</string>
+    <string name="series_scope_all">Cała seria</string>
+    <string name="series_scope_one">To zdjęcie</string>
+    <string name="series_scope_label">Zakres zmian</string>
+    <string name="series_thumb_cd">Zdjęcie %1$d z %2$d</string>
+    <string name="series_thumb_own_cd">Zdjęcie %1$d z %2$d, edytowane osobno</string>
+    <string name="series_scope_all_confirm_title">Ustawić dla całej serii?</string>
+    <string name="series_scope_all_confirm_text">Film, korekty, kadr i ramka tego zdjęcia trafią do wszystkich zdjęć. Osobne edycje pozostałych zdjęć zostaną zastąpione.</string>
+    <string name="save_sheet_title">Zapisz zdjęcie</string>
+    <string name="save_sheet_title_many">Zapisz serię (%1$d)</string>
+    <string name="save_sheet_where">JPEG · Pictures/RetroFilm</string>
+    <string name="save_sheet_size">Rozmiar</string>
+    <string name="save_sheet_go">Zapisz</string>
+    <string name="save_sheet_go_many">Zapisz wszystkie (%1$d)</string>
+    <string name="save_sheet_progress">Zapisywanie %1$d z %2$d…</string>
+    <string name="save_sheet_done">Zapisano: %1$d</string>
+    <string name="save_sheet_failed">Nie udało się: %1$d</string>
+    <string name="save_sheet_retry">Ponów nieudane (%1$d)</string>
+    <string name="save_sheet_share">Udostępnij</string>
+    <string name="save_sheet_share_chooser">Udostępnij zdjęcia</string>
+    <string name="save_sheet_as_default">Zapamiętaj jako domyślne</string>
+    <string name="save_sheet_as_default_hint">Jakość, rozmiar, ramka i podpis dla nowych zdjęć</string>
+    <string name="save_sheet_defaults_saved">Zapisano ustawienia domyślne</string>
+    <string name="save_sheet_reset_defaults">Przywróć fabryczne</string>
+    <string name="save_sheet_close">Gotowe</string>
 </resources>

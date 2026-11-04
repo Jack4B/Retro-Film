@@ -5,7 +5,7 @@ import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
 /** Wynik zapisu serii zdjęć: ile zapisano i ile się nie udało. */
-data class BatchResult(val saved: Int, val failed: Int)
+data class BatchResult(val saved: Int, val failed: Int, val failedIndices: List<Int> = emptyList())
 
 /**
  * Zapisuje kolejno [items] funkcją [one]. Błąd jednego zdjęcia nie przerywa serii; anulowanie – tak.
@@ -14,6 +14,7 @@ data class BatchResult(val saved: Int, val failed: Int)
 suspend fun <T> exportBatch(items: List<T>, onProgress: (Int) -> Unit = {}, one: suspend (T) -> Unit): BatchResult {
     var saved = 0
     var failed = 0
+    val failedAt = mutableListOf<Int>()
     items.forEachIndexed { index, item ->
         onProgress(index)
         try {
@@ -23,13 +24,17 @@ suspend fun <T> exportBatch(items: List<T>, onProgress: (Int) -> Unit = {}, one:
             throw e
         } catch (_: IOException) {
             failed++
+            failedAt += index
         } catch (_: IllegalStateException) {
             failed++
+            failedAt += index
         } catch (_: SecurityException) {
             failed++
+            failedAt += index
         } catch (_: SignatureTooLongException) {
             failed++
+            failedAt += index
         }
     }
-    return BatchResult(saved, failed)
+    return BatchResult(saved, failed, failedAt)
 }

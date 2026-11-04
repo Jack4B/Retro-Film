@@ -93,7 +93,7 @@ class UiScreenshotTest {
         shot("01-korekty")
         tab("Kadr", "02-kadr")
         tab("Film", "03-film")
-        tab("Wykończenie", "04-wykonczenie")
+        tab("Efekty", "04-efekty")
         tab("Ramka", "05-ramka")
     }
 
@@ -101,8 +101,8 @@ class UiScreenshotTest {
         assumeNotNull(out)
         editor(state(3))
         shot("10-seria-korekty")
-        compose.onNodeWithText("1/3 ▾").performClick()
-        shot("11-seria-menu-zdjec")
+        compose.onNodeWithText("To zdjęcie").performClick()
+        shot("11-seria-to-zdjecie")
     }
 
     @Test fun lightTheme() {
@@ -118,8 +118,6 @@ class UiScreenshotTest {
         s.setIndividual(true)
         editor(s)
         shot("30-osobna-edycja")
-        compose.onNodeWithText("✎ 1/3 ▾").performClick()
-        shot("31-osobna-edycja-menu")
     }
 
     @Test fun landscape() {

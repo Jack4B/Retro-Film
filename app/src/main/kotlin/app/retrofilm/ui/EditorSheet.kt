@@ -76,7 +76,8 @@ internal fun EditorSheet(
     tab: EditorTab,
     onTab: (EditorTab) -> Unit,
     control: SheetControl,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    header: @Composable () -> Unit = {}
 ) {
     val screen = LocalConfiguration.current.screenHeightDp
     val compact = if (tab == EditorTab.Film) FILM_COMPACT_FRACTION else COMPACT_FRACTION
@@ -105,6 +106,7 @@ internal fun EditorSheet(
     ) {
         Column(Modifier.animateContentSize()) {
             SheetHandle(control.mode, control.onMode)
+            header()
             if (control.mode != SheetMode.Collapsed) {
                 Column(Modifier.fillMaxWidth().heightIn(max = contentMax).verticalScroll(rememberScrollState())) {
                     TabContent(state, tab)
