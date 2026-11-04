@@ -36,9 +36,9 @@ jobs:
           disable-animations: true
           script: |
             mkdir -p out/emulator-perf
-            ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace || echo "FAILED" > out/emulator-perf/failed
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.perf.PerfTimingTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace || echo "FAILED" > out/emulator-perf/failed
             adb pull /sdcard/Android/data/app.retrofilm/files/perf/film-switch-perf.json out/emulator-perf/ || true
-            adb logcat -d -s FilmSwitchPerf TestRunner AndroidRuntime > out/emulator-perf/logcat.txt || true
+            adb logcat -d -s RetroPerf FilmSwitchPerf TestRunner AndroidRuntime > out/emulator-perf/logcat.txt || true
             test ! -f out/emulator-perf/failed
       - name: Upload results
         if: always()
