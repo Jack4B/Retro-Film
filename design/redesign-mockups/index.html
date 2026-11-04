@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro Film — makiety redesignu UX/UI</title>
+<style>
+:root{
+  --bg:#FBF8F3;--surface:#F3EDE4;--surface-hi:#EAE2D6;--card:#FFFFFF;
+  --text:#211B13;--text-2:#51473B;--primary:#8A5200;--on-primary:#FFFFFF;
+  --primary-cont:#FFDDB3;--on-primary-cont:#2D1600;--outline:#8C7F70;--line:#D8CEC0;
+  --error:#B3261E;--ok:#2E6B30;--edge:#E8590C;--edge-text:#5A2A00;
+  --photo:linear-gradient(160deg,#F6C177 0%,#E0805A 38%,#7A4E6E 70%,#2E3350 100%);
+  --r-s:8px;--r-m:14px;--r-l:22px;--tap:48px;
+  --f-ui:"Roboto","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-display:Georgia,"Times New Roman",serif;
+  --f-code:ui-monospace,"Roboto Mono","Courier New",monospace;
+  color-scheme:light;
+}
+[data-theme=dark]{
+  --bg:#0E0E10;--surface:#1A1A1E;--surface-hi:#26262C;--card:#202026;
+  --text:#F2F2F2;--text-2:#B4B4BC;--primary:#F5A33B;--on-primary:#1A1206;
+  --primary-cont:#3A2A12;--on-primary-cont:#FFDDB3;--outline:#8A8A92;--line:#3A3A42;
+  --error:#FF8A80;--ok:#8BD48E;--edge:#F5A33B;--edge-text:#F5A33B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 var(--f-ui)}
+body{overflow-x:hidden}
+a{color:var(--primary)}
+button{font:inherit;color:inherit}
+.page{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
+h1{font:700 clamp(26px,5vw,40px)/1.1 var(--f-display);margin:0}
+h2{font:700 24px/1.2 var(--f-display);margin:40px 0 4px}
+.lead{color:var(--text-2);max-width:70ch;margin:8px 0 0}
+.toggle{min-height:var(--tap);padding:0 18px;border-radius:999px;border:1px solid var(--outline);background:var(--surface);cursor:pointer}
+.toggle:focus-visible,.btn:focus-visible,.chip:focus-visible,.tool:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+.edge{font:600 12px/1 var(--f-code);letter-spacing:.12em;color:var(--edge-text);display:flex;gap:14px;flex-wrap:wrap;margin:14px 0 0}
+.pair{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;margin-top:16px}
+.col{flex:1 1 300px;min-width:0;max-width:380px}
+.col h3{font:600 14px/1.2 var(--f-code);letter-spacing:.08em;margin:0 0 8px;color:var(--text-2)}
+.col.new h3{color:var(--primary)}
+.notes{flex:1 1 260px;min-width:0;color:var(--text-2);font-size:15px}
+.notes li{margin:0 0 6px}
+.bad{color:var(--error);font-weight:600}
+/* Telefon */
+.phone{width:100%;max-width:360px;aspect-ratio:9/19.5;border-radius:34px;border:8px solid #111;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.sb{height:24px;flex:none;font:600 11px/24px var(--f-code);padding:0 16px;color:var(--text-2);display:flex;justify-content:space-between}
+.bar{display:flex;align-items:center;gap:4px;min-height:56px;padding:0 4px;flex:none}
+.bar .ttl{flex:1;font-weight:600;font-size:18px;padding:0 8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:var(--tap);height:var(--tap);border-radius:50%;display:grid;place-items:center;border:0;background:transparent;font-size:20px;flex:none}
+.body{flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;gap:12px;min-height:0}
+.btn{min-height:var(--tap);border-radius:999px;border:0;padding:0 18px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;white-space:nowrap}
+.btn.pri{background:var(--primary);color:var(--on-primary)}
+.btn.ton{background:var(--primary-cont);color:var(--on-primary-cont)}
+.btn.out{background:transparent;border:1px solid var(--outline)}
+.btn.txt{background:transparent;color:var(--primary);padding:0 10px}
+.btn.big{min-height:56px;width:100%;font-size:17px}
+.chips{display:flex;gap:8px;overflow:hidden;flex:none}
+.chip{min-height:36px;padding:0 12px;border-radius:var(--r-s);border:1px solid var(--outline);background:transparent;display:inline-flex;align-items:center;white-space:nowrap;font-size:14px;flex:none;position:relative}
+.chip::after{content:"";position:absolute;inset:-6px 0}/* strefa dotyku 48 */
+.chip.on{background:var(--primary-cont);color:var(--on-primary-cont);border-color:transparent;font-weight:600}
+.muted{color:var(--text-2);font-size:14px}
+.small{font-size:13px}
+.photo{background:var(--photo);border-radius:var(--r-s);position:relative;overflow:hidden}
+.photo::before{content:"";position:absolute;left:12%;right:12%;bottom:18%;height:28%;background:linear-gradient(transparent,rgba(20,15,30,.55));border-radius:50% 50% 0 0}
+.canvas{flex:1;min-height:0;display:grid;place-items:center;background:var(--surface);position:relative}
+.framed{background:#F7F1E6;padding:7% 7% 16%;width:78%;aspect-ratio:1;display:flex;flex-direction:column;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.framed .photo{flex:1;border-radius:2px}
+.sig{font:italic 20px/1 "Segoe Script","Bradley Hand","Comic Sans MS",cursive;color:#2B3A67;margin-top:8px;text-align:right}
+.badge{position:absolute;font:600 11px/1 var(--f-code);padding:6px 8px;border-radius:6px;background:rgba(0,0,0,.62);color:#fff;letter-spacing:.06em}
+.sheet{background:var(--surface);border-radius:var(--r-l) var(--r-l) 0 0;padding:8px 16px 0;flex:none;display:flex;flex-direction:column;gap:10px}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--outline);margin:0 auto}
+.sl{display:flex;flex-direction:column;gap:4px}
+.sl .row{display:flex;justify-content:space-between;font-size:14px}
+.sl .row b{color:var(--primary);font-family:var(--f-code)}
+.track{height:4px;border-radius:2px;background:var(--line);position:relative;margin:10px 0}
+.track i{position:absolute;left:0;top:0;bottom:0;background:var(--primary);border-radius:2px}
+.track i::after{content:"";position:absolute;right:-10px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--primary)}
+.track.c i{left:50%}
+.tabs{display:flex;border-top:1px solid var(--line);flex:none;background:var(--surface)}
+.tab{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;gap:2px;color:var(--text-2);border:0;background:transparent;min-width:0;padding:0 2px}
+.tab .ico{font-size:18px;line-height:1;width:56px;height:28px;display:grid;place-items:center;border-radius:14px}
+.tab.on{color:var(--text);font-weight:600}
+.tab.on .ico{background:var(--primary-cont);color:var(--on-primary-cont)}
+.tab.txtonly{font-size:13px}
+.strip{display:flex;gap:6px;overflow:hidden;padding:6px 12px;flex:none;align-items:center;background:var(--bg)}
+.th{width:44px;height:44px;flex:none;border-radius:6px;background:var(--photo);position:relative;border:2px solid transparent}
+.th.on{border-color:var(--primary)}
+.th.own::after{content:"✎";position:absolute;right:-4px;top:-6px;background:var(--primary);color:var(--on-primary);font-size:10px;border-radius:50%;width:16px;height:16px;display:grid;place-items:center}
+.th.add{background:transparent;border:1px dashed var(--outline);display:grid;place-items:center;color:var(--text-2)}
+.seg{display:flex;border:1px solid var(--outline);border-radius:999px;overflow:hidden;flex:none}
+.seg span{flex:1;min-height:40px;display:grid;place-items:center;font-size:13px;padding:0 10px;white-space:nowrap}
+.seg span.on{background:var(--primary-cont);color:var(--on-primary-cont);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{display:flex;flex-direction:column;gap:4px;font-size:12px;min-width:0}
+.tile .photo{aspect-ratio:1}
+.tile .photo .badge{right:4px;top:4px;padding:4px 5px;font-size:10px}
+.tile.on .photo{outline:3px solid var(--primary);outline-offset:-3px}
+.tile span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list{display:flex;flex-direction:column}
+.li{min-height:56px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);font-size:15px}
+.li .t{flex:1;min-width:0}
+.li .t small{display:block;color:var(--text-2);font-size:13px}
+.card{background:var(--card);border-radius:var(--r-m);padding:12px;border:1px solid var(--line)}
+.sect{font:600 12px/1 var(--f-code);letter-spacing:.1em;color:var(--text-2);margin-top:4px}
+.sw{width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--outline)}
+.sw.on{background:var(--primary)}.sw.on::after{left:21px;background:var(--on-primary)}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;justify-content:flex-end}
+.prog{height:6px;border-radius:3px;background:var(--line);overflow:hidden}.prog i{display:block;height:100%;background:var(--primary)}
+.sprocket{height:10px;flex:none;background:repeating-linear-gradient(90deg,transparent 0 6px,var(--line) 6px 14px);opacity:.9}
+/* Tablet / 1280 */
+.tablet{width:100%;border-radius:22px;border:8px solid #111;background:var(--bg);overflow:hidden;display:flex;min-height:520px;margin-top:16px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.rail{width:88px;flex:none;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0}
+.rail .tab{flex:none;width:80px;min-height:64px}
+.tcanvas{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface-hi)}
+.tpanel{width:340px;flex:none;background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.tcanvas .canvas{background:transparent}
+.tcanvas .framed{width:min(62%,420px)}
+@media (max-width:860px){.tablet{flex-wrap:wrap}.rail{width:100%;flex-direction:row;justify-content:space-around;order:3}.rail .tab{width:auto;flex:1}.tpanel{width:100%}.tcanvas{flex-basis:100%;min-height:320px}}
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tw{overflow-x:auto;max-width:100%}
+td,th{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+.sw-c{display:inline-block;width:18px;height:18px;border-radius:4px;border:1px solid var(--line);vertical-align:middle;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="top">
+  <div>
+    <h1>Retro Film — redesign UX/UI</h1>
+    <p class="lead">Makiety statyczne. Każda sekcja: <b>Obecnie</b> (odtworzone z kodu <code>main</code> @ cb0e3e9) i <b>Propozycja</b>. Kod aplikacji bez zmian.</p>
+    <div class="edge" aria-hidden="true"><span>▸ 1</span><span>RETRO FILM 400</span><span>▸ 1A</span><span>SAFETY FILM</span><span>▸ 2</span></div>
+  </div>
+  <button class="toggle" id="tt" type="button" aria-pressed="false">Motyw: jasny / ciemny</button>
+</header>
+
+<!-- 1. START -->
+<h2 id="start">1. Start</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecny ekran Start">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ttl">Retro Film</span><span class="ib">⚙</span></div>
+   <div class="body" style="justify-content:center">
+    <div style="font:500 30px/1.15 var(--f-ui)">Zdjęcia jak z kliszy.</div>
+    <div class="muted">Działa offline, bez konta. Lokalizacja jest usuwana z każdego zapisanego pliku.</div>
+    <button class="btn pri big">Wybierz zdjęcia</button>
+    <button class="btn out big">Z plików (inny folder)</button>
+    <button class="btn ton big">Pobierz więcej filmów</button>
+    <div class="muted">Zaznacz kilka zdjęć, a ten sam film i ramkę nałożysz na wszystkie naraz.</div>
+   </div>
+  </div>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA</h3>
+  <div class="phone" role="img" aria-label="Proponowany ekran Start">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ttl" style="font-family:var(--f-display);font-size:22px">Retro Film</span><span class="ib" title="Ustawienia">⚙</span></div>
+   <div class="sprocket"></div>
+   <div class="body" style="padding-top:12px">
+    <div style="font:700 28px/1.15 var(--f-display)">Zdjęcia jak z kliszy.</div>
+    <button class="btn pri big">＋ Wybierz zdjęcia</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><span class="muted small">Jedno lub do 30 naraz</span><button class="btn txt">Z plików…</button></div>
+    <div class="sect">OSTATNIO UŻYWANE FILMY</div>
+    <div class="grid">
+     <div class="tile"><div class="photo"></div><span>Portra 400</span></div>
+     <div class="tile"><div class="photo" style="filter:grayscale(1)"></div><span>Tri-X 400</span></div>
+     <div class="tile"><div class="photo" style="filter:saturate(1.6)"></div><span>Velvia 50</span></div>
+    </div>
+    <div class="sect">TWOJE PRESETY</div>
+    <div class="chips"><span class="chip">Lato '98</span><span class="chip">Portret ciepły</span><span class="chip">＋</span></div>
+    <div class="card small" style="display:flex;gap:10px;align-items:center"><span>☁</span><span style="flex:1">Masz 10 z 260 filmów. <a href="#lib">Biblioteka filmów</a></span></div>
+    <div class="muted small" style="margin-top:auto;padding-bottom:12px">🔒 Offline, bez konta, GPS usuwany przy zapisie.</div>
+   </div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> trzy przyciski o tej samej wadze — główna akcja nie dominuje; „Pobierz więcej filmów” konkuruje z wyborem zdjęć.</li>
+  <li>Brak „ciągłości”: ostatnie filmy i presety są tylko w głębi Edytora.</li>
+  <li><b>Zmiana:</b> jedna główna CTA, „Z plików” jako akcja tekstowa, skróty do ostatnich filmów/presetów (dotknięcie = wybór zdjęć z tym filmem), licznik pobranych filmów prowadzi do jednej Biblioteki.</li>
+ </ul>
+</div>
+
+<!-- 2. EDYTOR -->
+<h2 id="editor">2. Edytor — Korekty i seria</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecny Edytor">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="chip">✎ 2/5 ▾</span><span style="flex:1"></span><span class="chip">Przed</span><button class="btn pri" style="min-height:40px">Zapisz (5)</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div></div><span class="ib badge" style="top:8px;right:8px;width:auto;height:auto">ⓘ</span></div>
+   <div class="sheet">
+    <div class="handle"></div>
+    <div class="btn ton" style="min-height:40px;font-size:13px">Auto: popraw światło i kolor</div>
+    <div class="chips"><span class="chip on">Światło</span><span class="chip">Kolor</span><span class="chip">Kolory</span><span class="chip">Detal</span><span class="chip">Mas…</span></div>
+    <div class="sl"><div class="row"><span>Ekspozycja</span><b>0</b></div><div class="track c"><i style="width:0"></i></div></div>
+    <div class="sl"><div class="row"><span>Kontrast</span><b>0</b></div><div class="track c"><i style="width:0"></i></div></div>
+    <div class="tabs" style="margin:0 -16px"><span class="tab txtonly">Kadr</span><span class="tab txtonly on">Korekty</span><span class="tab txtonly">Film</span><span class="tab txtonly">Wykończenie</span><span class="tab txtonly">Ramka</span></div>
+   </div>
+  </div>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA</h3>
+  <div class="phone" role="img" aria-label="Proponowany Edytor">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib" title="Wróć">←</span><span class="ib" title="Cofnij">↶</span><span class="ib" title="Ponów">↷</span><span style="flex:1"></span><button class="btn pri">Zapisz 5</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div><div class="sig">Tatry '26</div></div>
+    <span class="badge" style="left:8px;top:8px">PORTRA 400 · 80%</span>
+    <span class="badge" style="right:8px;bottom:8px">PRZYTRZYMAJ = ORYGINAŁ</span></div>
+   <div class="strip"><div class="seg"><span class="on">Cała seria</span><span>To zdjęcie</span></div><div class="th"></div><div class="th on own"></div><div class="th"></div><div class="th"></div><div class="th add">＋</div></div>
+   <div class="sheet">
+    <div class="chips"><span class="chip on">☀ Światło</span><span class="chip">🎨 Kolor</span><span class="chip">HSL</span><span class="chip">Detal</span><span class="chip">◐ Maski</span></div>
+    <div style="display:flex;gap:8px"><button class="btn ton" style="flex:1">✦ Auto</button><button class="btn out" style="flex:1">Pod film</button></div>
+    <div class="sl"><div class="row"><span>Ekspozycja</span><b>+0,3</b></div><div class="track c"><i style="width:8%"></i></div></div>
+    <div class="sl"><div class="row"><span>Kontrast</span><b>−12</b></div><div class="track c"><i style="width:0;left:44%;right:50%"></i></div></div>
+   </div>
+   <div class="tabs"><span class="tab"><span class="ico">⛶</span>Kadr</span><span class="tab on"><span class="ico">☀</span>Korekty</span><span class="tab"><span class="ico">🎞</span>Film</span><span class="tab"><span class="ico">✧</span>Efekty</span><span class="tab"><span class="ico">▢</span>Ramka</span></div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> zakres edycji (seria / to zdjęcie) ukryty w rozwijanym „✎ 2/5 ▾” — kluczowa funkcja wyróżniająca jest niewidoczna; brak paska miniatur (jest tylko przesuwanie i menu).</li>
+  <li><span class="bad">Problem:</span> 5 zakładek tylko tekstowych o różnej szerokości (waga = długość słowa); „Wykończenie” jest długie, a w środku ukrywa Wyostrzanie, Tonowanie i Krzywe.</li>
+  <li><span class="bad">Problem:</span> brak cofnij/ponów i resetu pojedynczego suwaka; „Przed” to chip, a przytrzymanie podglądu nie jest nigdzie widoczne.</li>
+  <li><b>Zmiana:</b> pasek serii z segmentem „Cała seria | To zdjęcie” i ✎ na zdjęciach edytowanych osobno; dolna nawigacja z ikonami (5 pozycji, 56 dp); „Wykończenie” → „Efekty”; Auto/Pod film obok siebie; dwukrotne dotknięcie suwaka = reset; ↶↷ w pasku.</li>
+ </ul>
+</div>
+
+<!-- 3. FILM -->
+<h2 id="film">3. Edytor — Film</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecna zakładka Film">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="chip">1/5 ▾</span><span style="flex:1"></span><span class="chip">Przed</span><button class="btn pri" style="min-height:40px">Zapisz (5)</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div></div></div>
+   <div class="sheet">
+    <div class="handle"></div>
+    <div style="display:flex;align-items:center;gap:8px"><div style="flex:1"><b>Portra 400</b><div class="muted small">Negatyw nowoczesny</div></div><span class="ib">☆</span><span class="ib">▦</span></div>
+    <div class="chips"><span class="chip on">Wszystkie</span><span class="chip">Ulubione</span><span class="chip">Kodak</span><span class="chip">Fuji</span><span class="chip">Pola…</span></div>
+    <div class="chips"><div class="th"></div><div class="th on"></div><div class="th"></div><div class="th"></div><div class="th"></div><div class="th"></div></div>
+    <div class="sl"><div class="row"><span>Moc filmu</span><b>80%</b></div><div class="track"><i style="width:80%"></i></div></div>
+    <div class="muted small">Presety ＋</div>
+    <div class="tabs" style="margin:0 -16px"><span class="tab txtonly">Kadr</span><span class="tab txtonly">Korekty</span><span class="tab txtonly on">Film</span><span class="tab txtonly">Wykończenie</span><span class="tab txtonly">Ramka</span></div>
+   </div>
+  </div>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA</h3>
+  <div class="phone" role="img" aria-label="Proponowana zakładka Film">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ib">↶</span><span class="ib">↷</span><span style="flex:1"></span><button class="btn pri">Zapisz 5</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div></div><span class="badge" style="left:8px;top:8px">PORTRA 400 · 80%</span></div>
+   <div class="sheet">
+    <div class="chips"><span class="chip on">★ Ulubione</span><span class="chip">Presety</span><span class="chip">Negatyw</span><span class="chip">Slajd</span><span class="chip">Cz-b</span></div>
+    <div style="display:flex;gap:8px;overflow:hidden">
+     <div class="tile" style="width:64px;flex:none"><div class="photo" style="filter:none"></div><span>Brak</span></div>
+     <div class="tile on" style="width:64px;flex:none"><div class="photo"></div><span>Portra 400</span></div>
+     <div class="tile" style="width:64px;flex:none"><div class="photo" style="filter:hue-rotate(-20deg)"></div><span>Ektar 100</span></div>
+     <div class="tile" style="width:64px;flex:none"><div class="photo" style="filter:grayscale(1)"><span class="badge">↓</span></div><span>HP5</span></div>
+    </div>
+    <div class="sl"><div class="row"><span>Moc filmu</span><b>80%</b></div><div class="track"><i style="width:80%"></i></div></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap"><button class="btn txt">☆ Do ulubionych</button><button class="btn txt">Wszystkie 260 ›</button></div>
+   </div>
+   <div class="tabs"><span class="tab"><span class="ico">⛶</span>Kadr</span><span class="tab"><span class="ico">☀</span>Korekty</span><span class="tab on"><span class="ico">🎞</span>Film</span><span class="tab"><span class="ico">✧</span>Efekty</span><span class="tab"><span class="ico">▢</span>Ramka</span></div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> filtry według marek (Kodak/Fuji/…) i według kategorii (w Bibliotece) — dwa różne systemy kategorii; ikona „▦” do biblioteki bez etykiety; presety na dole, łatwe do przeoczenia.</li>
+  <li><b>Zmiana:</b> jedna taksonomia (kategorie wyglądu + Ulubione + Presety jako pierwsza „kategoria”), miniatury z nazwą na Twoim zdjęciu, ↓ = do pobrania (dotknięcie pobiera i wybiera), wyraźny link „Wszystkie 260 ›”.</li>
+ </ul>
+</div>
+
+<!-- 4. BIBLIOTEKA -->
+<h2 id="lib">4. Biblioteka filmów (jedna zamiast dwóch)</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE — USTAWIENIA › FILTRY (LUT)</h3>
+  <div class="phone" role="img" aria-label="Obecny ekran Filtry LUT">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ttl">Filtry (LUT)</span></div>
+   <div class="body">
+    <div class="card small">Pobrane filtry 42 MB · Pamięć podręczna 120 MB · Wolne miejsce 18 GB · Do pobrania: 360 MB</div>
+    <button class="btn pri">Pobierz wszystkie (~360 MB)</button>
+    <div class="li"><span class="t">Tylko przez Wi-Fi<small>Nie zużywa danych komórkowych</small></span><span class="sw on"></span></div>
+    <div class="muted small">Internet służy tylko do pobierania filtrów…</div>
+    <div class="sect">FILMY</div>
+    <div class="li"><span class="t">Portra 400<small>W aplikacji</small></span></div>
+    <div class="li"><span class="t">Gold 200<small>Do pobrania · 1,4 MB</small></span><span class="ib">↓</span></div>
+    <div class="li"><span class="t">Velvia 100<small>Pobieranie 40% · 1,4 MB</small></span></div>
+   </div>
+  </div>
+  <p class="muted small">Druga, osobna lista: „Filmy” z Edytora (siatka, szukaj, kategorie). Słowa: filtr / LUT / film.</p>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA — BIBLIOTEKA FILMÓW</h3>
+  <div class="phone" role="img" aria-label="Proponowana Biblioteka filmów">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ttl">Filmy</span><span class="ib" title="Pamięć i pobieranie">⋮</span></div>
+   <div class="body">
+    <div class="card" style="display:flex;align-items:center;gap:10px;padding:8px 12px"><span>🔍</span><span class="muted">Szukaj filmu</span></div>
+    <div class="chips"><span class="chip on">Wszystkie</span><span class="chip">★</span><span class="chip">Na telefonie</span><span class="chip">Negatyw</span><span class="chip">Slajd</span></div>
+    <div class="card small" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="flex:1;min-width:140px">250 filmów do pobrania · 360 MB · tylko Wi-Fi</span><button class="btn ton" style="min-height:40px">Pobierz</button></div>
+    <div class="sect">NEGATYW NOWOCZESNY · 38</div>
+    <div class="grid">
+     <div class="tile on"><div class="photo"></div><span>Portra 400</span></div>
+     <div class="tile"><div class="photo" style="filter:hue-rotate(-15deg)"><span class="badge">↓ 1,4</span></div><span>Portra 800</span></div>
+     <div class="tile"><div class="photo" style="filter:saturate(.7)"><span class="badge">40%</span></div><span>Fuji 400H</span></div>
+     <div class="tile"><div class="photo" style="filter:sepia(.4)"><span class="badge">↓ 1,4</span></div><span>Gold 200</span></div>
+     <div class="tile"><div class="photo" style="filter:contrast(1.2)"></div><span>Ektar 100</span></div>
+     <div class="tile"><div class="photo" style="filter:hue-rotate(10deg)"><span class="badge">↓ 1,4</span></div><span>Pro 160</span></div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> dwa ekrany robią to samo (pobieranie/wybór filmów) z innym układem i słownictwem; karta z 4 liczbami przed listą; zdanie o prywatności powtarzane.</li>
+  <li><b>Zmiana:</b> jedna Biblioteka „Filmy” otwierana z Edytora, Startu i Ustawień; pobieranie w kafelku; menu ⋮ → „Pamięć i pobieranie” (Wi-Fi, pamięć podręczna, wyczyść, licencje LUT).</li>
+ </ul>
+</div>
+
+<!-- 5. RAMKA -->
+<h2 id="frame">5. Edytor — Ramka i podpis</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecna zakładka Ramka">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="chip">1/5 ▾</span><span style="flex:1"></span><button class="btn pri" style="min-height:40px">Zapisz (5)</button></div>
+   <div class="canvas" style="flex:.7"><div class="framed" style="width:60%"><div class="photo"></div></div></div>
+   <div class="sheet" style="flex:1;overflow:hidden">
+    <div class="li"><span class="sw on"></span><span class="t">Ramka</span></div>
+    <div class="li"><span class="sw"></span><span class="t">Znak wodny: kod QR z linkiem do Retro-Film</span></div>
+    <div class="chips"><span class="chip on">1:1</span><span class="chip">4:5</span><span class="chip">Oryginał</span></div>
+    <div class="sl"><div class="row"><span>Grubość ramki: 8%</span></div><div class="track"><i style="width:30%"></i></div></div>
+    <div class="li"><span class="sw on"></span><span class="t">Podpis</span></div>
+    <div class="card small">Tekst podpisu … 9/40</div>
+   </div>
+  </div>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA</h3>
+  <div class="phone" role="img" aria-label="Proponowana zakładka Ramka">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ib">↶</span><span class="ib">↷</span><span style="flex:1"></span><button class="btn pri">Zapisz 5</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div><div class="sig">Tatry '26</div></div></div>
+   <div class="sheet">
+    <div class="chips"><span class="chip on">Styl</span><span class="chip">Podpis</span><span class="chip">Znak wodny</span></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+     <span class="th" style="background:#F7F1E6;border-color:var(--primary)" title="Kremowa"></span><span class="th" style="background:#fff;border-color:var(--line)" title="Biała"></span><span class="th" style="background:#111" title="Czarna"></span><span class="th" style="background:transparent;border:1px dashed var(--outline);display:grid;place-items:center;font-size:12px" title="Bez ramki">∅</span>
+    </div>
+    <div class="chips"><span class="chip on">1:1</span><span class="chip">4:5</span><span class="chip">Oryginał</span></div>
+    <div class="sl"><div class="row"><span>Grubość</span><b>8%</b></div><div class="track"><i style="width:30%"></i></div></div>
+    <div class="muted small">Ramka wspólna dla serii · podpis osobno dla każdego zdjęcia</div>
+   </div>
+   <div class="tabs"><span class="tab"><span class="ico">⛶</span>Kadr</span><span class="tab"><span class="ico">☀</span>Korekty</span><span class="tab"><span class="ico">🎞</span>Film</span><span class="tab"><span class="ico">✧</span>Efekty</span><span class="tab on"><span class="ico">▢</span>Ramka</span></div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> długa lista przełączników jeden pod drugim, podgląd maleje; „Ramka do wszystkich zdjęć” jest osobnym przełącznikiem zamiast wynikać z zakresu serii.</li>
+  <li><b>Zmiana:</b> podzakładki Styl / Podpis / Znak wodny; wybór koloru jako próbki (∅ = bez ramki, zastępuje przełącznik); zakres serii z paska serii; podpis z licznikiem i komunikatem „za długi” w podzakładce Podpis (font, kolor atramentu, wielkość).</li>
+ </ul>
+</div>
+
+<!-- 6. ZAPIS -->
+<h2 id="save">6. Zapis serii</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecny zapis">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="chip">Zapisywanie 3 z 5</span><span style="flex:1"></span><button class="btn pri" style="min-height:40px;opacity:.5">Zapisz (5)</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div></div></div>
+   <div class="body" style="flex:none;padding:12px 16px"><div class="card small">Zapisano zdjęcia: 4, nie udało się: 1</div></div>
+  </div>
+  <p class="muted small">Jakość JPEG i rozmiar są w panelu edytora (ExportSettingsUi), nie przy przycisku Zapisz.</p>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA — ARKUSZ „ZAPISZ”</h3>
+  <div class="phone" role="img" aria-label="Proponowany arkusz zapisu">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span style="flex:1"></span><button class="btn pri">Zapisz 5</button></div>
+   <div class="canvas"><div class="framed"><div class="photo"></div></div></div>
+   <div class="scrim"><div class="sheet" style="padding-bottom:16px">
+    <div class="handle"></div>
+    <div style="font:700 20px/1.2 var(--f-display)">Zapisz 5 zdjęć</div>
+    <div class="chips"><span class="chip on">Oryginalny rozmiar</span><span class="chip">2048 px</span><span class="chip">1080 px</span></div>
+    <div class="sl"><div class="row"><span>Jakość JPEG</span><b>92%</b></div><div class="track"><i style="width:92%"></i></div></div>
+    <div class="muted small">Pictures/RetroFilm · bez GPS</div>
+    <div class="prog" aria-label="3 z 5"><i style="width:60%"></i></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span class="small">3 z 5 · 1 błąd</span><button class="btn txt">Ponów nieudane</button></div>
+    <div style="display:flex;gap:8px"><button class="btn out" style="flex:1">Udostępnij</button><button class="btn pri" style="flex:1">Zapisz</button></div>
+   </div></div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> „Zapisz” działa od razu, bez potwierdzenia ustawień; postęp jest tylko w tytule, wynik tylko w snackbarze; nie ma „Ponów nieudane” ani udostępniania.</li>
+  <li><b>Zmiana:</b> arkusz z rozmiarem, jakością, miejscem zapisu, postępem „3 z 5”, „Ponów nieudane” i „Udostępnij”. Ostatnie ustawienia zapamiętane — przytrzymanie „Zapisz” = szybki zapis bez arkusza.</li>
+ </ul>
+</div>
+
+<!-- 7. USTAWIENIA -->
+<h2 id="settings">7. Ustawienia</h2>
+<div class="pair">
+ <div class="col"><h3>OBECNIE</h3>
+  <div class="phone" role="img" aria-label="Obecne Ustawienia">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ttl">Ustawienia</span></div>
+   <div class="body">
+    <div class="sect">WYGLĄD</div>
+    <div class="li"><span class="t">Motyw<small>Systemowy</small></span></div>
+    <div class="li"><span class="t">Dynamiczne kolory (Material You)<small>Kolory aplikacji dopasowane do tapety</small></span><span class="sw"></span></div>
+    <div class="sect">FILTRY</div>
+    <div class="li"><span class="t">Filtry<small>Pobieranie i usuwanie filtrów filmowych</small></span></div>
+    <div class="sect">LICENCJE I AUTORZY</div>
+    <div class="li"><span class="t">Film-Simulator</span></div><div class="li"><span class="t">Font Caveat</span></div>
+    <div class="sect">PRYWATNOŚĆ</div>
+   </div>
+  </div>
+ </div>
+ <div class="col new"><h3>PROPOZYCJA</h3>
+  <div class="phone" role="img" aria-label="Proponowane Ustawienia">
+   <div class="sb"><span>9:41</span><span>● ▲ ▮</span></div>
+   <div class="bar"><span class="ib">←</span><span class="ttl">Ustawienia</span></div>
+   <div class="body">
+    <div class="sect">WYGLĄD</div>
+    <div class="seg"><span>Systemowy</span><span class="on">Ciemny</span><span>Jasny</span></div>
+    <div class="li"><span class="t">Kolory z tapety<small>Wyłącz, aby zachować bursztynowy styl</small></span><span class="sw"></span></div>
+    <div class="sect">DOMYŚLNE</div>
+    <div class="li"><span class="t">Zapis<small>JPEG 92% · oryginalny rozmiar</small></span><span>›</span></div>
+    <div class="li"><span class="t">Ramka i podpis<small>Kremowa 1:1 · Caveat · grafit</small></span><span>›</span></div>
+    <div class="sect">FILMY</div>
+    <div class="li"><span class="t">Pamięć i pobieranie<small>42 MB · tylko Wi-Fi</small></span><span>›</span></div>
+    <div class="li"><span class="t">O aplikacji, licencje, prywatność<small>Wersja 1.1.0</small></span><span>›</span></div>
+   </div>
+  </div>
+ </div>
+ <ul class="notes">
+  <li><span class="bad">Problem:</span> brak ustawień domyślnych (ramka, podpis, jakość — obiecane w EKRANY.md §7); licencje rozwinięte wprost na głównym ekranie.</li>
+  <li><b>Zmiana:</b> motyw jako segment (1 dotknięcie), sekcja „Domyślne”, licencje i prywatność w „O aplikacji”.</li>
+ </ul>
+</div>
+
+<!-- 8. TABLET -->
+<h2 id="tablet">8. Edytor na szerokim ekranie (tablet / poziomo, ≥ 840 dp)</h2>
+<p class="lead">Wg compose-adaptive: <code>NavigationSuiteScaffold</code> → pasek nawigacji zamienia się w rail, panel narzędzi staje się stałym panelem bocznym (list-detail), seria jako pionowy pasek.</p>
+<div class="tablet" role="img" aria-label="Proponowany Edytor na tablecie">
+ <div class="rail"><span class="ib">←</span><span class="tab"><span class="ico">⛶</span>Kadr</span><span class="tab on"><span class="ico">☀</span>Korekty</span><span class="tab"><span class="ico">🎞</span>Film</span><span class="tab"><span class="ico">✧</span>Efekty</span><span class="tab"><span class="ico">▢</span>Ramka</span></div>
+ <div class="tcanvas">
+  <div class="bar"><span class="ib">↶</span><span class="ib">↷</span><span class="badge" style="position:static">PORTRA 400 · 80%</span><span style="flex:1"></span><span class="chip">Przed / po</span><button class="btn pri">Zapisz 5</button></div>
+  <div class="canvas"><div class="framed"><div class="photo"></div><div class="sig">Tatry '26</div></div></div>
+  <div class="strip" style="background:transparent;justify-content:center;flex-wrap:wrap"><div class="seg"><span class="on">Cała seria</span><span>To zdjęcie</span></div><div class="th"></div><div class="th on own"></div><div class="th"></div><div class="th"></div><div class="th"></div><div class="th add">＋</div></div>
+ </div>
+ <div class="tpanel">
+  <div style="font:700 20px/1.2 var(--f-display)">Korekty</div>
+  <div class="chips" style="flex-wrap:wrap"><span class="chip on">Światło</span><span class="chip">Kolor</span><span class="chip">HSL</span><span class="chip">Detal</span><span class="chip">Maski</span></div>
+  <div style="display:flex;gap:8px"><button class="btn ton" style="flex:1">✦ Auto</button><button class="btn out" style="flex:1">Pod film</button></div>
+  <div class="sl"><div class="row"><span>Ekspozycja</span><b>+0,3</b></div><div class="track c"><i style="width:8%"></i></div></div>
+  <div class="sl"><div class="row"><span>Kontrast</span><b>−12</b></div><div class="track c"><i style="width:0"></i></div></div>
+  <div class="sl"><div class="row"><span>Światła</span><b>−20</b></div><div class="track c"><i style="width:0"></i></div></div>
+  <div class="sl"><div class="row"><span>Cienie</span><b>+15</b></div><div class="track c"><i style="width:7%"></i></div></div>
+  <div class="sl"><div class="row"><span>Biele / Czernie</span><b>0 / 0</b></div><div class="track c"><i style="width:0"></i></div></div>
+  <button class="btn txt" style="align-self:flex-start">Wyzeruj korekty</button>
+ </div>
+</div>
+
+<!-- 9. MAPA I TOKENY -->
+<h2 id="map">9. Gdzie jest każda funkcja</h2>
+<div class="tw"><table>
+<tr><th>Funkcja</th><th>Obecnie</th><th>Propozycja</th></tr>
+<tr><td>Wybór zdjęć (Photo Picker, do 30) / z plików</td><td>Start, 2 równorzędne przyciski</td><td>Start: główna CTA + „Z plików…”</td></tr>
+<tr><td>Zakres: seria / to zdjęcie, „Zastosuj do wszystkich”</td><td>Menu w tytule „✎ 2/5 ▾”</td><td>Pasek serii w Edytorze (segment + ✎ na miniaturze, przytrzymanie miniatury = menu)</td></tr>
+<tr><td>Kadr, obrót, prostowanie, perspektywa</td><td>Zakładka Kadr</td><td>Kadr (bez zmian, ikony obrotu w rzędzie)</td></tr>
+<tr><td>Światło, Kolor, HSL, Detal, Maski, Auto, Pod film</td><td>Korekty</td><td>Korekty (Auto i Pod film obok siebie)</td></tr>
+<tr><td>Film, moc, ulubione, presety</td><td>Film + osobna Biblioteka</td><td>Film (Ulubione/Presety pierwsze) → „Wszystkie 260 ›”</td></tr>
+<tr><td>Klisza (blaknięcie, ziarno, winieta), Wyostrzanie, Tonowanie, Krzywe</td><td>Wykończenie</td><td>Efekty (podzakładki chipami)</td></tr>
+<tr><td>Ramka, proporcje, grubość, podpis, atrament, znak wodny QR</td><td>Ramka (lista przełączników)</td><td>Ramka: Styl / Podpis / Znak wodny</td></tr>
+<tr><td>Przed/po</td><td>Chip „Przed” + przytrzymanie</td><td>Przytrzymanie podglądu (podpowiedź na płótnie); tablet: przycisk</td></tr>
+<tr><td>Info o zdjęciu (rozmiar, film)</td><td>Przycisk ⓘ na płótnie</td><td>Etykieta „FILM · MOC” na płótnie, dotknięcie = szczegóły</td></tr>
+<tr><td>Cofnij / ponów</td><td>— (brak)</td><td>↶ ↷ w pasku</td></tr>
+<tr><td>Zapis, jakość, rozmiar, postęp, ponów</td><td>„Zapisz” od razu; jakość w panelu</td><td>Arkusz „Zapisz” (+ Udostępnij)</td></tr>
+<tr><td>Pobieranie filmów, Wi-Fi, pamięć podręczna</td><td>Ustawienia › Filtry (LUT)</td><td>Filmy › ⋮ Pamięć i pobieranie (też z Ustawień)</td></tr>
+<tr><td>Motyw, kolory dynamiczne, licencje</td><td>Ustawienia</td><td>Ustawienia (segment motywu, „O aplikacji”)</td></tr>
+</table></div>
+
+<h2 id="tokens">10. Tokeny</h2>
+<div class="tw"><table>
+<tr><th>Token</th><th>Jasny</th><th>Ciemny</th><th>Rola</th></tr>
+<tr><td>bg</td><td><span class="sw-c" style="background:#FBF8F3"></span>#FBF8F3</td><td><span class="sw-c" style="background:#0E0E10"></span>#0E0E10</td><td>tło (papier odbitki / ciemnia)</td></tr>
+<tr><td>surface</td><td><span class="sw-c" style="background:#F3EDE4"></span>#F3EDE4</td><td><span class="sw-c" style="background:#1A1A1E"></span>#1A1A1E</td><td>panele, arkusze</td></tr>
+<tr><td>text</td><td><span class="sw-c" style="background:#211B13"></span>#211B13 (15,9:1)</td><td><span class="sw-c" style="background:#F2F2F2"></span>#F2F2F2 (17:1)</td><td>tekst główny</td></tr>
+<tr><td>text-2</td><td><span class="sw-c" style="background:#51473B"></span>#51473B (8,6:1)</td><td><span class="sw-c" style="background:#B4B4BC"></span>#B4B4BC (8,7:1 na surface)</td><td>opisy</td></tr>
+<tr><td>primary</td><td><span class="sw-c" style="background:#8A5200"></span>#8A5200 (6,1:1)</td><td><span class="sw-c" style="background:#F5A33B"></span>#F5A33B (9,4:1)</td><td>bursztyn — CTA, wybór, wartości</td></tr>
+<tr><td>primary-cont</td><td><span class="sw-c" style="background:#FFDDB3"></span>#FFDDB3 / #2D1600</td><td><span class="sw-c" style="background:#3A2A12"></span>#3A2A12 / #FFDDB3</td><td>zaznaczone chipy i zakładki</td></tr>
+</table></div>
+<p class="lead">Typografia: nagłówki — szeryf (Georgia → w aplikacji np. „Fraunces”/„Young Serif”, OFL), UI — Roboto/systemowy, etykiety „kodu krawędzi kliszy” — monospace wersalikami (FILM · MOC). Cele dotyku ≥ 48 dp, siatka 4/8 dp, promienie 8/14/22.</p>
+</div>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search).get('theme');
+  var t=q|| (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  function set(v){document.documentElement.setAttribute('data-theme',v);document.getElementById('tt').setAttribute('aria-pressed',v==='dark');}
+  set(t);
+  document.getElementById('tt').addEventListener('click',function(){set(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');});
+})();
+</script>
+</body>
+</html>
