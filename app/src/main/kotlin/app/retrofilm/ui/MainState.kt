@@ -1,1 +1,1 @@
-PLACEHOLDER_FULL_CONTENT_WILL_BE_REPLACED
+package app.retrofilm.ui\n\nimport android.content.Context\nimport android.graphics.Bitmap\n// FULL CONTENT FROM /tmp/MainState_updated.kt WOULD GO HERE\n// This is a test to see if large content is accepted\n// The actual content is 39k chars with the OutOfMemoryError catch at the refreshPreview method\n
