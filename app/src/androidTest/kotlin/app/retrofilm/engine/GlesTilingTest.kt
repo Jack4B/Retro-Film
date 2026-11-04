@@ -37,7 +37,7 @@ class GlesTilingTest {
         val src = image(301, 203)
         val l = lut()
         val cpu = CpuLutEngine().apply(src, l, 0.8f)
-        for (engine in listOf(GlesLutEngine(tileLimit = 64), GlesLutEngine())) {
+        for (engine in listOf(GlesLutEngine(tileLimit = 64, dither = false), GlesLutEngine(dither = false))) {
             val gl = engine.apply(src, l, 0.8f)
             var diff = 0
             for (y in 0 until src.height) {

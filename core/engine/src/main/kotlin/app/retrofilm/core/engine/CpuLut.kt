@@ -26,12 +26,19 @@ object CpuLut {
             val g = (p shr SHIFT_G and BYTE_MASK) / MAX_BYTE
             val b = (p and BYTE_MASK) / MAX_BYTE
             sample(lut, r, g, b, rgb, interpolation)
-            val ro = toByte(r + (rgb[0] - r) * t)
-            val go = toByte(g + (rgb[1] - g) * t)
-            val bo = toByte(b + (rgb[2] - b) * t)
+            val ro = toByte(mixLinear(r, rgb[0], t))
+            val go = toByte(mixLinear(g, rgb[1], t))
+            val bo = toByte(mixLinear(b, rgb[2], t))
             out[i] = (p and ALPHA_MASK) or (ro shl SHIFT_R) or (go shl SHIFT_G) or bo
         }
         return out
+    }
+
+    /** Mieszanie siły LUT-a w świetle liniowym (jak shadery GPU); t = 1 → dokładnie wynik LUT-a. */
+    fun mixLinear(src: Float, graded: Float, t: Float): Float {
+        if (t >= 1f) return graded
+        val lin = Srgb.toLinear(src) + (Srgb.toLinear(graded.coerceIn(0f, 1f)) - Srgb.toLinear(src)) * t
+        return if (t <= 0f) src else Srgb.fromLinear(lin)
     }
 
     /** Próbkuje LUT wybraną interpolacją; wejście i wynik w zakresie 0..1. */

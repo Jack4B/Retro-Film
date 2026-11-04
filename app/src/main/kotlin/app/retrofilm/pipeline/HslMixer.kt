@@ -70,15 +70,25 @@ class HslMixer(adj: HslAdjust) {
         val chroma = sqrt(a * a + b * b)
         if (chroma < MIN_CHROMA) return
         val hue = OkLab.hueDegrees(a, b)
-        val idx = hue.toInt().coerceIn(0, DEGREES - 1)
-        if (hueShift[idx] == 0f && satScale[idx] == 0f && lumScale[idx] == 0f) return
+        // Interpolacja liniowa między sąsiednimi stopniami z zawinięciem 359 → 0 (bez skoku na czerwieni).
+        val i0 = floorMod(hue.toInt(), DEGREES)
+        val i1 = (i0 + 1) % DEGREES
+        val f = (hue - kotlin.math.floor(hue)).coerceIn(0f, 1f)
+        val shift = lerp(hueShift, i0, i1, f)
+        val sat = lerp(satScale, i0, i1, f)
+        val lumAdj = lerp(lumScale, i0, i1, f)
+        if (shift == 0f && sat == 0f && lumAdj == 0f) return
         val strength = minOf(1f, chroma / CHROMA_FULL)
-        val h2 = Math.toRadians((hue + hueShift[idx] * strength).toDouble())
-        val c2 = chroma * (1f + satScale[idx] * strength).coerceAtLeast(0f)
-        val lum = lumScale[idx] * LUM_GAIN * strength
+        val h2 = Math.toRadians((hue + shift * strength).toDouble())
+        val c2 = chroma * (1f + sat * strength).coerceAtLeast(0f)
+        val lum = lumAdj * LUM_GAIN * strength
         val l2 = (if (lum >= 0f) l + lum * (1f - l) else l * (1f + lum)).coerceIn(0f, 1f)
         ok.toRgb(l2, c2 * cos(h2).toFloat(), c2 * sin(h2).toFloat(), rgb)
     }
+
+    private fun lerp(t: FloatArray, i0: Int, i1: Int, f: Float) = t[i0] + (t[i1] - t[i0]) * f
+
+    private fun floorMod(a: Int, n: Int) = ((a % n) + n) % n
 
     private fun circular(a: Int, b: Int): Float {
         val d = abs(a - b) % DEGREES
