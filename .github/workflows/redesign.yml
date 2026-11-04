@@ -75,7 +75,7 @@ jobs:
           ram-size: 2048M
           cores: 2
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.ui.RedesignEditorTest --stacktrace
+          script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.ui.RedesignEditorTest,app.retrofilm.engine.GlesTilingTest --stacktrace
       - name: Upload emulator reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
