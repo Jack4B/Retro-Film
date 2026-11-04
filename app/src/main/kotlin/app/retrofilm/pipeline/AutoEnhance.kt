@@ -145,7 +145,8 @@ object AutoEnhance {
         val out = FloatArray(3 * gw * gh)
         val clipped = BooleanArray(gw * gh)
         val clip = (CLIP_LEVEL * 255f).toInt()
-        for (gy in 0 until gh) {
+        // wiersze siatki równolegle (I: auto_suggest ≤ 30 ms na telefonie); każdy wiersz pisze rozłączny fragment
+        Parallel.forEach(gh) { gy ->
             for (gx in 0 until gw) {
                 val i = gy * gw + gx
                 clipped[i] = blockMean(px, w, h, gx * step, gy * step, step, clip, out, 3 * i)

@@ -18,7 +18,9 @@ internal class StripPlans(
     val longSide: Int,
     val debandRadius: Int = 0,
     /** Zapas wierszy samego wyostrzania (część [halo]); jasność do wyostrzania tylko z rdzenia ± tego zapasu. */
-    val sharpMargin: Int = 0
+    val sharpMargin: Int = 0,
+    /** Mapa poświaty halacji (I); null = bez halacji. */
+    val halation: Halation.Map? = null
 )
 
 /**
@@ -232,7 +234,7 @@ internal class StripWorker(
             filmAndFinish(count, a, t.y0, t.y1)
         } else {
             if (adj.hasDetail) sharpen(count, a, core, coreCount, adj)
-            processor.effectsPlanes(planes, core, coreCount, span(t.y0))
+            processor.effectsPlanes(planes, core, coreCount, span(t.y0), plans.halation)
             io.stage?.apply(planes, core, coreCount)
         }
         val fracOut = io.fracOut
@@ -256,7 +258,7 @@ internal class StripWorker(
         io.stage?.apply(planes, 0, count)
         if (!finish.isNeutral) finisher.processPlanes(planes, count, span(a), null)
         if (finish.hasDetail) sharpen(count, a, core, coreCount, finish)
-        finisher.effectsPlanes(planes, core, coreCount, span(y0))
+        finisher.effectsPlanes(planes, core, coreCount, span(y0), plans.halation)
     }
 
     /**

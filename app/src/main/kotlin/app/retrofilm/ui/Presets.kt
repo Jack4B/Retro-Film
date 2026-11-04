@@ -52,7 +52,7 @@ object PresetCodec {
             "toneInversion" to a.toneInversion, "highlights" to a.highlights,
             "shadows" to a.shadows, "whites" to a.whites, "blacks" to a.blacks, "texture" to a.texture,
             "fade" to a.fade, "grain" to a.grain, "grainSize" to a.grainSize,
-            "vignette" to a.vignette,
+            "vignette" to a.vignette, "halation" to a.halation,
             "sharpness" to a.sharpness, "sharpRadius" to a.sharpRadius, "sharpDetail" to a.sharpDetail,
             "sharpMasking" to a.sharpMasking, "clarity" to a.clarity, "dehaze" to a.dehaze, "denoise" to a.denoise,
             "lumaDenoise" to a.lumaDenoise, "chromaEdges" to a.chromaEdges,
@@ -130,7 +130,11 @@ object PresetCodec {
             grain = f(
                 "grain"
             ),
-            grainSize = f("grainSize", Adjustments.DEFAULT_GRAIN_SIZE), vignette = f("vignette"),
+            grainSize = f(
+                "grainSize",
+                Adjustments.DEFAULT_GRAIN_SIZE
+            ),
+            vignette = f("vignette"), halation = f("halation"),
             sharpness = f("sharpness"), sharpRadius = f("sharpRadius", SharpenParams.DEFAULT_RADIUS),
             sharpDetail = f("sharpDetail", SharpenParams.DEFAULT_DETAIL), sharpMasking = f("sharpMasking"),
             sharpMode = SharpenMode.entries.firstOrNull { it.name == o.optString("sharpMode") } ?: SharpenMode.Standard,

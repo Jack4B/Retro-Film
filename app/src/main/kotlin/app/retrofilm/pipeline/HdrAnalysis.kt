@@ -1,5 +1,7 @@
 package app.retrofilm.pipeline
 
+import kotlin.math.pow
+
 /**
  * Informacje o zapasie jasności spoza pikseli SDR, dla automatycznej korekty ([AutoContext]), w pełni offline:
  * - Ultra HDR JPEG: `hdrgm:HDRCapacityMax` (albo `GainMapMax`) z XMP gain mapy – ile EV ponad biel SDR zapisano
@@ -35,6 +37,33 @@ object HdrAnalysis {
             .mapNotNull { m -> (m.groupValues[1].ifEmpty { m.groupValues[2] }).toFloatOrNull() }
             .maxOrNull()?.coerceIn(0f, MAX_HEADROOM_EV) ?: 0f
     }
+
+    /**
+     * Zapas HDR (EV) zmierzony z samej gain mapy (I): 99. percentyl wzmocnienia log2 = lerp(min, max, g^(1/γ))
+     * zakodowanych wartości [encoded] (0..255). Metadane HDRCapacityMax mówią o możliwościach, nie o treści
+     * zdjęcia – scena bez jasnych świateł ma mapę bliską zera i nie powinna dostać zapasu „na kolano”.
+     */
+    fun measuredHeadroom(encoded: IntArray, minLog2: Float, maxLog2: Float, gamma: Float): Float {
+        if (encoded.isEmpty()) return 0f
+        val hist = IntArray(BYTE_LEVELS)
+        for (v in encoded) hist[v.coerceIn(0, BYTE_LEVELS - 1)]++
+        val limit = (encoded.size * P99).toInt()
+        var acc = 0
+        var level = BYTE_LEVELS - 1
+        for (i in 0 until BYTE_LEVELS) {
+            acc += hist[i]
+            if (acc > limit) {
+                level = i
+                break
+            }
+        }
+        val g = (level / (BYTE_LEVELS - 1f)).pow(1f / gamma.coerceAtLeast(MIN_GAMMA))
+        return (minLog2 + (maxLog2 - minLog2) * g).coerceIn(0f, MAX_HEADROOM_EV)
+    }
+
+    private const val BYTE_LEVELS = 256
+    private const val P99 = 0.99f
+    private const val MIN_GAMMA = 0.01f
 
     /** BaselineExposure z IFD0 pliku TIFF/DNG albo null. */
     fun baselineExposure(b: ByteArray): Float? {

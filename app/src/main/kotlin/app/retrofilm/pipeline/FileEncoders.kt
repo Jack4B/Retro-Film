@@ -109,6 +109,34 @@ object UltraHdrExport {
         return copy(gain, oriented)
     }
 
+    /** Zapas HDR zmierzony z gain mapy źródła ([HdrAnalysis.measuredHeadroom]), najwyżej [capacity]; null = brak. */
+    fun measuredHeadroom(open: () -> InputStream, capacity: Float): Float? {
+        val opts = BitmapFactory.Options().apply { inSampleSize = HEADROOM_SAMPLE }
+        val base = open().use { BitmapFactory.decodeStream(it, null, opts) }
+        val gain = base?.gainmap
+        base?.recycle()
+        return gain?.let { headroomOf(it, capacity) }
+    }
+
+    private fun headroomOf(gain: Gainmap, capacity: Float): Float {
+        val c = gain.gainmapContents
+        val px = IntArray(c.width * c.height)
+        c.getPixels(px, 0, c.width, 0, 0, c.width, c.height)
+        // kanał zielony (albo alfa w mapie jednokanałowej ALPHA_8)
+        val shift = if (c.config == Bitmap.Config.ALPHA_8) ALPHA_SHIFT else GREEN_SHIFT
+        val enc = IntArray(px.size) { (px[it] ushr shift) and BYTE_MASK }
+        val measured = HdrAnalysis.measuredHeadroom(enc, log2(gain.ratioMin[1]), log2(gain.ratioMax[1]), gain.gamma[1])
+        return if (capacity > 0f) minOf(capacity, measured) else measured
+    }
+
+    private fun log2(v: Float) = kotlin.math.ln(v.coerceAtLeast(MIN_RATIO)) / kotlin.math.ln(2f)
+
+    private const val ALPHA_SHIFT = 24
+    private const val GREEN_SHIFT = 8
+    private const val BYTE_MASK = 0xFF
+    private const val MIN_RATIO = 1e-6f
+    private const val HEADROOM_SAMPLE = 16
+
     /** JPEG/R: [out] (wynik potoku) + [gain] po [geometry], w rozdzielczości 1/4 wyniku (jak typowy JPEG/R). */
     fun encode(out: Bitmap, gain: Gainmap, geometry: Geometry, quality: Int): ByteArray {
         val cropped = GeometryApplier.apply(gain.gainmapContents, geometry)
