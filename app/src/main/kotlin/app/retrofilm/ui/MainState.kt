@@ -53,6 +53,8 @@ import java.io.InputStream
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
@@ -468,6 +470,16 @@ class MainState(
         return FrameRenderer.status(frame, w, h, signatureTypeface())
     }
 
+    /** Zmierzony zapas HDR w EV: z treści gain mapy (I) albo z dekodu F16 DNG (J); null = prior z nagłówka. */
+    private fun measureHeadroom(bytes: ByteArray): Float? = when {
+        photoHasGainMap && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ->
+            UltraHdrExport.measuredHeadroom({ java.io.ByteArrayInputStream(bytes) }, hdrInfo.headroomEv)
+
+        HdrAnalysis.isTiff(bytes) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> RawLoader.analyseHeadroom(bytes)
+
+        else -> null
+    }
+
     /** Wymiary oryginału dla [p] (gdy nieznane: wymiary bitmapy). */
     fun sourceOf(p: Bitmap): Pair<Int, Int> = sourceSize.takeIf { it.first > 0 } ?: (p.width to p.height)
 
@@ -483,16 +495,10 @@ class MainState(
             }
             photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
             hdrInfo = HdrAnalysis.of(bytes)
-            if (photoHasGainMap && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                // I: zapas z rzeczywistej treści gain mapy (mocno pomniejszony dekod), nie tylko z XMP
-                val raw = { java.io.ByteArrayInputStream(bytes) }
-                runCatching { withContext(Dispatchers.IO) { UltraHdrExport.measuredHeadroom(raw, hdrInfo.headroomEv) } }
-                    .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
-            }
-            if (HdrAnalysis.isTiff(bytes) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                // J: DNG – zapas HDR z pomniejszonego dekodu F16 (po BaselineExposure), nie tylko prior z nagłówka
-                runCatching { withContext(Dispatchers.Default) { RawLoader.analyseHeadroom(bytes) } }
-                    .getOrNull()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
+            // J: pomiar zapasu HDR (gain mapa / DNG F16) równolegle z dekodowaniem podglądu, nie przed nim – w I
+            // dokładał się szeregowo do open_first_preview i open_full_preview (230 → 302 ms w CI).
+            val headroom = CoroutineScope(currentCoroutineContext()).async(Dispatchers.Default) {
+                runCatching { measureHeadroom(bytes) }.getOrNull()
             }
             // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
             // HDR wpływa tylko na zapis, więc nie wymaga ponownego dekodowania.
@@ -515,6 +521,7 @@ class MainState(
             updatePerfContext()
             photo = loaded.bitmap
             before = null
+            headroom.await()?.let { hdrInfo = hdrInfo.copy(headroomEv = it) }
             thumbnails.switchTo(uri)
             null
         } catch (_: IOException) {
