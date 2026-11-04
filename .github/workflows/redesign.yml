@@ -75,7 +75,16 @@ jobs:
           ram-size: 2048M
           cores: 2
           disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.ui.RedesignEditorTest --stacktrace
+          script: |
+            ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.ui.RedesignEditorTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace
+            adb shell am instrument -w -e class app.retrofilm.engine.GlesTilingTest,app.retrofilm.perf.PerfTimingTest app.retrofilm.test/androidx.test.runner.AndroidJUnitRunner | tee app/build/instrument.txt
+            adb logcat -d -s RetroPerf:I > app/build/perf.txt || true
+            grep -q '^OK (' app/build/instrument.txt
+      - name: Perf timings
+        if: always()
+        run: |
+          echo '### RetroPerf (emulator, debug)' >> "$GITHUB_STEP_SUMMARY"
+          grep -o '[a-z_0-9]*=[0-9]* ms' app/build/perf.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
       - name: Upload emulator reports
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -84,4 +93,6 @@ jobs:
           path: |
             app/build/reports/androidTests/
             app/build/outputs/androidTest-results/
+            app/build/perf.txt
+            app/build/instrument.txt
           retention-days: 14

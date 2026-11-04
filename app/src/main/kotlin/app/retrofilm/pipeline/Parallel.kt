@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger
 internal object Parallel {
     private const val MAX_WORKERS = 4
     private const val CHUNK = 1 shl 18
+    internal const val REDUCE_GROUPS = 8
 
     val workers: Int = Runtime.getRuntime().availableProcessors().coerceIn(1, MAX_WORKERS)
 
@@ -72,6 +73,26 @@ internal object Parallel {
         null
     } catch (e: ExecutionException) {
         e.cause ?: e
+    }
+
+    /**
+     * Redukcja deterministyczna: kawałki 0 until [count] dzielone są na stałe grupy ([REDUCE_GROUPS], niezależnie od
+     * liczby wątków i harmonogramu), każda grupa ma własny akumulator z [newAcc] i przetwarza swoje kawałki po kolei,
+     * a akumulatory łączone są przez [merge] w kolejności grup. Dzięki temu suma zmiennoprzecinkowa jest bit w bit
+     * taka sama przy każdym uruchomieniu i na każdym telefonie (dynamiczne [forEach] z akumulatorem na wątek dawało
+     * różny skład sum).
+     */
+    fun <A> reduce(count: Int, newAcc: () -> A, merge: (into: A, other: A) -> Unit, body: (A, Int) -> Unit): A {
+        val groups = minOf(REDUCE_GROUPS, count).coerceAtLeast(1)
+        val accs = List(groups) { newAcc() }
+        forEach(groups) { g ->
+            val from = g * count / groups
+            val to = (g + 1) * count / groups
+            for (i in from until to) body(accs[g], i)
+        }
+        val first = accs[0]
+        for (g in 1 until groups) merge(first, accs[g])
+        return first
     }
 
     /** Dzieli indeksy 0 until [count] na zakresy po [CHUNK] elementów i wywołuje [body] z zakresem [from, to). */

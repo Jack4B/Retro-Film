@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 
 private const val MAX_PICKED = 30
 private const val HISTORY_DEBOUNCE_MS = 400L
+private const val PREVIEW_CONFLATE_MS = 16L
 
 /**
  * Korzeń ścieżki: Start (przyciski: galeria albo pliki; wybór zdjęć nie otwiera się sam) → Edytor → zapis jednym
@@ -65,6 +66,8 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
         state.previewDetail,
         state.geometry
     ) {
+        // latest-wins: kolejne zmiany (suwak) w oknie klatki anulują wcześniejszy render jeszcze przed startem
+        delay(PREVIEW_CONFLATE_MS)
         state.refreshPreview()
     }
     // Cofnij/Ponów: stan trafia do historii po krótkiej przerwie, więc przeciągnięcie suwaka to jeden krok

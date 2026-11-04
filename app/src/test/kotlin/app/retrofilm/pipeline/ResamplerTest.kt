@@ -1,9 +1,16 @@
 package app.retrofilm.pipeline
 
+import android.graphics.Bitmap
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
 class ResamplerTest {
     private fun gray(v: Int) = (0xFF shl 24) or (v shl 16) or (v shl 8) or v
 
@@ -26,9 +33,17 @@ class ResamplerTest {
 
     @Test fun checkerboardAveragesToMidGrayWhenHalved() {
         val src = IntArray(64 * 64) { gray(if ((it % 64 + it / 64) % 2 == 0) 0 else 255) }
-        val out = Resampler.resize(src, 64, 64, 32, 32)
+        val out = Resampler.resizeEncoded(src, 64, 64, 32, 32)
         val inner = (4 until 28).flatMap { y -> (4 until 28).map { x -> red(out[y * 32 + x]) } }
         assertTrue("szachownica bez aliasingu → szarość", inner.all { it in 118..137 })
+    }
+
+    @Test fun checkerboardAveragesToLinearMidGrayInLinearLight() {
+        val src = IntArray(64 * 64) { gray(if ((it % 64 + it / 64) % 2 == 0) 0 else 255) }
+        val out = Resampler.resize(src, 64, 64, 32, 32)
+        val inner = (4 until 28).flatMap { y -> (4 until 28).map { x -> red(out[y * 32 + x]) } }
+        // 50% światła liniowego = 188 w sRGB (uśrednianie w gammie przyciemniało do 128)
+        assertTrue("światło liniowe: ${inner.minOrNull()}..${inner.maxOrNull()}", inner.all { it in 180..196 })
     }
 
     @Test fun linearRampIsPreservedWhenDownscaled() {
@@ -47,5 +62,29 @@ class ResamplerTest {
         assertTrue(out.all { red(it) in 0..255 })
         val transition = (12 until 18).count { red(out[it]) in 40..210 }
         assertTrue("przejście zajmuje najwyżej 2 piksele", transition <= 2)
+    }
+
+    @Test fun everyLevelSurvivesLinearRoundTrip() {
+        val src = IntArray(256 * 2) { gray(it % 256) }
+        val out = Resampler.resize(src, 256, 2, 256, 1)
+        for (v in 0..255) assertEquals("poziom $v", v, red(out[v]))
+    }
+
+    @Test fun bitmapPathMatchesArrayPath() {
+        val w = 300
+        val h = 257
+        val px = IntArray(w * h) { (0xFF shl 24) or ((it * 2654435761L).toInt() and 0xFFFFFF) }
+        val bmp = Bitmap.createBitmap(px, w, h, Bitmap.Config.ARGB_8888)
+        val a = Resampler.resize(px, w, h, 97, 83)
+        val b = Resampler.resize(bmp, 97, 83)
+        assertArrayEquals(a, b)
+        assertArrayEquals(a, Resampler.resize(px, w, h, 97, 83))
+    }
+
+    @Test fun workingSetIsFarBelowFullCopy() {
+        // 50 MP (8160×6120) → 2048 px: dawniej kopia źródła 200 MB + bufor dw×sh 50 MB
+        val perWorker = Resampler.bandBytes(8160, 6120, 2048, 1536)
+        val old = 8160L * 6120 * 4 + 2048L * 6120 * 4
+        assertTrue("pas $perWorker B", perWorker * 4 < old / 5)
     }
 }
