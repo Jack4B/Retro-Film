@@ -46,6 +46,7 @@ internal object Cat {
 
     /** Luminancja Rec.709 liniowego sRGB. */
     fun luma(rgb: DoubleArray): Double = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+    fun luma(r: Double, g: Double, b: Double): Double = 0.2126 * r + 0.7152 * g + 0.0722 * b
 
     private fun xyz(xy: Pair<Double, Double>) = doubleArrayOf(
         xy.first / xy.second,

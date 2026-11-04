@@ -78,7 +78,7 @@ data class AutoContext(
  */
 @Suppress("MagicNumber") // progi i współczynniki heurystyki (opisane powyżej) są danymi, nie „magicznymi liczbami”
 object AutoEnhance {
-    private const val SAMPLE_SIDE = 256
+    private const val SAMPLE_SIDE = 128
     private const val TARGET_SKIN = 0.30f
     private const val EXPOSURE_LIMIT = 2f
     private const val KNEE_HEADROOM_EV = 0.68f

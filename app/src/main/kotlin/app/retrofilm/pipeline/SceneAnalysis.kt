@@ -79,8 +79,8 @@ object SceneAnalyzer {
     private const val COLOR_SKIN_MAX = 0.6f
 
     fun analyze(s: Sample, faces: List<FaceBox> = emptyList()): SceneAnalysis {
-        val colors = oklab(s)
-        val hue = hues(s)
+        val hue = FloatArray(s.count)
+        val colors = oklab(s, hue)
         val n = s.count
         val skin = BooleanArray(n)
         val sky = BooleanArray(n)
@@ -118,8 +118,14 @@ object SceneAnalyzer {
         else -> AutoScene.General
     }
 
-    /** Jasność i chroma OKLab każdej próbki. */
-    private fun oklab(s: Sample): SceneColors {
+    /** Dominacja barwy samej próbki (bez masek) – jedno przejście OKLab. */
+    fun dominanceOf(s: Sample): Float {
+        val hue = FloatArray(s.count)
+        return dominance(oklab(s, hue).chroma, hue)
+    }
+
+    /** Jasność i chroma OKLab każdej próbki; kąt barwy (stopnie) trafia do [hue]. */
+    private fun oklab(s: Sample, hue: FloatArray): SceneColors {
         val lab = OkLab()
         val rgb = FloatArray(3)
         val light = FloatArray(s.count)
@@ -129,19 +135,9 @@ object SceneAnalyzer {
             lab.fromRgb(rgb)
             light[i] = lab.lab[0]
             chroma[i] = hypot(lab.lab[1], lab.lab[2])
+            hue[i] = OkLab.hueDegrees(lab.lab[1], lab.lab[2])
         }
         return SceneColors(chroma, light)
-    }
-
-    /** Kąt barwy OKLab (stopnie) każdej próbki. */
-    private fun hues(s: Sample): FloatArray {
-        val lab = OkLab()
-        val rgb = FloatArray(3)
-        return FloatArray(s.count) { i ->
-            for (k in 0..2) rgb[k] = AdjustmentProcessor.linearToSrgb(s.rgb[3 * i + k].coerceIn(0f, 1f))
-            lab.fromRgb(rgb)
-            OkLab.hueDegrees(lab.lab[1], lab.lab[2])
-        }
     }
 
     private fun isSkin(l: Float, c: Float, h: Float): Boolean =

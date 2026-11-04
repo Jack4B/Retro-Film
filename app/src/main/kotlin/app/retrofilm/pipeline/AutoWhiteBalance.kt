@@ -56,7 +56,7 @@ internal object AutoWhiteBalance {
         repeat(REFINE_PASSES) { est = combined(s, nearGrey(s, open, est.first)) ?: est }
         val (e, conf) = est
         // Dominującą barwę oceniamy po usunięciu oświetlenia: zabarwienie od światła to nie barwa sceny.
-        val dominance = SceneAnalyzer.analyze(divided(s, e), emptyList()).dominance
+        val dominance = SceneAnalyzer.dominanceOf(divided(s, e))
         val dominanceFactor = if (dominance <= DOMINANT) 1.0 else maxOf(0.2, 1.0 - (dominance - DOMINANT) * 1.6)
         val usable = if (scene.usableRatio >= MIN_USABLE) 1.0 else 0.4
         val strength = dominanceFactor * usable * (0.5 + 0.5 * conf)
@@ -77,9 +77,9 @@ internal object AutoWhiteBalance {
 
     /** Mediana chromatyczności rg czterech estymatorów i pewność z ich rozrzutu kątowego. */
     private fun combined(s: Sample, mask: BooleanArray): Pair<DoubleArray, Double>? {
-        val idx = (0 until s.count).filter { mask[it] && !s.clipped[it] && midtone(s.rgb, it) }
+        val idx = indices(s, mask)
         if (idx.size < MIN_ILLUMINANT_SAMPLES) return null
-        val list = listOfNotNull(minkowski(s, idx, 5.0), minkowski(s, idx, 2.0), grayEdge(s, mask), whitePatch(s, idx))
+        val list = listOfNotNull(minkowski(s, idx, 5), minkowski(s, idx, 2), grayEdge(s, mask), whitePatch(s, idx))
         val r = list.map { it[0] / it.sum() }.sorted()
         val g = list.map { it[1] / it.sum() }.sorted()
         fun med(v: List<Double>) = if (v.size % 2 == 1) v[v.size / 2] else (v[v.size / 2 - 1] + v[v.size / 2]) / 2
@@ -88,9 +88,23 @@ internal object AutoWhiteBalance {
         return e to (1.0 - spread / SPREAD_DEG).coerceIn(0.0, 1.0)
     }
 
-    private fun minkowski(s: Sample, idx: List<Int>, p: Double): DoubleArray {
+    private fun indices(s: Sample, mask: BooleanArray): IntArray {
+        val out = IntArray(s.count)
+        var n = 0
+        for (i in 0 until s.count) if (mask[i] && !s.clipped[i] && midtone(s.rgb, i)) out[n++] = i
+        return out.copyOf(n)
+    }
+
+    /** Shades of gray dla p = 2 lub 5 (potęgi przez mnożenie – gorąca pętla). */
+    private fun minkowski(s: Sample, idx: IntArray, p: Int): DoubleArray {
         val sum = DoubleArray(3)
-        for (i in idx) for (k in 0..2) sum[k] += s.rgb[3 * i + k].toDouble().pow(p)
+        for (i in idx) {
+            for (k in 0..2) {
+                val v = s.rgb[3 * i + k].toDouble()
+                val v2 = v * v
+                sum[k] += if (p == 2) v2 else v2 * v2 * v
+            }
+        }
         return DoubleArray(3) { (sum[it] / idx.size).pow(1.0 / p) }
     }
 
@@ -117,10 +131,19 @@ internal object AutoWhiteBalance {
     }
 
     /** White-patch: średnia najjaśniejszych 5% próbek neutralnych (bez przepalonych). */
-    private fun whitePatch(s: Sample, idx: List<Int>): DoubleArray {
-        val top = idx.sortedByDescending { s.rgb[3 * it] + s.rgb[3 * it + 1] + s.rgb[3 * it + 2] }
-            .take(maxOf(MIN_SAMPLES, idx.size / 20))
-        return DoubleArray(3) { k -> top.sumOf { s.rgb[3 * it + k].toDouble() } / top.size }
+    private fun whitePatch(s: Sample, idx: IntArray): DoubleArray {
+        val take = minOf(idx.size, maxOf(MIN_SAMPLES, idx.size / 20))
+        val bright = FloatArray(idx.size) { s.rgb[3 * idx[it]] + s.rgb[3 * idx[it] + 1] + s.rgb[3 * idx[it] + 2] }
+        val limit = bright.copyOf().also { it.sort() }[idx.size - take]
+        val sum = DoubleArray(3)
+        var n = 0
+        for (j in idx.indices) {
+            if (bright[j] >= limit && n < take) {
+                for (k in 0..2) sum[k] += s.rgb[3 * idx[j] + k].toDouble()
+                n++
+            }
+        }
+        return DoubleArray(3) { sum[it] / n }
     }
 
     /**
@@ -129,17 +152,18 @@ internal object AutoWhiteBalance {
      */
     private fun nearGrey(s: Sample, mask: BooleanArray, e: DoubleArray): BooleanArray {
         val dist = DoubleArray(s.count) { i ->
-            val c = DoubleArray(3) { s.rgb[3 * i + it] / e[it] }
-            val sum = c.sum()
+            val r = s.rgb[3 * i] / e[0]
+            val g = s.rgb[3 * i + 1] / e[1]
+            val sum = r + g + s.rgb[3 * i + 2] / e[2]
             if (!mask[i] || s.clipped[i] ||
                 sum < 1e-4
             ) {
                 Double.MAX_VALUE
             } else {
-                hypot(c[0] / sum - 1.0 / 3, c[1] / sum - 1.0 / 3)
+                hypot(r / sum - 1.0 / 3, g / sum - 1.0 / 3)
             }
         }
-        val sorted = dist.filter { it < Double.MAX_VALUE }.sorted()
+        val sorted = dist.filter { it < Double.MAX_VALUE }.toDoubleArray().also { it.sort() }
         if (sorted.isEmpty()) return BooleanArray(s.count)
         val limit =
             minOf(NEAR_GREY, sorted[maxOf(MIN_ILLUMINANT_SAMPLES, sorted.size / 10).coerceAtMost(sorted.size - 1)])
@@ -170,7 +194,7 @@ internal object AutoWhiteBalance {
         val r = rgb[3 * i]
         val g = rgb[3 * i + 1]
         val b = rgb[3 * i + 2]
-        return Cat.luma(doubleArrayOf(r.toDouble(), g.toDouble(), b.toDouble())) >= 0.01 && maxOf(r, g, b) <= 0.95f
+        return Cat.luma(r.toDouble(), g.toDouble(), b.toDouble()) >= 0.01 && maxOf(r, g, b) <= 0.95f
     }
 
     /** Suwaki temperatury i tintu najbliższe docelowemu xy (siatka, ±1) i reszta (dx, dy). */
