@@ -7,15 +7,26 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import app.retrofilm.core.ui.RetroFilmTheme
 import app.retrofilm.engine.AppGraph
 import com.github.takahirom.roborazzi.captureRoboImage
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +77,44 @@ class RedesignScreenshotTest {
         shot("redesign-edytor")
         compose.onNodeWithText("Efekty").performClick()
         shot("redesign-efekty")
+    }
+
+    @Test fun hdrChipToggles() {
+        val s = state(1)
+        s.photoHasGainMap = true
+        editor(s)
+        compose.onNodeWithContentDescription("HDR ze zdjęcia", substring = true).assertIsOff()
+            .assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
+        shot("redesign-hdr-wyl")
+        compose.onNodeWithContentDescription("HDR ze zdjęcia", substring = true).performClick()
+        compose.waitForIdle()
+        assertTrue(s.hdrFromPhoto)
+        compose.onNodeWithContentDescription("HDR ze zdjęcia", substring = true).assertIsOn()
+        shot("redesign-hdr-wl")
+    }
+
+    @Test
+    @Config(qualifiers = "w390dp-h844dp-notnight-xxhdpi")
+    fun hdrChipStatesLight() {
+        compose.setContent {
+            RetroFilmTheme(dynamicColor = false, darkTheme = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Row(
+                        Modifier.padding(16.dp).testTag("chips"),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                    ) {
+                        HdrChip(on = false, onToggle = {})
+                        HdrChip(on = true, onToggle = {})
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag("chips").captureRoboImage("src/test/screenshots/redesign-hdr-jasne.png")
+    }
+
+    @Test fun hdrChipHiddenWithoutGainMap() {
+        editor(state(1))
+        compose.onNodeWithContentDescription("HDR ze zdjęcia", substring = true).assertDoesNotExist()
     }
 
     @Test fun editorSeries() {

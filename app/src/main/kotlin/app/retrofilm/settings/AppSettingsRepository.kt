@@ -11,7 +11,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import app.retrofilm.core.ui.ThemeMode
+import kotlin.reflect.KClass
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.appSettings: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
@@ -44,6 +46,42 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         }
     }
 
+    /** „HDR ze zdjęcia” dla nowo otwieranych zdjęć (ekran Ustawienia); domyślnie wył. – szybsze otwieranie i zapis. */
+    val defaultHdrFromPhoto: Flow<Boolean> = store.data.map { it[DEF_HDR] ?: false }
+
+    suspend fun setDefaultHdrFromPhoto(on: Boolean) {
+        store.edit { it[DEF_HDR] = on }
+    }
+
+    /** „Logi czasów” (lokalny bufor pomiarów do eksportu); domyślnie wył. */
+    val perfLogEnabled: Flow<Boolean> = store.data.map { it[PERF_LOG] ?: false }
+
+    suspend fun setPerfLogEnabled(on: Boolean) {
+        store.edit { it[PERF_LOG] = on }
+    }
+
+    /** Wszystkie znane ustawienia (do kopii zapasowej): nazwa klucza → wartość. */
+    suspend fun snapshot(): Map<String, Any> {
+        val p = store.data.first()
+        return KNOWN.keys.mapNotNull { k -> p[k]?.let { k.name to it } }.toMap()
+    }
+
+    /**
+     * Przywraca [values] z kopii: tylko znane klucze o zgodnym typie (reszta pomijana). [replace] = najpierw
+     * usuwa wszystkie znane ustawienia (powrót do fabrycznych dla brakujących w kopii).
+     */
+    @Suppress("UNCHECKED_CAST") // typ wartości sprawdzony względem KNOWN przed zapisem
+    suspend fun restore(values: Map<String, Any>, replace: Boolean) {
+        store.edit { p ->
+            if (replace) KNOWN.keys.forEach { p.remove(it) }
+            KNOWN.forEach { (key, type) ->
+                val v = values[key.name]?.takeIf { type.isInstance(it) } ?: return@forEach
+                val clean = if (v is Set<*>) v.filterIsInstance<String>().toSet() else v
+                p[key as Preferences.Key<Any>] = clean
+            }
+        }
+    }
+
     /** Domyślne ustawienia nowej edycji (jakość, rozmiar, ramka z podpisem); brak zapisu = fabryczne. */
     val editDefaults: Flow<EditDefaults> = store.data.map { p ->
         EditDefaults.sanitized(
@@ -72,7 +110,6 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             p[DEF_CHROMA_444] = v.chroma444
             p[DEF_KEEP_EXIF] = v.keepExif
             p[DEF_P3] = v.displayP3
-            p[DEF_HDR] = v.hdrFromPhoto
             p[DEF_FRAME] = v.frameEnabled
             v.frameAspect?.let { p[DEF_ASPECT] = it } ?: p.remove(DEF_ASPECT)
             v.frameMargin?.let { p[DEF_MARGIN] = it } ?: p.remove(DEF_MARGIN)
@@ -106,7 +143,6 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             DEF_CHROMA_444,
             DEF_KEEP_EXIF,
             DEF_P3,
-            DEF_HDR,
             DEF_FRAME,
             DEF_ASPECT,
             DEF_MARGIN,
@@ -118,6 +154,27 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         internal val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         internal val THEME_MODE = stringPreferencesKey("theme_mode")
         internal val FAVORITE_FILMS = stringSetPreferencesKey("favorite_films")
+
+        internal val PERF_LOG = booleanPreferencesKey("perf_log_enabled")
+
+        private val KNOWN: Map<Preferences.Key<*>, KClass<*>> = mapOf(
+            DYNAMIC_COLOR to Boolean::class,
+            THEME_MODE to String::class,
+            FAVORITE_FILMS to Set::class,
+            PERF_LOG to Boolean::class,
+            DEF_HDR to Boolean::class,
+            DEF_QUALITY to Int::class,
+            DEF_MAX_SIDE to Int::class,
+            DEF_CHROMA_444 to Boolean::class,
+            DEF_KEEP_EXIF to Boolean::class,
+            DEF_P3 to Boolean::class,
+            DEF_FRAME to Boolean::class,
+            DEF_ASPECT to String::class,
+            DEF_MARGIN to Float::class,
+            DEF_SIGNATURE_ON to Boolean::class,
+            DEF_SIGNATURE to String::class,
+            DEF_FONT to String::class
+        )
 
         fun create(context: Context): AppSettingsRepository =
             AppSettingsRepository(context.applicationContext.appSettings)

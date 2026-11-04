@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -76,6 +77,7 @@ import app.retrofilm.pipeline.GeometryMath
 import java.util.Locale
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val MinTouch = 48.dp
 private const val CAPTION_ALPHA = 0.55f
@@ -389,11 +391,11 @@ private fun BoxScope.PreviewInfo(
         }
     }
     if (state.photoHasGainMap) {
-        ZoomReadout(
-            text = stringResource(R.string.hdr_badge),
-            description = stringResource(R.string.hdr_badge_cd),
-            modifier = Modifier.align(Alignment.TopStart).padding(EdgePad).testTag("hdr-badge"),
-            subtle = true
+        val scope = rememberCoroutineScope()
+        HdrChip(
+            on = state.hdrFromPhoto,
+            onToggle = { scope.launch { state.setHdrFromPhoto(it) } },
+            modifier = Modifier.align(Alignment.TopStart).testTag("hdr-badge")
         )
     }
     InfoButton(showInfo, onToggleInfo, Modifier.align(Alignment.TopEnd))

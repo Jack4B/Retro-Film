@@ -161,7 +161,84 @@ class PerfTimingTest {
         assertTrue(sdr.size < bytes.size && !UltraHdrJpeg.hasGainMap(sdr))
     }
 
+    /**
+     * Pełna ścieżka MainState jak w aplikacji (wpisy PerfLog = te same, co `adb logcat -s RetroFilmPerf:I` na
+     * telefonie): otwarcie zimne i ciepłe syntetycznego Ultra HDR 12 MP, przełączenie chipu HDR, zapis JPEG.
+     */
+    @Test
+    fun editorFlowStages(): Unit = runBlocking {
+        val primary = java.io.ByteArrayOutputStream().also { photo().compress(Bitmap.CompressFormat.JPEG, JPEG_Q, it) }
+        val p = primary.toByteArray()
+        val mpf =
+            byteArrayOf(
+                0xFF.toByte(),
+                0xE2.toByte(),
+                0,
+                MPF_LEN,
+                'M'.code.toByte(),
+                'P'.code.toByte(),
+                'F'.code.toByte(),
+                0
+            )
+        val file = File(context.cacheDir, "editor-flow.jpg")
+        file.writeBytes(p.copyOfRange(0, 2) + mpf + p.copyOfRange(2, p.size) + p)
+        val ring = PerfRing()
+        PerfLog.recorder = ring
+        try {
+            val state = MainState(AppGraph(context), Typeface.DEFAULT)
+            val uri = android.net.Uri.fromFile(file)
+            state.load(context, uri)
+            state.refreshPreview()
+            stage(ring, "photo_decode", "flow_photo_decode_cold_ms")
+            firstPreview(ring, "flow_first_preview_cold_ms")
+            stage(ring, "open_full_preview", "flow_full_preview_cold_ms")
+            ring.clear()
+            state.load(context, uri)
+            state.refreshPreview()
+            firstPreview(ring, "flow_first_preview_warm_ms")
+            stage(ring, "open_full_preview", "flow_full_preview_warm_ms")
+            assertTrue(state.photoHasGainMap)
+            state.setHdrFromPhoto(true)
+            stage(ring, "hdr_toggle_reapply", "flow_hdr_toggle_on_ms")
+            state.setHdrFromPhoto(false)
+            stage(ring, "hdr_toggle_reapply", "flow_hdr_toggle_off_ms")
+            var size = 0
+            state.export(null) { size = it.size }
+            assertTrue(size > 0)
+            stage(ring, "save_total", "flow_save_total_ms")
+            assertTrue(
+                ring.entries().filter { it.stage == "save_total" }.all {
+                    it.width == SRC_W &&
+                        it.backend.isNotEmpty()
+                }
+            )
+        } finally {
+            PerfLog.recorder = null
+            file.delete()
+        }
+    }
+
+    /** Bez osadzonej miniatury EXIF pierwszy obraz to pełny podgląd. */
+    private fun firstPreview(ring: PerfRing, name: String) {
+        val stage = if (ring.entries().any {
+                it.stage == "open_first_preview"
+            }
+        ) {
+            "open_first_preview"
+        } else {
+            "open_full_preview"
+        }
+        stage(ring, stage, name)
+    }
+
+    private fun stage(ring: PerfRing, stage: String, name: String) {
+        val e = ring.entries().lastOrNull { it.stage == stage }
+        assertTrue("brak etapu $stage", e != null)
+        report(name, e!!.ms)
+    }
+
     private companion object {
+        const val SRC_W = 4000
         const val GAIN_W = 2048
         const val GAIN_H = 1536
         const val MPF_LEN: Byte = 6

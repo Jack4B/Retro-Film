@@ -1,5 +1,6 @@
 package app.retrofilm.feature.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.FilterVintage
+import androidx.compose.material.icons.outlined.HdrOn
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Palette
@@ -35,6 +37,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -58,8 +61,11 @@ fun SettingsScreen(
     onOpenFilters: () -> Unit,
     onOpenLicense: (ThirdPartyLicense) -> Unit,
     modifier: Modifier = Modifier,
-    onThemeModeChange: (ThemeMode) -> Unit = {}
+    onThemeModeChange: (ThemeMode) -> Unit = {},
+    onDefaultHdrChange: (Boolean) -> Unit = {},
+    toolsActions: SettingsToolsActions = SettingsToolsActions()
 ) {
+    state.tools?.let { ToolsDialogs(it, toolsActions) }
     Scaffold(
         modifier = modifier,
         topBar = { SettingsTopBar(stringResource(R.string.settings_title), onBack) }
@@ -76,6 +82,19 @@ fun SettingsScreen(
             if (state.dynamicColorSupported) {
                 item { DynamicColorRow(state.dynamicColor, onDynamicColorChange) }
             }
+            state.defaultHdrFromPhoto?.let { hdr ->
+                item { SectionHeader(stringResource(R.string.settings_section_photos)) }
+                item {
+                    SwitchRow(
+                        checked = hdr,
+                        onChange = onDefaultHdrChange,
+                        title = R.string.settings_hdr_default,
+                        subtitle = R.string.settings_hdr_default_subtitle,
+                        modifier = Modifier.testTag("settings-hdr-default"),
+                        icon = { Icon(Icons.Outlined.HdrOn, contentDescription = null) }
+                    )
+                }
+            }
             item { SectionHeader(stringResource(R.string.settings_section_filters)) }
             item {
                 NavRow(
@@ -85,6 +104,7 @@ fun SettingsScreen(
                     onClick = onOpenFilters
                 )
             }
+            state.tools?.let { toolsSections(it, toolsActions) }
             item { SectionHeader(stringResource(R.string.settings_section_licenses)) }
             items(ThirdPartyLicense.entries, key = { it.name }) { lic ->
                 NavRow(
@@ -140,17 +160,33 @@ private fun ThemeModeRow(selected: ThemeMode, onChange: (ThemeMode) -> Unit) {
 }
 
 @Composable
-private fun DynamicColorRow(checked: Boolean, onChange: (Boolean) -> Unit) {
+private fun DynamicColorRow(checked: Boolean, onChange: (Boolean) -> Unit) = SwitchRow(
+    checked,
+    onChange,
+    R.string.settings_dynamic_color,
+    R.string.settings_dynamic_color_subtitle,
+    icon = { Icon(Icons.Outlined.Palette, contentDescription = null) }
+)
+
+@Composable
+internal fun SwitchRow(
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    @StringRes title: Int,
+    @StringRes subtitle: Int,
+    modifier: Modifier = Modifier,
+    icon: (@Composable () -> Unit)? = null
+) {
     val toggleState = stringResource(if (checked) R.string.settings_on else R.string.settings_off)
     ListItem(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = MinTouch)
             .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
             .semantics { stateDescription = toggleState },
-        headlineContent = { Text(stringResource(R.string.settings_dynamic_color)) },
-        supportingContent = { Text(stringResource(R.string.settings_dynamic_color_subtitle)) },
-        leadingContent = { Icon(Icons.Outlined.Palette, contentDescription = null) },
+        headlineContent = { Text(stringResource(title)) },
+        supportingContent = { Text(stringResource(subtitle)) },
+        leadingContent = icon,
         trailingContent = { Switch(checked = checked, onCheckedChange = null) },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.background)
     )
