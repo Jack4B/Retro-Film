@@ -72,6 +72,19 @@ class RedesignScreenshotTest {
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
     }
 
+    /** „Przygotuj pod film” włączone: pod przyciskiem suwak siły zdjęcia krzywej telefonu. */
+    @Test fun prepInversionSlider() {
+        val s = state(1)
+        kotlinx.coroutines.runBlocking { s.togglePrep() }
+        compose.setContent {
+            RetroFilmTheme(dynamicColor = false, darkTheme = true) {
+                Surface { androidx.compose.foundation.layout.Column { PrepButton(s) } }
+            }
+        }
+        compose.onNodeWithText("Zdejmij krzywą telefonu", substring = true).assertExists()
+        shot("redesign-przygotuj-suwak")
+    }
+
     @Test fun editorSingle() {
         editor(state(1))
         shot("redesign-edytor")

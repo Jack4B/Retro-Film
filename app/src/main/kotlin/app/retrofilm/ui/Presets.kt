@@ -48,7 +48,8 @@ object PresetCodec {
     private fun adjustmentsToJson(a: Adjustments): JSONObject = JSONObject().apply {
         mapOf(
             "exposure" to a.exposure, "contrast" to a.contrast, "saturation" to a.saturation,
-            "temperature" to a.temperature, "tint" to a.tint, "highlights" to a.highlights,
+            "temperature" to a.temperature, "tint" to a.tint, "whiteDx" to a.whiteDx, "whiteDy" to a.whiteDy,
+            "toneInversion" to a.toneInversion, "highlights" to a.highlights,
             "shadows" to a.shadows, "whites" to a.whites, "blacks" to a.blacks, "texture" to a.texture,
             "fade" to a.fade, "grain" to a.grain, "grainSize" to a.grainSize,
             "vignette" to a.vignette,
@@ -117,7 +118,8 @@ object PresetCodec {
         } ?: HslAdjust()
         return Adjustments(
             exposure = f("exposure"), contrast = f("contrast"), saturation = f("saturation"),
-            temperature = f("temperature"), tint = f("tint"), highlights = f("highlights"),
+            temperature = f("temperature"), tint = f("tint"), whiteDx = f("whiteDx"), whiteDy = f("whiteDy"),
+            toneInversion = f("toneInversion"), highlights = f("highlights"),
             shadows = f(
                 "shadows"
             ),

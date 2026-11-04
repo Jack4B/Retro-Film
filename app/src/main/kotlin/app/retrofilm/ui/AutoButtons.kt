@@ -12,6 +12,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.pipeline.AutoScene
+import java.util.Locale
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 private val SidePad = 16.dp
@@ -27,7 +29,18 @@ internal fun PrepButton(state: MainState) {
     ) {
         Text(stringResource(if (undo) R.string.adjust_prep_undo else R.string.adjust_prep))
     }
+    // Siła zdjęcia krzywej tonalnej telefonu (domyślnie umiarkowana), tylko gdy propozycja jest nałożona.
+    if (undo) {
+        AdjustSlider(
+            stringResource(R.string.adjust_prep_inversion),
+            state.prepInversion,
+            { "%d%%".format(Locale.forLanguageTag("pl"), (it * PERCENT).roundToInt()) },
+            range = 0f..1f
+        ) { state.updatePrepInversion(it) }
+    }
 }
+
+private const val PERCENT = 100f
 
 @Composable
 internal fun AutoButton(state: MainState) {

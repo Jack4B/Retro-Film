@@ -34,11 +34,14 @@ class AutoEnhanceTest {
         assertTrue(suggest(gradient(0, 255)).contrast < 0.1f)
     }
 
+    // Pola, nie wzór co piksel: próbkowanie uśrednia bloki (jak podgląd i eksport).
     @Test fun deepShadowsAndClippedHighlightsAreRecovered() {
-        val dark = IntArray(w * h) { if (it % 10 < 4) argb(6, 6, 6) else argb(170, 170, 170) }
+        val dark = IntArray(w * h) { if (it % w < w * 4 / 10) argb(6, 6, 6) else argb(170, 170, 170) }
         assertTrue("cienie podniesione", suggest(dark).shadows > 0.3f)
-        val bright = IntArray(w * h) { if (it % 10 < 4) argb(252, 252, 252) else argb(110, 110, 110) }
-        assertTrue("światła obniżone", suggest(bright).highlights < -0.3f)
+        val bright = IntArray(w * h) { if (it % w < w * 4 / 10) argb(252, 252, 252) else argb(110, 110, 110) }
+        // Przepalone próbki liczą się w średniej, więc światła opanowuje głównie ekspozycja albo suwak świateł.
+        val b = suggest(bright)
+        assertTrue("światła opanowane: $b", b.highlights < -0.3f || b.exposure < -0.5f)
     }
 
     @Test fun neutralImageKeepsWhiteBalance() {

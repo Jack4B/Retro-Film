@@ -70,6 +70,28 @@ class AutoToggleTest {
         assertEquals("wyłączenie wraca do ustawień z ręczną zmianą", edited, s.adjustments)
     }
 
+    @Test fun prepInversionSliderChangesOnlyToneInversion() = runBlocking {
+        val s = state()
+        s.togglePrep()
+        assertEquals("domyślnie umiarkowane odwrócenie", 0.5f, s.adjustments.toneInversion, 1e-6f)
+        val before = s.adjustments
+        s.updatePrepInversion(0.2f)
+        assertEquals(0.2f, s.adjustments.toneInversion, 1e-6f)
+        assertEquals("reszta propozycji bez zmian", before.copy(toneInversion = 0.2f), s.adjustments)
+        assertTrue("dalej można cofnąć", s.canUndoPrep)
+        s.togglePrep()
+        assertEquals("cofnięcie zdejmuje też odwrócenie", 0f, s.adjustments.toneInversion, 0f)
+    }
+
+    @Test fun manualTemperatureClearsHiddenWhiteOffset() {
+        val a = Adjustments(temperature = 0.2f, whiteDx = 0.01f, whiteDy = -0.01f)
+        val s = state()
+        s.adjustments = a
+        // to samo, co robi suwak temperatury w AdjustPanel
+        s.adjustments = s.adjustments.copy(temperature = 0.3f, whiteDx = 0f, whiteDy = 0f)
+        assertEquals(0f, s.adjustments.whiteDx, 0f)
+    }
+
     @Test fun unsavedEditsAreDetected() {
         val s = state()
         assertFalse(s.hasUnsavedEdits)
