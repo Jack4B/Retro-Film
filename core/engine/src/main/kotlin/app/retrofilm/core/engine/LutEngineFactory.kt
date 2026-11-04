@@ -67,17 +67,30 @@ object LutEngineFactory {
         FallbackLutEngine(primary, CpuLutEngine(interpolation))
 }
 
-private class FallbackLutEngine(private val primary: LutEngine, private val fallback: LutEngine) : LutEngine {
+/**
+ * Backend GPU z awaryjnym CPU. Po pierwszej awarii zostaje na CPU (ponowne próby GPU przy każdej klatce tylko by
+ * dokładały czas wyjątku); [activeBackend] i [fallbackReason] mówią logowi czasów, co naprawdę liczy.
+ */
+class FallbackLutEngine(private val primary: LutEngine, private val fallback: LutEngine) : LutEngine {
     override val name: String get() = primary.name
 
+    @Volatile override var fallbackReason: String? = null
+        private set
+
+    override val activeBackend: String get() = if (fallbackReason == null) primary.activeBackend else fallback.name
+
     @Suppress("TooGenericExceptionCaught")
-    override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap = try {
-        primary.apply(src, lut, intensity)
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: RuntimeException) {
-        Log.w("LutEngine", "Backend ${primary.name} zawiódł, używam CPU", e)
-        fallback.apply(src, lut, intensity)
+    override suspend fun apply(src: Bitmap, lut: Lut, intensity: Float): Bitmap {
+        if (fallbackReason != null) return fallback.apply(src, lut, intensity)
+        return try {
+            primary.apply(src, lut, intensity)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RuntimeException) {
+            fallbackReason = "${primary.name}: ${e.javaClass.simpleName}: ${e.message.orEmpty()}"
+            Log.w("LutEngine", "Backend ${primary.name} zawiódł, używam CPU", e)
+            fallback.apply(src, lut, intensity)
+        }
     }
 
     override fun warm(lut: Lut) = primary.warm(lut)

@@ -7,6 +7,8 @@ import android.graphics.Paint
 import app.retrofilm.core.engine.CpuLut
 import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.Srgb
+import app.retrofilm.perf.SaveTrace
+import app.retrofilm.perf.SaveTrace.Companion.timed
 import java.nio.IntBuffer
 
 /** Przestrzeń barw pliku wyjściowego. */
@@ -54,30 +56,35 @@ object FloatExport {
         adjustments: Adjustments,
         space: OutputSpace,
         faces: List<FaceBox> = emptyList(),
-        fracOut: ByteArray? = null
+        fracOut: ByteArray? = null,
+        trace: SaveTrace? = null
     ): Bitmap {
         val stage = lut?.let { LutStage(it, intensity, space == OutputSpace.DisplayP3) }
         val finishing = adjustments.finishing()
         // maski są mieszane na 8 bitach po pasach – wtedy korekty osobno (jak dotąd), LUT dalej w potoku float
         val masked = adjustments.corrections().masks.isNotEmpty()
-        val input = if (masked) AdjustmentsApplier.apply(work, adjustments.corrections(), lut != null) else work
+        val input = if (masked) {
+            trace.timed("masks") { AdjustmentsApplier.apply(work, adjustments.corrections(), lut != null) }
+        } else {
+            work
+        }
         val first = if (masked) Adjustments.None else adjustments.corrections()
         val deband = lut != null && !masked
         if (finishing.isNeutral) {
-            return StripPipeline.run(
-                input,
-                first,
-                deband,
-                emptyList(),
-                StripIo(fracOut = fracOut, stage = stage)
-            ).also {
+            return trace.timed("lut_render_dither") {
+                StripPipeline.run(input, first, deband, emptyList(), StripIo(fracOut = fracOut, stage = stage))
+            }.also {
                 if (input !== work) input.recycle()
             }
         }
         val frac = ByteArray(work.width * work.height)
-        val filmed = StripPipeline.run(input, first, deband, emptyList(), StripIo(null, frac, stage, false))
+        val filmed = trace.timed("lut_render") {
+            StripPipeline.run(input, first, deband, emptyList(), StripIo(null, frac, stage, false))
+        }
         if (input !== work) input.recycle()
-        val finished = StripPipeline.run(filmed, finishing, false, faces, StripIo(fracIn = frac, fracOut = fracOut))
+        val finished = trace.timed("effects_dither") {
+            StripPipeline.run(filmed, finishing, false, faces, StripIo(fracIn = frac, fracOut = fracOut))
+        }
         filmed.recycle()
         return finished
     }

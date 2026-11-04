@@ -29,11 +29,11 @@ object PerfLog {
 
     fun since(name: String, start: Long) = log(name, now() - start)
 
-    fun log(name: String, ms: Long) {
-        Log.i(TAG, "${name}_ms=$ms")
+    fun log(name: String, ms: Long, note: String = "") {
+        Log.i(TAG, if (note.isEmpty()) "${name}_ms=$ms" else "${name}_ms=$ms $note")
         val ring = recorder ?: return
         val c = context
-        ring.add(PerfEntry(System.currentTimeMillis(), name, ms, c.backend, c.width, c.height, c.hdr, device))
+        ring.add(PerfEntry(System.currentTimeMillis(), name, ms, c.backend, c.width, c.height, c.hdr, device, note))
     }
 
     inline fun <T> time(name: String, block: () -> T): T {

@@ -13,6 +13,8 @@ import app.retrofilm.core.engine.Lut
 import app.retrofilm.core.engine.LutEngine
 import app.retrofilm.core.export.JpegExporter
 import app.retrofilm.core.export.JpegOptions
+import app.retrofilm.perf.SaveTrace
+import app.retrofilm.perf.SaveTrace.Companion.timed
 import java.io.IOException
 
 /** Pełna ścieżka: zdjęcie (już z orientacją) → film (LUT) → ramka + podpis → JPEG bez metadanych. */
@@ -36,13 +38,16 @@ object ExportPipeline {
         adjustments: Adjustments = Adjustments.None,
         faces: List<FaceBox> = emptyList(),
         space: OutputSpace = OutputSpace.Srgb,
-        fracOut: ByteArray? = null
+        fracOut: ByteArray? = null,
+        trace: SaveTrace? = null
     ): Bitmap {
         // Etapy pośrednie są zwalniane od razu (50 MP = 200 MB na kopię). Wejście [photo] należy do wywołującego.
-        val work = FloatExport.working(photo, space)
-        val finished = FloatExport.look(work, lut, intensity, adjustments, space, faces, fracOut)
+        val work = trace.timed("color_convert") { FloatExport.working(photo, space) }
+        val finished = FloatExport.look(work, lut, intensity, adjustments, space, faces, fracOut, trace)
         release(work, finished, photo)
-        val framed = FrameRenderer.render(finished, frame, typeface, colorSpaceSource = finished)
+        val framed = trace.timed("frame") {
+            FrameRenderer.render(finished, frame, typeface, colorSpaceSource = finished)
+        }
         release(finished, framed, photo)
         return framed
     }

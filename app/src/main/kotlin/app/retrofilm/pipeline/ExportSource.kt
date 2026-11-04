@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.ExifInterface
 import app.retrofilm.core.export.ExifData
+import app.retrofilm.perf.SaveTrace
+import app.retrofilm.perf.SaveTrace.Companion.timed
 import java.io.IOException
 import java.io.InputStream
 import kotlin.math.sqrt
@@ -46,20 +48,22 @@ object ExportSource {
     }
 
     /** [block] na pełnym rozmiarze; przy braku pamięci jeszcze raz na rozmiarze podglądu (z `reduced = true`). */
-    suspend fun <T> withFallback(open: () -> InputStream, block: suspend (Loaded) -> T): T {
+    suspend fun <T> withFallback(open: () -> InputStream, trace: SaveTrace? = null, block: suspend (Loaded) -> T): T {
         val full = try {
-            load(open)
+            trace.timed("decode_full") { load(open) }
         } catch (_: OutOfMemoryError) {
+            trace?.event("oom_fallback", "where=decode")
             null
         }
         if (full != null) {
             try {
                 return block(full)
             } catch (_: OutOfMemoryError) {
+                trace?.event("oom_fallback", "where=render side=${maxOf(full.bitmap.width, full.bitmap.height)}")
                 full.bitmap.recycle()
             }
         }
-        val small = PhotoLoader.load(open, PhotoLoader.DEFAULT_MAX_SIDE)
+        val small = trace.timed("decode_reduced") { PhotoLoader.load(open, PhotoLoader.DEFAULT_MAX_SIDE) }
         return block(Loaded(small, ExifSource.read(open), reduced = true))
     }
 }
