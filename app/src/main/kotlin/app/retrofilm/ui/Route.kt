@@ -46,6 +46,7 @@ fun RetroFilmNavHost(
     var licensesParent by rememberSaveable { mutableStateOf(Route.Settings) }
     var filtersParent by rememberSaveable { mutableStateOf(Route.Settings) }
     val scope = rememberCoroutineScope()
+    val defaultHdr by graph.appSettings.defaultHdrFromPhoto.collectAsState(initial = false)
     val parent = when (route) {
         Route.Licenses -> licensesParent
         Route.Filters -> filtersParent
@@ -60,7 +61,12 @@ fun RetroFilmNavHost(
         }
 
         Route.Settings -> SettingsScreen(
-            state = SettingsUiState(dynamicColor = dynamicColor, themeMode = themeMode),
+            state = SettingsUiState(
+                dynamicColor = dynamicColor,
+                themeMode = themeMode,
+                defaultHdrFromPhoto = defaultHdr
+            ),
+            onDefaultHdrChange = { scope.launch { graph.appSettings.setDefaultHdrFromPhoto(it) } },
             onBack = back,
             onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },
             onThemeModeChange = { scope.launch { graph.appSettings.setThemeMode(it) } },

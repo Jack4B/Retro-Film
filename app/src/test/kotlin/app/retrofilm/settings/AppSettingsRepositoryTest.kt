@@ -68,4 +68,16 @@ class AppSettingsRepositoryTest {
         withRepo { it.setThemeMode(ThemeMode.System) }
         assertEquals(ThemeMode.System, withRepo { it.themeMode.first() })
     }
+
+    @Test
+    fun defaultHdrIsOffAndIndependentOfSaveSheetDefaults() {
+        assertFalse(withRepo { it.defaultHdrFromPhoto.first() })
+        withRepo { it.setDefaultHdrFromPhoto(true) }
+        assertTrue(withRepo { it.defaultHdrFromPhoto.first() })
+        // „Zapamiętaj jako domyślne” z arkusza zapisu i „Przywróć fabryczne” nie ruszają ustawienia z Ustawień
+        withRepo { it.setEditDefaults(EditDefaults(hdrFromPhoto = false)) }
+        withRepo { it.clearEditDefaults() }
+        assertTrue(withRepo { it.defaultHdrFromPhoto.first() })
+        assertTrue(withRepo { it.editDefaults.first().hdrFromPhoto })
+    }
 }

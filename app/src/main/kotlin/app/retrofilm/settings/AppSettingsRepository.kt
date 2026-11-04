@@ -44,6 +44,13 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         }
     }
 
+    /** „HDR ze zdjęcia” dla nowo otwieranych zdjęć (ekran Ustawienia); domyślnie wył. – szybsze otwieranie i zapis. */
+    val defaultHdrFromPhoto: Flow<Boolean> = store.data.map { it[DEF_HDR] ?: false }
+
+    suspend fun setDefaultHdrFromPhoto(on: Boolean) {
+        store.edit { it[DEF_HDR] = on }
+    }
+
     /** Domyślne ustawienia nowej edycji (jakość, rozmiar, ramka z podpisem); brak zapisu = fabryczne. */
     val editDefaults: Flow<EditDefaults> = store.data.map { p ->
         EditDefaults.sanitized(
@@ -72,7 +79,6 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             p[DEF_CHROMA_444] = v.chroma444
             p[DEF_KEEP_EXIF] = v.keepExif
             p[DEF_P3] = v.displayP3
-            p[DEF_HDR] = v.hdrFromPhoto
             p[DEF_FRAME] = v.frameEnabled
             v.frameAspect?.let { p[DEF_ASPECT] = it } ?: p.remove(DEF_ASPECT)
             v.frameMargin?.let { p[DEF_MARGIN] = it } ?: p.remove(DEF_MARGIN)
@@ -106,7 +112,6 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             DEF_CHROMA_444,
             DEF_KEEP_EXIF,
             DEF_P3,
-            DEF_HDR,
             DEF_FRAME,
             DEF_ASPECT,
             DEF_MARGIN,

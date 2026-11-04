@@ -16,6 +16,7 @@ import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.perf.PerfLog
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.AutoResult
@@ -169,6 +170,14 @@ class MainState(
 
     /** „HDR ze zdjęcia”: Wył. = dekodowany i zapisywany tylko obraz bazowy SDR (bez gain mapy). */
     var hdrFromPhoto by mutableStateOf(false)
+
+    /** „HDR ze zdjęcia” zmienione chipem dla konkretnych zdjęć serii (indeks → wartość); reszta = domyślne. */
+    private val hdrOverrides = mutableMapOf<Int, Boolean>()
+
+    private fun hdrFor(i: Int) = hdrOverrides[i] ?: defaults.hdrFromPhoto
+
+    /** Start pomiaru otwarcia zdjęcia (logi [PerfLog]); 0 = brak trwającego pomiaru pełnego podglądu. */
+    private var openStart = 0L
 
     /** Czy bieżące zdjęcie ma gain mapę Ultra HDR (pokazuje chip „HDR”). */
     var photoHasGainMap by mutableStateOf(false)
@@ -439,6 +448,8 @@ class MainState(
     fun sourceOf(p: Bitmap): Pair<Int, Int> = sourceSize.takeIf { it.first > 0 } ?: (p.width to p.height)
 
     suspend fun load(context: Context, uri: Uri): UiMessage? = withBusy {
+        val start = PerfLog.now()
+        openStart = start
         try {
             // Jeden odczyt pliku zamiast 4 (EXIF, miniatura, wymiary, dekodowanie przez ContentResolver); zdjęcia
             // „ruchome” (Motion/Live Photo) mają za JPEG-iem ~10 MB wideo i gain mapę, więc każdy odczyt był drogi.
@@ -446,13 +457,20 @@ class MainState(
                 context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw IOException("Brak pliku")
             }
             photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
-            val decodeBytes = if (hdrFromPhoto) bytes else UltraHdrJpeg.sdrOnly(bytes)
+            // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
+            // HDR wpływa tylko na zapis, więc nie wymaga ponownego dekodowania.
+            val decodeBytes = UltraHdrJpeg.sdrOnly(bytes)
             val open = { java.io.ByteArrayInputStream(decodeBytes) }
             // Najpierw osadzona miniatura (ms), potem dekodowanie pomniejszone do rozmiaru podglądu (nie pełne MP).
-            withContext(Dispatchers.IO) { PhotoLoader.thumbnail(open) }.let { preview = it }
+            withContext(Dispatchers.IO) { PhotoLoader.thumbnail(open) }?.let {
+                preview = it
+                PerfLog.since("open_first_preview", start)
+            }
             loadingRaw = preview == null && PhotoLoader.isTiffRaw(open)
             val loaded = try {
-                withContext(Dispatchers.IO) { PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE) }
+                withContext(Dispatchers.IO) {
+                    PerfLog.time("photo_decode") { PhotoLoader.open(open, PhotoLoader.PREVIEW_MAX_SIDE) }
+                }
             } finally {
                 loadingRaw = false
             }
@@ -472,6 +490,8 @@ class MainState(
         uris = picked
         index = 0
         if (!defaults.isFactory) applyDefaults(defaults)
+        hdrOverrides.clear()
+        hdrFromPhoto = defaults.hdrFromPhoto
         edits.reset(snapshot())
         history.reset(snapshot())
         failedIndices = emptyList()
@@ -485,6 +505,7 @@ class MainState(
         if (i == index || i !in uris.indices) return null
         commitCurrent()
         index = i
+        hdrFromPhoto = hdrFor(i)
         restore(edits.editFor(i))
         history.reset(snapshot())
         return load(context, uris[i])
@@ -496,6 +517,7 @@ class MainState(
         save: suspend (ByteArray) -> Unit,
         only: List<Int> = uris.indices.toList()
     ): UiMessage = withBusy {
+        val start = PerfLog.now()
         commitCurrent()
         val watermark = frame.watermark
         var current = 0
@@ -514,10 +536,10 @@ class MainState(
                 photoFrame,
                 face,
                 exportMaxSide,
-                exportFormat
+                exportFormat.copy(hdr = hdrFor(photoIndex))
             )
             val out = withContext(Dispatchers.Default) {
-                job.run(exportSource(context, uri), null)
+                job.run(exportSource(context, uri, hdrFor(photoIndex)), null)
             }
             if (out.reduced) reducedCount++
             val jpeg = out.jpeg
@@ -526,22 +548,29 @@ class MainState(
         exportProgress = 0
         failedIndices = result.failedIndices.map { only[it] }
         markSaved()
+        PerfLog.since("save_batch_total", start)
         UiMessage.SavedMany(result.saved, result.failed, reducedCount)
     }
 
     /** Źródło eksportu: przy wyłączonym „HDR ze zdjęcia” sam obraz bazowy SDR (gain mapa i wideo odcięte). */
-    private fun exportSource(context: Context, uri: Uri): () -> InputStream {
+    private fun exportSource(context: Context, uri: Uri, hdr: Boolean = hdrFromPhoto): () -> InputStream {
         val open = { context.contentResolver.openInputStream(uri) ?: throw IOException("Brak pliku") }
-        if (hdrFromPhoto) return open
+        if (hdr) return open
         val bytes by lazy { UltraHdrJpeg.sdrOnly(open().use { it.readBytes() }) }
         return { java.io.ByteArrayInputStream(bytes) }
     }
 
-    /** Przełącza „HDR ze zdjęcia” i wczytuje bieżące zdjęcie ponownie. */
-    suspend fun setHdrFromPhoto(context: Context, on: Boolean): UiMessage? {
-        if (on == hdrFromPhoto) return null
+    /**
+     * Przełącza „HDR ze zdjęcia” dla bieżącego zdjęcia (chip „HDR”). Bez ponownego dekodowania: podgląd i tak
+     * pokazuje obraz bazowy SDR, a etapy podglądu są w pamięci – zmienia się tylko sposób zapisu.
+     */
+    suspend fun setHdrFromPhoto(on: Boolean) {
+        if (on == hdrFromPhoto) return
+        val start = PerfLog.now()
         hdrFromPhoto = on
-        return uris.getOrNull(index)?.let { load(context, it) }
+        hdrOverrides[index] = on
+        refreshPreview()
+        PerfLog.since("hdr_toggle_reapply", start)
     }
 
     /** Podgląd: ta sama ścieżka co eksport, na pomniejszonej kopii. */
@@ -551,6 +580,10 @@ class MainState(
         rendering = true
         try {
             withContext(Dispatchers.Default) { renderPreview(p) }
+            if (openStart != 0L) {
+                PerfLog.since("open_full_preview", openStart)
+                openStart = 0L
+            }
         } finally {
             rendering = false
         }
@@ -660,6 +693,7 @@ class MainState(
 
     /** Eksport; nigdy nie rzuca – błędy wracają jako [UiMessage]. */
     suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
+        val start = PerfLog.now()
         val p = photo ?: return@withBusy UiMessage.LoadFailed
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
@@ -682,6 +716,7 @@ class MainState(
             val out = withContext(Dispatchers.Default) { job.run(open, p) }
             withContext(Dispatchers.IO) { save(out.jpeg) }
             markSaved()
+            PerfLog.since("save_total", start)
             if (out.reduced) UiMessage.SavedReduced else UiMessage.Saved
         } catch (_: SignatureTooLongException) {
             UiMessage.SignatureTooLong

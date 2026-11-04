@@ -104,7 +104,6 @@ private fun ExportFileOptions(state: MainState) {
             modifier = Modifier.testTag("export-space-p3")
         )
     }
-    if (state.photoHasGainMap) HdrOption(state)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -120,28 +119,6 @@ private fun ExportFileOptions(state: MainState) {
         Text(stringResource(R.string.export_exif), modifier = Modifier.weight(1f))
         Switch(checked = state.exportKeepExif, onCheckedChange = null)
     }
-}
-
-/** „HDR ze zdjęcia: Wł./Wył.” – tylko dla zdjęć z gain mapą; Wł. wymusza 4:2:0 i zapis bez ramki (Gainmap API). */
-@Composable
-private fun HdrOption(state: MainState) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    OptionRow(R.string.hdr_from_photo_label) {
-        FilterChip(
-            selected = !state.hdrFromPhoto,
-            onClick = { scope.launch { state.setHdrFromPhoto(context, false) } },
-            label = { Text(stringResource(R.string.hdr_off)) },
-            modifier = Modifier.testTag("hdr-off")
-        )
-        FilterChip(
-            selected = state.hdrFromPhoto,
-            onClick = { scope.launch { state.setHdrFromPhoto(context, true) } },
-            label = { Text(stringResource(R.string.hdr_on)) },
-            modifier = Modifier.testTag("hdr-on")
-        )
-    }
-    if (state.hdrFromPhoto) Text(stringResource(R.string.hdr_note), style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable

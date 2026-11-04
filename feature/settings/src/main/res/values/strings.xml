@@ -78,4 +78,7 @@
     <string name="lut_dialog_confirm_cd">Wyczyść pamięć podręczną, zwolni %1$s</string>
     <string name="lut_dialog_dismiss">Anuluj</string>
     <string name="lut_dialog_dismiss_cd">Anuluj, nie czyść pamięci podręcznej</string>
+    <string name="settings_section_photos">Zdjęcia</string>
+    <string name="settings_hdr_default">HDR ze zdjęcia</string>
+    <string name="settings_hdr_default_subtitle">Domyślnie dla nowo otwieranych zdjęć z gain mapą Ultra HDR. Wył. = szybsze otwieranie i zapis. Wł. zapisuje 4:2:0 i bez ramki. Zmienisz to też chipem „HDR” w edytorze.</string>
 </resources>

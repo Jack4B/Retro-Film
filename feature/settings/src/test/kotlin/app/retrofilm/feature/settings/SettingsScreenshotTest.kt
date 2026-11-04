@@ -43,6 +43,26 @@ class SettingsScreenshotTest {
         assertEquals(true, toggled)
     }
 
+    @Test fun ustawieniaHdr() {
+        var hdr: Boolean? = null
+        compose.setContent {
+            RetroFilmTheme {
+                SettingsScreen(
+                    SettingsUiState(defaultHdrFromPhoto = false, versionName = VERSION),
+                    {},
+                    {},
+                    {},
+                    {},
+                    onDefaultHdrChange = { hdr = it }
+                )
+            }
+        }
+        compose.onNodeWithText("HDR ze zdjęcia").assertIsOff()
+        compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-hdr.png")
+        compose.onNodeWithText("HDR ze zdjęcia").performClick()
+        assertEquals(true, hdr)
+    }
+
     @Test fun ustawienia_dynamic() {
         settings(SettingsUiState(dynamicColor = true, dynamicColorSupported = true, versionName = VERSION))
         compose.onRoot().captureRoboImage("src/test/screenshots/ustawienia-dynamic.png")

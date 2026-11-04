@@ -59,6 +59,8 @@ data class SettingsUiState(
     val dynamicColor: Boolean = false,
     /** Przełącznik widoczny tylko na API 31+. */
     val dynamicColorSupported: Boolean = supportsDynamicColor(),
+    /** Domyślne „HDR ze zdjęcia”; `null` ukrywa wiersz (np. w starszych zrzutach). */
+    val defaultHdrFromPhoto: Boolean? = null,
     /** Wersja aplikacji (BuildConfig). */
     val versionName: String = BuildConfig.APP_VERSION
 )
