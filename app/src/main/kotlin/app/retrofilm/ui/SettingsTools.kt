@@ -27,6 +27,7 @@ import app.retrofilm.feature.settings.SettingsToolsActions
 import app.retrofilm.feature.settings.SettingsToolsState
 import app.retrofilm.feature.settings.ToolsNotice
 import app.retrofilm.perf.PerfLog
+import app.retrofilm.pipeline.SaveBackend
 import java.io.IOException
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ import kotlinx.coroutines.withContext
 class SettingsTools(val state: SettingsToolsState, val actions: SettingsToolsActions)
 
 @Composable
-fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean): SettingsTools {
+fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean, gpuSave: Boolean = true): SettingsTools {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val store = remember(graph) { BackupStore(context.applicationContext, graph.appSettings) }
@@ -51,6 +52,10 @@ fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean): SettingsToo
         onPerfLogChange = { on ->
             PerfLog.recorder = if (on) PerfLog.ring else null
             scope.launch { graph.appSettings.setPerfLogEnabled(on) }
+        },
+        onGpuSaveChange = { on ->
+            SaveBackend.gpuEnabled = on
+            scope.launch { graph.appSettings.setGpuSave(on) }
         },
         onExportPerfLog = { launchers.exportLog.launch("retrofilm-czasy-$today.csv") },
         onSharePerfLog = { sharePerfLog(context) },
@@ -79,6 +84,7 @@ fun rememberSettingsTools(graph: AppGraph, perfLogEnabled: Boolean): SettingsToo
     )
     val state = SettingsToolsState(
         perfLogEnabled = perfLogEnabled,
+        gpuSave = gpuSave,
         perfLogCount = clearTick.let { PerfLog.ring.size },
         restorePrompt = pending?.let { b ->
             b.summary().let { RestorePrompt(b.appVersion, it.settings, it.presets, it.favorites) }

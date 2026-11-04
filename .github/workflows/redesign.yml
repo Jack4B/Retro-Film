@@ -77,7 +77,7 @@ jobs:
           disable-animations: true
           script: |
             ./gradlew :app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=app.retrofilm.ui.RedesignEditorTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true --stacktrace
-            adb shell am instrument -w -e class app.retrofilm.engine.GlesTilingTest,app.retrofilm.perf.PerfTimingTest,app.retrofilm.perf.SaveStagesTest,app.retrofilm.perf.DngImportTest,app.retrofilm.perf.EncoderTimingTest,app.retrofilm.perf.AutoSuggestTest,app.retrofilm.perf.SaveStressTest app.retrofilm.test/androidx.test.runner.AndroidJUnitRunner | tee app/build/instrument.txt
+            adb shell am instrument -w -e class app.retrofilm.engine.GlesTilingTest,app.retrofilm.perf.PerfTimingTest,app.retrofilm.perf.SaveStagesTest,app.retrofilm.perf.DngImportTest,app.retrofilm.perf.EncoderTimingTest,app.retrofilm.perf.AutoSuggestTest,app.retrofilm.perf.SaveStressTest,app.retrofilm.engine.GpuSaveKernelTest app.retrofilm.test/androidx.test.runner.AndroidJUnitRunner | tee app/build/instrument.txt
             adb logcat -d -s RetroPerf:I RetroFilmPerf:I > app/build/perf.txt || true
             grep -q '^OK (' app/build/instrument.txt
       - name: Perf timings

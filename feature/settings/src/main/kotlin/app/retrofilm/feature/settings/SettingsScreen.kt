@@ -63,6 +63,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onThemeModeChange: (ThemeMode) -> Unit = {},
     onDefaultHdrChange: (Boolean) -> Unit = {},
+    onFrameOutwardChange: (Boolean) -> Unit = {},
     toolsActions: SettingsToolsActions = SettingsToolsActions()
 ) {
     state.tools?.let { ToolsDialogs(it, toolsActions) }
@@ -82,8 +83,10 @@ fun SettingsScreen(
             if (state.dynamicColorSupported) {
                 item { DynamicColorRow(state.dynamicColor, onDynamicColorChange) }
             }
-            state.defaultHdrFromPhoto?.let { hdr ->
+            if (state.defaultHdrFromPhoto != null || state.frameOutward != null) {
                 item { SectionHeader(stringResource(R.string.settings_section_photos)) }
+            }
+            state.defaultHdrFromPhoto?.let { hdr ->
                 item {
                     SwitchRow(
                         checked = hdr,
@@ -95,6 +98,7 @@ fun SettingsScreen(
                     )
                 }
             }
+            state.frameOutward?.let { outward -> item { FrameModeRow(outward, onFrameOutwardChange) } }
             item { SectionHeader(stringResource(R.string.settings_section_filters)) }
             item {
                 NavRow(
@@ -153,6 +157,34 @@ private fun ThemeModeRow(selected: ThemeMode, onChange: (ThemeMode) -> Unit) {
                     onClick = { onChange(mode) },
                     shape = SegmentedButtonDefaults.itemShape(index, options.size),
                     modifier = Modifier.heightIn(min = MinTouch)
+                ) { Text(stringResource(label)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FrameModeRow(outward: Boolean, onChange: (Boolean) -> Unit) {
+    val options = listOf(
+        Triple(true, R.string.settings_frame_outward, "frame-mode-outward"),
+        Triple(false, R.string.settings_frame_original, "frame-mode-original")
+    )
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(stringResource(R.string.settings_frame_mode), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            stringResource(
+                if (outward) R.string.settings_frame_outward_subtitle else R.string.settings_frame_original_subtitle
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            options.forEachIndexed { index, (value, label, tag) ->
+                SegmentedButton(
+                    selected = value == outward,
+                    onClick = { onChange(value) },
+                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                    modifier = Modifier.heightIn(min = MinTouch).testTag(tag)
                 ) { Text(stringResource(label)) }
             }
         }

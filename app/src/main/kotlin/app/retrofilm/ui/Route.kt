@@ -18,6 +18,7 @@ import app.retrofilm.feature.settings.SettingsUiState
 import app.retrofilm.feature.settings.ThirdPartyLicense
 import app.retrofilm.feature.settings.lut.LutDownloadScreen
 import app.retrofilm.perf.PerfLog
+import app.retrofilm.pipeline.SaveBackend
 import kotlinx.coroutines.launch
 
 /** Trasy aplikacji. Nazwy tras są stałe (deep linki / testy); podtrasy ustawień z feature:settings. */
@@ -51,6 +52,8 @@ fun RetroFilmNavHost(
     val defaultHdr by graph.appSettings.defaultHdrFromPhoto.collectAsState(initial = false)
     val perfLogOn by graph.appSettings.perfLogEnabled.collectAsState(initial = false)
     LaunchedEffect(perfLogOn) { PerfLog.recorder = if (perfLogOn) PerfLog.ring else null }
+    val gpuSave by graph.appSettings.gpuSave.collectAsState(initial = true)
+    LaunchedEffect(gpuSave) { SaveBackend.gpuEnabled = gpuSave }
     val parent = when (route) {
         Route.Licenses -> licensesParent
         Route.Filters -> filtersParent
@@ -64,14 +67,23 @@ fun RetroFilmNavHost(
             route = it
         }
 
-        Route.Settings -> SettingsRoute(graph, dynamicColor, themeMode, defaultHdr, perfLogOn, back, onOpenFilters = {
-            filtersParent = Route.Settings
-            route = Route.Filters
-        }, onOpenLicense = {
-            license = it
-            licensesParent = Route.Settings
-            route = Route.Licenses
-        })
+        Route.Settings -> SettingsRoute(
+            graph,
+            dynamicColor,
+            themeMode,
+            defaultHdr,
+            perfLogOn to gpuSave,
+            back,
+            onOpenFilters = {
+                filtersParent = Route.Settings
+                route = Route.Filters
+            },
+            onOpenLicense = {
+                license = it
+                licensesParent = Route.Settings
+                route = Route.Licenses
+            }
+        )
 
         Route.Licenses -> LicensesScreen(
             selected = license,
@@ -93,20 +105,24 @@ private fun SettingsRoute(
     dynamicColor: Boolean,
     themeMode: ThemeMode,
     defaultHdr: Boolean,
-    perfLogOn: Boolean,
+    diagnostics: Pair<Boolean, Boolean>,
     onBack: () -> Unit,
     onOpenFilters: () -> Unit,
     onOpenLicense: (ThirdPartyLicense) -> Unit
 ) {
     val scope = rememberCoroutineScope()
-    val tools = rememberSettingsTools(graph, perfLogOn)
+    val (perfLogOn, gpuSave) = diagnostics
+    val tools = rememberSettingsTools(graph, perfLogOn, gpuSave)
+    val frameOutward by graph.appSettings.frameOutward.collectAsState(initial = true)
     SettingsScreen(
         state = SettingsUiState(
             dynamicColor = dynamicColor,
             themeMode = themeMode,
             defaultHdrFromPhoto = defaultHdr,
+            frameOutward = frameOutward,
             tools = tools.state
         ),
+        onFrameOutwardChange = { scope.launch { graph.appSettings.setFrameOutward(it) } },
         onDefaultHdrChange = { scope.launch { graph.appSettings.setDefaultHdrFromPhoto(it) } },
         onBack = onBack,
         onDynamicColorChange = { scope.launch { graph.appSettings.setDynamicColor(it) } },

@@ -54,6 +54,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
     val onPickFiles = { filesPicker.launch(arrayOf("image/*")) }
     val onSave = rememberSaveFlow(state, ::show)
     LaunchedEffect(Unit) { state.observeDefaults() }
+    LaunchedEffect(Unit) { state.observeFrameMode() }
     LaunchedEffect(Unit) { state.library.observeFavorites() }
     LaunchedEffect(Unit) { state.presetBook.load(context) }
     LaunchedEffect(Unit) { state.library.observeDownloads() }

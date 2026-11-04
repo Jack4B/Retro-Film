@@ -34,7 +34,17 @@ data class FrameOptions(
     /** Wielkość podpisu jako ułamek bazowej; domyślnie 0,8 (suwak 100%), do 1,0 (suwak 125%). */
     val signatureScale: Float = TightFrame.DEFAULT_SIGNATURE_SCALE,
     /** Znak wodny: kod QR z linkiem do aplikacji w rogu zdjęcia. */
-    val watermark: Boolean = false
+    val watermark: Boolean = false,
+    /**
+     * K: tryb ramki (Ustawienia). true = „Ramka na zewnątrz” (J): zdjęcie 1:1, plik większy o margines.
+     * false = „Oryginalny rozmiar pliku”: zdjęcie zmniejszone do okna ramki, plik ma wymiary oryginału.
+     */
+    val outward: Boolean = true,
+    /**
+     * Dłuższy bok płótna w trybie „Oryginalny rozmiar pliku” (0 = dłuższy bok zdjęcia). Zapis ustawia go, gdy
+     * zdjęcie zostało już zmniejszone do okna ([FrameRenderer.originalWindow]) przed potokiem – wtedy kopia 1:1.
+     */
+    val fitLongSide: Int = 0
 ) {
     val drawsSignature get() = enabled && signatureEnabled && signature.isNotBlank()
 }
@@ -76,6 +86,7 @@ class PaintSignatureMeasurer(
 }
 
 /** Składa ramkę (RAMKA-SPEC v2, [FrameGeometry]) i podpis na bitmapie wyjściowej. */
+@Suppress("TooManyFunctions")
 object FrameRenderer {
     /** Status podpisu – ten sam algorytm co podgląd i blokada w `JpegExporter`. */
     fun status(options: FrameOptions, photoW: Int, photoH: Int, typeface: Typeface): SignatureFitStatus =
@@ -96,25 +107,13 @@ object FrameRenderer {
      */
     fun render(photo: Bitmap, options: FrameOptions, typeface: Typeface, colorSpaceSource: Bitmap = photo): Bitmap {
         if (!options.enabled) return plain(photo, options, colorSpaceSource)
-        val lines = if (options.drawsSignature) {
-            TightFrame.signatureLines(
-                options.aspect,
-                photo.width.toFloat(),
-                photo.height.toFloat(),
-                options.margin,
-                options.signatureScale,
-                PaintSignatureMeasurer(options.signature, typeface)
-            )
+        val lines = linesFor(options, photo.width, photo.height, typeface)
+        val layout = if (options.outward) {
+            outwardLayout(photo, options, lines)
         } else {
-            1
+            val side = options.fitLongSide.takeIf { it > 0 } ?: maxOf(photo.width, photo.height)
+            layoutFor(photo, options, lines, side.toFloat())
         }
-        // J: płótno dobrane tak, by okno zdjęcia miało (po zaokrągleniu) jego rozmiar – zdjęcie kopiowane 1:1, ramka
-        // rośnie na zewnątrz. Dawniej dłuższy bok płótna = dłuższy bok zdjęcia, więc każde zdjęcie w ramce przechodziło
-        // pełny Lanczos (0,3–0,6 s przy 12 MP) i traciło ostrość. Układ jest liniowy w długości boku: dwa przybliżenia.
-        val first = layoutFor(photo, options, lines, maxOf(photo.width, photo.height).toFloat())
-        val grow = photo.width / first.photo.width.coerceAtLeast(1f)
-        val longSide = maxOf(first.canvasWidth, first.canvasHeight) * grow.coerceIn(1f, MAX_GROW)
-        val layout = layoutFor(photo, options, lines, longSide)
         val w = layout.canvasWidth.roundToInt().coerceAtLeast(1)
         val h = layout.canvasHeight.roundToInt().coerceAtLeast(1)
         val out = blank(w, h, colorSpaceSource)
@@ -125,6 +124,59 @@ object FrameRenderer {
         if (options.drawsSignature) drawSignature(canvas, layout, options, typeface)
         if (options.watermark) Watermark.draw(canvas, AndroidRectF(p.left, p.top, p.right, p.bottom))
         return out
+    }
+
+    /**
+     * J: płótno dobrane tak, by okno zdjęcia miało (po zaokrągleniu) jego rozmiar – zdjęcie kopiowane 1:1, ramka
+     * rośnie na zewnątrz. Układ jest liniowy w długości boku: dwa przybliżenia.
+     */
+    private fun outwardLayout(photo: Bitmap, options: FrameOptions, lines: Int): app.retrofilm.core.frame.FrameLayout {
+        val first = layoutFor(photo, options, lines, maxOf(photo.width, photo.height).toFloat())
+        val grow = photo.width / first.photo.width.coerceAtLeast(1f)
+        val longSide = maxOf(first.canvasWidth, first.canvasHeight) * grow.coerceIn(1f, MAX_GROW)
+        return layoutFor(photo, options, lines, longSide)
+    }
+
+    /**
+     * K: rozmiar okna zdjęcia w trybie „Oryginalny rozmiar pliku” dla zdjęcia [w]×[h] – zapis zmniejsza zdjęcie do
+     * niego jeszcze przed potokiem (mniej pikseli do obróbki, ziarno i dithering bez rozmycia), a ramka kopiuje 1:1.
+     * null = ramka wyłączona albo tryb „na zewnątrz”.
+     */
+    fun originalWindow(options: FrameOptions, w: Int, h: Int, typeface: Typeface): Pair<Int, Int>? {
+        if (!options.enabled || options.outward) return null
+        val lines = linesFor(options, w, h, typeface)
+        val (cw, ch) = TightFrame.canvasSize(
+            options.aspect,
+            w.toFloat(),
+            h.toFloat(),
+            options.margin,
+            options.drawsSignature,
+            maxOf(w, h).toFloat(),
+            options.signatureScale,
+            lines
+        )
+        val layout = TightFrame.layout(
+            SizeF(cw.roundToInt().coerceAtLeast(1).toFloat(), ch.roundToInt().coerceAtLeast(1).toFloat()),
+            SizeF(w.toFloat(), h.toFloat()),
+            options.margin,
+            options.drawsSignature,
+            options.signatureScale,
+            lines
+        )
+        return layout.photo.width.roundToInt().coerceAtLeast(1) to layout.photo.height.roundToInt().coerceAtLeast(1)
+    }
+
+    private fun linesFor(options: FrameOptions, w: Int, h: Int, typeface: Typeface): Int = if (options.drawsSignature) {
+        TightFrame.signatureLines(
+            options.aspect,
+            w.toFloat(),
+            h.toFloat(),
+            options.margin,
+            options.signatureScale,
+            PaintSignatureMeasurer(options.signature, typeface)
+        )
+    } else {
+        1
     }
 
     private fun layoutFor(

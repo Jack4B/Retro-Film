@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 private val Context.appSettings: DataStore<Preferences> by preferencesDataStore(name = "app_settings")
 
 /** Trwałe ustawienia aplikacji (DataStore Preferences): dynamiczne kolory i ulubione filmy. */
+@Suppress("TooManyFunctions") // para flow+setter na każde ustawienie
 class AppSettingsRepository(private val store: DataStore<Preferences>) {
     /** Dynamiczne kolory (Material You); domyślnie wyłączone. */
     val dynamicColor: Flow<Boolean> = store.data.map { it[DYNAMIC_COLOR] ?: false }
@@ -58,6 +59,20 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
 
     suspend fun setPerfLogEnabled(on: Boolean) {
         store.edit { it[PERF_LOG] = on }
+    }
+
+    /** K: tryb ramki – true „Ramka na zewnątrz” (domyślnie), false „Oryginalny rozmiar pliku”. */
+    val frameOutward: Flow<Boolean> = store.data.map { it[FRAME_OUTWARD] ?: true }
+
+    suspend fun setFrameOutward(on: Boolean) {
+        store.edit { it[FRAME_OUTWARD] = on }
+    }
+
+    /** K: Diagnostyka „Zapis na GPU (eksperymentalny)” – domyślnie włączony, z automatycznym powrotem na CPU. */
+    val gpuSave: Flow<Boolean> = store.data.map { it[GPU_SAVE] ?: true }
+
+    suspend fun setGpuSave(on: Boolean) {
+        store.edit { it[GPU_SAVE] = on }
     }
 
     /** Wszystkie znane ustawienia (do kopii zapasowej): nazwa klucza → wartość. */
@@ -156,12 +171,16 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         internal val FAVORITE_FILMS = stringSetPreferencesKey("favorite_films")
 
         internal val PERF_LOG = booleanPreferencesKey("perf_log_enabled")
+        internal val FRAME_OUTWARD = booleanPreferencesKey("frame_outward")
+        internal val GPU_SAVE = booleanPreferencesKey("gpu_save")
 
         private val KNOWN: Map<Preferences.Key<*>, KClass<*>> = mapOf(
             DYNAMIC_COLOR to Boolean::class,
             THEME_MODE to String::class,
             FAVORITE_FILMS to Set::class,
             PERF_LOG to Boolean::class,
+            FRAME_OUTWARD to Boolean::class,
+            GPU_SAVE to Boolean::class,
             DEF_HDR to Boolean::class,
             DEF_QUALITY to Int::class,
             DEF_MAX_SIDE to Int::class,

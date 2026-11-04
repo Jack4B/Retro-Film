@@ -8,6 +8,7 @@ import app.retrofilm.core.engine.CpuLutEngine
 import app.retrofilm.core.export.ExifData
 import app.retrofilm.core.export.IccProfiles
 import app.retrofilm.core.export.JpegInspector
+import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.pipeline.Adjustments
 import app.retrofilm.pipeline.FileType
 import app.retrofilm.pipeline.FrameOptions
@@ -30,14 +31,15 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ExportJobTest {
-    private fun job(maxSide: Int = 0, format: ExportFormat = ExportFormat()) = ExportJob(
-        ExportLook(Geometry(), null, 1f, Adjustments()),
-        CpuLutEngine(),
-        FrameOptions(),
-        Typeface.DEFAULT,
-        maxSide,
-        format
-    )
+    private fun job(maxSide: Int = 0, format: ExportFormat = ExportFormat(), frame: FrameOptions = FrameOptions()) =
+        ExportJob(
+            ExportLook(Geometry(), null, 1f, Adjustments()),
+            CpuLutEngine(),
+            frame,
+            Typeface.DEFAULT,
+            maxSide,
+            format
+        )
 
     private fun photo(w: Int, h: Int) = Bitmap.createBitmap(
         IntArray(w * h) { i -> (0xFF shl 24) or ((i % w) * 255 / w shl 16) or ((i / w) * 255 / h shl 8) or 90 },
@@ -116,5 +118,35 @@ class ExportJobTest {
             }
         }
         assertTrue("brak wartości pośrednich między poziomami 8-bit", fine > 64 * 48 / 2)
+    }
+
+    @Test
+    fun outwardFrameGrowsFileByMargin() = runBlocking {
+        val out = job(frame = FrameOptions(enabled = true, outward = true)).run(null, photo(1200, 800))
+        val (w, h) = size(out.jpeg)
+        assertTrue("$w x $h", w > 1200 && h > 800)
+    }
+
+    @Test
+    fun originalSizeFrameKeepsSourceLongSide() = runBlocking {
+        // jak przed J: dłuższy bok pliku = dłuższy bok zdjęcia (proporcje płótna wynikają z ramki)
+        val out = job(frame = FrameOptions(enabled = true, outward = false)).run(null, photo(1200, 800))
+        val (w, h) = size(out.jpeg)
+        assertEquals(1200, w)
+        assertTrue("$h", h in 800..1000)
+    }
+
+    @Test
+    fun originalSizeSquareFrameKeepsLongSide() = runBlocking {
+        val frame = FrameOptions(enabled = true, outward = false, aspect = FrameAspect.entries.last())
+        val (w, h) = size(job(frame = frame).run(null, photo(1200, 800)).jpeg)
+        assertEquals(1200, maxOf(w, h))
+    }
+
+    @Test
+    fun originalSizeWithSignatureKeepsSourceLongSide() = runBlocking {
+        val frame = FrameOptions(enabled = true, outward = false, signatureEnabled = true, signature = "Karesh")
+        val (w, h) = size(job(frame = frame).run(null, photo(1200, 800)).jpeg)
+        assertEquals(1200, maxOf(w, h))
     }
 }

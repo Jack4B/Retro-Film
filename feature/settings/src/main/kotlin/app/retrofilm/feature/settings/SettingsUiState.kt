@@ -61,6 +61,8 @@ data class SettingsUiState(
     val dynamicColorSupported: Boolean = supportsDynamicColor(),
     /** Domyślne „HDR ze zdjęcia”; `null` ukrywa wiersz (np. w starszych zrzutach). */
     val defaultHdrFromPhoto: Boolean? = null,
+    /** K: tryb ramki – true „Ramka na zewnątrz”, false „Oryginalny rozmiar pliku”; `null` ukrywa wybór. */
+    val frameOutward: Boolean? = null,
     /** Sekcje „Kopia zapasowa” i „Diagnostyka”; `null` je ukrywa. */
     val tools: SettingsToolsState? = null,
     /** Wersja aplikacji (BuildConfig). */
