@@ -1,6 +1,7 @@
 package app.retrofilm.ui
 
 import app.retrofilm.core.export.SignatureTooLongException
+import app.retrofilm.perf.CrashLog
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -32,6 +33,11 @@ suspend fun <T> exportBatch(items: List<T>, onProgress: (Int) -> Unit = {}, one:
             failed++
             failedAt += index
         } catch (_: SignatureTooLongException) {
+            failed++
+            failedAt += index
+        } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+            // H: OOM i inne błędy jednego zdjęcia nie mogą zamknąć aplikacji
+            CrashLog.record("batch", e)
             failed++
             failedAt += index
         }

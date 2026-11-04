@@ -31,8 +31,6 @@ internal class StripPlans(
  * (pełne tablice ARGB i float zastępują bufory pasów po jednym na wątek). Wynik nie zależy od liczby wątków.
  */
 internal object StripPipeline {
-    private const val MIN_CORE = 128
-    private const val HALO_FACTOR = 6
     private const val NANOS_PER_MS = 1_000_000L
 
     fun run(
@@ -48,15 +46,58 @@ internal object StripPipeline {
         val plans = StripAnalysis(src, adj, deband, faces, io.finish, io.stage).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        // pas jest co najmniej HALO_FACTOR razy wyższy od zapasu, żeby nadmiarowe wiersze nie dominowały kosztu
-        val core = max(MIN_CORE, HALO_FACTOR * plans.halo)
+        val layout = StripBudget.layout(w, h, plans, io.finish ?: adj, io.budget ?: StripBudget.bytes())
+        val core = layout.core
         Parallel.forEach(
             (h + core - 1) / core,
-            { StripWorker(adj, plans, w, h, min(h, core + 2 * plans.halo), io) }
+            { StripWorker(adj, plans, w, h, min(h, core + 2 * plans.halo), io) },
+            layout.threads
         ) { worker, chunk -> worker.run(src, out, chunk * core, min(h, (chunk + 1) * core)) }
         PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
         PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS
         return out
+    }
+}
+
+/**
+ * H: limit pamięci buforów pasów. W G jeden przebieg (film + wykończenie) łączył zapasy odbandowania i wyostrzania,
+ * a wysokość pasa rosła z zapasem (×[HALO_FACTOR]) – przy 8 wątkach bufory pasów 12 MP sięgały ~1 GB
+ * (OOM przy zapisie).
+ * Teraz wysokość pasa i liczba wątków są dobierane tak, by suma buforów wszystkich wątków mieściła się w [bytes].
+ */
+internal object StripBudget {
+    data class Layout(val core: Int, val threads: Int)
+
+    const val MIN_CORE = 128
+    const val HALO_FACTOR = 6
+    private const val MB = 1L shl 20
+    const val MIN_BYTES = 48 * MB
+    private const val MAX_BYTES = 192 * MB
+    private const val HEAP_SHARE = 4
+    private const val BASE_BPP = 16 // ints + 3 płaszczyzny float
+    private const val DEBAND_BPP = 16 // Deband.Scratch
+    private const val SHARP_BPP = 36 // jasność, RL (4), rozmycie, delta, maska
+
+    /** Budżet: 1/[HEAP_SHARE] sterty (zostaje miejsce na bitmapy wejścia/wyjścia, ramkę i JPEG). */
+    fun bytes(maxHeap: Long = Runtime.getRuntime().maxMemory()): Long =
+        (maxHeap / HEAP_SHARE).coerceIn(MIN_BYTES, MAX_BYTES)
+
+    /** Szacunek pamięci jednego wątku dla pasa o rdzeniu [core] wierszy. */
+    fun workerBytes(w: Int, core: Int, plans: StripPlans, detail: Boolean): Long {
+        val rows = (core + 2L * plans.halo)
+        val bpp = BASE_BPP + if (plans.debandRadius > 0) DEBAND_BPP else 0
+        val sharpRows = if (detail) core + 2L * plans.sharpMargin else 0L
+        return w * (rows * bpp + sharpRows * SHARP_BPP)
+    }
+
+    fun layout(w: Int, h: Int, plans: StripPlans, sharp: Adjustments, budget: Long): Layout {
+        val detail = sharp.hasDetail
+        var core = min(h, max(MIN_CORE, HALO_FACTOR * plans.halo))
+        val workers = Parallel.workers
+        // najpierw niższe pasy (do MIN_CORE), potem mniej wątków; jeden wątek zawsze (minimalny pas)
+        while (core > MIN_CORE && workerBytes(w, core, plans, detail) * workers > budget) core = max(MIN_CORE, core / 2)
+        val threads = (budget / workerBytes(w, core, plans, detail)).toInt().coerceIn(1, workers)
+        return Layout(core, threads)
     }
 }
 
@@ -215,8 +256,12 @@ internal class StripIo(
     val stage: PlaneStage? = null,
     val dither: Boolean = true,
     /** Wykończenie po [stage] w tym samym przebiegu (G): LUT na całym pasie, potem wyostrzanie, ziarno i winieta. */
-    val finish: Adjustments? = null
+    val finish: Adjustments? = null,
+    /** Limit pamięci buforów pasów (H); null = [StripBudget.bytes]. */
+    val budget: Long? = null
 ) {
+    fun copyWith(budget: Long) = StripIo(fracIn, fracOut, stage, dither, finish, budget)
+
     companion object {
         val Default = StripIo()
     }

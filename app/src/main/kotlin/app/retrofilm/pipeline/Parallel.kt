@@ -28,14 +28,14 @@ internal object Parallel {
     }
 
     /** Wywołuje [body] dla kawałków 0 until [count]; kawałki rozdzielane dynamicznie między wątki. */
-    fun forEach(count: Int, body: (Int) -> Unit) = forEach(count, { }, { _, i -> body(i) })
+    fun forEach(count: Int, body: (Int) -> Unit): Unit = forEach(count, { }, workers) { _, i -> body(i) }
 
     /**
      * Jak [forEach], ale każdy wątek dostaje własny stan z [newState] (np. [AdjustmentProcessor], który ma bufory
      * robocze i nie jest bezpieczny wątkowo).
      */
-    fun <S> forEach(count: Int, newState: () -> S, body: (S, Int) -> Unit) {
-        val threads = minOf(workers, count)
+    fun <S> forEach(count: Int, newState: () -> S, maxThreads: Int = workers, body: (S, Int) -> Unit) {
+        val threads = minOf(workers, count, maxThreads)
         if (threads <= 1 || insideWorker.get()) {
             val state = newState()
             for (i in 0 until count) body(state, i)

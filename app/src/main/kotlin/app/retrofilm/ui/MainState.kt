@@ -16,6 +16,7 @@ import app.retrofilm.core.export.SignatureTooLongException
 import app.retrofilm.core.frame.FrameAspect
 import app.retrofilm.core.frame.SignatureFitStatus
 import app.retrofilm.engine.AppGraph
+import app.retrofilm.perf.CrashLog
 import app.retrofilm.perf.PerfContext
 import app.retrofilm.perf.PerfLog
 import app.retrofilm.perf.SaveTrace
@@ -45,6 +46,7 @@ import app.retrofilm.pipeline.UltraHdrJpeg
 import app.retrofilm.settings.EditDefaults
 import java.io.IOException
 import java.io.InputStream
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
@@ -810,6 +812,12 @@ class MainState(
             UiMessage.ExportFailed(e.message.orEmpty())
         } catch (e: SecurityException) {
             UiMessage.ExportFailed(e.message.orEmpty())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+            // H: brak pamięci (OOM) i każdy inny błąd zapisu → komunikat zamiast zamknięcia aplikacji
+            CrashLog.record("export", e)
+            UiMessage.ExportFailed(e.javaClass.simpleName)
         }
     }
 
