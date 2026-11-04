@@ -46,13 +46,30 @@ internal object StripPipeline {
         val plans = StripAnalysis(src, adj, deband, faces, io.finish, io.stage).plans()
         val t1 = System.nanoTime()
         val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val layout = StripBudget.layout(w, h, plans, io.finish ?: adj, io.budget ?: StripBudget.bytes())
+        val columns = io.fracIn == null && io.fracOut == null
+        val layout = StripBudget.layout(
+            w,
+            h,
+            plans,
+            io.finish ?: adj,
+            io.budget ?: StripBudget.bytes(),
+            columns = columns
+        )
         val core = layout.core
+        val tiles = layout.tilesX
+        val coreW = (w + tiles - 1) / tiles
+        val tileW = StripBudget.tileWidth(w, tiles, plans.halo)
         Parallel.forEach(
-            (h + core - 1) / core,
-            { StripWorker(adj, plans, w, h, min(h, core + 2 * plans.halo), io) },
+            (h + core - 1) / core * tiles,
+            { StripWorker(adj, plans, ImageSize(w, h), tileW * min(h, core + 2 * plans.halo), io) },
             layout.threads
-        ) { worker, chunk -> worker.run(src, out, chunk * core, min(h, (chunk + 1) * core)) }
+        ) { worker, chunk ->
+            val row = chunk / tiles
+            val col = chunk % tiles
+            val y = row * core
+            val x = col * coreW
+            worker.run(src, out, Tile(x, y, min(w, x + coreW), min(h, y + core)))
+        }
         PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
         PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS
         return out
@@ -66,38 +83,88 @@ internal object StripPipeline {
  * Teraz wysokość pasa i liczba wątków są dobierane tak, by suma buforów wszystkich wątków mieściła się w [bytes].
  */
 internal object StripBudget {
-    data class Layout(val core: Int, val threads: Int)
+    data class Layout(val core: Int, val threads: Int, val tilesX: Int = 1)
 
     const val MIN_CORE = 128
     const val HALO_FACTOR = 6
+    private const val CORE_STEP = 64
+    private const val MAX_TILES_X = 8
     private const val MB = 1L shl 20
     const val MIN_BYTES = 48 * MB
-    private const val MAX_BYTES = 192 * MB
-    private const val HEAP_SHARE = 4
+    private const val MAX_BYTES = 256 * MB
+    private const val HEAP_SHARE = 2 // piksele bitmap są poza stertą Javy (API 26+) – bufory pasów to główny jej koszt
     private const val BASE_BPP = 16 // ints + 3 płaszczyzny float
     private const val DEBAND_BPP = 16 // Deband.Scratch
-    private const val SHARP_BPP = 36 // jasność, RL (4), rozmycie, delta, maska
+    private const val SHARP_KEEP_BPP = 8 // jasność + delta na cały zakres wyostrzania
+    private const val SHARP_CHUNK_BPP = 40 // bufory jednego podpasa wyostrzania (RL, rozmycie, maska…)
 
-    /** Budżet: 1/[HEAP_SHARE] sterty (zostaje miejsce na bitmapy wejścia/wyjścia, ramkę i JPEG). */
+    /** Wiersze podpasa wyostrzania (I): bufory RL zależą od niego, nie od wysokości pasa. */
+    const val SHARP_CHUNK = 256
+
+    /** Budżet: 1/[HEAP_SHARE] sterty, w granicach [MIN_BYTES]..[MAX_BYTES]. */
     fun bytes(maxHeap: Long = Runtime.getRuntime().maxMemory()): Long =
         (maxHeap / HEAP_SHARE).coerceIn(MIN_BYTES, MAX_BYTES)
 
     /** Szacunek pamięci jednego wątku dla pasa o rdzeniu [core] wierszy. */
     fun workerBytes(w: Int, core: Int, plans: StripPlans, detail: Boolean): Long {
-        val rows = (core + 2L * plans.halo)
+        val rows = core + 2L * plans.halo
         val bpp = BASE_BPP + if (plans.debandRadius > 0) DEBAND_BPP else 0
-        val sharpRows = if (detail) core + 2L * plans.sharpMargin else 0L
-        return w * (rows * bpp + sharpRows * SHARP_BPP)
+        val sharp = if (detail) {
+            val m = 2L * plans.sharpMargin
+            (core + m) * SHARP_KEEP_BPP + (min(core, SHARP_CHUNK) + m) * SHARP_CHUNK_BPP
+        } else {
+            0L
+        }
+        return w * (rows * bpp + sharp)
     }
 
-    fun layout(w: Int, h: Int, plans: StripPlans, sharp: Adjustments, budget: Long): Layout {
+    /** Szerokość kafla z zapasem po obu stronach, gdy obraz [w] dzielimy na [tiles] kolumn. */
+    fun tileWidth(w: Int, tiles: Int, halo: Int): Int = min(w, (w + tiles - 1) / tiles + 2 * halo)
+
+    /**
+     * Układ o największej przepustowości w budżecie: wątki × udział rdzenia w kaflu (zapas to praca stracona).
+     * H dzieliło tylko na pasy pełnej szerokości i obcinało wątki – przy 8 rdzeniach 12 MP zostawały 2–3 wątki
+     * (regres zapisu i pełnego podglądu). I dzieli też na kolumny ([Layout.tilesX]), więc kafel jest mały,
+     * a wątków dużo. [columns] = false: tylko pasy (ułamki [StripIo.fracIn]/[StripIo.fracOut] w układzie obrazu).
+     */
+
+    @Suppress("LongParameterList")
+    fun layout(
+        w: Int,
+        h: Int,
+        plans: StripPlans,
+        sharp: Adjustments,
+        budget: Long,
+        workers: Int = Parallel.workers,
+        columns: Boolean = true
+    ): Layout {
         val detail = sharp.hasDetail
-        var core = min(h, max(MIN_CORE, HALO_FACTOR * plans.halo))
-        val workers = Parallel.workers
-        // najpierw niższe pasy (do MIN_CORE), potem mniej wątków; jeden wątek zawsze (minimalny pas)
-        while (core > MIN_CORE && workerBytes(w, core, plans, detail) * workers > budget) core = max(MIN_CORE, core / 2)
-        val threads = (budget / workerBytes(w, core, plans, detail)).toInt().coerceIn(1, workers)
-        return Layout(core, threads)
+        val top = min(h, max(MIN_CORE, HALO_FACTOR * plans.halo))
+        var best = Layout(min(h, MIN_CORE), 1)
+        var bestScore = -Float.MAX_VALUE
+        val maxTiles = if (columns) max(1, w / max(MIN_CORE, 2 * plans.halo)).coerceAtMost(MAX_TILES_X) else 1
+        for (tiles in 1..maxTiles) {
+            val coreW = (w + tiles - 1) / tiles
+            val tileW = tileWidth(w, tiles, plans.halo)
+            var core = min(h, MIN_CORE)
+            while (core <= top) {
+                val bytes = workerBytes(tileW, core, plans, detail)
+                val chunks = (h + core - 1) / core * tiles
+                val threads = (budget / bytes).toInt().coerceIn(1, min(workers, chunks))
+                // ponad budżet nawet jeden wątek: wybierz najmniejszy kafel
+                val score = if (bytes > budget) {
+                    -bytes.toFloat()
+                } else {
+                    threads * core.toFloat() / min(h, core + 2 * plans.halo) * coreW / tileW
+                }
+                if (score > bestScore) {
+                    best = Layout(core, threads, tiles)
+                    bestScore = score
+                }
+                core += CORE_STEP
+            }
+        }
+        return best
     }
 }
 
@@ -109,28 +176,40 @@ internal object PipelineStats {
 }
 
 /** Przetwarza pasy jednego wątku: własny procesor i bufory (nie są bezpieczne wątkowo). */
+internal data class ImageSize(val w: Int, val h: Int)
+
+/** Rdzeń kafla: kolumny [x0, x1), wiersze [y0, y1). */
+internal data class Tile(val x0: Int, val y0: Int, val x1: Int, val y1: Int)
+
 internal class StripWorker(
     private val adj: Adjustments,
     private val plans: StripPlans,
-    private val w: Int,
-    private val h: Int,
-    capRows: Int,
+    size: ImageSize,
+    capacity: Int,
     private val io: StripIo = StripIo.Default
 ) {
+    private val fullW = size.w
+    private val h = size.h
+    private var w = fullW // szerokość bieżącego kafla z zapasem
     private val processor = AdjustmentProcessor(adj)
     private val neutral = adj.isNeutral
     private val finish = io.finish
     private val finisher = finish?.let { AdjustmentProcessor(it) }
-    private val ints = IntArray(w * capRows)
-    private val planes = Planes.of(w * capRows)
-    private val debandScratch = if (plans.debandRadius > 0) Deband.Scratch(w * capRows) else null
+    private val ints = IntArray(capacity)
+    private val planes = Planes.of(capacity)
+    private val debandScratch = if (plans.debandRadius > 0) Deband.Scratch(capacity) else null
+    private var firstCol = 0
 
-    /** Przetwarza wiersze [y0, y1) obrazu [src] i zapisuje je do [out]. */
-    fun run(src: Bitmap, out: Bitmap, y0: Int, y1: Int) {
-        val a = max(0, y0 - plans.halo)
-        val b = min(h, y1 + plans.halo)
+    /** Przetwarza kafel [t] obrazu [src] (z zapasem [StripPlans.halo] w obu osiach) i zapisuje rdzeń do [out]. */
+    fun run(src: Bitmap, out: Bitmap, t: Tile) {
+        val a = max(0, t.y0 - plans.halo)
+        val b = min(h, t.y1 + plans.halo)
+        val xa = max(0, t.x0 - plans.halo)
+        val xb = min(fullW, t.x1 + plans.halo)
+        w = xb - xa
+        firstCol = xa
         val count = (b - a) * w
-        synchronized(src) { src.getPixels(ints, 0, w, 0, a, w, b - a) }
+        synchronized(src) { src.getPixels(ints, 0, w, xa, a, w, b - a) }
         for (i in 0 until count) {
             val c = ints[i]
             planes.r[i] = ((c shr RED_SHIFT) and MASK).toFloat()
@@ -138,35 +217,35 @@ internal class StripWorker(
             planes.b[i] = (c and MASK).toFloat()
         }
         io.fracIn?.let { Frac.add(it, a * w, planes, count) }
-        val span = PixelSpan(w, a, h)
+        val span = span(a)
         plans.chroma?.let { ChromaDenoise.applyPlanes(it, planes, count, span) }
         plans.chromaEdge?.let { ChromaEdge.applyPlanes(it, planes, count, w) }
         plans.luma?.let { LumaDenoise.applyPlanes(it, planes, count, w) }
         plans.dehaze?.let { Dehaze.restorePlanes(it, planes, count, span) }
         if (!neutral) processor.processPlanes(planes, count, span, plans.tone)
-        if (plans.debandRadius >
-            0
-        ) {
+        if (plans.debandRadius > 0) {
             Deband.applyPlanes(planes, count, w, plans.debandRadius, debandScratch ?: Deband.Scratch(count))
         }
-        val core = (y0 - a) * w
-        val coreCount = (y1 - y0) * w
+        val core = (t.y0 - a) * w
+        val coreCount = (t.y1 - t.y0) * w
         if (finisher != null && finish != null) {
-            filmAndFinish(count, a, y0, y1)
+            filmAndFinish(count, a, t.y0, t.y1)
         } else {
             if (adj.hasDetail) sharpen(count, a, core, coreCount, adj)
-            processor.effectsPlanes(planes, core, coreCount, PixelSpan(w, y0, h))
+            processor.effectsPlanes(planes, core, coreCount, span(t.y0))
             io.stage?.apply(planes, core, coreCount)
         }
         val fracOut = io.fracOut
         if (fracOut != null) {
-            Frac.split(planes, core, coreCount, fracOut, y0 * w)
-            quantize(core, coreCount, y0, dither = false)
+            Frac.split(planes, core, coreCount, fracOut, t.y0 * w)
+            quantize(core, coreCount, t.y0, dither = false)
         } else {
-            quantize(core, coreCount, y0, io.dither)
+            quantize(core, coreCount, t.y0, io.dither)
         }
-        synchronized(out) { out.setPixels(ints, core, w, 0, y0, w, y1 - y0) }
+        synchronized(out) { out.setPixels(ints, core + (t.x0 - xa), w, t.x0, t.y0, t.x1 - t.x0, t.y1 - t.y0) }
     }
+
+    private fun span(firstRow: Int) = PixelSpan(w, firstRow, h, firstCol, fullW)
 
     /** Jak dawny drugi przebieg: film na całym pasie (z zapasem dla wyostrzania), potem wykończenie. */
     private fun filmAndFinish(count: Int, a: Int, y0: Int, y1: Int) {
@@ -175,9 +254,9 @@ internal class StripWorker(
         val core = (y0 - a) * w
         val coreCount = (y1 - y0) * w
         io.stage?.apply(planes, 0, count)
-        if (!finish.isNeutral) finisher.processPlanes(planes, count, PixelSpan(w, a, h), null)
+        if (!finish.isNeutral) finisher.processPlanes(planes, count, span(a), null)
         if (finish.hasDetail) sharpen(count, a, core, coreCount, finish)
-        finisher.effectsPlanes(planes, core, coreCount, PixelSpan(w, y0, h))
+        finisher.effectsPlanes(planes, core, coreCount, span(y0))
     }
 
     /**
@@ -199,7 +278,8 @@ internal class StripWorker(
             adj.sharpenParams,
             adj.clarity,
             plans.clarity,
-            plans.semantic
+            plans.semantic,
+            firstCol
         )
         for (i in core until core + coreCount) {
             val d = delta[i - from]
@@ -214,7 +294,7 @@ internal class StripWorker(
         var x = 0
         var row = y0
         for (i in core until core + coreCount) {
-            val d = if (dither) Dither.at(x, row) * MAX else 0f
+            val d = if (dither) Dither.at(firstCol + x, row) * MAX else 0f
             ints[i] = (ints[i] and ALPHA_MASK) or (to8(planes.r[i] + d) shl RED_SHIFT) or
                 (to8(planes.g[i] + d) shl GREEN_SHIFT) or to8(planes.b[i] + d)
             if (++x == w) {

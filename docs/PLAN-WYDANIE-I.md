@@ -14,8 +14,8 @@ ramka 442–485, dekodowanie ~180, konwersja ~215, kodowanie ~150, zapis ~60, ca
 | # | Etap | DoD | Status |
 |---|------|-----|--------|
 | 0 | Plan (ten plik) | zatwierdzony w PR | ✅ |
-| 2 | Regres pełnego podglądu i zapisu z H | przyczyna potwierdzona testem; układ pasów nie ogranicza wątków bez potrzeby | ⏳ |
-| 1a | Pasy CPU: mniej pamięci na wątek (wyostrzanie w podpasach, dokładny szacunek), układ maksymalizujący przepustowość w budżecie | 12 MP: 8 wątków w ≤ 224 MB buforów; wynik bit-w-bit niezależny od układu | ⏳ |
+| 2 | Regres pełnego podglądu i zapisu z H | przyczyna potwierdzona testem; układ pasów nie ogranicza wątków bez potrzeby | ✅ (StripBudgetTest; CI do potwierdzenia) |
+| 1a | Pasy CPU: mniej pamięci na wątek (wyostrzanie w podpasach, dokładny szacunek), układ maksymalizujący przepustowość w budżecie | 12 MP: 8 wątków w ≤ 224 MB buforów; wynik bit-w-bit niezależny od układu | ✅ kafle 2D (kolumny+pasy), sumy okien w double; bit-w-bit test |
 | 1b | GPU (AGSL/GLES) dla zapisu | patrz „Ryzyka” – realizowane etapami, CPU zostaje rezerwą | ⏳ |
 | 3 | Postęp pojedynczego zapisu | pasek określony (etapy + pasy), UI responsywne | ⏳ |
 | 4 | Auto-korekta | pomiar bez przyciętych próbek; DNG/Ultra HDR z realnego zapasu; `auto_suggest` ≤ 30 ms | ⏳ |

@@ -120,7 +120,7 @@ internal object ChromaDenoise {
             val luma = KR * r + KG * planes.g[i] + KB * b
             val cb = b - luma
             val cr = r - luma
-            val px = x * xStep
+            val px = span.firstCol + x * xStep
             val ncb = cb + (plan.low.sample(plan.smoothCb, px, row) * (2 * BYTE_MAX) - BYTE_MAX - cb) * plan.k
             val ncr = cr + (plan.low.sample(plan.smoothCr, px, row) * (2 * BYTE_MAX) - BYTE_MAX - cr) * plan.k
             val nr = luma + ncr

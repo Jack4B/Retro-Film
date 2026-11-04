@@ -285,8 +285,9 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[2] = encodeLinear(m20 * lr + m21 * lg + m22 * lb)
             chroma?.apply(rgb)
             hsl?.apply(rgb)
-            texture(mask, x * xStep, row)
-            if (hasTone) toneRecovery(mask, x * xStep, row)
+            val gx = span.firstCol + x * xStep
+            texture(mask, gx, row)
+            if (hasTone) toneRecovery(mask, gx, row)
             ends?.apply(rgb)
             contrast?.apply(rgb)
             curves?.apply(rgb)
@@ -304,7 +305,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
     /** Winieta i ziarno na kanałach float: [count] pikseli od indeksu [from] (początek wiersza), położenie [span]. */
     internal fun effectsPlanes(planes: Planes, from: Int, count: Int, span: PixelSpan) {
         if (!hasEffects) return
-        val cell = grainCell(span.width, span.totalRows)
+        val cell = grainCell(span.totalCols, span.totalRows)
         var x = 0
         var row = span.firstRow
         for (i in from until from + count) {
@@ -312,7 +313,7 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             rgb[1] = planes.g[i] / BYTE_MAX
             rgb[2] = planes.b[i] / BYTE_MAX
             grainColorful = planes.grainChroma[i]
-            effects(x, row, span.width, span.totalRows, cell)
+            effects(span.firstCol + x, row, span.totalCols, span.totalRows, cell)
             store(planes, i)
             if (++x == span.width) {
                 x = 0
@@ -588,7 +589,14 @@ class AdjustmentProcessor(private val adj: Adjustments) {
 }
 
 /** Położenie porcji pikseli w obrazie: szerokość wiersza, pierwszy wiersz i liczba wierszy całego obrazu. */
-data class PixelSpan(val width: Int, val firstRow: Int = 0, val totalRows: Int = 1)
+data class PixelSpan(
+    val width: Int,
+    val firstRow: Int = 0,
+    val totalRows: Int = 1,
+    /** Kafel (I): pierwsza kolumna porcji i szerokość całego obrazu (winieta, ziarno, mapy w niskiej rozdz.). */
+    val firstCol: Int = 0,
+    val totalCols: Int = width
+)
 
 /** Nakłada [Adjustments] na bitmapę (nowa bitmapa ARGB_8888, źródło bez zmian). */
 object AdjustmentsApplier {
