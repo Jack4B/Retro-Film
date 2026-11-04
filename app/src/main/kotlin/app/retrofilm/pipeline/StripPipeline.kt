@@ -61,8 +61,10 @@ internal object StripPipeline {
         val tiles = layout.tilesX
         val coreW = (w + tiles - 1) / tiles
         val tileW = StripBudget.tileWidth(w, tiles, plans.halo)
+        val chunks = (h + core - 1) / core * tiles
+        val done = java.util.concurrent.atomic.AtomicInteger()
         Parallel.forEach(
-            (h + core - 1) / core * tiles,
+            chunks,
             { StripWorker(adj, plans, ImageSize(w, h), tileW * min(h, core + 2 * plans.halo), io) },
             layout.threads
         ) { worker, chunk ->
@@ -71,6 +73,7 @@ internal object StripPipeline {
             val y = row * core
             val x = col * coreW
             worker.run(src, out, Tile(x, y, min(w, x + coreW), min(h, y + core)))
+            SaveProgress.tiles(done.incrementAndGet(), chunks)
         }
         PipelineStats.analysisMs = (t1 - t0) / NANOS_PER_MS
         PipelineStats.stripsMs = (System.nanoTime() - t1) / NANOS_PER_MS

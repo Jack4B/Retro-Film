@@ -42,6 +42,7 @@ import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
+import app.retrofilm.pipeline.SaveProgress
 import app.retrofilm.pipeline.SignatureFont
 import app.retrofilm.pipeline.UltraHdrExport
 import app.retrofilm.pipeline.UltraHdrJpeg
@@ -551,6 +552,7 @@ class MainState(
         var reducedCount = 0
         val result = exportBatch(only, {
             current = only[it]
+            SaveProgress.reset()
             exportProgress = it + 1
         }) { photoIndex ->
             val uri = uris[photoIndex]
@@ -788,6 +790,7 @@ class MainState(
     suspend fun export(context: Context? = null, save: suspend (ByteArray) -> Unit): UiMessage = withBusy {
         val start = PerfLog.now()
         val p = photo ?: return@withBusy UiMessage.LoadFailed
+        SaveProgress.reset()
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val job = ExportJob(

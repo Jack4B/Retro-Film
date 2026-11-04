@@ -25,8 +25,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -34,6 +37,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.retrofilm.R
 import app.retrofilm.core.frame.SignatureFitStatus
+import app.retrofilm.pipeline.SaveProgress
+import kotlinx.coroutines.delay
 
 private val Pad = 20.dp
 private val Gap = 12.dp
@@ -136,14 +141,27 @@ private fun DefaultsRow(state: MainState, actions: SaveActions) {
 private fun Progress(state: MainState, result: UiMessage?) {
     val total = state.saveTotal
     val live = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+    // I: postęp w obrębie jednego zdjęcia (kafle potoku), odczytywany co 100 ms – pasek określony także dla 1 zdjęcia
+    val within by produceState(0f, state.busy) {
+        while (state.busy) {
+            value = SaveProgress.value
+            delay(PROGRESS_POLL_MS)
+        }
+        value = 0f
+    }
     when {
         state.busy && state.exportProgress > 0 && total > 0 -> {
             Text(stringResource(R.string.save_sheet_progress, state.exportProgress, total), modifier = live)
             LinearProgressIndicator(
-                progress = { state.exportProgress.toFloat() / total },
-                modifier = Modifier.fillMaxWidth()
+                progress = { ((state.exportProgress - 1 + within) / total).coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth().testTag("save-progress")
             )
         }
+
+        state.busy && within > 0f -> LinearProgressIndicator(
+            progress = { within },
+            modifier = Modifier.fillMaxWidth().testTag("save-progress")
+        )
 
         state.busy -> LinearProgressIndicator(Modifier.fillMaxWidth())
 
@@ -200,3 +218,5 @@ private fun ResultActions(state: MainState, result: UiMessage?, actions: SaveAct
         }
     }
 }
+
+private const val PROGRESS_POLL_MS = 100L
