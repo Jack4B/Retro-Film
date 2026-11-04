@@ -50,8 +50,9 @@ internal object AutoWhiteBalance {
     fun estimate(s: Sample, scene: SceneAnalysis): WbEstimate {
         // Pierwszy przebieg bez progu chromy (pod mocnym światłem szarości wyglądają na barwne), potem zawężanie.
         val open = BooleanArray(s.count) { !scene.sky[it] && !(scene.hasFaces && scene.skin[it]) }
-        val seed = GreySearch.densestGrey(s, open) ?: combined(s, open)?.first ?: return WbEstimate.NONE
-        var est = combined(s, nearGrey(s, open, seed)) ?: combined(s, open) ?: return WbEstimate.NONE
+        val fallback = combined(s, open)
+        val seed = GreySearch.densestGrey(s, open) ?: fallback?.first
+        var est = seed?.let { combined(s, nearGrey(s, open, it)) } ?: fallback ?: return WbEstimate.NONE
         repeat(REFINE_PASSES) { est = combined(s, nearGrey(s, open, est.first)) ?: est }
         val (e, conf) = est
         // Dominującą barwę oceniamy po usunięciu oświetlenia: zabarwienie od światła to nie barwa sceny.
@@ -102,15 +103,17 @@ internal object AutoWhiteBalance {
             for (x in 0 until s.gw) {
                 val i = y * s.gw + x
                 if (!ok(i)) continue
-                for (j in intArrayOf(if (x + 1 < s.gw) i + 1 else -1, if (y + 1 < s.gh) i + s.gw else -1)) {
-                    if (j < 0 || !ok(j)) continue
-                    for (k in 0..2) sum[k] += abs(s.rgb[3 * i + k] - s.rgb[3 * j + k]).toDouble()
-                    n++
-                }
+                if (x + 1 < s.gw && ok(i + 1)) n += addEdge(s, i, i + 1, sum)
+                if (y + 1 < s.gh && ok(i + s.gw)) n += addEdge(s, i, i + s.gw, sum)
             }
         }
         val e = DoubleArray(3) { sum[it] / maxOf(n, 1) }
         return if (n < MIN_ILLUMINANT_SAMPLES || e.sum() < 1e-4) null else e
+    }
+
+    private fun addEdge(s: Sample, i: Int, j: Int, sum: DoubleArray): Int {
+        for (k in 0..2) sum[k] += abs(s.rgb[3 * i + k] - s.rgb[3 * j + k]).toDouble()
+        return 1
     }
 
     /** White-patch: średnia najjaśniejszych 5% próbek neutralnych (bez przepalonych). */
@@ -128,17 +131,31 @@ internal object AutoWhiteBalance {
         val dist = DoubleArray(s.count) { i ->
             val c = DoubleArray(3) { s.rgb[3 * i + it] / e[it] }
             val sum = c.sum()
-            if (!mask[i] || s.clipped[i] || sum < 1e-4) Double.MAX_VALUE else hypot(c[0] / sum - 1.0 / 3, c[1] / sum - 1.0 / 3)
+            if (!mask[i] || s.clipped[i] ||
+                sum < 1e-4
+            ) {
+                Double.MAX_VALUE
+            } else {
+                hypot(c[0] / sum - 1.0 / 3, c[1] / sum - 1.0 / 3)
+            }
         }
         val sorted = dist.filter { it < Double.MAX_VALUE }.sorted()
         if (sorted.isEmpty()) return BooleanArray(s.count)
-        val limit = minOf(NEAR_GREY, sorted[maxOf(MIN_ILLUMINANT_SAMPLES, sorted.size / 10).coerceAtMost(sorted.size - 1)])
+        val limit =
+            minOf(NEAR_GREY, sorted[maxOf(MIN_ILLUMINANT_SAMPLES, sorted.size / 10).coerceAtMost(sorted.size - 1)])
         return BooleanArray(s.count) { dist[it] <= limit }
     }
 
     private fun divided(s: Sample, e: DoubleArray): Sample {
         val k = DoubleArray(3) { e.sum() / 3 / e[it] }
-        return Sample(FloatArray(s.rgb.size) { (s.rgb[it] * k[it % 3]).toFloat().coerceIn(0f, 1f) }, s.gw, s.gh, s.clipped)
+        return Sample(
+            FloatArray(s.rgb.size) {
+                (s.rgb[it] * k[it % 3]).toFloat().coerceIn(0f, 1f)
+            },
+            s.gw,
+            s.gh,
+            s.clipped
+        )
     }
 
     private fun angle(a: DoubleArray, b: DoubleArray): Double {
@@ -178,7 +195,10 @@ internal object AutoWhiteBalance {
         }
         val src = WhiteBalance.sourceXy(best.first, best.second)
         return floatArrayOf(
-            best.first, best.second, (target.first - src.first).toFloat(), (target.second - src.second).toFloat()
+            best.first,
+            best.second,
+            (target.first - src.first).toFloat(),
+            (target.second - src.second).toFloat()
         )
     }
 

@@ -8,7 +8,8 @@ import org.junit.Test
 /** Podział korekt na „korekty” (przed filmem) i „wykończenie” (po filmie), D15. */
 class AdjustmentsSplitTest {
     private val corrections = setOf(
-        "exposure", "contrast", "saturation", "temperature", "tint", "whiteDx", "whiteDy", "toneInversion", "highlights", "shadows", "clarity", "dehaze",
+        "exposure", "contrast", "saturation", "temperature", "tint", "whiteDx", "whiteDy", "toneInversion",
+        "highlights", "shadows", "clarity", "dehaze",
         "whites", "blacks", "texture", "denoise", "lumaDenoise", "chromaEdges", "hsl", "masks"
     )
     private val finishing = setOf(

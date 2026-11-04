@@ -1,5 +1,6 @@
 package app.retrofilm.pipeline
 
+import kotlin.math.abs
 import kotlin.math.pow
 
 /**
@@ -32,7 +33,7 @@ object WhiteBalance {
      * barwę oświetlenia (xy) poza krzywą dzienną + tint – reszta automatycznej korekty, której suwaki nie pokazują.
      */
     fun matrix(temperature: Float, tint: Float, dx: Float = 0f, dy: Float = 0f): FloatArray {
-        if (temperature == 0f && tint == 0f && dx == 0f && dy == 0f) return IDENTITY
+        if (abs(temperature) + abs(tint) + abs(dx) + abs(dy) == 0f) return IDENTITY
         val m = Cat.adapt(sourceXy(temperature, tint, dx, dy), Cat.D65_XY)
         val white = Cat.mul3(m, doubleArrayOf(1.0, 1.0, 1.0))
         val k = 1.0 / (LUM_R * white[0] + LUM_G * white[1] + LUM_B * white[2])

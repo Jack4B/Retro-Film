@@ -20,6 +20,7 @@ import app.retrofilm.perf.PerfContext
 import app.retrofilm.perf.PerfLog
 import app.retrofilm.perf.SaveTrace
 import app.retrofilm.pipeline.Adjustments
+import app.retrofilm.pipeline.AutoContext
 import app.retrofilm.pipeline.AutoEnhance
 import app.retrofilm.pipeline.AutoResult
 import app.retrofilm.pipeline.AutoScene
@@ -27,13 +28,16 @@ import app.retrofilm.pipeline.ColorPolicy
 import app.retrofilm.pipeline.ExportPipeline
 import app.retrofilm.pipeline.FaceBox
 import app.retrofilm.pipeline.FileType
+import app.retrofilm.pipeline.FilmCalibration
 import app.retrofilm.pipeline.FrameOptions
 import app.retrofilm.pipeline.FrameRenderer
 import app.retrofilm.pipeline.Geometry
 import app.retrofilm.pipeline.GeometryApplier
 import app.retrofilm.pipeline.GeometryMath
+import app.retrofilm.pipeline.HdrAnalysis
 import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.OutputSpace
+import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SignatureFont
@@ -146,6 +150,14 @@ class MainState(
     private var autoResult: AutoResult? = null
 
     private var prepResult: AutoResult? = null
+
+    /** Siła odwrócenia krzywej telefonu w „Przygotuj pod film” (suwak, 0–1). */
+    var prepInversion by mutableFloatStateOf(PhoneCurve.DEFAULT_STRENGTH)
+        private set
+    private var hdrInfo = HdrAnalysis.NONE
+    private var autoFilm: String? = null
+    private var prepRaw: AutoResult? = null
+    private val calibrations = HashMap<String, FilmCalibration>()
 
     val canUndoAuto: Boolean get() = autoOn && autoApplied == adjustments
 
@@ -460,6 +472,7 @@ class MainState(
                 context.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw IOException("Brak pliku")
             }
             photoHasGainMap = UltraHdrJpeg.hasGainMap(bytes)
+            hdrInfo = HdrAnalysis.of(bytes)
             // Podgląd zawsze z obrazu bazowego SDR (piksele identyczne, gain mapa nie jest wyświetlana): przełącznik
             // HDR wpływa tylko na zapis, więc nie wymaga ponownego dekodowania.
             val decodeBytes = UltraHdrJpeg.sdrOnly(bytes)
@@ -605,6 +618,7 @@ class MainState(
     suspend fun refreshPreview() {
         val p = photo ?: return
         if (signatureStatus() == SignatureFitStatus.TooLong) return
+        refreshAutoForFilm()
         rendering = true
         try {
             withContext(Dispatchers.Default) { renderPreview(p) }
@@ -683,17 +697,56 @@ class MainState(
         }
         val turnOn = if (kind == AutoKind.Auto) !autoOn else !prepOn
         if (turnOn) {
-            val result = withContext(Dispatchers.Default) {
-                val small = GeometryApplier.apply(previewBase(p), geometry)
-                val px = IntArray(small.width * small.height)
-                small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
-                val suggestion = AutoEnhance.suggest(px, small.width, small.height, FaceFinder.find(small))
-                if (kind == AutoKind.Prep) suggestion.forFilm() else suggestion
-            }
+            val result = suggestFor(p, kind)
             if (kind == AutoKind.Auto) autoResult = result else prepResult = result
             autoScene = result.scene
         }
         if (kind == AutoKind.Auto) autoOn = turnOn else prepOn = turnOn
+        reapplyAuto()
+    }
+
+    /** Suwak siły odwrócenia krzywej telefonu; przy włączonym „Przygotuj pod film” od razu stosuje nową siłę. */
+    fun updatePrepInversion(value: Float) {
+        prepInversion = value.coerceIn(0f, 1f)
+        if (!prepOn || autoApplied != adjustments) return
+        prepResult = prepRaw?.forFilm(prepInversion) ?: return
+        reapplyAuto()
+    }
+
+    /** Po zmianie filmu propozycja liczy się od nowa pod jego szarość (o ile od tej pory nie zmieniano korekt). */
+    private suspend fun refreshAutoForFilm() {
+        val p = photo?.takeIf { (autoOn || prepOn) && autoFilm != film } ?: return
+        if (autoApplied != adjustments) return
+        if (autoOn) autoResult = suggestFor(p, AutoKind.Auto)
+        if (prepOn) prepResult = suggestFor(p, AutoKind.Prep)
+        reapplyAuto()
+    }
+
+    private suspend fun suggestFor(p: Bitmap, kind: AutoKind): AutoResult = withContext(Dispatchers.Default) {
+        val small = GeometryApplier.apply(previewBase(p), geometry)
+        val px = IntArray(small.width * small.height)
+        small.getPixels(px, 0, small.width, 0, 0, small.width, small.height)
+        val faces = FaceFinder.find(small)
+        val context = AutoContext(calibration().targetGrey, hdrInfo.headroomEv, hdrInfo.baselineEv)
+        autoFilm = film
+        val start = PerfLog.now()
+        val suggestion = AutoEnhance.suggest(px, small.width, small.height, faces, context)
+        PerfLog.since("auto_suggest", start)
+        if (kind == AutoKind.Prep) {
+            prepRaw = suggestion
+            suggestion.forFilm(prepInversion)
+        } else {
+            suggestion
+        }
+    }
+
+    /** Kalibracja wybranego filmu (rampa szarości przez LUT), liczona raz na film. */
+    private fun calibration(): FilmCalibration {
+        val lut = lut() ?: return FilmCalibration.NEUTRAL
+        return calibrations.getOrPut(film) { FilmCalibration.of(lut) }
+    }
+
+    private fun reapplyAuto() {
         var next = autoBase ?: adjustments
         autoResult?.takeIf { autoOn }?.let { next = it.applyTo(next) }
         prepResult?.takeIf { prepOn }?.let { next = it.applyTo(next) }
@@ -708,6 +761,7 @@ class MainState(
         prepOn = false
         autoResult = null
         prepResult = null
+        prepRaw = null
     }
 
     private enum class AutoKind { Auto, Prep }

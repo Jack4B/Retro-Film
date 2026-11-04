@@ -147,32 +147,48 @@ object AutoEnhance {
         val clip = (CLIP_LEVEL * 255f).toInt()
         for (gy in 0 until gh) {
             for (gx in 0 until gw) {
-                var r = 0f
-                var g = 0f
-                var b = 0f
-                var n = 0
-                var hot = false
-                for (y in gy * step until minOf(h, gy * step + step)) {
-                    for (x in gx * step until minOf(w, gx * step + step)) {
-                        val c = px[y * w + x]
-                        val cr = (c shr 16) and 0xFF
-                        val cg = (c shr 8) and 0xFF
-                        val cb = c and 0xFF
-                        if (cr >= clip || cg >= clip || cb >= clip) hot = true
-                        r += LINEAR[cr]
-                        g += LINEAR[cg]
-                        b += LINEAR[cb]
-                        n++
-                    }
-                }
                 val i = gy * gw + gx
-                out[3 * i] = r / n
-                out[3 * i + 1] = g / n
-                out[3 * i + 2] = b / n
-                clipped[i] = hot
+                clipped[i] = blockMean(px, w, h, gx * step, gy * step, step, clip, out, 3 * i)
             }
         }
         return Sample(out, gw, gh, clipped)
+    }
+
+    /** Średnia liniowa bloku [step]×[step] od (x0, y0) zapisana do [out] od [at]; true, gdy blok ma przepalenie. */
+    @Suppress("LongParameterList") // gorąca pętla próbkowania: bez alokacji obiektu bloku
+    private fun blockMean(
+        px: IntArray,
+        w: Int,
+        h: Int,
+        x0: Int,
+        y0: Int,
+        step: Int,
+        clip: Int,
+        out: FloatArray,
+        at: Int
+    ): Boolean {
+        var r = 0f
+        var g = 0f
+        var b = 0f
+        var n = 0
+        var hot = false
+        for (y in y0 until minOf(h, y0 + step)) {
+            for (x in x0 until minOf(w, x0 + step)) {
+                val c = px[y * w + x]
+                val cr = (c shr 16) and 0xFF
+                val cg = (c shr 8) and 0xFF
+                val cb = c and 0xFF
+                hot = hot || cr >= clip || cg >= clip || cb >= clip
+                r += LINEAR[cr]
+                g += LINEAR[cg]
+                b += LINEAR[cb]
+                n++
+            }
+        }
+        out[at] = r / n
+        out[at + 1] = g / n
+        out[at + 2] = b / n
+        return hot
     }
 
     private val LINEAR = FloatArray(256) { AdjustmentProcessor.srgbToLinear(it / 255f) }
@@ -182,27 +198,11 @@ object AutoEnhance {
      * z korektą do jasności twarzy; siła rośnie z pewnością pomiaru; ograniczona kolanem z zapasem HDR i niebem.
      */
     private fun exposure(lumas: FloatArray, s: Sample, scene: SceneAnalysis, ctx: AutoContext): Float {
-        var sumW = 0.0
-        var sumL = 0.0
-        val kept = ArrayList<Float>(lumas.size)
-        for (i in lumas.indices) {
-            val dx = ((i % s.gw) + 0.5f) / s.gw - 0.5f
-            val dy = ((i / s.gw) + 0.5f) / s.gh - 0.5f
-            val wgt = exp(-(dx * dx + dy * dy) / (2f * CENTER_SIGMA * CENTER_SIGMA)).toDouble()
-            sumW += wgt
-            sumL += wgt * ln(lumas[i].coerceAtLeast(MIN_LUMA).toDouble())
-            if (!s.clipped[i]) kept += lumas[i]
-        }
+        val kept = lumas.filterIndexed { i, _ -> !s.clipped[i] }.toMutableList()
         if (kept.size < MIN_SAMPLES / 4) return 0f
-        val key = kotlin.math.exp(sumL / sumW).toFloat()
-        var ev = log2(ctx.targetGrey / key)
-        val skin = lumas.filterIndexed { i, _ -> scene.skin[i] && !s.clipped[i] }.sorted()
+        var ev = log2(ctx.targetGrey / key(lumas, s))
         // Jasność skóry tylko przy twarzach z wykrywacza: sam kolor „skóry” to też drewno, piasek czy pomarańcza.
-        if (scene.hasFaces && skin.size >= MIN_SAMPLES / 4) {
-            val skinTarget = TARGET_SKIN * ctx.targetGrey / FilmCalibration.MID_GREY
-            val evSkin = log2(skinTarget / skin[skin.size / 2].coerceAtLeast(MIN_LUMA))
-            ev = FACE_WEIGHT * evSkin + (1f - FACE_WEIGHT) * ev
-        }
+        if (scene.hasFaces) faceEv(lumas, s, scene, ctx)?.let { ev = FACE_WEIGHT * it + (1f - FACE_WEIGHT) * ev }
         // Pewność pomiaru: rozjaśnianie zaszumionych, bardzo ciemnych zdjęć jest niepewne; przyciemnianie nie.
         val dark = kept.count { it < 0.002f } / kept.size.toFloat()
         val confidence = if (ev <= 0f) 1f else (1f - 2f * dark).coerceIn(0f, 1f)
@@ -215,6 +215,28 @@ object AutoEnhance {
         if (ev > headroom) ev = maxOf(headroom, 0f).coerceAtMost(ev)
         if (scene.skyRatio > 0.15f && ev > 0.3f && skyBrightness(lumas, scene) > 0.7f) ev = 0.3f
         return ev.coerceIn(-EXPOSURE_LIMIT, EXPOSURE_LIMIT).let { if (abs(it) < MIN_EV) 0f else it }
+    }
+
+    /** Średnia logarytmiczna jasności ważona do środka kadru (gaussowsko), z przepalonymi blokami włącznie. */
+    private fun key(lumas: FloatArray, s: Sample): Float {
+        var sumW = 0.0
+        var sumL = 0.0
+        for (i in lumas.indices) {
+            val dx = ((i % s.gw) + 0.5f) / s.gw - 0.5f
+            val dy = ((i / s.gw) + 0.5f) / s.gh - 0.5f
+            val wgt = exp(-(dx * dx + dy * dy) / (2f * CENTER_SIGMA * CENTER_SIGMA)).toDouble()
+            sumW += wgt
+            sumL += wgt * ln(lumas[i].coerceAtLeast(MIN_LUMA).toDouble())
+        }
+        return kotlin.math.exp(sumL / sumW).toFloat()
+    }
+
+    /** Korekta EV mediany skóry do docelowej jasności twarzy (skalowanej szarością filmu) albo null. */
+    private fun faceEv(lumas: FloatArray, s: Sample, scene: SceneAnalysis, ctx: AutoContext): Float? {
+        val skin = lumas.filterIndexed { i, _ -> scene.skin[i] && !s.clipped[i] }.sorted()
+        if (skin.size < MIN_SAMPLES / 4) return null
+        val skinTarget = TARGET_SKIN * ctx.targetGrey / FilmCalibration.MID_GREY
+        return log2(skinTarget / skin[skin.size / 2].coerceAtLeast(MIN_LUMA))
     }
 
     private fun log2(v: Float) = ln(v) / ln(2f)

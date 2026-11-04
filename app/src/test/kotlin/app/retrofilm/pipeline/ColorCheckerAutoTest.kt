@@ -31,7 +31,7 @@ class ColorCheckerAutoTest {
         intArrayOf(160, 160, 160), intArrayOf(122, 122, 121), intArrayOf(85, 85, 85), intArrayOf(52, 52, 52)
     )
     private val patch = 40
-    private val CLIP = 0.95
+    private val clipLevel = 0.95
     private val w = 6 * patch
     private val h = 4 * patch
 
@@ -90,7 +90,7 @@ class ColorCheckerAutoTest {
         AdjustmentProcessor(adj).process(out)
         var worst = 0.0
         // Szare pola (19 biel … 23 neutral 3.5) bez przepalonych kanałów na wejściu – przepalonych nie da się odzyskać.
-        for (g in 18..22) if (meanPatch(px, g).max() < CLIP) worst = maxOf(worst, neutralDeltaE(meanPatch(out, g)))
+        for (g in 18..22) if (meanPatch(px, g).max() < clipLevel) worst = maxOf(worst, neutralDeltaE(meanPatch(out, g)))
         val est = result.illuminant?.toDoubleArray() ?: doubleArrayOf(1.0, 1.0, 1.0)
         val y = Cat.luma(meanPatch(out, 21))
         val evErr = abs(ln(y / Cat.luma(DoubleArray(3) { lin(patches[21][0]) })) / ln(2.0))
@@ -98,7 +98,9 @@ class ColorCheckerAutoTest {
     }
 
     @Test fun greysNeutralIlluminantAccurateAndExposureRightAcrossLightsAndExposures() {
-        val cases = illuminants.flatMap { (name, xy) -> listOf(-2.0, -1.0, 0.0, 1.0, 2.0).map { ev -> run("$name ${ev}EV", xy, ev) } }
+        val cases = illuminants.flatMap { (name, xy) ->
+            listOf(-2.0, -1.0, 0.0, 1.0, 2.0).map { ev -> run("$name ${ev}EV", xy, ev) }
+        }
         val report = cases.joinToString("\n") {
             "%-18s ΔE00=%.2f kąt=%.2f° EV=%.2f".format(it.name, it.deltaE, it.angle, it.ev)
         }
@@ -147,7 +149,13 @@ class ColorCheckerAutoTest {
         val dL = b[0] - a[0]
         val dC = c2p - c1p
         var dh = h2 - h1
-        if (c1p * c2p == 0.0) dh = 0.0 else if (dh > 180) dh -= 360 else if (dh < -180) dh += 360
+        if (c1p * c2p == 0.0) {
+            dh = 0.0
+        } else if (dh > 180) {
+            dh -= 360
+        } else if (dh < -180) {
+            dh += 360
+        }
         val dH = 2 * sqrt(c1p * c2p) * sin(Math.toRadians(dh / 2))
         val lm = (a[0] + b[0]) / 2
         val cmp = (c1p + c2p) / 2

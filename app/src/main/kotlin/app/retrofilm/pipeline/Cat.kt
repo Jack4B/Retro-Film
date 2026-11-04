@@ -34,7 +34,7 @@ internal object Cat {
         return mulM(XYZ_TO_RGB, mulM(mulM(BRADFORD_INV, mulM(diag, BRADFORD)), RGB_TO_XYZ))
     }
 
-    /** Aparat bez balansu bieli pod światłem [xy]: biel D65 sceny staje się bielą oświetlenia (do testów i symulacji). */
+    /** Aparat bez balansu bieli pod światłem [xy]: biel D65 sceny staje się bielą oświetlenia (testy, symulacje). */
     fun toIlluminant(xy: Pair<Double, Double>): DoubleArray = adapt(D65_XY, xy)
 
     /** Chromatyczność xy koloru w liniowym sRGB. */
@@ -47,9 +47,16 @@ internal object Cat {
     /** Luminancja Rec.709 liniowego sRGB. */
     fun luma(rgb: DoubleArray): Double = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
 
-    private fun xyz(xy: Pair<Double, Double>) = doubleArrayOf(xy.first / xy.second, 1.0, (1 - xy.first - xy.second) / xy.second)
+    private fun xyz(xy: Pair<Double, Double>) = doubleArrayOf(
+        xy.first / xy.second,
+        1.0,
+        (1 - xy.first - xy.second) / xy.second
+    )
 
-    fun mul3(m: DoubleArray, v: DoubleArray) = DoubleArray(3) { r -> m[r * 3] * v[0] + m[r * 3 + 1] * v[1] + m[r * 3 + 2] * v[2] }
+    fun mul3(m: DoubleArray, v: DoubleArray) = DoubleArray(3) { r ->
+        m[r * 3] * v[0] + m[r * 3 + 1] * v[1] +
+            m[r * 3 + 2] * v[2]
+    }
 
     private fun mulM(a: DoubleArray, b: DoubleArray) = DoubleArray(9) { i ->
         val r = i / 3

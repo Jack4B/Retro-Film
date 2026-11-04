@@ -124,10 +124,10 @@ private fun ColorSliders(state: MainState) {
         state.adjustments = a.copy(saturation = it)
     }
     AdjustSlider(stringResource(R.string.adjust_temperature), a.temperature, { percentText(it) }) {
-        state.adjustments = a.copy(temperature = it)
+        state.adjustments = a.copy(temperature = it, whiteDx = 0f, whiteDy = 0f)
     }
     AdjustSlider(stringResource(R.string.adjust_tint), a.tint, { percentText(it) }) {
-        state.adjustments = a.copy(tint = it)
+        state.adjustments = a.copy(tint = it, whiteDx = 0f, whiteDy = 0f)
     }
 }
 

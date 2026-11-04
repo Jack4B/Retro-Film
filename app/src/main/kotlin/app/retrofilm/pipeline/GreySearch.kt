@@ -5,8 +5,8 @@ import kotlin.math.sqrt
 
 /**
  * Punkt startowy szacowania oświetlenia: szare powierzchnie pod światłem [T] mają chromatyczność tego światła, więc
- * szukamy wzdłuż krzywej Plancka (1700–12000 K, ±tint) miejsca, przy którym leży najwięcej próbek (histogram rg,
- * waga √luminancji). W przeciwieństwie do „gray world” nie przesuwa go jedna duża barwna powierzchnia, a pod mocnym
+ * szukamy wzdłuż krzywej Plancka (1700–12000 K, ±tint) miejsca, przy którym leży najwięcej próbek (histogram rg
+ * próbek). W przeciwieństwie do „gray world” nie przesuwa go jedna duża barwna powierzchnia, a pod mocnym
  * światłem nie gubi szarości. Krzywa Plancka z przybliżenia Kima i in. (2002).
  */
 @Suppress("MagicNumber") // współczynniki publicznego przybliżenia i rozmiary histogramu
@@ -14,6 +14,7 @@ internal object GreySearch {
     private const val BINS = 128
     private const val RADIUS = 2
     private const val MIN_WEIGHT = 8.0
+    private const val MIN_SUM = 0.03f
     private val CANDIDATES: List<DoubleArray> = buildList {
         var mired = 1e6 / 12000
         while (mired <= 1e6 / 1700) {
@@ -27,12 +28,10 @@ internal object GreySearch {
     fun densestGrey(s: Sample, mask: BooleanArray): DoubleArray? {
         val hist = DoubleArray(BINS * BINS)
         for (i in 0 until s.count) {
-            if (!mask[i] || s.clipped[i]) continue
             val r = s.rgb[3 * i]
             val g = s.rgb[3 * i + 1]
             val sum = r + g + s.rgb[3 * i + 2]
-            if (sum < 0.03f) continue
-            hist[bin(r / sum) * BINS + bin(g / sum)] += 1.0
+            if (mask[i] && !s.clipped[i] && sum >= MIN_SUM) hist[bin(r / sum) * BINS + bin(g / sum)] += 1.0
         }
         var best: DoubleArray? = null
         var bestScore = MIN_WEIGHT

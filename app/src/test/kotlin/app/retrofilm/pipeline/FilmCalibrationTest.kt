@@ -7,7 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FilmCalibrationTest {
-    private fun gammaLut(gamma: Float) = Lut.generate(33) { r, g, b -> Triple(r.pow(gamma), g.pow(gamma), b.pow(gamma)) }
+    private fun gammaLut(gamma: Float) =
+        Lut.generate(33) { r, g, b -> Triple(r.pow(gamma), g.pow(gamma), b.pow(gamma)) }
 
     @Test fun identityFilmKeepsEighteenPercent() {
         assertEquals(0.18f, FilmCalibration.of(Lut.identity()).targetGrey, 0.01f)
@@ -37,7 +38,9 @@ class FilmCalibrationTest {
     }
 
     @Test fun shoulderIsBelowOneForCompressingFilm() {
-        val film = Lut.generate(33) { r, g, b -> Triple(minOf(r * 1.4f, 0.8f), minOf(g * 1.4f, 0.8f), minOf(b * 1.4f, 0.8f)) }
+        val film = Lut.generate(33) { r, g, b ->
+            Triple(minOf(r * 1.4f, 0.8f), minOf(g * 1.4f, 0.8f), minOf(b * 1.4f, 0.8f))
+        }
         assertTrue(FilmCalibration.of(film).shoulder < 0.6f)
     }
 }

@@ -17,6 +17,8 @@ data class FilmCalibration(val targetGrey: Float, val shoulder: Float) {
         const val MAX_TARGET = 0.36f
         private const val SHOULDER_FRACTION = 0.9f
         private const val BYTE_MAX = 255f
+        private const val EPS = 1e-6f
+        private const val CHANNELS = 3
         val NEUTRAL = FilmCalibration(MID_GREY, 1f)
 
         fun of(lut: Lut): FilmCalibration {
@@ -25,7 +27,7 @@ data class FilmCalibration(val targetGrey: Float, val shoulder: Float) {
             var target = MAX_TARGET
             for (i in 1..STEPS) {
                 if (out[i] >= MID_GREY) {
-                    val t = (MID_GREY - out[i - 1]) / (out[i] - out[i - 1]).coerceAtLeast(1e-6f)
+                    val t = (MID_GREY - out[i - 1]) / (out[i] - out[i - 1]).coerceAtLeast(EPS)
                     target = input(i - 1 + t.coerceIn(0f, 1f))
                     break
                 }
@@ -42,7 +44,7 @@ data class FilmCalibration(val targetGrey: Float, val shoulder: Float) {
             val p = v * (lut.size - 1)
             val i = p.toInt().coerceAtMost(lut.size - 2)
             val f = p - i
-            val rgb = DoubleArray(3) { c ->
+            val rgb = DoubleArray(CHANNELS) { c ->
                 val a = lut.nodeF(i, i, i, c)
                 val b = lut.nodeF(i + 1, i + 1, i + 1, c)
                 AdjustmentProcessor.srgbToLinear(((a + (b - a) * f) / BYTE_MAX).coerceIn(0f, 1f)).toDouble()

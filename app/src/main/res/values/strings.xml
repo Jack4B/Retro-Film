@@ -56,6 +56,7 @@
     <string name="crop_rotate_right">Obróć w prawo</string>
     <string name="adjust_auto">Auto: popraw światło i kolor</string>
     <string name="adjust_auto_undo">Cofnij auto (wykryto: %1$s)</string>
+    <string name="adjust_prep_inversion">Zdejmij krzywą telefonu</string>
     <string name="adjust_prep">Przygotuj pod film (balans bieli, ekspozycja)</string>
     <string name="adjust_prep_undo">Cofnij przygotowanie pod film</string>
     <string name="scene_portrait">portret</string>
