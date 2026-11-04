@@ -118,10 +118,11 @@ class AppSettingsRepositoryTest {
     }
 
     @Test
-    fun gpuSaveIsOnByDefaultPersistedAndBackedUp() {
-        assertTrue(withRepo { it.gpuSave.first() })
-        withRepo { it.setGpuSave(false) }
+    fun gpuSaveIsOffByDefaultPersistedAndBackedUp() {
+        // L: na telefonie (Mali-G720) LUT na GLES był ~6× wolniejszy niż pasy CPU – domyślnie CPU
         assertFalse(withRepo { it.gpuSave.first() })
-        assertEquals(false, withRepo { it.snapshot() }["gpu_save"])
+        withRepo { it.setGpuSave(true) }
+        assertTrue(withRepo { it.gpuSave.first() })
+        assertEquals(true, withRepo { it.snapshot() }["gpu_save"])
     }
 }

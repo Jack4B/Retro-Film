@@ -118,5 +118,5 @@
     <string name="settings_frame_outward_subtitle">Zdjęcie bez skalowania (1:1), plik większy o ramkę. Najszybszy zapis.</string>
     <string name="settings_frame_original_subtitle">Zdjęcie zmniejszone do okna ramki (Lanczos), plik zachowuje dłuższy bok oryginału.</string>
     <string name="gpu_save">Zapis na GPU (eksperymentalny)</string>
-    <string name="gpu_save_subtitle">Filtr kliszy liczony na GPU w zapisie. Przy każdym błędzie automatycznie wraca na CPU. Backend widać w logu czasów.</string>
+    <string name="gpu_save_subtitle">Filtr kliszy liczony na GPU w zapisie. Przy pierwszym zapisie porównuje czas z CPU i wybiera szybszy; przy błędzie wraca na CPU. Domyślnie wyłączony.</string>
 </resources>
