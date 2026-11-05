@@ -75,6 +75,13 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         store.edit { it[GPU_SAVE] = on }
     }
 
+    /** O: AGSL odrzucone (format 22) – nie próbuj przy kolejnych startach. */
+    val gpuSkipAgsl: Flow<Boolean> = store.data.map { it[GPU_SKIP_AGSL] ?: false }
+
+    suspend fun setGpuSkipAgsl(on: Boolean) {
+        store.edit { it[GPU_SKIP_AGSL] = on }
+    }
+
     /** Wszystkie znane ustawienia (do kopii zapasowej): nazwa klucza → wartość. */
     suspend fun snapshot(): Map<String, Any> {
         val p = store.data.first()
@@ -173,6 +180,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         internal val PERF_LOG = booleanPreferencesKey("perf_log_enabled")
         internal val FRAME_OUTWARD = booleanPreferencesKey("frame_outward")
         internal val GPU_SAVE = booleanPreferencesKey("gpu_save")
+        internal val GPU_SKIP_AGSL = booleanPreferencesKey("gpu_skip_agsl")
 
         private val KNOWN: Map<Preferences.Key<*>, KClass<*>> = mapOf(
             DYNAMIC_COLOR to Boolean::class,
@@ -181,6 +189,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
             PERF_LOG to Boolean::class,
             FRAME_OUTWARD to Boolean::class,
             GPU_SAVE to Boolean::class,
+            GPU_SKIP_AGSL to Boolean::class,
             DEF_HDR to Boolean::class,
             DEF_QUALITY to Int::class,
             DEF_MAX_SIDE to Int::class,
