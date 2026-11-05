@@ -17,12 +17,20 @@ class ZoomState {
         private set
     var size by mutableStateOf(IntSize.Zero)
 
+    /**
+     * Q: tryb szczegółowy niezależny od [scale] – po ROI settle scale wraca do 1 (Compose identity),
+     * ale isDetailed zostaje, żeby nie wyłączyć podglądu szczegółowego / ROI.
+     */
+    var detailMode by mutableStateOf(false)
+        private set
+
     /** Przybliżenie na tyle duże, że warto policzyć podgląd w wyższej rozdzielczości. */
-    val isDetailed: Boolean get() = scale >= DETAIL_SCALE
+    val isDetailed: Boolean get() = detailMode || scale >= DETAIL_SCALE
 
     fun reset() {
         scale = 1f
         offset = Offset.Zero
+        detailMode = false
     }
 
     /** Gest: [zoom] względem punktu [centroid] (współrzędne ekranu), potem przesunięcie o [pan]. */
@@ -33,11 +41,27 @@ class ZoomState {
         val rel = centroid - center
         offset = clamp(rel - (rel - offset) * applied + pan, newScale)
         scale = newScale
+        if (scale >= DETAIL_SCALE) detailMode = true
     }
 
     /** Dwukrotne dotknięcie: z powiększenia wraca do całości, z całości zbliża do [DOUBLE_TAP_SCALE] w punkcie [at]. */
     fun toggle(at: Offset) {
-        if (scale > 1f) reset() else transform(at, Offset.Zero, DOUBLE_TAP_SCALE)
+        if (scale > 1f || detailMode) {
+            reset()
+        } else {
+            detailMode = true
+            transform(at, Offset.Zero, DOUBLE_TAP_SCALE)
+        }
+    }
+
+    /**
+     * Q: po pojawieniu się bitmapy ROI Compose ma scale=1 (wycinek = już przybliżenie).
+     * Bez tego: najpierw 2,5× na pełnym podglądzie, potem identity na ROI = drugi skok.
+     */
+    fun settleForRoiBase() {
+        scale = 1f
+        offset = Offset.Zero
+        detailMode = true
     }
 
     private fun clamp(o: Offset, forScale: Float): Offset {
