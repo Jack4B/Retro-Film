@@ -31,3 +31,9 @@ jest pusty. Kluczem debug podpisywane są tylko artefakty z PR. Kluczy **nigdy**
 
 ## Lokalnie
 Wymagane JDK 17+ i Android SDK (compileSdk 37). `./gradlew assembleDebug testDebugUnitTest`.
+
+## Wydania testowe (`v-test-…`)
+Na gałęzi `test` boty / Jack4B publikują prerelease’y `v-test-YYYY-MM-DD-X` z APK (często podpis debug).
+Changelog: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md).
+Workflow `release.yml` przy tagu `v-test-*` może nie przejść kontroli `VERSION` (tag nie jest `major.minor.patch-…`) – APK testowe bywa dołączane ręcznie do prerelease; to oczekiwane dla liter D–R.
+PR-y tylko do `test`, nigdy `main`; bez force-push.

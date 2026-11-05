@@ -26,6 +26,7 @@ Plik użytkownika (realme, prywatny, nie w repo): JPEG 3072×4096, 15,6 MB = obr
 Przyczyny i poprawki:
 - plik był czytany 4× przez ContentResolver (EXIF orientacja, wymiary, dekodowanie, miniatura) → teraz 1 odczyt do pamięci;
 - podgląd dekodował do 4096 px (praktycznie pełna rozdzielczość) → teraz do 2560 (`PREVIEW_MAX_SIDE`, inSampleSize),
+  - **Stan po R:** bitmapa bazowa podglądu w cache to zawsze 1280 (`previewBase`); przy zoomie bez ramki ROI bierze lokalne źródło do 2560 tylko do wycięcia wycinka (bez trzymania pełnego 2560 w `previewCache`). Zob. [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
   pełna rozdzielczość tylko w eksporcie (`ExportSource`), a wymiary oryginału trzymane osobno (`sourceSize`);
 - dekoder na API 34+ dekodował też gain mapę → „HDR ze zdjęcia” domyślnie Wył.: `UltraHdrJpeg.sdrOnly` odcina MPF,
   XMP hdrgm i wszystko za EOI obrazu bazowego (27 ms na JVM dla tego pliku: 16,4 MB → 5,8 MB);

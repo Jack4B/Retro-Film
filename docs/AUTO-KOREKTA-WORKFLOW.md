@@ -1,4 +1,6 @@
-# Autokorekta w Retro-Film (wydanie F) — jak jej używać
+# Autokorekta w Retro-Film — jak jej używać
+
+Dokument aktualny względem wydań **F–M** (autokorekta) oraz **N–R** (zoom podglądu nie zmienia algorytmu auto). Ustawienia / GPU / zoom: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
 
 Nazwy przycisków, suwaków i przełączników są przepisane z `strings.xml` aplikacji.
 
@@ -96,7 +98,12 @@ Każdy film inaczej oddaje szarość: jedne są jaśniejsze, inne ciemniejsze. A
 - Autokorekta mierzy siatkę 128 próbek na dłuższym boku, więc bardzo małe obiekty mają mały wpływ.
 - Wszystko działa offline. Zdjęcia nie opuszczają telefonu.
 
-## 10. Logi i kopia zapasowa
+## 10. Logi, diagnostyka i kopia zapasowa
 
-- **Ustawienia → Diagnostyka → Logi czasów**: włącz, zrób edycję lub zapis, potem użyj **Eksportuj log czasów** (plik `retrofilm-czasy-RRRR-MM-DD.csv`) albo **Udostępnij log czasów**. Wpis `auto_suggest` to czas autokorekty. Opcja **Wyczyść log** usuwa wpisy. Dane zostają w telefonie.
-- **Ustawienia → Kopia zapasowa → Eksportuj kopię**: ustawienia, presety (z wartościami autokorekty) i ulubione w pliku `retrofilm-kopia-RRRR-MM-DD.json`. **Przywróć z pliku** pozwala wybrać **Scal** albo **Zastąp**.
+- **Ustawienia → Diagnostyka → Logi czasów**: włącz, zrób edycję lub zapis, potem **Eksportuj log czasów** (`retrofilm-czasy-RRRR-MM-DD.csv`) albo **Udostępnij log czasów**. Wpis `auto_suggest` = czas autokorekty; w logu zapisu widać też `save_backend` / `save_backend_bench` (gdy włączysz GPU). **Wyczyść log** usuwa bufor. Dane zostają w telefonie.
+- **Ustawienia → Diagnostyka → Zapis na GPU (eksperymentalny)**: **domyślnie wyłączony** (L). Na Mali zwykle i tak wraca CPU po porównaniu z wieloma wątkami. Nie zmienia wyniku autokorekty – tylko backend LUT przy zapisie. Szczegóły: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
+- **Ustawienia → Kopia zapasowa → Eksportuj kopię**: ustawienia, presety (z wartościami autokorekty) i ulubione w `retrofilm-kopia-RRRR-MM-DD.json`. **Przywróć z pliku**: **Scal** albo **Zastąp**.
+
+## 11. Zoom podglądu a twarze / wyostrzanie (O–R)
+
+Autokorekta i suwaki nie zależą od zoomu. Przy **wyostrzaniu świadomym treści** i pinch ≥ 1,5× **bez ramki** podgląd liczy wycinek ROI; twarze brane są z pełnego kadru i mapowane do wycinka (R), żeby mapa twarzy nie była pusta/zła na detalu. Z **włączoną ramką** zoom Compose skaluje całą kompozycję (P/Q). Double-tap: jedno lądowanie (Q). Pełna tabela: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).

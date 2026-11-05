@@ -38,5 +38,6 @@ Domyślna interpolacja: **trójliniowa** (czworościenna dała pomijalny zysk Δ
 - RGB16 na GPU jest kwantowany do 8 bitów na kanał (tekstury RGBA8); pełną precyzję ma tylko CPU.
 
 Fabryka `LutEngineFactory.create()` wybiera AGSL → GLES → CPU; backendy GPU przy błędzie spadają do CPU.
+Przy zapisie ścieżkę GPU włącza dopiero `SaveBackend.gpuEnabled` (Diagnostyka; **domyślnie false** od L); potem probe/bench może i tak zostać przy CPU. Zob. [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
 Golden test GPU vs CPU (`GpuVsCpuTest`) zapisuje `files/diff.json`; tolerancja: max delta ≤ 2/255 na kanał.
 Obraz traktowany jako niepremnożony; alfa zachowana.

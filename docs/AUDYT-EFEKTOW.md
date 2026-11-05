@@ -15,4 +15,4 @@
 - Wykluczenie przepalonych bloków z `AutoEnhance.key()` – test ColorChecker (A i LED +2 EV) przekraczał próg (rezyduum ~0,83 EV). Przepalone bloki są już pomijane w p995 i w pewności. Możliwa kontynuacja: pomijać tylko bloki przepalone w większości.
 
 ## Nie zrobione w I
-- Pełna ścieżka zapisu GPU (AGSL/GLES) dla wszystkich efektów wykończenia: LUT już działa na GPU (Agsl/GlesLutEngine z testem GpuVsCpu), ale wyostrzanie, deband, halacja i ziarno są nielokalne i zostają na CPU (kafle 2D). Wymaga osobnego wydania z testami różnic pikseli.
+- Pełna ścieżka zapisu GPU (AGSL/GLES) dla wszystkich efektów wykończenia: LUT **może** iść na GPU (Agsl/GlesLutEngine, test GpuVsCpu), ale od L przełącznik diagnostyki jest **domyślnie OFF** (Mali: bench zwykle wybiera CPU×wątki). Wyostrzanie, deband, halacja i ziarno są nielokalne i zostają na CPU (kafle 2D). Port reszty na GPU – osobne wydanie.

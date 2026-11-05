@@ -16,3 +16,8 @@ Compose najpierw 2,5× na pełnym podglądzie, potem ROI/`previewRoiActive` → 
 
 ## Testy
 `DoubleTapZoomTest`, `ZoomStateTest`, regresje `PreviewRoiTest`.
+
+## Stan po R
+- One-landing (`awaitingRoi`) bez zmian.
+- Po pojawieniu się ROI gesty nie są już „przyklejone”: relative scale/offset do bazy wycinka ([PLAN-WYDANIE-R.md](PLAN-WYDANIE-R.md)).
+- `settleForRoiBase` nadal API testowe; produkcja trzyma bazę z viewportu przy budowie ROI.

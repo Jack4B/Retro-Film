@@ -20,3 +20,6 @@ Code review po Q: 3 ustalenia (2 HIGH, 1 MEDIUM) + tanie zamknięcie okna 2560 p
 
 ## Poza zakresem
 Algorytmy filmu/LUT nietknięte. `settleForRoiBase` zostaje API testowym (produkcja używa relative base z viewportu przy budowie ROI).
+
+## Dokumentacja
+[USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md)

@@ -68,7 +68,7 @@ class AppSettingsRepository(private val store: DataStore<Preferences>) {
         store.edit { it[FRAME_OUTWARD] = on }
     }
 
-    /** K: Diagnostyka „Zapis na GPU (eksperymentalny)” – domyślnie włączony, z automatycznym powrotem na CPU. */
+    /** L: Diagnostyka „Zapis na GPU (eksperymentalny)” – domyślnie wyłączony; przy włączeniu probe/bench vs CPU. */
     val gpuSave: Flow<Boolean> = store.data.map { it[GPU_SAVE] ?: false }
 
     suspend fun setGpuSave(on: Boolean) {
