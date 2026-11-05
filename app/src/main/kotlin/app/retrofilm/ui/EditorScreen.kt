@@ -309,18 +309,16 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
     ) {
         if (shown != null) {
             val layer = Modifier.fillMaxSize().graphicsLayer {
-                if (state.previewRoiActive) {
-                    // O: bitmapa to już widoczny wycinek – bez ponownego scale (unikamy podwójnego zoomu)
-                    scaleX = 1f
-                    scaleY = 1f
-                    translationX = 0f
-                    translationY = 0f
-                } else {
-                    scaleX = zoom.scale
-                    scaleY = zoom.scale
-                    translationX = zoom.offset.x
-                    translationY = zoom.offset.y
-                }
+                val z = composeZoomLayer(
+                    state.previewRoiActive,
+                    zoom.scale,
+                    zoom.offset.x,
+                    zoom.offset.y
+                )
+                scaleX = z.scale
+                scaleY = z.scale
+                translationX = z.offsetX
+                translationY = z.offsetY
             }
             Image(
                 bitmap = shown.asImageBitmap(),
