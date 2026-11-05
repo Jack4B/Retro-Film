@@ -5,7 +5,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import app.retrofilm.engine.AppGraph
 import app.retrofilm.pipeline.Adjustments
+import kotlin.math.abs
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -46,6 +48,7 @@ class PreviewRoiTest {
         val p = s.preview!!
         assertNotNull(p)
         assertTrue("ROI ${p.width}x${p.height}", p.width * p.height < 1200 * 900 / 2)
+        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(true, 3f, 10f, -5f))
     }
 
     @Test fun leavingDetailClearsRoiFlag() = runBlocking {
@@ -59,24 +62,29 @@ class PreviewRoiTest {
         assertFalse(s.previewRoiActive)
     }
 
-    @Test fun framedDetailZoomDoesNotActivateRoi() = runBlocking {
+    @Test fun framedDetailZoomDoesNotActivateRoiAndKeepsFullComposite() = runBlocking {
         val s = state(1200, 900)
         s.frame = s.frame.copy(enabled = true, margin = 0.08f)
         s.refreshPreview()
         val framed = s.preview!!
-        assertTrue(
-            "ramka powiększa płótno względem zdjęcia",
-            framed.width > 1200 || framed.height > 900
-        )
+        assertTrue("ramka powiększa płótno", framed.width > 1200 || framed.height > 900)
         s.updateDetail(true)
-        s.updateZoomViewport(scale = 3f, offsetX = 0f, offsetY = 0f, viewW = 400, viewH = 300)
+        s.updateZoomViewport(scale = 3f, offsetX = 40f, offsetY = -20f, viewW = 400, viewH = 300)
         s.refreshPreview()
-        assertFalse(
-            "P: z ramką ROI wyłączone – zoom Compose na całości (zdjęcie+ramka)",
-            s.previewRoiActive
-        )
+        assertFalse("P: ROI off when frame on", s.previewRoiActive)
         val p = s.preview!!
-        assertTrue("framed preview ${p.width}x${p.height}", p.width >= framed.width / 2)
+        // pełna kompozycja z marginesami ramki – nie wycinek ROI (O regresja: p << framed)
+        assertEquals("szerokość z ramką zachowana", framed.width, p.width)
+        assertEquals("wysokość z ramką zachowana", framed.height, p.height)
+        // Compose nakłada pinch na bitmapę z ramką (nie identity)
+        assertEquals(ComposeZoomLayer(3f, 40f, -20f), composeZoomLayer(s.previewRoiActive, 3f, 40f, -20f))
+        // margines ramki: narożniki płótna to tło ramki, nie piksele zdjęcia (szare 90,100,110)
+        val corner = p.getPixel(2, 2)
+        val photoPx = Color.rgb(90, 100, 110)
+        assertTrue(
+            "narożnik to margines ramki, nie wykadrowane zdjęcie",
+            corner != photoPx
+        )
     }
 
     @Test fun disablingFrameRestoresRoiOnDetailZoom() = runBlocking {
@@ -89,5 +97,12 @@ class PreviewRoiTest {
         s.frame = s.frame.copy(enabled = false)
         s.refreshPreview()
         assertTrue("bez ramki wraca ROI z O", s.previewRoiActive)
+        val p = s.preview!!
+        assertTrue(p.width * p.height < 1200 * 900 / 2)
+    }
+
+    @Test fun composeZoomLayerIdentityOnlyWhenRoiActive() {
+        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(true, 2.5f, 8f, 9f))
+        assertEquals(ComposeZoomLayer(2.5f, 8f, 9f), composeZoomLayer(false, 2.5f, 8f, 9f))
     }
 }

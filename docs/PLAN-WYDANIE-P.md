@@ -10,4 +10,4 @@ ROI z O (`previewDetail` + viewport) wycinał widoczny fragment **zdjęcia przed
 ROI włącza się tylko gdy **`!frame.enabled`**. Z włączoną ramką: pełny podgląd (1280/2560) + Compose zoom na bitmapie już z ramką (jak przed O). Bez ramki zostaje ROI z O (ochrona przed OOM GuidedFilter). Limit `Lowres.MAX_CELLS` z O nadal chroni ścieżkę z ramką.
 
 ## Testy
-`PreviewRoiTest`: framedDetailZoomDoesNotActivateRoi, disablingFrameRestoresRoiOnDetailZoom (+ regresje O).
+`PreviewRoiTest`: z ramką `previewRoiActive=false`, wymiary = pełna kompozycja (marginesy), `composeZoomLayer` nakłada pinch na bitmapę; bez ramki ROI wraca. (+ regresje O, `composeZoomLayerIdentityOnlyWhenRoiActive`).

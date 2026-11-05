@@ -99,3 +99,13 @@ internal object ZoomMath {
         (r.bottom + halo).coerceAtMost(photoH)
     )
 }
+
+/**
+ * P: jak Compose graphicsLayer ma skalować podgląd.
+ * ROI aktywny = bitmapa już jest wycinkiem (identity); inaczej pinch-zoom na całej bitmapie
+ * (w tym zdjęcie+ramka po FrameRenderer).
+ */
+internal data class ComposeZoomLayer(val scale: Float, val offsetX: Float, val offsetY: Float)
+
+internal fun composeZoomLayer(roiActive: Boolean, scale: Float, offsetX: Float, offsetY: Float): ComposeZoomLayer =
+    if (roiActive) ComposeZoomLayer(1f, 0f, 0f) else ComposeZoomLayer(scale, offsetX, offsetY)
