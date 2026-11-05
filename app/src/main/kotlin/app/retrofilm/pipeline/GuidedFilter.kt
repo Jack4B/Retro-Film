@@ -154,12 +154,12 @@ internal class Lowres(val width: Int, val height: Int, val factor: Int) {
         private const val GREEN_SHIFT = 8
         private const val BYTE_MASK = 0xFF
 
-        /** Max komórek lowres (DoubleArray 3× w Accumulator ≈ 9,4 MB przy 640²). */
-        const val MAX_CELLS = 640 * 640
+        /** Max komórek lowres (DoubleArray 3× w Accumulator ≈ 6,3 MB przy 512²; R: niżej pod peak 2 grup). */
+        const val MAX_CELLS = 512 * 512
 
         /**
          * Współczynnik zmniejszenia tak, by dłuższy bok miał ok. [target] pikseli; O: [w]×[h] ≤ [MAX_CELLS],
-         * inaczej Accumulator alokuje ~75 MB (crash realme przy semanticMap).
+         * inaczej Accumulator alokuje dziesiątki MB (crash realme przy semanticMap).
          */
         fun forSize(width: Int, height: Int, target: Int): Lowres {
             var factor = max(1, max(width, height) / target.coerceAtLeast(1))

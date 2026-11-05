@@ -321,7 +321,10 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
                     zoom.scale,
                     zoom.offset.x,
                     zoom.offset.y,
-                    awaitingRoi = awaitingRoi
+                    awaitingRoi = awaitingRoi,
+                    roiBaseScale = state.previewRoiBaseScale,
+                    roiBaseOffsetX = state.previewRoiBaseOffsetX,
+                    roiBaseOffsetY = state.previewRoiBaseOffsetY
                 )
                 scaleX = z.scale
                 scaleY = z.scale

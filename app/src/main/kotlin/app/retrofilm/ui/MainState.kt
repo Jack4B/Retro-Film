@@ -41,6 +41,7 @@ import app.retrofilm.pipeline.LocalMask
 import app.retrofilm.pipeline.OutputSpace
 import app.retrofilm.pipeline.PhoneCurve
 import app.retrofilm.pipeline.PhotoLoader
+import app.retrofilm.pipeline.PixelRect
 import app.retrofilm.pipeline.RawLoader
 import app.retrofilm.pipeline.Resampler
 import app.retrofilm.pipeline.SaveProgress
@@ -135,12 +136,31 @@ class MainState(
         pristine = effectiveEdits() to appLevel()
     }
 
-    /** Twarze do wyostrzania świadomego treści: wykrywane raz dla zdjęcia i kadru, tylko przy włączonym wyostrzaniu. */
-    private fun facesFor(photo: Bitmap, small: Bitmap): List<FaceBox> = when {
-        !adjustments.usesSmartSharpen -> emptyList()
+    /**
+     * Twarze do wyostrzania świadomego treści: wykrywane raz na pełnym kadrze (nie na ROI),
+     * R: przy ROI mapowane do współrzędnych wycinka.
+     */
+    private fun facesFor(photo: Bitmap, detectSrc: Bitmap): List<FaceBox> {
+        if (!adjustments.usesSmartSharpen) return emptyList()
+        val full = faceCache?.takeIf { it.first === photo && it.second == geometry }?.third
+            ?: FaceFinder.find(detectSrc).also { faceCache = Triple(photo, geometry, it) }
+        val roi = previewRoiRect
+        val fw = previewRoiFramedW
+        val fh = previewRoiFramedH
+        return if (roi != null && fw > 0 && fh > 0) {
+            full.map { it.mapIntoRoi(PixelRect(roi.left, roi.top, roi.right, roi.bottom), fw, fh) }
+        } else {
+            full
+        }
+    }
 
-        else -> faceCache?.takeIf { it.first === photo && it.second == geometry }?.third
-            ?: FaceFinder.find(small).also { faceCache = Triple(photo, geometry, it) }
+    private fun clearRoiMeta() {
+        previewRoiRect = null
+        previewRoiFramedW = 0
+        previewRoiFramedH = 0
+        previewRoiBaseScale = 1f
+        previewRoiBaseOffsetX = 0f
+        previewRoiBaseOffsetY = 0f
     }
 
     /**
@@ -386,6 +406,19 @@ class MainState(
     var previewRoiActive by mutableStateOf(false)
         private set
 
+    /** R: baza gestów Compose na bieżącym wycinku (scale/offset przy budowie ROI). */
+    var previewRoiBaseScale by mutableFloatStateOf(1f)
+        private set
+    var previewRoiBaseOffsetX by mutableFloatStateOf(0f)
+        private set
+    var previewRoiBaseOffsetY by mutableFloatStateOf(0f)
+        private set
+
+    /** R: prostokąt ROI w pikselach kadru (do mapowania twarzy); null poza ROI. */
+    private var previewRoiRect: PhotoRect? = null
+    private var previewRoiFramedW: Int = 0
+    private var previewRoiFramedH: Int = 0
+
     private var zoomViewport: ZoomViewport? = null
 
     /** Zmiana widocznego ROI – MainScreen odświeża podgląd. */
@@ -397,6 +430,7 @@ class MainState(
         previewDetail = detailed
         if (!detailed) {
             previewRoiActive = false
+            clearRoiMeta()
             zoomViewport = null
         }
         // N/O: zwolnij etapy i bazę poprzedniej rozdzielczości
@@ -722,6 +756,7 @@ class MainState(
     private fun recoverFromDetailOom() {
         previewDetail = false
         previewRoiActive = false
+        clearRoiMeta()
         zoomViewport = null
         previewCache = null
         stages.clear()
@@ -744,6 +779,7 @@ class MainState(
             return
         }
         previewRoiActive = false
+        clearRoiMeta()
         val base = previewBase(p)
         renderFullPreview(p, base, applyGeometry = true)
     }
@@ -865,9 +901,9 @@ class MainState(
      * Unika pełnego 2560 + SemanticSharpen/Lowres.Accumulator (~75 MB). P: nie wywoływane przy ramce.
      */
     private suspend fun CoroutineScope.renderRoiPreview(p: Bitmap, vp: ZoomViewport) {
-        // Najpierw kadr (geometry) na bazie podglądu, potem wycinek widoczny – UI zoomuje już wykadrowany obraz.
-        val base = previewBase(p)
-        val framed = stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
+        // R: źródło cropu lokalnie do DETAIL – bez wpisywania 2560 do previewCache (okno przed ROI).
+        val src = if (maxOf(p.width, p.height) <= PREVIEW_SIDE_DETAIL) p else scaleDown(p, PREVIEW_SIDE_DETAIL)
+        val framed = GeometryApplier.apply(src, geometry)
         ensureActive()
         val rect = ZoomMath.visiblePhotoRect(
             framed.width,
@@ -881,17 +917,37 @@ class MainState(
         val expanded = ZoomMath.expand(rect, ROI_HALO, framed.width, framed.height)
         if (expanded.width < 2 || expanded.height < 2) {
             previewRoiActive = false
-            renderFullPreview(p, base, applyGeometry = true)
+            clearRoiMeta()
+            renderFullPreview(p, previewBase(p), applyGeometry = true)
             return
         }
         val crop = Bitmap.createBitmap(framed, expanded.left, expanded.top, expanded.width, expanded.height)
         val region = if (maxOf(crop.width, crop.height) > ROI_MAX_SIDE) scaleDown(crop, ROI_MAX_SIDE) else crop
+        previewRoiRect = expanded
+        previewRoiFramedW = framed.width
+        previewRoiFramedH = framed.height
+        previewRoiBaseScale = vp.scale
+        previewRoiBaseOffsetX = vp.offsetX
+        previewRoiBaseOffsetY = vp.offsetY
         // region jest już po geometry – nie kadrować drugi raz
-        renderFullPreview(p, region, applyGeometry = false)
+        // detectSrc = pełny kadr 1280 (cache twarzy), nie ROI
+        renderFullPreview(
+            p,
+            region,
+            applyGeometry = false,
+            faceDetectSrc = previewBase(p).let {
+                GeometryApplier.apply(it, geometry)
+            }
+        )
         previewRoiActive = true
     }
 
-    private suspend fun CoroutineScope.renderFullPreview(p: Bitmap, base: Bitmap, applyGeometry: Boolean = true) {
+    private suspend fun CoroutineScope.renderFullPreview(
+        p: Bitmap,
+        base: Bitmap,
+        applyGeometry: Boolean = true,
+        faceDetectSrc: Bitmap? = null
+    ) {
         val small = if (applyGeometry) {
             stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
         } else {
@@ -920,8 +976,9 @@ class MainState(
             ensureActive()
             preview = FrameRenderer.render(quick, frame, signatureTypeface(), colorSpaceSource = srgb)
         }
+        val detect = faceDetectSrc ?: small
         val looked = stages.look(corrected, key) {
-            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, small))
+            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, detect))
         }
         ensureActive()
         preview = FrameRenderer.render(looked, frame, signatureTypeface(), colorSpaceSource = srgb)
@@ -930,8 +987,8 @@ class MainState(
 
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
     private fun previewBase(p: Bitmap): Bitmap {
-        // Q: z ramką zostajemy na 1280 – Compose zoom skaluje całą kompozycję (bez skoku 1280→2560).
-        val side = if (previewDetail && !frame.enabled) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
+        // R: zawsze 1280 w cache – detail bez ramki idzie ROI z lokalnego źródła DETAIL (bez okna 2560).
+        val side = PREVIEW_SIDE
         val cached = previewCache
         if (cached != null && cached.first === p && cached.second == side) return cached.third
         return scaleDown(p, side).also { previewCache = Triple(p, side, it) }

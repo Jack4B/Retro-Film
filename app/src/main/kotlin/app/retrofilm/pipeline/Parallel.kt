@@ -17,6 +17,9 @@ internal object Parallel {
     private const val CHUNK = 1 shl 18
     internal const val REDUCE_GROUPS = 8
 
+    /** R: ścieżki z Lowres.Accumulator – max 2 grupy, żeby peak nie był 8×~10 MB. */
+    internal const val REDUCE_GROUPS_HEAVY = 2
+
     val workers: Int = Runtime.getRuntime().availableProcessors().coerceIn(1, MAX_WORKERS)
 
     private val insideWorker: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
@@ -84,8 +87,14 @@ internal object Parallel {
      * taka sama przy każdym uruchomieniu i na każdym telefonie (dynamiczne [forEach] z akumulatorem na wątek dawało
      * różny skład sum).
      */
-    fun <A> reduce(count: Int, newAcc: () -> A, merge: (into: A, other: A) -> Unit, body: (A, Int) -> Unit): A {
-        val groups = minOf(REDUCE_GROUPS, count).coerceAtLeast(1)
+    fun <A> reduce(
+        count: Int,
+        newAcc: () -> A,
+        merge: (into: A, other: A) -> Unit,
+        maxGroups: Int = REDUCE_GROUPS,
+        body: (A, Int) -> Unit
+    ): A {
+        val groups = minOf(maxGroups, REDUCE_GROUPS, count).coerceAtLeast(1)
         val accs = List(groups) { newAcc() }
         forEach(groups) { g ->
             val from = g * count / groups

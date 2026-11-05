@@ -48,7 +48,11 @@ class PreviewRoiTest {
         val p = s.preview!!
         assertNotNull(p)
         assertTrue("ROI ${p.width}x${p.height}", p.width * p.height < 1200 * 900 / 2)
-        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(true, 3f, 10f, -5f))
+        // R: na bazie ROI layer = identity; dalszy gest byłby względny (RoiLiveZoomTest)
+        assertEquals(
+            ComposeZoomLayer(1f, 0f, 0f),
+            composeZoomLayer(true, 3f, 10f, -5f, roiBaseScale = 3f, roiBaseOffsetX = 10f, roiBaseOffsetY = -5f)
+        )
     }
 
     @Test fun leavingDetailClearsRoiFlag() = runBlocking {
@@ -101,8 +105,15 @@ class PreviewRoiTest {
         assertTrue(p.width * p.height < 1200 * 900 / 2)
     }
 
-    @Test fun composeZoomLayerIdentityOnlyWhenRoiActive() {
-        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(true, 2.5f, 8f, 9f))
+    @Test fun composeZoomLayerAtRoiBaseIsIdentityElseRelative() {
+        assertEquals(
+            ComposeZoomLayer(1f, 0f, 0f),
+            composeZoomLayer(true, 2.5f, 8f, 9f, roiBaseScale = 2.5f, roiBaseOffsetX = 8f, roiBaseOffsetY = 9f)
+        )
+        assertEquals(
+            ComposeZoomLayer(1.2f, 2f, 1f),
+            composeZoomLayer(true, 3f, 10f, 10f, roiBaseScale = 2.5f, roiBaseOffsetX = 8f, roiBaseOffsetY = 9f)
+        )
         assertEquals(ComposeZoomLayer(2.5f, 8f, 9f), composeZoomLayer(false, 2.5f, 8f, 9f))
     }
 }
