@@ -737,10 +737,10 @@ class MainState(
     private suspend fun CoroutineScope.renderPreview(p: Bitmap) {
         previewBomb?.invoke()
         val vp = zoomViewport
-        // P: z ramką ROI wycina zdjęcie *przed* FrameRenderer – zoom wygląda jak powiększenie
-        // w oknie ramki. Trzymamy ROI tylko bez ramki; z ramką Compose skaluje całą kompozycję.
-        if (previewDetail && !frame.enabled && vp != null && vp.scale >= ZoomState.DETAIL_SCALE) {
-            renderRoiPreview(p, vp)
+        // P: z ramką ROI wycina zdjęcie przed FrameRenderer – zoom w oknie ramki.
+        // ROI tylko bez ramki; z ramką Compose skaluje całą kompozycję.
+        if (shouldRenderRoi(vp)) {
+            renderRoiPreview(p, checkNotNull(vp))
             return
         }
         previewRoiActive = false
@@ -860,6 +860,11 @@ class MainState(
      * O: podgląd szczegółowy = tylko widoczny wycinek (+halo), max [ROI_MAX_SIDE] px.
      * Unika pełnego 2560 + SemanticSharpen/Lowres.Accumulator (~75 MB) – właściwa naprawa crashu z N.
      */
+
+    /** P: ROI tylko przy zoomie szczegółowym bez ramki (ramka = zoom Compose na kompozycji). */
+    private fun shouldRenderRoi(vp: ZoomViewport?): Boolean =
+        previewDetail && !frame.enabled && vp != null && vp.scale >= ZoomState.DETAIL_SCALE
+
     private suspend fun CoroutineScope.renderRoiPreview(p: Bitmap, vp: ZoomViewport) {
         // Najpierw kadr (geometry) na bazie podglądu, potem wycinek widoczny – UI zoomuje już wykadrowany obraz.
         val base = previewBase(p)
