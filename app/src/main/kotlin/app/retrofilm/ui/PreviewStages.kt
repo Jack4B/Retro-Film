@@ -38,6 +38,13 @@ internal class PreviewStages {
         }
     }
 
+    fun clear() {
+        crop = null
+        srgb = null
+        corrected = null
+        look = null
+    }
+
     fun hasLook(corrected: Bitmap, key: LookKey): Boolean = look.hit(corrected, key) != null
 
     suspend fun look(corrected: Bitmap, key: LookKey, make: suspend () -> Bitmap): Bitmap =
