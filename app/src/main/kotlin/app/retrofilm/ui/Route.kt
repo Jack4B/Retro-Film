@@ -53,7 +53,12 @@ fun RetroFilmNavHost(
     val perfLogOn by graph.appSettings.perfLogEnabled.collectAsState(initial = false)
     LaunchedEffect(perfLogOn) { PerfLog.recorder = if (perfLogOn) PerfLog.ring else null }
     val gpuSave by graph.appSettings.gpuSave.collectAsState(initial = false)
+    val gpuSkipAgsl by graph.appSettings.gpuSkipAgsl.collectAsState(initial = false)
     LaunchedEffect(gpuSave) { SaveBackend.gpuEnabled = gpuSave }
+    LaunchedEffect(gpuSkipAgsl) { SaveBackend.skipAgsl = gpuSkipAgsl }
+    LaunchedEffect(Unit) {
+        SaveBackend.onSkipAgsl = { on -> scope.launch { graph.appSettings.setGpuSkipAgsl(on) } }
+    }
     val parent = when (route) {
         Route.Licenses -> licensesParent
         Route.Filters -> filtersParent

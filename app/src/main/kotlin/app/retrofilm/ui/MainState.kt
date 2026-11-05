@@ -77,8 +77,11 @@ sealed interface UiMessage {
 
 const val IDENTITY_ID = "identity"
 
+/** Widok pinch-zoom przekazywany z EditorScreen do podglądu ROI (O). */
+data class ZoomViewport(val scale: Float, val offsetX: Float, val offsetY: Float, val viewW: Int, val viewH: Int)
+
 /** Stan ścieżki testowej: zdjęcie → film → ramka/podpis → eksport. */
-@Suppress("TooManyFunctions") // stan jednej ścieżki: wczytanie, podgląd, zapis pojedynczy i seria
+@Suppress("TooManyFunctions", "LargeClass") // stan jednej ścieżki: wczytanie, podgląd, zapis pojedynczy i seria
 class MainState(
     private val graph: AppGraph,
     private val typeface: Typeface,
@@ -379,13 +382,37 @@ class MainState(
     var previewDetail by mutableStateOf(false)
         private set
 
+    /** O: podgląd to wycinek ROI (nie cały kadr) – UI nie nakłada dodatkowego graphicsLayer zoom. */
+    var previewRoiActive by mutableStateOf(false)
+        private set
+
+    private var zoomViewport: ZoomViewport? = null
+
+    /** Zmiana widocznego ROI – MainScreen odświeża podgląd. */
+    var roiEpoch by mutableIntStateOf(0)
+        private set
+
     fun updateDetail(detailed: Boolean) {
         if (detailed == previewDetail) return
         previewDetail = detailed
-        // N: zwolnij etapy i bazę poprzedniej rozdzielczości zanim policzymy 2560 (albo wrócimy do 1280)
+        if (!detailed) {
+            previewRoiActive = false
+            zoomViewport = null
+        }
+        // N/O: zwolnij etapy i bazę poprzedniej rozdzielczości
         previewCache = null
         stages.clear()
         before = null
+    }
+
+    /** Widoczny fragment przy pinch-zoom (scale/offset z ZoomState + rozmiar pola). */
+    fun updateZoomViewport(scale: Float, offsetX: Float, offsetY: Float, viewW: Int, viewH: Int) {
+        if (viewW <= 0 || viewH <= 0) return
+        val next = ZoomViewport(scale, offsetX, offsetY, viewW, viewH)
+        if (next != zoomViewport) {
+            zoomViewport = next
+            roiEpoch++
+        }
     }
 
     /**
@@ -694,6 +721,8 @@ class MainState(
     /** Wyłącza tryb szczegółowy i czyści pamięć etapów, żeby następny render został na 1280. */
     private fun recoverFromDetailOom() {
         previewDetail = false
+        previewRoiActive = false
+        zoomViewport = null
         previewCache = null
         stages.clear()
         before = null
@@ -707,35 +736,14 @@ class MainState(
      */
     private suspend fun CoroutineScope.renderPreview(p: Bitmap) {
         previewBomb?.invoke()
+        val vp = zoomViewport
+        if (previewDetail && vp != null && vp.scale >= ZoomState.DETAIL_SCALE) {
+            renderRoiPreview(p, vp)
+            return
+        }
+        previewRoiActive = false
         val base = previewBase(p)
-        val small = stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
-        ensureActive() // nowsza zmiana już czeka: porzuć przestarzały render (latest-wins)
-        val srgb = stages.srgb(small) { ColorPolicy.toSrgb(small) }
-        before = before ?: FrameRenderer.render(srgb, FrameOptions(), typeface, colorSpaceSource = srgb)
-        val lut = lut()
-        val corrected = stages.corrected(srgb, adjustments, lut != null) {
-            ExportPipeline.correct(srgb, adjustments, lut != null)
-        }
-        ensureActive()
-        val key = PreviewStages.LookKey(film, intensity, adjustments.finishing())
-        val engine = graph.filmEngine.renderer
-        if (!stages.hasLook(corrected, key) && lut != null) {
-            val quick = ExportPipeline.look(
-                scaleDown(corrected, PREVIEW_SIDE_QUICK),
-                lut,
-                engine,
-                intensity,
-                adjustments
-            )
-            ensureActive()
-            preview = FrameRenderer.render(quick, frame, signatureTypeface(), colorSpaceSource = srgb)
-        }
-        val looked = stages.look(corrected, key) {
-            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, small))
-        }
-        ensureActive()
-        preview = FrameRenderer.render(looked, frame, signatureTypeface(), colorSpaceSource = srgb)
-        prefetchNeighbours()
+        renderFullPreview(p, base, applyGeometry = true)
     }
 
     /** Ładuje w tle LUT-y sąsiednich filmów karuzeli, żeby kolejne dotknięcie nie czekało na dekodowanie. */
@@ -846,6 +854,74 @@ class MainState(
 
     private enum class AutoKind { Auto, Prep }
 
+    /**
+     * O: podgląd szczegółowy = tylko widoczny wycinek (+halo), max [ROI_MAX_SIDE] px.
+     * Unika pełnego 2560 + SemanticSharpen/Lowres.Accumulator (~75 MB) – właściwa naprawa crashu z N.
+     */
+    private suspend fun CoroutineScope.renderRoiPreview(p: Bitmap, vp: ZoomViewport) {
+        // Najpierw kadr (geometry) na bazie podglądu, potem wycinek widoczny – UI zoomuje już wykadrowany obraz.
+        val base = previewBase(p)
+        val framed = stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
+        ensureActive()
+        val rect = ZoomMath.visiblePhotoRect(
+            framed.width,
+            framed.height,
+            vp.viewW,
+            vp.viewH,
+            vp.scale,
+            vp.offsetX,
+            vp.offsetY
+        )
+        val expanded = ZoomMath.expand(rect, ROI_HALO, framed.width, framed.height)
+        if (expanded.width < 2 || expanded.height < 2) {
+            previewRoiActive = false
+            renderFullPreview(p, base, applyGeometry = true)
+            return
+        }
+        val crop = Bitmap.createBitmap(framed, expanded.left, expanded.top, expanded.width, expanded.height)
+        val region = if (maxOf(crop.width, crop.height) > ROI_MAX_SIDE) scaleDown(crop, ROI_MAX_SIDE) else crop
+        // region jest już po geometry – nie kadrować drugi raz
+        renderFullPreview(p, region, applyGeometry = false)
+        previewRoiActive = true
+    }
+
+    private suspend fun CoroutineScope.renderFullPreview(p: Bitmap, base: Bitmap, applyGeometry: Boolean = true) {
+        val small = if (applyGeometry) {
+            stages.cropped(base, geometry) { GeometryApplier.apply(base, geometry) }
+        } else {
+            base
+        }
+        ensureActive()
+        val srgb = stages.srgb(small) { ColorPolicy.toSrgb(small) }
+        if (!previewRoiActive) {
+            before = before ?: FrameRenderer.render(srgb, FrameOptions(), typeface, colorSpaceSource = srgb)
+        }
+        val lut = lut()
+        val corrected = stages.corrected(srgb, adjustments, lut != null) {
+            ExportPipeline.correct(srgb, adjustments, lut != null)
+        }
+        ensureActive()
+        val key = PreviewStages.LookKey(film, intensity, adjustments.finishing())
+        val engine = graph.filmEngine.renderer
+        if (!stages.hasLook(corrected, key) && lut != null && !previewRoiActive) {
+            val quick = ExportPipeline.look(
+                scaleDown(corrected, PREVIEW_SIDE_QUICK),
+                lut,
+                engine,
+                intensity,
+                adjustments
+            )
+            ensureActive()
+            preview = FrameRenderer.render(quick, frame, signatureTypeface(), colorSpaceSource = srgb)
+        }
+        val looked = stages.look(corrected, key) {
+            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, small))
+        }
+        ensureActive()
+        preview = FrameRenderer.render(looked, frame, signatureTypeface(), colorSpaceSource = srgb)
+        if (!previewRoiActive) prefetchNeighbours()
+    }
+
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
     private fun previewBase(p: Bitmap): Bitmap {
         val side = if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
@@ -920,6 +996,10 @@ class MainState(
         const val PREVIEW_SIDE = 1280
         const val PREVIEW_SIDE_QUICK = 512
         const val PREVIEW_SIDE_DETAIL = 2560
+
+        /** O: dłuższy bok wycinka ROI; wystarczy do inspekcji detalu bez 75 MB akumulatora. */
+        const val ROI_MAX_SIDE = 1280
+        const val ROI_HALO = 48
 
         fun scaleDown(src: Bitmap, maxSide: Int): Bitmap {
             val long = maxOf(src.width, src.height)

@@ -22,6 +22,13 @@ object SaveBackend {
     @Volatile
     var gpuEnabled: Boolean = false
 
+    /** O: po „Invalid format specified 22” nie próbuj AGSL do końca procesu (i po restarcie, jeśli ustawione). */
+    @Volatile
+    var skipAgsl: Boolean = false
+
+    /** Opcjonalny zapis trwałej blokady AGSL (DataStore z UI). */
+    var onSkipAgsl: ((Boolean) -> Unit)? = null
+
     /** Do testów: lista kandydatów zamiast prawdziwego GPU. */
     @Volatile
     internal var candidates: () -> List<PlaneLutKernel> = ::deviceKernels
@@ -111,10 +118,12 @@ object SaveBackend {
                 chosen = k
                 return k
             }
+            val errText = err.exceptionOrNull()?.let { describe(it) }.orEmpty()
+            if ("agsl" in k.name) noteAgslRejected(errText)
             probeNotes += if (e != null) {
                 "name=${k.name} result=rejected diff=%.3f tol=$TOLERANCE probe_ms=$ms".format(e)
             } else {
-                "name=${k.name} result=error error=${describe(err.exceptionOrNull())} probe_ms=$ms"
+                "name=${k.name} result=error error=$errText probe_ms=$ms"
             }
             names += k.name
             runCatching { k.close() }
@@ -159,11 +168,20 @@ object SaveBackend {
     }
 
     private fun deviceKernels(): List<PlaneLutKernel> = buildList {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (!skipAgsl && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(AgslPlaneLut(linearOut = false))
             add(AgslPlaneLut(linearOut = true))
         }
         add(GlesPlaneLut())
+    }
+
+    internal fun noteAgslRejected(error: String) {
+        if (skipAgsl) return
+        if ("Invalid format" in error || "format specified 22" in error) {
+            skipAgsl = true
+            onSkipAgsl?.invoke(true)
+            probeNotes += "name=agsl result=skipped reason=format_22_cached"
+        }
     }
 }
 

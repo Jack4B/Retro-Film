@@ -266,12 +266,18 @@ private fun RowScope.EditorActions(
 }
 
 @Composable
+@Suppress("LongMethod", "CyclomaticComplexMethod") // O: ROI + zoom viewport
 private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode, modifier: Modifier) {
     val cropMode = mode.crop
     val zoom = remember { ZoomState() }
     var showInfo by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(state.photo, cropMode) { zoom.reset() }
     LaunchedEffect(zoom.isDetailed) { state.updateDetail(zoom.isDetailed) }
+    LaunchedEffect(zoom.scale, zoom.offset, zoom.size, zoom.isDetailed) {
+        if (zoom.isDetailed && zoom.size.width > 0) {
+            state.updateZoomViewport(zoom.scale, zoom.offset.x, zoom.offset.y, zoom.size.width, zoom.size.height)
+        }
+    }
     val shown = if (showBefore) state.before else state.preview
     val shownNow by rememberUpdatedState(shown)
     val cd = stringResource(if (showBefore) R.string.editor_preview_before_cd else R.string.editor_preview_cd)
@@ -303,10 +309,18 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
     ) {
         if (shown != null) {
             val layer = Modifier.fillMaxSize().graphicsLayer {
-                scaleX = zoom.scale
-                scaleY = zoom.scale
-                translationX = zoom.offset.x
-                translationY = zoom.offset.y
+                if (state.previewRoiActive) {
+                    // O: bitmapa to już widoczny wycinek – bez ponownego scale (unikamy podwójnego zoomu)
+                    scaleX = 1f
+                    scaleY = 1f
+                    translationX = 0f
+                    translationY = 0f
+                } else {
+                    scaleX = zoom.scale
+                    scaleY = zoom.scale
+                    translationX = zoom.offset.x
+                    translationY = zoom.offset.y
+                }
             }
             Image(
                 bitmap = shown.asImageBitmap(),

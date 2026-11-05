@@ -65,6 +65,7 @@ fun MainScreen(state: MainState, onSettings: () -> Unit, onDownloadFilms: () -> 
         state.intensity,
         state.adjustments,
         state.previewDetail,
+        state.roiEpoch,
         state.geometry
     ) {
         // latest-wins: kolejne zmiany (suwak) w oknie klatki anulują wcześniejszy render jeszcze przed startem
