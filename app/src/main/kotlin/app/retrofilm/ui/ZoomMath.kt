@@ -101,21 +101,33 @@ internal object ZoomMath {
 }
 
 /**
- * P: jak Compose graphicsLayer ma skalować podgląd.
- * ROI aktywny = bitmapa już jest wycinkiem (identity); inaczej pinch-zoom na całej bitmapie
- * (w tym zdjęcie+ramka po FrameRenderer).
+ * P/R: jak Compose graphicsLayer ma skalować podgląd.
+ * Bez ROI: pinch na całej bitmapie (zdjęcie+ramka). Z ROI: gesty względem bazy wycinka (live, bez rebuild).
  */
 internal data class ComposeZoomLayer(val scale: Float, val offsetX: Float, val offsetY: Float)
 
 /**
- * [roiActive] – bitmapa to już wycinek; [awaitingRoi] – Q: czekamy na pierwszy ROI po double-tap
- * (nie pokazuj 2,5× na pełnym kadrze, potem identity – jeden skok gdy ROI gotowe).
+ * [awaitingRoi] – Q: identity aż pierwszy ROI (jeden skok).
+ * [roiActive] – R: scale/offset względem [roiBaseScale]/[roiBaseOffset*], nie hard identity
+ * (pan/pinch na bitmapie ROI od razu; rebuild tylko gdy viewport się znacznie zmieni).
  */
+@Suppress("LongParameterList")
 internal fun composeZoomLayer(
     roiActive: Boolean,
     scale: Float,
     offsetX: Float,
     offsetY: Float,
-    awaitingRoi: Boolean = false
-): ComposeZoomLayer =
-    if (roiActive || awaitingRoi) ComposeZoomLayer(1f, 0f, 0f) else ComposeZoomLayer(scale, offsetX, offsetY)
+    awaitingRoi: Boolean = false,
+    roiBaseScale: Float = 1f,
+    roiBaseOffsetX: Float = 0f,
+    roiBaseOffsetY: Float = 0f
+): ComposeZoomLayer = when {
+    awaitingRoi -> ComposeZoomLayer(1f, 0f, 0f)
+
+    roiActive -> {
+        val base = roiBaseScale.coerceAtLeast(1f)
+        ComposeZoomLayer(scale / base, offsetX - roiBaseOffsetX, offsetY - roiBaseOffsetY)
+    }
+
+    else -> ComposeZoomLayer(scale, offsetX, offsetY)
+}

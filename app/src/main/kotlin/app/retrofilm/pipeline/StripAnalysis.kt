@@ -109,7 +109,8 @@ internal class StripAnalysis(
         return Parallel.reduce(
             sampler.chunks,
             { Sums(chromaLow?.let { Lowres.Accumulator(it) }, dehazeLow?.let { Lowres.Accumulator(it) }) },
-            { into, other -> into.merge(other) }
+            { into, other -> into.merge(other) },
+            maxGroups = Parallel.REDUCE_GROUPS_HEAVY
         ) { sums, chunk ->
             sampler.rows(chunk) { y, p ->
                 for (i in 0 until p.size) {
@@ -164,7 +165,8 @@ internal class StripAnalysis(
         val acc0 = Parallel.reduce(
             sampler.chunks,
             { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
-            { a, b -> a.acc.merge(b.acc) }
+            { a, b -> a.acc.merge(b.acc) },
+            maxGroups = Parallel.REDUCE_GROUPS_HEAVY
         ) { state, chunk ->
             val acc = state.acc
             sampler.rows(chunk) { y, p ->
@@ -187,7 +189,8 @@ internal class StripAnalysis(
         val acc0 = Parallel.reduce(
             sampler.chunks,
             { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
-            { a, b -> a.acc.merge(b.acc) }
+            { a, b -> a.acc.merge(b.acc) },
+            maxGroups = Parallel.REDUCE_GROUPS_HEAVY
         ) { state, chunk ->
             sampler.rows(chunk) { y, p ->
                 restoreRow(chroma, dehaze, p, y, stride)
@@ -240,7 +243,8 @@ internal class StripAnalysis(
         val clarity = Parallel.reduce(
             sampler.chunks,
             { ClarityState(Lowres.Accumulator(low), AdjustmentProcessor(adj)) },
-            { a, b -> a.acc.merge(b.acc) }
+            { a, b -> a.acc.merge(b.acc) },
+            maxGroups = Parallel.REDUCE_GROUPS_HEAVY
         ) { state, chunk ->
             sampler.rows(chunk) { y, p ->
                 restoreRow(chroma, dehaze, p, y, stride)

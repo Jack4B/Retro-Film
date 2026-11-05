@@ -34,10 +34,19 @@ class DoubleTapZoomTest {
             ComposeZoomLayer(1f, 0f, 0f),
             composeZoomLayer(roiActive = false, scale = z.scale, offsetX = 1f, offsetY = 2f, awaitingRoi = true)
         )
-        // ROI gotowe: nadal identity na wycinku
+        // ROI gotowe na bazie double-tap: identity; dalszy pinch = względny (RoiLiveZoomTest)
         assertEquals(
             ComposeZoomLayer(1f, 0f, 0f),
-            composeZoomLayer(roiActive = true, scale = z.scale, offsetX = 1f, offsetY = 2f, awaitingRoi = false)
+            composeZoomLayer(
+                roiActive = true,
+                scale = z.scale,
+                offsetX = 1f,
+                offsetY = 2f,
+                awaitingRoi = false,
+                roiBaseScale = z.scale,
+                roiBaseOffsetX = 1f,
+                roiBaseOffsetY = 2f
+            )
         )
     }
 
@@ -80,7 +89,16 @@ class DoubleTapZoomTest {
         assertTrue(s.previewRoiActive)
         assertEquals(
             ComposeZoomLayer(1f, 0f, 0f),
-            composeZoomLayer(s.previewRoiActive, z.scale, z.offset.x, z.offset.y, awaitingRoi = false)
+            composeZoomLayer(
+                s.previewRoiActive,
+                z.scale,
+                z.offset.x,
+                z.offset.y,
+                awaitingRoi = false,
+                roiBaseScale = s.previewRoiBaseScale,
+                roiBaseOffsetX = s.previewRoiBaseOffsetX,
+                roiBaseOffsetY = s.previewRoiBaseOffsetY
+            )
         )
         // gesty nadal mają scale>1 – viewport może się odświeżyć (pan/pinch po ROI)
         assertTrue(z.scale > 1f)

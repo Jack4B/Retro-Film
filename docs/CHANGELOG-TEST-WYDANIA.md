@@ -18,6 +18,7 @@ Prerelease’y na gałęzi `test` (nie `main`). APK: GitHub → Releases. Data w
 | [v-test-2026-11-05-O](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-O) | RetroFilm-O-release.apk | ROI zoom, Lowres MAX_CELLS, skip AGSL format 22 |
 | [v-test-2026-11-05-P](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-P) | RetroFilm-P-release.apk | Z ramką: zoom Compose na zdjęciu+ramce (bez ROI) |
 | [v-test-2026-11-05-Q](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-Q) | RetroFilm-Q-release.apk | Double-tap: jedno lądowanie (`awaitingRoi` / ramka 1280) |
+| [v-test-2026-11-05-R](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-R) | RetroFilm-R-release.apk | Live ROI pan/zoom; twarze z pełnego kadru→ROI; peak Accumulator ↓; bez okna 2560 |
 
 ---
 
@@ -63,4 +64,7 @@ Z **włączoną ramką** ROI wyłączone – pinch skaluje bitmapę po `FrameRen
 ## Q
 Double-tap: bez ramki `awaitingRoi` nie pokazuje 2,5× na pełnym kadrze przed ROI (jeden skok gdy wycinek gotowy); z ramką detail zostaje na 1280 + Compose 2,5× (bez skoku 1280→2560). `ZoomState.detailMode`.
 
-Szczegóły techniczne: `docs/PLAN-WYDANIE-*.md` (I–Q).
+## R
+Live gesty na bitmapie ROI (relative do bazy wycinka); twarze smart-sharpen z pełnego kadru mapowane do ROI; `REDUCE_GROUPS_HEAVY=2` + `MAX_CELLS=512²` tnie peak Accumulator; `previewBase` zawsze 1280 (ROI z lokalnego DETAIL).
+
+Szczegóły techniczne: `docs/PLAN-WYDANIE-*.md` (I–R).

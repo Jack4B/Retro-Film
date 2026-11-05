@@ -2,8 +2,25 @@ package app.retrofilm.pipeline
 
 import kotlin.math.hypot
 
+/** Prostokąt wycinka w pikselach kadru (do mapowania twarzy na ROI). */
+data class PixelRect(val left: Int, val top: Int, val right: Int, val bottom: Int)
+
 /** Prostokąt twarzy w współrzędnych znormalizowanych do obrazu (0..1), np. z wykrywacza twarzy. */
-data class FaceBox(val left: Float, val top: Float, val right: Float, val bottom: Float)
+data class FaceBox(val left: Float, val top: Float, val right: Float, val bottom: Float) {
+    /**
+     * R: mapuje ramkę z pełnego kadru [fullW]×[fullH] do wycinka ROI (normalized 0..1 względem cropu).
+     * Piksele poza ROI clampowane do krawędzi (0 lub 1).
+     */
+    fun mapIntoRoi(roi: PixelRect, fullW: Int, fullH: Int): FaceBox {
+        val rw = (roi.right - roi.left).coerceAtLeast(1).toFloat()
+        val rh = (roi.bottom - roi.top).coerceAtLeast(1).toFloat()
+        val fw = fullW.coerceAtLeast(1).toFloat()
+        val fh = fullH.coerceAtLeast(1).toFloat()
+        fun mx(n: Float) = ((n * fw - roi.left) / rw).coerceIn(0f, 1f)
+        fun my(n: Float) = ((n * fh - roi.top) / rh).coerceIn(0f, 1f)
+        return FaceBox(mx(left), my(top), mx(right), my(bottom))
+    }
+}
 
 /** Rodzaj sceny rozpoznany przez [SceneAnalyzer]; steruje ostrożnością [AutoEnhance]. */
 enum class AutoScene { General, Portrait, Landscape, Dominant }
