@@ -11,6 +11,10 @@ Wykonawcy: Forge (kod, silnik), Lumen (makiety), Python Programista Master (`too
 | **F4** Eksport | JPEG/PNG, jakość, EXIF bez GPS, „Ponów nieudane” | Brak GPS w plikach wynikowych |
 | **F5** Szlif/wydanie | Dostępność, Baseline Profiles, Licencje i autorzy, podpisane APK | Release w GitHub Releases, działa w Obtainium |
 
+## Wydania testowe (gałąź `test`)
+
+Literowe prerelease’y D–R: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md), zachowanie ustawień/zoomu: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
+
 ## Do dodania (backlog)
 
 - **Dodge & Burn** (wyrównanie skóry bez ruszania porów + pędzel): plan, metodologia i kryteria w [PLAN-DODGE-BURN.md](PLAN-DODGE-BURN.md); czyste algorytmy bez sieci neuronowych; wracamy 2026-10-31.

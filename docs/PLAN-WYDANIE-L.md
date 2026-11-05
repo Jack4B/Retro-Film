@@ -13,3 +13,6 @@ Telefon (realme RMX5085, Mali-G720, 3072x4096, K z GPU): lut=gpu-gles-f32, save_
 - Asynchroniczny odczyt PBO (etap pasów jest synchroniczny; wymaga przebudowy potoku).
 - Utrwalanie wyniku próbki między uruchomieniami (per wersja+urządzenie) – tylko cache w procesie.
 - Wejście nadal RGBA32F (16F wejścia dałoby błąd > tolerancji przy ciemnych tonach – niezmierzone).
+
+## Dokumentacja
+Zachowanie przełącznika: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md). Domyślnie OFF obowiązuje od L (nadpisuje K).

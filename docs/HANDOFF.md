@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-11-05 – docs po R (gałąź test)
+- Faza: uzupełnienie dokumentacji do stanu `v-test-2026-11-05-R` (bez nowego APK)
+- Zrobione: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md) przez R + skrót testera; nowe [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) (Diagnostyka, tryb ramki, zoom framed/frameless Q/R); [PLAN-WYDANIE-M.md](PLAN-WYDANIE-M.md); aktualizacja K/L/N/O/P/Q/R, AUTO-KOREKTA-WORKFLOW, CI, LUT-BIN, WYDAJNOSC, AUDYT-EFEKTOW; KDoc `gpuSave` → domyślnie OFF
+- PR / gałąź: `auto/docs-r` → `test`
+- Otwarte: —
+- Następny krok: ocena R na telefonie (live ROI, twarze, pamięć)
+
 ## 2026-10-28 – Claude (mapa Graphify budowana na starcie sesji)
 - Faza: konfiguracja na prośbę Jack4B (mapa gotowa na sobotę); bez wydania
 - Zrobione: `tools/graphify_build.py` (mapa z kodu `main` wszystkich modułów: 139 plików, 1730 węzłów, 4590 krawędzi, 95 społeczności; ok. 5 s, lokalnie, bez tokenów) wywoływany przez `.claude/hooks/session-start.sh` po instalacji Graphify; instrukcja w `docs/NARZEDZIA-CLAUDE.md` (bez `/graphify app/src`, które puszcza 260 miniatur do analizy przez model).

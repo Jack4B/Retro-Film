@@ -8,7 +8,10 @@
   Uwaga: ramka zmienia proporcje płótna, więc zachowany jest dłuższy bok (jak dawniej), nie oba wymiary.
 - Zapisywane w `AppSettingsRepository` (`frame_outward`), w kopii zapasowej. Zrzuty Roborazzi jasny/ciemny.
 
-## B. Zapis na GPU (Diagnostyka → „Zapis na GPU (eksperymentalny)”, domyślnie włączony)
+## B. Zapis na GPU (Diagnostyka → „Zapis na GPU (eksperymentalny)”)
+> **Stan po L/R:** przełącznik jest **domyślnie wyłączony** (L). Na Mali bench zwykle zostawia CPU. AGSL format 22 → skip (O). Szczegóły: [PLAN-WYDANIE-L.md](PLAN-WYDANIE-L.md), [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).
+
+W wydaniu K (historycznie) domyślnie włączony:
 - Na GPU: etap LUT-a (najdroższy, `lut_render_dither`) – AGSL na RGBA_F16 (API 33+), wariant z liniowym buforem,
   zapasowo GLES 3 z FBO RGBA32F i LUT-em 3D RGB16F (interpolacja czworościenna w shaderze, jak CPU).
 - Przed użyciem próbka 4913 barw vs CPU (tolerancja 0,75/255 – poniżej szumu ditheringu); zły wynik / wyjątek →

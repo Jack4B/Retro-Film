@@ -1,6 +1,8 @@
 # Changelog wydań testowych Retro-Film (`v-test-…`)
 
-Prerelease’y na gałęzi `test` (nie `main`). APK: GitHub → Releases. Data w tagu = dzień publikacji (Europe/Warsaw).
+Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Data w tagu = dzień publikacji (Europe/Warsaw).
+
+**Stan bieżący (po R):** [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · workflow autokorekty: [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md) · plany: `PLAN-WYDANIE-I.md` … `PLAN-WYDANIE-R.md` (brak litery po J przed K; M dodane).
 
 | Tag | APK (asset) | Temat |
 |-----|-------------|--------|
@@ -22,6 +24,15 @@ Prerelease’y na gałęzi `test` (nie `main`). APK: GitHub → Releases. Data w
 
 ---
 
+## Stan po R (skrót dla testera)
+
+- **GPU zapis:** diagnostyka, **domyślnie OFF**; na Mali zwykle i tak wraca CPU po bench (L). AGSL format 22 → skip (O).
+- **Ramka włączona:** pinch skaluje **zdjęcie+ramkę** (P); detail 1280 (Q/R).
+- **Bez ramki + zoom:** ROI + live gesty (O/R); double-tap bez podwójnego skoku (Q).
+- **Przygotuj pod film:** ekspozycja po krzywej + ochrona twarzy (M); patrz AUTO-KOREKTA-WORKFLOW.
+
+---
+
 ## D (2026-11-04)
 Chip HDR w edytorze, domyślne HDR w Ustawieniach, lokalny log czasów (`RetroFilmPerf`), kopia zapasowa JSON. Offline.
 
@@ -29,7 +40,7 @@ Chip HDR w edytorze, domyślne HDR w Ustawieniach, lokalny log czasów (`RetroFi
 Log zapisu: prawdziwy backend (AGSL/GLES/CPU) + powód fallbacku; etapy `save_*`; szybsza konwersja Display P3.
 
 ## F
-Auto-korekta: sceny, WB, ekspozycja, dokumentacja workflow.
+Auto-korekta: sceny, WB, ekspozycja, dokumentacja workflow. → [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md)
 
 ## G
 Zapis: jeden przebieg LUT+wykończenie; optymalizacje deband/ziarno/wyostrzanie; poprawka pełnego podglądu.
@@ -38,33 +49,33 @@ Zapis: jeden przebieg LUT+wykończenie; optymalizacje deband/ziarno/wyostrzanie;
 Budżet pamięci pasów; OOM przy eksporcie → komunikat zamiast crashu; `CrashLog` / `last_crash` w CSV diagnostyki.
 
 ## I
-Kafle 2D w StripPipeline (pełne wątki w budżecie); określony postęp zapisu; halacja; winieta cos⁴; zapas HDR z gain mapy; równoległy `auto_suggest`.
+Kafle 2D w StripPipeline (pełne wątki w budżecie); określony postęp zapisu; halacja; winieta cos⁴; zapas HDR z gain mapy; równoległy `auto_suggest`. → [PLAN-WYDANIE-I.md](PLAN-WYDANIE-I.md)
 
 ## J
-Ramka: płótno rośnie, zdjęcie 1:1 (bez ciężkiego Lanczosa); analiza DNG F16 / BaselineExposure; budżet pasów max 128 MB. Pełne GPU LUT – jeszcze nie.
+Ramka: płótno rośnie, zdjęcie 1:1 (bez ciężkiego Lanczosa); analiza DNG F16 / BaselineExposure; budżet pasów max 128 MB. Pełne GPU LUT – jeszcze nie (eksperyment w K). → [PLAN-WYDANIE-J.md](PLAN-WYDANIE-J.md)
 
 ## K
-Ustawienia: tryb ramki (na zewnątrz vs oryginalny rozmiar); zapis LUT na GPU (AGSL F16 + GLES) z próbką i awaryjnym CPU.
+Ustawienia: tryb ramki (na zewnątrz vs oryginalny rozmiar); zapis LUT na GPU (AGSL F16 + GLES) z próbką i awaryjnym CPU. **Uwaga:** w K przełącznik GPU startował włączony; od L domyślnie OFF. → [PLAN-WYDANIE-K.md](PLAN-WYDANIE-K.md)
 
 ## L
-GPU **domyślnie wyłączone** (na Mali ~6× wolniej niż CPU pasami). Probe cache na proces + powody (diff/tol/probe_ms); auto-bench `gpu×wątki` vs CPU; reuse zasobów GLES; `save_lut_gpu_split`.
+GPU **domyślnie wyłączone** (na Mali ~6× wolniej niż CPU pasami). Probe cache na proces + powody (diff/tol/probe_ms); auto-bench `gpu×wątki` vs CPU; reuse zasobów GLES; `save_lut_gpu_split`. → [PLAN-WYDANIE-L.md](PLAN-WYDANIE-L.md)
 
 ## M
-„Przygotuj pod film”: ekspozycja liczona **po** zdjęciu krzywej; limit jasności twarzy (FaceExposureCap); suwak „Zdejmij krzywą” działa też po ręcznej ekspozycji; 100% = pełne zdjęcie krzywej.
+„Przygotuj pod film”: ekspozycja liczona **po** zdjęciu krzywej; limit jasności twarzy (FaceExposureCap); suwak „Zdejmij krzywą” działa też po ręcznej ekspozycji; 100% = pełne zdjęcie krzywej. → [PLAN-WYDANIE-M.md](PLAN-WYDANIE-M.md)
 
 ## N
-Crash zoom+wyostrzanie: `refreshPreview` łapie OOM, loguje, wyłącza detail, wraca na 1280. (Nie dawało prawdziwego detalu – patrz O.)
+Crash zoom+wyostrzanie: `refreshPreview` łapie OOM, loguje, wyłącza detail, wraca na 1280. (Nie dawało prawdziwego detalu – patrz O/R.) → [PLAN-WYDANIE-N.md](PLAN-WYDANIE-N.md)
 
 ## O
-ROI: przy zoomie ≥1,5× (bez ramki) liczony widoczny wycinek (+halo). `Lowres.MAX_CELLS` chroni przed ~75 MB Accumulator. AGSL format 22 → `skipAgsl` + DataStore. GPU nadal OFF domyślnie.
+ROI: przy zoomie ≥1,5× (bez ramki) liczony widoczny wycinek (+halo). `Lowres.MAX_CELLS` chroni przed ~75 MB Accumulator (w O: 640²; od R: 512²). AGSL format 22 → `skipAgsl` + DataStore. GPU nadal OFF domyślnie. → [PLAN-WYDANIE-O.md](PLAN-WYDANIE-O.md)
 
 ## P
-Z **włączoną ramką** ROI wyłączone – pinch skaluje bitmapę po `FrameRenderer` (zdjęcie+ramka razem). Bez ramki ROI z O zostaje.
+Z **włączoną ramką** ROI wyłączone – pinch skaluje bitmapę po `FrameRenderer` (zdjęcie+ramka razem). Bez ramki ROI z O zostaje. → [PLAN-WYDANIE-P.md](PLAN-WYDANIE-P.md)
 
 ## Q
-Double-tap: bez ramki `awaitingRoi` nie pokazuje 2,5× na pełnym kadrze przed ROI (jeden skok gdy wycinek gotowy); z ramką detail zostaje na 1280 + Compose 2,5× (bez skoku 1280→2560). `ZoomState.detailMode`.
+Double-tap: bez ramki `awaitingRoi` nie pokazuje 2,5× na pełnym kadrze przed ROI (jeden skok gdy wycinek gotowy); z ramką detail zostaje na 1280 + Compose 2,5× (bez skoku 1280→2560). `ZoomState.detailMode`. → [PLAN-WYDANIE-Q.md](PLAN-WYDANIE-Q.md)
 
 ## R
-Live gesty na bitmapie ROI (relative do bazy wycinka); twarze smart-sharpen z pełnego kadru mapowane do ROI; `REDUCE_GROUPS_HEAVY=2` + `MAX_CELLS=512²` tnie peak Accumulator; `previewBase` zawsze 1280 (ROI z lokalnego DETAIL).
+Live gesty na bitmapie ROI (relative do bazy wycinka); twarze smart-sharpen z pełnego kadru mapowane do ROI; `REDUCE_GROUPS_HEAVY=2` + `MAX_CELLS=512²` tnie peak Accumulator; `previewBase` zawsze 1280 (ROI z lokalnego DETAIL). → [PLAN-WYDANIE-R.md](PLAN-WYDANIE-R.md)
 
-Szczegóły techniczne: `docs/PLAN-WYDANIE-*.md` (I–R).
+Szczegóły techniczne: `docs/PLAN-WYDANIE-*.md` (I–R) · zachowanie UI: [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md).

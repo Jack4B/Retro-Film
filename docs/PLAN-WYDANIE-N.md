@@ -21,3 +21,6 @@ Potok filmu/LUT/koloru **nie był** źródłem – tylko rozmiar podglądu + bra
 ## Poza zakresem
 - ROI/kafelki przy zoomie (kolejna optymalizacja; safety-net OOM wystarcza na crash).
 - Zmiany algorytmów filmu/LUT/koloru (zostawione zgodnie ze zgłoszeniem).
+
+## Stan po O/R
+Catch OOM zostaje. Ścieżka detail bez ramki to ROI (O) + live gesty i limity pamięci (R); pełne 2560 nie jest już pierwszą próbą `previewBase`.

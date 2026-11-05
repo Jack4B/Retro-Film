@@ -20,3 +20,9 @@ N łapał OOM w `refreshPreview` i wracał na 1280, ale **1280 z wyostrzaniem ś
 
 ## Testy
 ZoomMath (ROI), LowresCap, PreviewRoi, PreviewDetailOom, SaveBackendAgslSkip + istniejące SaveBackend.
+
+## Stan po R (aktualizacja)
+- `composeZoomLayer` nie trzyma już hard identity przy `roiActive` – gesty live względem bazy ROI ([PLAN-WYDANIE-R.md](PLAN-WYDANIE-R.md)).
+- `Lowres.MAX_CELLS` obniżone do **512²**; Accumulator reduce: `REDUCE_GROUPS_HEAVY=2`.
+- `previewBase` zawsze 1280; crop ROI z lokalnego źródła do `PREVIEW_SIDE_DETAIL` (bez okna pełnego 2560 w cache).
+- Z ramką nadal ROI off (P); double-tap one-landing (Q).
