@@ -274,9 +274,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
     LaunchedEffect(state.photo, cropMode) { zoom.reset() }
     LaunchedEffect(zoom.isDetailed) { state.updateDetail(zoom.isDetailed) }
     LaunchedEffect(zoom.scale, zoom.offset, zoom.size, zoom.isDetailed) {
-        // Q: po settle ROI (scale=1) nie przebudowuj wycinka – inaczej drugi skok kadru
         if (!zoom.isDetailed || zoom.size.width <= 0) return@LaunchedEffect
-        if (state.previewRoiActive && zoom.scale <= 1f) return@LaunchedEffect
         state.updateZoomViewport(
             zoom.scale,
             zoom.offset.x,
@@ -284,9 +282,6 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
             zoom.size.width,
             zoom.size.height
         )
-    }
-    LaunchedEffect(state.previewRoiActive) {
-        if (state.previewRoiActive) zoom.settleForRoiBase()
     }
     val shown = if (showBefore) state.before else state.preview
     val shownNow by rememberUpdatedState(shown)
@@ -319,11 +314,14 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
     ) {
         if (shown != null) {
             val layer = Modifier.fillMaxSize().graphicsLayer {
+                val awaitingRoi =
+                    zoom.isDetailed && !state.frame.enabled && !state.previewRoiActive
                 val z = composeZoomLayer(
                     state.previewRoiActive,
                     zoom.scale,
                     zoom.offset.x,
-                    zoom.offset.y
+                    zoom.offset.y,
+                    awaitingRoi = awaitingRoi
                 )
                 scaleX = z.scale
                 scaleY = z.scale

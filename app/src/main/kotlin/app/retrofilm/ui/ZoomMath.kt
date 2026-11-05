@@ -107,5 +107,15 @@ internal object ZoomMath {
  */
 internal data class ComposeZoomLayer(val scale: Float, val offsetX: Float, val offsetY: Float)
 
-internal fun composeZoomLayer(roiActive: Boolean, scale: Float, offsetX: Float, offsetY: Float): ComposeZoomLayer =
-    if (roiActive) ComposeZoomLayer(1f, 0f, 0f) else ComposeZoomLayer(scale, offsetX, offsetY)
+/**
+ * [roiActive] – bitmapa to już wycinek; [awaitingRoi] – Q: czekamy na pierwszy ROI po double-tap
+ * (nie pokazuj 2,5× na pełnym kadrze, potem identity – jeden skok gdy ROI gotowe).
+ */
+internal fun composeZoomLayer(
+    roiActive: Boolean,
+    scale: Float,
+    offsetX: Float,
+    offsetY: Float,
+    awaitingRoi: Boolean = false
+): ComposeZoomLayer =
+    if (roiActive || awaitingRoi) ComposeZoomLayer(1f, 0f, 0f) else ComposeZoomLayer(scale, offsetX, offsetY)

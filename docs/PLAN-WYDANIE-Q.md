@@ -1,20 +1,18 @@
 # Wydanie Q (2026-11-05) – stabilne lądowanie po dwukrotnym dotknięciu
 
 ## Status P
-P (v-test-2026-11-05-P) już naprawia zoom z ramką: ROI wyłączone przy `frame.enabled`, Compose skaluje całą kompozycję zdjęcie+ramka.
+P już naprawia zoom z ramką (ROI off przy `frame.enabled`).
 
-## Zgłoszenie Q
-Po dwukrotnym dotknięciu zoom skacze do jednej wartości, a po chwili do drugiej.
+## Zgłoszenie
+Double-tap: skok do jednej skali, po chwili do drugiej.
 
 ## Przyczyna
-1. `toggle` → scale 2,5× (Compose od razu powiększa pełny podgląd).
-2. Po ~16 ms + render: bez ramki ROI ustawia `previewRoiActive` i `composeZoomLayer` → identity; albo z ramką `previewDetail` przełącza 1280→2560 (inna bitmapa przy tym samym scale).
-3. Drugi skok wizualny.
+Compose najpierw 2,5× na pełnym podglądzie, potem ROI/`previewRoiActive` → identity (albo 1280→2560 z ramką).
 
 ## Naprawa
-- `ZoomState.detailMode` + `settleForRoiBase()`: po ROI scale/offset → 1/0, ale `isDetailed` zostaje (bez wyłączania ROI).
-- `LaunchedEffect(previewRoiActive)` woła settle; viewport nie jest odświeżany po settle (ten sam wycinek).
-- Z ramką `previewBase` zostaje na 1280 nawet w detail – jedyny zoom to Compose (bez skoku rozdzielczości).
+1. **Bez ramki:** `awaitingRoi` trzyma layer na identity aż ROI gotowe → jeden skok (pojawia się wycinek). Gesty po ROI nadal aktualizują viewport (scale zostaje >1).
+2. **Z ramką:** `previewBase` zostaje na 1280 w detail; Compose 2,5× od razu, bez wymiany bitmapy.
+3. `ZoomState.detailMode` + opcjonalne `settleForRoiBase` (testy / API).
 
 ## Testy
-`DoubleTapZoomTest`, rozszerzony `ZoomStateTest`; regresje P (`PreviewRoiTest`).
+`DoubleTapZoomTest`, `ZoomStateTest`, regresje `PreviewRoiTest`.

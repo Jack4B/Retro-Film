@@ -18,28 +18,27 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/**
- * Q: dwukrotne dotknięcie ląduje na jednej skali – bez drugiego skoku po przebudowie ROI / 2560.
- */
+/** Q: dwukrotne dotknięcie ląduje na jednej skali – bez skoku 2,5×→ROI. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class DoubleTapZoomTest {
     private fun zoom() = ZoomState().apply { size = IntSize(1000, 800) }
 
-    @Test fun settleForRoiBaseKeepsDetailWithoutComposeScale() {
+    @Test fun awaitingRoiUsesIdentityUntilRoiReady() {
         val z = zoom()
         z.toggle(Offset(300f, 300f))
         assertEquals(ZoomState.DOUBLE_TAP_SCALE, z.scale, 0.001f)
-        assertTrue(z.isDetailed)
-        z.settleForRoiBase()
-        assertEquals(1f, z.scale, 0f)
-        assertEquals(Offset.Zero, z.offset)
-        assertTrue("detailMode trzyma isDetailed po settle (inaczej LaunchedEffect wyłączy ROI)", z.isDetailed)
-        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(true, z.scale, z.offset.x, z.offset.y))
-        z.toggle(Offset(300f, 300f))
-        assertEquals(1f, z.scale, 0f)
-        assertFalse(z.isDetailed)
+        // zanim ROI: identity (nie pokazuj 2,5× na pełnym)
+        assertEquals(
+            ComposeZoomLayer(1f, 0f, 0f),
+            composeZoomLayer(roiActive = false, scale = z.scale, offsetX = 1f, offsetY = 2f, awaitingRoi = true)
+        )
+        // ROI gotowe: nadal identity na wycinku
+        assertEquals(
+            ComposeZoomLayer(1f, 0f, 0f),
+            composeZoomLayer(roiActive = true, scale = z.scale, offsetX = 1f, offsetY = 2f, awaitingRoi = false)
+        )
     }
 
     @Test fun framedDoubleTapKeepsComposeScaleAfterPreviewRebuild() = runBlocking {
@@ -57,16 +56,16 @@ class DoubleTapZoomTest {
         s.refreshPreview()
         assertFalse(s.previewRoiActive)
         val after = s.preview!!
-        // Q: z ramką bez skoku 1280→2560 – ten sam bok podglądu (Compose zoom = jedyny zoom)
         assertEquals(before.width, after.width)
         assertEquals(before.height, after.height)
+        // z ramką: Compose od razu 2,5× (awaitingRoi=false)
         assertEquals(
             ComposeZoomLayer(ZoomState.DOUBLE_TAP_SCALE, 12f, -8f),
-            composeZoomLayer(s.previewRoiActive, ZoomState.DOUBLE_TAP_SCALE, 12f, -8f)
+            composeZoomLayer(false, ZoomState.DOUBLE_TAP_SCALE, 12f, -8f, awaitingRoi = false)
         )
     }
 
-    @Test fun framelessRoiSettleEndsAtIdentityLayer() = runBlocking {
+    @Test fun framelessRoiReadyUsesIdentityLayer() = runBlocking {
         val s = MainState(AppGraph(RuntimeEnvironment.getApplication()), Typeface.DEFAULT).also {
             it.setPhotoForTest(
                 Bitmap.createBitmap(IntArray(1200 * 900) { Color.GRAY }, 1200, 900, Bitmap.Config.ARGB_8888)
@@ -79,9 +78,21 @@ class DoubleTapZoomTest {
         s.updateZoomViewport(z.scale, z.offset.x, z.offset.y, z.size.width, z.size.height)
         s.refreshPreview()
         assertTrue(s.previewRoiActive)
+        assertEquals(
+            ComposeZoomLayer(1f, 0f, 0f),
+            composeZoomLayer(s.previewRoiActive, z.scale, z.offset.x, z.offset.y, awaitingRoi = false)
+        )
+        // gesty nadal mają scale>1 – viewport może się odświeżyć (pan/pinch po ROI)
+        assertTrue(z.scale > 1f)
+    }
+
+    @Test fun settleForRoiBaseKeepsDetailWithoutComposeScale() {
+        val z = zoom()
+        z.toggle(Offset(300f, 300f))
         z.settleForRoiBase()
         assertEquals(1f, z.scale, 0f)
         assertTrue(z.isDetailed)
-        assertEquals(ComposeZoomLayer(1f, 0f, 0f), composeZoomLayer(s.previewRoiActive, z.scale, 0f, 0f))
+        z.toggle(Offset(300f, 300f))
+        assertFalse(z.isDetailed)
     }
 }
