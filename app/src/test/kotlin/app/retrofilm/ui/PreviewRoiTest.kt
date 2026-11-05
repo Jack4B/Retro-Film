@@ -16,6 +16,9 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
+/**
+ * O/P: ROI przy zoomie bez ramki (OOM); z włączoną ramką ROI wyłączone – zoom Compose na zdjęciu+ramce.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -54,5 +57,37 @@ class PreviewRoiTest {
         s.updateDetail(false)
         s.refreshPreview()
         assertFalse(s.previewRoiActive)
+    }
+
+    @Test fun framedDetailZoomDoesNotActivateRoi() = runBlocking {
+        val s = state(1200, 900)
+        s.frame = s.frame.copy(enabled = true, margin = 0.08f)
+        s.refreshPreview()
+        val framed = s.preview!!
+        assertTrue(
+            "ramka powiększa płótno względem zdjęcia",
+            framed.width > 1200 || framed.height > 900
+        )
+        s.updateDetail(true)
+        s.updateZoomViewport(scale = 3f, offsetX = 0f, offsetY = 0f, viewW = 400, viewH = 300)
+        s.refreshPreview()
+        assertFalse(
+            "P: z ramką ROI wyłączone – zoom Compose na całości (zdjęcie+ramka)",
+            s.previewRoiActive
+        )
+        val p = s.preview!!
+        assertTrue("framed preview ${p.width}x${p.height}", p.width >= framed.width / 2)
+    }
+
+    @Test fun disablingFrameRestoresRoiOnDetailZoom() = runBlocking {
+        val s = state(1200, 900)
+        s.frame = s.frame.copy(enabled = true)
+        s.updateDetail(true)
+        s.updateZoomViewport(3f, 0f, 0f, 400, 300)
+        s.refreshPreview()
+        assertFalse(s.previewRoiActive)
+        s.frame = s.frame.copy(enabled = false)
+        s.refreshPreview()
+        assertTrue("bez ramki wraca ROI z O", s.previewRoiActive)
     }
 }

@@ -310,7 +310,7 @@ private fun PreviewPane(state: MainState, showBefore: Boolean, mode: PreviewMode
         if (shown != null) {
             val layer = Modifier.fillMaxSize().graphicsLayer {
                 if (state.previewRoiActive) {
-                    // O: bitmapa to już widoczny wycinek – bez ponownego scale (unikamy podwójnego zoomu)
+                    // O/P: bitmapa to już widoczny wycinek (tylko bez ramki) – bez ponownego scale (unikamy podwójnego zoomu)
                     scaleX = 1f
                     scaleY = 1f
                     translationX = 0f

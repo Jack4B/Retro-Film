@@ -382,7 +382,7 @@ class MainState(
     var previewDetail by mutableStateOf(false)
         private set
 
-    /** O: podgląd to wycinek ROI (nie cały kadr) – UI nie nakłada dodatkowego graphicsLayer zoom. */
+    /** O/P: wycinek ROI bez ramki; z ramką zawsze false – zoom Compose na zdjęciu+ramce. */
     var previewRoiActive by mutableStateOf(false)
         private set
 
@@ -737,7 +737,9 @@ class MainState(
     private suspend fun CoroutineScope.renderPreview(p: Bitmap) {
         previewBomb?.invoke()
         val vp = zoomViewport
-        if (previewDetail && vp != null && vp.scale >= ZoomState.DETAIL_SCALE) {
+        // P: z ramką ROI wycina zdjęcie *przed* FrameRenderer – zoom wygląda jak powiększenie
+        // w oknie ramki. Trzymamy ROI tylko bez ramki; z ramką Compose skaluje całą kompozycję.
+        if (previewDetail && !frame.enabled && vp != null && vp.scale >= ZoomState.DETAIL_SCALE) {
             renderRoiPreview(p, vp)
             return
         }
