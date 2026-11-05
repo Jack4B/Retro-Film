@@ -50,4 +50,14 @@ class ZoomStateTest {
         assertEquals(Offset.Zero, z.offset)
         assertFalse(z.isDetailed)
     }
+
+    @Test fun settleForRoiBaseKeepsDetailedFlag() {
+        val z = zoomState()
+        z.toggle(Offset(300f, 300f))
+        z.settleForRoiBase()
+        assertEquals(1f, z.scale, 0f)
+        assertTrue(z.isDetailed)
+        z.toggle(Offset(300f, 300f))
+        assertFalse(z.isDetailed)
+    }
 }

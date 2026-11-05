@@ -930,7 +930,8 @@ class MainState(
 
     /** Zmniejszona kopia zdjęcia do podglądu (filtr Lanczosa jest drogi, więc liczona raz na zdjęcie i rozmiar). */
     private fun previewBase(p: Bitmap): Bitmap {
-        val side = if (previewDetail) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
+        // Q: z ramką zostajemy na 1280 – Compose zoom skaluje całą kompozycję (bez skoku 1280→2560).
+        val side = if (previewDetail && !frame.enabled) PREVIEW_SIDE_DETAIL else PREVIEW_SIDE
         val cached = previewCache
         if (cached != null && cached.first === p && cached.second == side) return cached.third
         return scaleDown(p, side).also { previewCache = Triple(p, side, it) }
