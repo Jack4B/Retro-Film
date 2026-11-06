@@ -40,8 +40,10 @@ data class Adjustments(
     val fade: Float = 0f,
     /** Ziarno filmowe 0..1. */
     val grain: Float = 0f,
-    /** Rozmiar ziarna 0..1 (0,5 = domyślny, więcej = grubsze ziarno). */
+    /** Rozmiar ziarna 0..1 (0,5 = `grainUm` profilu wybranego filmu). */
     val grainSize: Float = DEFAULT_GRAIN_SIZE,
+    /** Id filmu do profilu ziarna (puste = identity). Nie wpływa na [isNeutral] ani na włączenie ziarna. */
+    val grainStockId: String = "",
     /** Winieta 0..1: przyciemnione rogi. */
     val vignette: Float = 0f,
     /** Halacja 0..1 (I): ciepła poświata wokół świateł ([Halation]); część wykończenia. */
@@ -84,7 +86,10 @@ data class Adjustments(
     /** Maski lokalne (do [LocalMask.MAX_MASKS]) z własnymi korektami, zob. [LocalMask]. */
     val masks: List<LocalMask> = emptyList()
 ) {
-    val isNeutral: Boolean get() = this == None
+    val isNeutral: Boolean get() = if (grainStockId.isEmpty()) this == None else copy(grainStockId = "") == None
+
+    /** Ustawia film dla profilu ziarna bez zmiany siły ani rozmiaru suwaków. */
+    fun withGrainStock(filmId: String): Adjustments = if (grainStockId == filmId) this else copy(grainStockId = filmId)
 
     /** Czy wyostrzanie korzysta z wykrywania twarzy ([SemanticSharpen]). */
     val usesSmartSharpen: Boolean get() = sharpness > 0f && sharpSmart
@@ -107,6 +112,7 @@ data class Adjustments(
         fade = 0f,
         grain = 0f,
         grainSize = DEFAULT_GRAIN_SIZE,
+        grainStockId = "",
         vignette = 0f,
         halation = 0f,
         sharpness = 0f,
@@ -132,6 +138,7 @@ data class Adjustments(
         fade = fade,
         grain = grain,
         grainSize = grainSize,
+        grainStockId = grainStockId,
         vignette = vignette,
         halation = halation,
         sharpness = sharpness,
@@ -340,10 +347,10 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         return toLinear[i] + (toLinear[i + 1] - toLinear[i]) * (v - i).coerceIn(0f, 1f)
     }
 
-    private fun grainCell(width: Int, totalRows: Int): Float = maxOf(
-        GRAIN_CELL_MIN,
-        maxOf(width, totalRows).toFloat() / GRAIN_CELL_DIVISOR * (GRAIN_SIZE_MIN + adj.grainSize * GRAIN_SIZE_SPAN)
-    )
+    private val grainProfile = FilmGrainProfiles.of(adj.grainStockId)
+
+    private fun grainCell(width: Int, totalRows: Int): Float =
+        FilmGrain.cellPx(width, totalRows, adj.grainSize, grainProfile.grainUm)
 
     private fun luma() = LUM_R * rgb[0] + LUM_G * rgb[1] + LUM_B * rgb[2]
 
@@ -446,10 +453,13 @@ class AdjustmentProcessor(private val adj: Adjustments) {
             for (k in 0..2) rgb[k] *= f
         }
         if (adj.grain > 0f) {
-            val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain)
-            FilmGrain.pixel(x, y, cell, grainNoise)
+            val stops = FilmGrain.stops(luma().coerceIn(0f, 1f), adj.grain, grainProfile.sigmaEv)
+            FilmGrain.pixel(x, y, cell, grainNoise, grainProfile)
             for (k in 0..2) {
-                rgb[k] *= FilmGrain.gain(stops, FilmGrain.mix(grainNoise[0], grainNoise[k + 1], grainColorful))
+                rgb[k] *= FilmGrain.gain(
+                    stops,
+                    FilmGrain.mix(grainNoise[0], grainNoise[k + 1], grainColorful, grainProfile.chromaShare)
+                )
             }
         }
     }
@@ -496,10 +506,6 @@ class AdjustmentProcessor(private val adj: Adjustments) {
         private const val FADE_LIFT = 0.12f
         private const val FADE_TOP = 0.06f
         private const val FADE_DESAT = 0.2f
-        private const val GRAIN_CELL_MIN = 0.7f
-        private const val GRAIN_CELL_DIVISOR = 1200f
-        private const val GRAIN_SIZE_MIN = 0.6f
-        private const val GRAIN_SIZE_SPAN = 2f
         private const val HASH_X = 374761393
         private const val HASH_Y = 668265263
         private const val HASH_SALT = 1442695041

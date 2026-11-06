@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-11-06 – ziarno S (karty techniczne)
+- Faza: wdrożenie planu ziarna (decyzje Q1–Q6)
+- Zrobione: profile emulsji, amplituda amount·σ(gEq), dziedziczenie wariantów, instant dye-cloud; film nie włącza ziarna; testy syntetyczne
+- PR / gałąź: `feat/ziarno-emulsje` → `test` (wydanie S)
+- Otwarte / P2: Roborazzi UI nie dodane (testy JVM syntetyczne); podgląd 512 px może trafić w GRAIN_CELL_MIN 0,7
+- Następny krok: ocena ziarna na telefonie przy suwaku 100% na filmach startowych
+
 ## 2026-11-05 – docs po R (gałąź test)
 - Faza: uzupełnienie dokumentacji do stanu `v-test-2026-11-05-R` (bez nowego APK)
 - Zrobione: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md) przez R + skrót testera; nowe [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) (Diagnostyka, tryb ramki, zoom framed/frameless Q/R); [PLAN-WYDANIE-M.md](PLAN-WYDANIE-M.md); aktualizacja K/L/N/O/P/Q/R, AUTO-KOREKTA-WORKFLOW, CI, LUT-BIN, WYDAJNOSC, AUDYT-EFEKTOW; KDoc `gpuSave` → domyślnie OFF

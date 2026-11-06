@@ -20,7 +20,7 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Odszumianie kolorów | ChromaDenoise.kt | ✅ | Cb/Cr z jasnością jako przewodnikiem |
 | Odszumianie jasności | LumaDenoise.kt | ✅ | filtr prowadzony sterowany szumem; do rozważenia NLM/wavelet dla silnego szumu |
 | Winieta | ColorGrade.kt (VignetteLut) | ✅ | cos⁴; ewentualnie środek/zaokrąglenie |
-| Ziarno | FilmGrain.kt | ✅ | model kryształów srebra, mnożnik w świetle liniowym, tekstura Gaussa; kanały skorelowane (szum barwny 16%), szare zdjęcia i odcień filmu dają ziarno prawie szare (1.1.12) |
+| Ziarno | FilmGrain.kt, FilmGrainProfiles.kt | ✅ | model kryształów srebra; amplituda z karty (σ(gEq) @ 100% suwaka); rozmiar względem klatki 35 mm; B&W bez chromy; instant — duże miękkie chmury; 1.1.12 + wydanie S |
 | Blaknięcie | Adjustments.kt | ✅ | podniesiona czerń, przytłumiona biel, odbarwienie |
 | Dithering 8 bit | Dither.kt | ✅ | TPDF ±0,5 |
 | Geometria: obrót, kadr, perspektywa | Geometry.kt, Perspective.kt, CropFit.kt, BicubicWarp.kt | ✅ | perspektywa pion/poziom z auto-kadrem, kadr gestem (przeciągnięcie, szczypnięcie), siatka trójpodziału |

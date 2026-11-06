@@ -1,7 +1,7 @@
 # Plan: ziarno zgodne z kartami technicznymi filmów
 
-Status: **faza 1 — audyt + badania + propozycja modelu**. Bez zmian w kodzie silnika.
-Gałąź: `docs/ziarno-plan` → PR do `test`. Data badań: 2026-11-06 (Europe/Warsaw).
+Status: **faza 2 w toku** (decyzje Jack4B 2026-11-06, Europe/Warsaw). Faza 1: PR #150.
+Gałąź wdrożenia: `feat/ziarno-emulsje` → PR do `test`.
 
 Zakres wdrożenia (faza 2, po decyzjach Jack4B): wyłącznie ziarno. **Nie ruszać** LUT-ów, ekspozycji, krzywej, zoomu, ramki, GPU ani innych algorytmów.
 
@@ -343,34 +343,19 @@ Zmiana złotych LUT, testów ekspozycji, GPU, zoomu, ramki. Jeśli któryś test
 
 ---
 
-## 7. Pytania do decyzji (Jack4B)
+## 7. Decyzje Jack4B (2026-11-06)
 
-**Q1. Czy wybór filmu ma sam włączać ziarno tej emulsji?**
-Dziś suwak jest na 0 i film go nie rusza. Żeby „na poszczególnych filmach było jak na kliszy”, naturalne jest ustawienie amount=1 (karta) przy zmianie filmu. Alternatywa: film tylko różnicuje charakter, a użytkownik nadal świadomie włącza ziarno.
-
-**Q2. Co oznacza suwak „Ziarno” = 100%?**
-(A) Zgodność z kartą (`σ` z `gEq`). (B) Jak dziś, skala artystyczna 0…0,5 EV, a karta tylko względnie ustawia film (Portra ciszej niż Tri-X), bez obiecywania „to jest RMS”.
-
-**Q3. Czy warianty LUT `+` / `++` (push) mają dostać więcej ziarna?**
-Karty (np. Portra 800, T-Max) pokazują krzywe przy EI wyższym, ale nie zawsze nowy RMS. Propozycja domyślna: **nie** w v1 (ten sam profil), ewentualnie +~12% amplitudy na stop jako opcja.
-
-**Q4. Suwak rozmiaru: 50% = `grainUm` z karty/profilu?**
-Tak jest najczytelniej. Dziś 50% ≈ 48 µm dla każdego filmu.
-
-**Q5. Czy w fazie 2 kalibrować `kFuji` wizualnie na startowych Superia 400 vs Portra 400 (syntetyczna szara karta), czy zostawić wzór 1,8 bez strojenia oka?**
-
-**Q6. Instant (Polaroid / FP-100c):** trzymać duży, miękki dye-cloud (propozycja), czy celować w wygląd skanu packfilmu z LUT-a bez osobnego modelu?
+| | Pytanie | Decyzja |
+|--|---------|---------|
+| **Q1** | Czy wybór filmu sam włącza ziarno? | **Nie.** Ziarno zostaje domyślnie wyłączone (`grain = 0`). Film nie rusza suwaka — tylko dostarcza profil, gdy użytkownik sam włączy ziarno. |
+| **Q2** | Co oznacza suwak 100%? | **Zgodność z kartą:** `amount * σ(gEq)` (obwiednia Selwyna bez zmian). |
+| **Q3** | Warianty LUT `+` / `++`? | **Dziedziczą profil rodzica**, bez dodatkowego ziarna za push. |
+| **Q4** | Suwak rozmiaru 50%? | **Nie było osobnej odpowiedzi** — obowiązuje domyślna z planu: 50% = `grainUm` z profilu (`sizeMul = grainSize / 0,5`). |
+| **Q5** | Współczynnik Fuji CN? | **Zostaje 1,8** (bez strojenia oka Superia vs Portra). |
+| **Q6** | Instant? | **Duże, miękkie chmury barwnika** (większe `grainUm`, więcej kłaczków, wyższa chroma na kolorowym packfilmie). |
 
 ---
 
-## 8. Faza 2 (nie w tym PR)
+## 8. Faza 2
 
-Po odpowiedziach na Q1–Q6, osobny PR do `test`:
-
-1. Czerwone testy z §5.1.
-2. Tabela profili (JSON lub generowany Kotlin) + mapper id LUT → `baseId`.
-3. `FilmGrain.stops` / `grainCell` czytają profil; zero zmian LUT/ekspozycji/krzywej/zoomu/ramki/GPU.
-4. Testy emulatora + ewentualne goldeny Roborazzi ze syntetyków.
-5. Krótka aktualizacja [STAN-ALGORYTMOW.md](STAN-ALGORYTMOW.md) i HANDOFF.
-
-Ten dokument jest jedyną zmianą fazy 1.
+Osobny PR do `test` (`feat/ziarno-emulsje`): profile emulsji, amplituda z karty, dziedziczenie wariantów, testy syntetyczne. LUT, ekspozycja, krzywa, zoom, ramka i GPU bez zmian.

@@ -655,7 +655,12 @@ class MainState(
             val photoFrame = seriesFrame.working(edit.frame, watermark)
             val face = fonts(photoFrame.font)
             val job = ExportJob(
-                ExportLook(edit.geometry, lutFor(edit.film), edit.intensity, edit.adjustments),
+                ExportLook(
+                    edit.geometry,
+                    lutFor(edit.film),
+                    edit.intensity,
+                    edit.adjustments.withGrainStock(edit.film)
+                ),
                 graph.filmEngine.renderer,
                 photoFrame.copy(outward = frameOutward),
                 face,
@@ -971,14 +976,21 @@ class MainState(
                 lut,
                 engine,
                 intensity,
-                adjustments
+                adjustments.withGrainStock(film)
             )
             ensureActive()
             preview = FrameRenderer.render(quick, frame, signatureTypeface(), colorSpaceSource = srgb)
         }
         val detect = faceDetectSrc ?: small
         val looked = stages.look(corrected, key) {
-            ExportPipeline.look(corrected, lut, engine, intensity, adjustments, facesFor(p, detect))
+            ExportPipeline.look(
+                corrected,
+                lut,
+                engine,
+                intensity,
+                adjustments.withGrainStock(film),
+                facesFor(p, detect)
+            )
         }
         ensureActive()
         preview = FrameRenderer.render(looked, frame, signatureTypeface(), colorSpaceSource = srgb)
@@ -1001,7 +1013,7 @@ class MainState(
         if (signatureStatus() == SignatureFitStatus.TooLong) return@withBusy UiMessage.SignatureTooLong
         try {
             val job = ExportJob(
-                ExportLook(geometry, lut(), intensity, adjustments),
+                ExportLook(geometry, lut(), intensity, adjustments.withGrainStock(film)),
                 graph.filmEngine.renderer,
                 frame.copy(outward = frameOutward),
                 signatureTypeface(),

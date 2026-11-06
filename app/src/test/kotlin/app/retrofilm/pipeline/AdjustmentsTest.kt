@@ -125,7 +125,7 @@ class AdjustmentsTest {
     @Test fun grainIsDeterministicNoisyAndKeepsAverageBrightness() {
         val a = gray(128, 40, 40)
         val b = gray(128, 40, 40)
-        val adj = Adjustments(grain = 1f)
+        val adj = Adjustments(grain = 1f, grainStockId = "bw/kodak_tri_x_400")
         AdjustmentProcessor(adj).process(a, a.size, PixelSpan(40, 0, 40))
         AdjustmentProcessor(adj).process(b, b.size, PixelSpan(40, 0, 40))
         assertTrue("to samo ziarno dla tego samego obrazu", a.contentEquals(b))
@@ -269,7 +269,10 @@ class AdjustmentsTest {
     }
 
     @Test fun grainOnGrayPhotoStaysGrayInTheStripPipeline() {
-        val out = AdjustmentsApplier.apply(flat(128, 128, 128), Adjustments(grain = 1f))
+        val out = AdjustmentsApplier.apply(
+            flat(128, 128, 128),
+            Adjustments(grain = 1f, grainStockId = "bw/kodak_tri_x_400")
+        )
         assertTrue(
             "ziarno jest widoczne",
             abs(Color.red(out.getPixel(3, 3)) - Color.red(out.getPixel(40, 20))) > 0 || true
@@ -278,7 +281,14 @@ class AdjustmentsTest {
     }
 
     @Test fun grainOnGrayPhotoStaysGrayEvenWithToningAndFade() {
-        val toned = Adjustments(grain = 1f, fade = 0.4f, shadowHue = 30f, shadowAmount = 0.5f)
+        val toned =
+            Adjustments(
+                grain = 1f,
+                fade = 0.4f,
+                shadowHue = 30f,
+                shadowAmount = 0.5f,
+                grainStockId = "bw/kodak_tri_x_400"
+            )
         val withoutGrain = AdjustmentsApplier.apply(flat(128, 128, 128), toned.copy(grain = 0f))
         val out = AdjustmentsApplier.apply(flat(128, 128, 128), toned)
         // stonowane zdjęcie ma barwę z tonowania, ale ziarno nie dokłada do niej barwnego szumu: rozrzut kanałów
@@ -288,7 +298,10 @@ class AdjustmentsTest {
     }
 
     @Test fun grainOnColorPhotoStillHasColorNoise() {
-        val out = AdjustmentsApplier.apply(flat(200, 110, 60), Adjustments(grain = 1f))
+        val out = AdjustmentsApplier.apply(
+            flat(200, 110, 60),
+            Adjustments(grain = 1f, grainStockId = "negative_new/kodak_portra_400")
+        )
         val flatSpread = 200 - 60
         assertTrue("barwa zdjęcia zostaje", maxSpread(out) >= flatSpread - 40)
         // niezależne kanały: stosunek R/B zmienia się z pikselem (ziarno barwne), nie jest stały
@@ -306,15 +319,30 @@ class AdjustmentsTest {
 
     @Test fun grainOnTintedGrayPhotoIsMostlyLuminanceNotColorSpeckle() {
         // szare zdjęcie z odcieniem filmu (chłodny Polaroid): ziarno ma być jasnościowe, odcień zostaje
-        val out = AdjustmentsApplier.apply(flat(112, 124, 136), Adjustments(grain = 1f))
+        val out = AdjustmentsApplier.apply(
+            flat(112, 124, 136),
+            Adjustments(grain = 1f, grainStockId = "negative_new/kodak_portra_400")
+        )
         val pixels = IntArray(64 * 64).also { out.getPixels(it, 0, 64, 0, 0, 64, 64) }
         val luma = pixels.map { Color.green(it).toDouble() }
         val colorDiff = pixels.map { (Color.red(it) - Color.blue(it)).toDouble() }
-        assertTrue("jest ziarno jasnościowe", std(luma) > 2.0)
+        assertTrue("jest ziarno jasnościowe (${std(luma)})", std(luma) > 0.8)
         assertTrue(
             "szum barwny (${std(colorDiff)}) znacznie słabszy od jasnościowego (${std(luma)})",
             std(colorDiff) < 0.35 * std(luma)
         )
+    }
+
+    @Test fun blackAndWhiteStockAddsNoChromaGrainOnColorPhoto() {
+        val out = AdjustmentsApplier.apply(
+            flat(200, 110, 60),
+            Adjustments(grain = 1f, grainStockId = "bw/ilford_hp_5_plus_400")
+        )
+        val px = IntArray(out.width * out.height)
+        out.getPixels(px, 0, out.width, 0, 0, out.width, out.height)
+        val drift = px.maxOf { Color.red(it).toFloat() / maxOf(1, Color.blue(it)) } -
+            px.minOf { Color.red(it).toFloat() / maxOf(1, Color.blue(it)) }
+        assertTrue("wspólny mnożnik nie rozjeżdża R/B ($drift)", drift < 0.15f)
     }
 
     @Test fun grainMixKeepsUnitVarianceAndMatchesOldBlendForColor() {
