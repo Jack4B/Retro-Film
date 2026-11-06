@@ -2,7 +2,7 @@
 
 Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Data w tagu = dzień publikacji (Europe/Warsaw).
 
-**Stan bieżący (po S):** [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · workflow autokorekty: [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md) · plany: `PLAN-WYDANIE-I.md` … `PLAN-WYDANIE-R.md` (brak litery po J przed K; M dodane).
+**Stan bieżący (po S):** [ZIARNO.md](ZIARNO.md) · [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · workflow autokorekty: [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md) · plany: `PLAN-WYDANIE-I.md` … `PLAN-WYDANIE-S.md` (brak litery po J przed K; M dodane).
 
 | Tag | APK (asset) | Temat |
 |-----|-------------|--------|
@@ -27,7 +27,7 @@ Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Da
 
 ## Stan po S (skrót dla testera)
 
-- **Ziarno:** każdy film ma profil z karty (RMS/PGI/`gEq`). Suwak nadal domyślnie 0 — wybór filmu go nie włącza. Przy 100% amplituda = karta (obwiednia Selwyna). `+`/`++` dziedziczą rodzica. Instant: duże miękkie chmury barwnika. B&W: ziarno tylko jasnościowe.
+- **Ziarno:** każdy film ma profil z karty (RMS/PGI/`gEq`) — tabela i źródła w [ZIARNO.md](ZIARNO.md). Suwak nadal domyślnie 0 — wybór filmu go nie włącza. Przy 100% amplituda = karta (obwiednia Selwyna). Rozmiar 50% = `grainUm` profilu. `+`/`++` dziedziczą rodzica. Instant: duże miękkie chmury barwnika. B&W: ziarno tylko jasnościowe. Fuji C-41: `gEq = 1,8 · RMS`. Ilford: szacunek-rówieśnik (kart bez RMS).
 - Pozostałe jak po R (niżej).
 
 ## Stan po R (skrót dla testera)
@@ -40,7 +40,7 @@ Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Da
 ---
 
 ## S
-Ziarno per emulsja z kart technicznych (`docs/ZIARNO-PLAN.md`, decyzje Q1–Q6). Profil nie zmienia LUT/ekspozycji/krzywej/zoomu/ramki/GPU. Suwak ziarna nadal wyłącza efekt przy 0. → [PLAN-WYDANIE-S.md](PLAN-WYDANIE-S.md)
+Ziarno per emulsja z kart technicznych (decyzje Q1–Q6). Profil nie zmienia LUT/ekspozycji/krzywej/zoomu/ramki/GPU. Suwak ziarna nadal wyłącza efekt przy 0. Dokumentacja: [ZIARNO.md](ZIARNO.md). Plan (historyczny): [ZIARNO-PLAN.md](ZIARNO-PLAN.md). → [PLAN-WYDANIE-S.md](PLAN-WYDANIE-S.md)
 
 ## D (2026-11-04)
 Chip HDR w edytorze, domyślne HDR w Ustawieniach, lokalny log czasów (`RetroFilmPerf`), kopia zapasowa JSON. Offline.

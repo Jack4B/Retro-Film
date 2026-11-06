@@ -32,8 +32,14 @@ jest pusty. Kluczem debug podpisywane są tylko artefakty z PR. Kluczy **nigdy**
 ## Lokalnie
 Wymagane JDK 17+ i Android SDK (compileSdk 37). `./gradlew assembleDebug testDebugUnitTest`.
 
+Testy ziarna (wydanie S, syntetyki JVM — bez prywatnych zdjęć, bez osobnych zrzutów Roborazzi):
+`FilmGrainProfilesTest` (kompletność katalogu, dziedziczenie wariantów, RMS @ D=1, niezależność 1280 vs 4000, suwak 100% = σ z karty, B&W / Fuji ×1,8),
+`FilmGrainPixelTest` (determinizm `pixel` ≡ `luma`+`chroma`),
+regresje `AdjustmentsTest` / `AdjustmentsSplitTest` (`grainStockId` w wykończeniu).
+Opis modelu i tabeli: [ZIARNO.md](ZIARNO.md).
+
 ## Wydania testowe (`v-test-…`)
 Na gałęzi `test` boty / Jack4B publikują prerelease’y `v-test-YYYY-MM-DD-X` z APK (często podpis debug).
 Changelog: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md).
-Workflow `release.yml` przy tagu `v-test-*` może nie przejść kontroli `VERSION` (tag nie jest `major.minor.patch-…`) – APK testowe bywa dołączane ręcznie do prerelease; to oczekiwane dla liter D–R.
+Workflow `release.yml` przy tagu `v-test-*` może nie przejść kontroli `VERSION` (tag nie jest `major.minor.patch-…`) – APK testowe bywa dołączane ręcznie do prerelease; to oczekiwane dla liter D–S.
 PR-y tylko do `test`, nigdy `main`; bez force-push.

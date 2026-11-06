@@ -1,7 +1,7 @@
 # Plan: ziarno zgodne z kartami technicznymi filmów
 
-Status: **faza 2 w toku** (decyzje Jack4B 2026-11-06, Europe/Warsaw). Faza 1: PR #150.
-Gałąź wdrożenia: `feat/ziarno-emulsje` → PR do `test`.
+Status: **wdrożone** (wydanie S, PR [#151](https://github.com/Jack4B/Retro-Film/pull/151), tag `v-test-2026-11-06-S`, 6 lis 2026, Europe/Warsaw).
+Dokumentacja użytkownika i dewelopera: [ZIARNO.md](ZIARNO.md). Ten plik zostaje jako zapis audytu, kart i decyzji Q1–Q6 (faza 1: PR #150, commity weszły do `test` razem z #151).
 
 Zakres wdrożenia (faza 2, po decyzjach Jack4B): wyłącznie ziarno. **Nie ruszać** LUT-ów, ekspozycji, krzywej, zoomu, ramki, GPU ani innych algorytmów.
 
@@ -358,4 +358,4 @@ Zmiana złotych LUT, testów ekspozycji, GPU, zoomu, ramki. Jeśli któryś test
 
 ## 8. Faza 2
 
-Osobny PR do `test` (`feat/ziarno-emulsje`): profile emulsji, amplituda z karty, dziedziczenie wariantów, testy syntetyczne. LUT, ekspozycja, krzywa, zoom, ramka i GPU bez zmian.
+**Zrobione** w PR #151 (`feat/ziarno-emulsje` → `test`): profile emulsji, amplituda z karty, dziedziczenie wariantów, testy syntetyczne. LUT, ekspozycja, krzywa, zoom, ramka i GPU bez zmian. Opis stanu: [ZIARNO.md](ZIARNO.md).

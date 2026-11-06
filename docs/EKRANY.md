@@ -5,7 +5,7 @@
 > **Zmiany v3 (1.1.0, faza C, D15):** edytor ma pięć zakładek w kolejności pracy: **Kadr · Korekty · Film · Wykończenie · Ramka** (otwiera się na Korektach).
 > - **Korekty** (przed filmem): Światło (ekspozycja, kontrast, światła, cienie, biele, czernie, tekstura, „Auto” i „Przygotuj pod film” jako przyciski), Kolor, Kolory (HSL), Detal (wyrazistość, dehaze, odszumianie koloru i jasności, ostrość koloru), Maski. „Wyzeruj korekty” nie rusza filmu ani wykończenia.
 > - **Film**: wybór looku i intensywność (bez zmian).
-> - **Wykończenie** (po filmie): Klisza (blaknięcie, ziarno, winieta), Wyostrzanie (w tym „Włosy i oczy mocniej, skóra słabiej”), Tonowanie, Krzywe. „Wyzeruj wykończenie” osobno.
+> - **Wykończenie** (po filmie): Klisza (blaknięcie, ziarno, winieta), Wyostrzanie (w tym „Włosy i oczy mocniej, skóra słabiej”), Tonowanie, Krzywe. „Wyzeruj wykończenie” osobno. Ziarno (S): suwak domyślnie 0 (film go nie włącza); 100% = karta techniczna; rozmiar 50% = `grainUm` profilu — [ZIARNO.md](ZIARNO.md).
 > - **Ramka**: bez zmian.
 > Opis ekranów poniżej jest starszy (do aktualizacji z kodem).
 

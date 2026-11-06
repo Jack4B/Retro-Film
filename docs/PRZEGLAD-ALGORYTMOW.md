@@ -203,7 +203,7 @@ przy −100% pozwoli wybrać między: wzmocnieniem struktury, barwy, ochroną pr
 | Dehaze | DCP (He 2009) + filtr prowadzony, duża łatka, ω 0,85 | 3,5 | PSNR na sztucznej mgle +1…+9 dB na wszystkich 9 zdjęciach; słabość: białe obiekty i niebo (DCP); alternatywa: haze-lines (Berman 2016) | bez zmian (haze-lines niewdrożone) |
 | Odszumianie koloru | filtr prowadzony Cb/Cr z jasnością jako przewodnikiem | 3,5 | błąd chrominancji −50…−80%; działa dobrze, nie modeluje szumu zależnego od sygnału | dodane odtworzenie krawędzi chromy 4:2:0 (B4, 1.0.5) |
 | Odszumianie jasności | filtr prowadzony, eps = (σk)², σ Immerkaera | 2,5 | to wygładzanie, nie denoiser: efekt „plastiku”, σ globalne (zawyżone na teksturach), stałe w jasności; stan wiedzy: NLM/BM3D/falki + stabilizacja wariancji | bez zmian: B3 (DQT + NLM) odłożone, na JPEG z telefonów zysk znikomy; nadal najsłabszy moduł |
-| Ziarno | model kryształów srebra, amplituda √(p(1−p)), tekstura Gaussa | 4 | wygląd dobry; fizycznie dokładniejszy jest model Boolean (Newson 2017), ale kosztowny | **zmienione (1.1.11–1.1.12)**: kanały silnie skorelowane (szum barwny 16%), szare zdjęcia i odcień filmu dają ziarno prawie szare; zob. §3a H |
+| Ziarno | model kryształów srebra, amplituda √(p(1−p)), tekstura Gaussa | 4 | wygląd dobry; fizycznie dokładniejszy jest model Boolean (Newson 2017), ale kosztowny | **zmienione (1.1.11–1.1.12 + S)**: korelacja kanałów i B&W (1.1.12); profile emulsji i σ z karty (S) — [ZIARNO.md](ZIARNO.md), §3a H |
 | Winieta | cos⁴ | 4 | | bez zmian |
 | Dithering | TPDF ±0,5, jedna kwantyzacja na końcu korekt | 5 | | bez zmian; dochodzi odbandowanie przed filmem (A2) |
 | Silnik filmów | LUT 3D, domyślnie trójliniowy, wynik 8-bit | 3,5 | tetrahedralna jest w kodzie, ale nieużywana domyślnie; wynik filmu kwantyzowany do 8 bitów bez ditheringu przed korektami | częściowo: `Deband` przed filmem (A2, ≤ ±3 poziomy tylko na płaskich gradientach); LUT nadal 8-bit, trójliniowy domyślnie |
@@ -226,7 +226,7 @@ przy −100% pozwoli wybrać między: wzmocnieniem struktury, barwy, ochroną pr
 | 7 | **Odszumianie jasności**: model szumu zależny od sygnału (Poisson–Gaussa: σ²(y) = a·y + b), lokalne σ, NLM-lite lub falki ze stabilizacją wariancji (GAT) | ostatni słaby moduł | 2–3 PR | średnie (czas) | ❌ odłożone (B3: niski zysk na JPEG z telefonów) |
 | 8 | Maski: luminancja, zakres koloru, pędzel z krawędzią z filtru prowadzonego | najczęściej używane narzędzie pro | 2 PR | niskie | ❌ niewdrożone |
 | 9 | Dehaze: A z regionu nieba, opcjonalnie haze-lines | dehaze na niebie i bieli | 1–2 PR | średnie | 🟡 ochrona nieba i kompensacja jasności są; haze-lines nie |
-| 10 | Ziarno: parametry z metadanych filmu, opcjonalny model Boolean | autentyczność | 2 PR | niskie | 🟡 ziarno poprawione w 1.1.11–1.1.12 (zob. §3a H); parametry z metadanych filmu i model Boolean nie |
+| 10 | Ziarno: parametry z metadanych filmu, opcjonalny model Boolean | autentyczność | 2 PR | niskie | 🟢 profile emulsji z kart (S, [ZIARNO.md](ZIARNO.md)); 🟡 model Boolean nadal odłożony |
 | 11 | Auto WB Grey-Edge, Auto-tone z krzywą S ważoną twarzami | lepsze „Auto” | 1 PR | niskie | 🟡 Auto ze sceną (skóra, niebo) jest; Grey-Edge nie wdrożony |
 
 Proponowana kolejność (z 1.0.3): 1 → 2 → 7 → 4 → 3 → reszta; wykonano 1 i 2, pozycja 7 odłożona. Każda zmiana z raportem jakości na zdjęciach stockowych i testem
@@ -326,6 +326,8 @@ w potoku float, między korektami a wykończeniem.
 6. Reszta: tetrahedral LUT 16-bit, szeroki gamut, maski, dehaze, ziarno.
 
 ### H. Ziarno filmowe (przegląd z 2026-10-27, po zgłoszeniu kolorowego ziarna na Polaroidzie)
+
+**Stan (S, 2026-11-06):** parametry z kart technicznych są w kodzie (`FilmGrainProfiles`). Suwak 100% = σ z `gEq`, wybór filmu nie włącza ziarna, warianty LUT dziedziczą rodzica. Dokumentacja: [ZIARNO.md](ZIARNO.md). Model Boolean nadal odłożony.
 
 Zgłoszenie: na zdjęciu czarno-białym z odcieniem filmu (Polaroid) ziarno wychodziło kolorowe. Przyczyna: model dawał
 każdemu kanałowi RGB niezależny szum barwny (44% wariancji), a wykrywanie „czarno-białego” (1.1.11) miało wąski próg,

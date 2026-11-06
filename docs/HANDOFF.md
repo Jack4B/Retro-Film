@@ -11,6 +11,13 @@ Nowe wpisy na górze. Szablon:
 - Następny krok:
 ```
 
+## 2026-11-06 – docs ziarna S
+- Faza: uzupełnienie dokumentacji po wydaniu S / PR #151 (bez zmian w kodzie)
+- Zrobione: nowe [ZIARNO.md](ZIARNO.md) (model, suwaki, tabela wszystkich baz + URL kart, mostki PGI/Fuji/Ilford, caveat `GRAIN_CELL_MIN`); [ZIARNO-PLAN.md](ZIARNO-PLAN.md) oznaczony jako wdrożony; odnośniki w README, USTAWIENIA-I-ZOOM, CHANGELOG, CI, STAN/ALGORYTMY/PRZEGLAD/EKRANY/AUDYT, PLAN-WYDANIE-S
+- PR / gałąź: `docs/ziarno-s` → `test`
+- Otwarte / P2: jak po S (ocena na telefonie; Roborazzi ziarna nie nagrywane)
+- Następny krok: ocena ziarna na telefonie przy suwaku 100% na filmach startowych
+
 ## 2026-11-06 – ziarno S (karty techniczne)
 - Faza: wdrożenie planu ziarna (decyzje Q1–Q6)
 - Zrobione: profile emulsji, amplituda amount·σ(gEq), dziedziczenie wariantów, instant dye-cloud; film nie włącza ziarna; testy syntetyczne

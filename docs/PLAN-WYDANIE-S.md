@@ -1,7 +1,7 @@
 # Wydanie S (2026-11-06) – ziarno według kart technicznych
 
 ## Źródło
-Decyzje Jack4B do [ZIARNO-PLAN.md](ZIARNO-PLAN.md) (PR #150): Q1 ziarno domyślnie OFF; Q2 suwak 100% = σ z karty; Q3 warianty `+`/`++` bez dopłaty; Q4 50% rozmiaru = `grainUm`; Q5 Fuji CN ×1,8; Q6 instant = duże miękkie chmury barwnika.
+Dokumentacja: [ZIARNO.md](ZIARNO.md). Decyzje Jack4B do [ZIARNO-PLAN.md](ZIARNO-PLAN.md) (PR #150, wdrożenie #151): Q1 ziarno domyślnie OFF; Q2 suwak 100% = σ z karty; Q3 warianty `+`/`++` bez dopłaty; Q4 50% rozmiaru = `grainUm`; Q5 Fuji CN ×1,8; Q6 instant = duże miękkie chmury barwnika.
 
 ## Zmiany
 - Tabela profili emulsji (`FilmGrainProfiles`) dla całego katalogu; warianty LUT dziedziczą bazę.

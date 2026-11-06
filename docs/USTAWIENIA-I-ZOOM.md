@@ -1,8 +1,8 @@
-# Ustawienia, diagnostyka i zoom (stan po wydaniu R)
+# Ustawienia, diagnostyka i zoom (stan po wydaniu S)
 
-Krótki opis **tego, co jest w aplikacji** na gałęzi `test` po `v-test-2026-11-05-R`. Nie obejmuje funkcji niewydanych. Nazwy z `strings.xml`.
+Krótki opis **tego, co jest w aplikacji** na gałęzi `test` po `v-test-2026-11-06-S`. Nie obejmuje funkcji niewydanych. Nazwy z `strings.xml`.
 
-Powiązane: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md), [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md), [PLAN-WYDANIE-L.md](PLAN-WYDANIE-L.md)–[R.md](PLAN-WYDANIE-R.md), [RAMKA-SPEC.md](RAMKA-SPEC.md).
+Powiązane: [CHANGELOG-TEST-WYDANIA.md](CHANGELOG-TEST-WYDANIA.md), [ZIARNO.md](ZIARNO.md), [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md), [PLAN-WYDANIE-L.md](PLAN-WYDANIE-L.md)–[S.md](PLAN-WYDANIE-S.md), [RAMKA-SPEC.md](RAMKA-SPEC.md).
 
 ## Ustawienia → Zdjęcia → Tryb ramki (K)
 
@@ -40,3 +40,14 @@ Progi: detail od **1,5×**, double-tap **2,5×**, max **6×** (`ZoomState`).
 | **OOM** | Catch w `refreshPreview` → fallback 1280 (N); limity `MAX_CELLS` / `REDUCE_GROUPS_HEAVY` (O/R). |
 
 Film / LUT / kolor: bez zmian w N–R (tylko ścieżka podglądu / pamięć / UI zoom).
+
+## Wykończenie → Ziarno (S)
+
+Suwaki **Ziarno** i **Rozmiar ziarna** (zakładka Wykończenie → Klisza):
+
+- Ziarno domyślnie **wyłączone** (0). Wybór filmu **nie** włącza suwaka — tylko dobiera profil emulsji, gdy użytkownik sam włączy ziarno.
+- Przy **100%** amplituda = karta techniczna wybranego filmu (`amount · σ(gEq)`, obwiednia Selwyna).
+- Przy rozmiarze **50%** plamka = `grainUm` z profilu na klatce 35 mm.
+- Warianty LUT `+`/`++` dziedziczą ziarno rodzica. B&W: tylko jasność. Instant: duże miękkie chmury barwnika.
+
+Pełna tabela emulsji, mostki RMS/PGI/Fuji ×1,8 i testy: [ZIARNO.md](ZIARNO.md).
