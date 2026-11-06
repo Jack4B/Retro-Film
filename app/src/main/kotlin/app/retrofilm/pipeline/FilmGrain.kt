@@ -80,10 +80,13 @@ internal object FilmGrain {
     fun mix(luma: Float, chroma: Float, colorful: Float): Float = mix(luma, chroma, colorful, CHROMA_SHARE)
 
     fun mix(luma: Float, chroma: Float, colorful: Float, chromaShare: Float): Float {
-        if (chromaShare <= 0f || colorful <= 0f) return luma
-        if (colorful >= 1f && chromaShare == CHROMA_SHARE) return mix(luma, chroma)
-        val c = chromaShare * colorful
-        return sqrt(1f - c * c) * luma + c * chroma
+        val c = chromaShare * colorful.coerceAtLeast(0f)
+        val lumaShare = when {
+            c <= 0f -> 1f
+            c == CHROMA_SHARE -> LUMA_SHARE
+            else -> sqrt(1f - c * c)
+        }
+        return lumaShare * luma + c * chroma
     }
 
     /**
@@ -97,7 +100,7 @@ internal object FilmGrain {
         return t * t * (SMOOTH_A - SMOOTH_B * t)
     }
 
-    /** Rozmiar komórki ziarna na kliszy [grainUm] µm, przy dłuższym boku = 36 mm i suwaku [grainSize] (0,5 = profil). */
+    /** Komórka ziarna: [grainUm] µm na klatce 36 mm; suwak [grainSize] 0,5 = profil. */
     fun cellPx(width: Int, height: Int, grainSize: Float, grainUm: Float): Float {
         val sizeMul = grainSize / Adjustments.DEFAULT_GRAIN_SIZE
         val raw = (grainUm / FRAME_UM) * maxOf(width, height).toFloat() * sizeMul

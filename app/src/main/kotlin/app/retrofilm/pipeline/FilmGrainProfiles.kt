@@ -27,6 +27,7 @@ internal data class FilmGrainProfile(
     val sigmaEv: Float = FilmGrain.sigmaEv(gEq, grainUm)
 }
 
+@Suppress("TooManyFunctions", "MagicNumber")
 internal object FilmGrainProfiles {
     const val FUJI_CN_FACTOR = 1.8f
     const val IDENTITY_ID = "identity"
@@ -43,7 +44,7 @@ internal object FilmGrainProfiles {
     fun of(filmId: String): FilmGrainProfile {
         if (filmId.isEmpty() || filmId == IDENTITY_ID) return IDENTITY
         val key = tableKey(filmId)
-        return TABLE[key] ?: estimate(filmId, key)
+        return TABLE[key] ?: estimate(key)
     }
 
     /** Ostatni człon ścieżki bez przyrostków wariantów LUT (`_pp`, `_cold`, …). */
@@ -94,67 +95,7 @@ internal object FilmGrainProfiles {
         clumpWeight = INSTANT_CLUMP
     )
 
-    private fun estimate(filmId: String, key: String): FilmGrainProfile {
-        val iso = ISO_SUFFIX.find(key)?.groupValues?.get(1)?.toIntOrNull() ?: 400
-        val path = filmId.lowercase()
-        return when {
-            path.startsWith("instant") || path.contains("polaroid") || path.contains("fp_100") ||
-                path.contains("fp_3000") ->
-                instant(
-                    key,
-                    iso,
-                    instantGeq(iso),
-                    instantUm(iso),
-                    if (path.contains("bw") || key.contains("3000b") ||
-                        key.contains("664") || key.contains("667") || key.contains("672") || key.contains("665")
-                    ) {
-                        0f
-                    } else {
-                        CHROMA_INSTANT
-                    }
-                )
-
-            path.startsWith("bw/") -> silver(key, iso, bwGeq(iso))
-
-            path.startsWith("colorslide/") -> slide(key, iso, slideGeq(iso))
-
-            else -> colorNeg(key, iso, colorGeq(iso))
-        }
-    }
-
-    private fun bwGeq(iso: Int): Float = when {
-        iso <= 50 -> 8f
-        iso <= 125 -> 9f
-        iso <= 400 -> 16f
-        iso <= 1600 -> 16f
-        else -> 18f
-    }
-
-    private fun slideGeq(iso: Int): Float = when {
-        iso <= 64 -> 10f
-        iso <= 100 -> 9f
-        iso <= 200 -> 12f
-        else -> 14f
-    }
-
-    private fun colorGeq(iso: Int): Float = when {
-        iso <= 100 -> 5f
-        iso <= 160 -> 6f
-        iso <= 200 -> 6.5f
-        iso <= 400 -> 7.1f
-        iso <= 800 -> 8.4f
-        else -> 12f
-    }
-
-    private fun instantGeq(iso: Int): Float = if (iso >= 600) 14f else 12f
-
-    private fun instantUm(iso: Int): Float = if (iso >= 2000) {
-        125f
-    } else if (iso >= 600) {
-        110f
-    } else {
-        100f
-    }
+    private fun estimate(key: String): FilmGrainProfile = colorNeg(key, FALLBACK_ISO, FALLBACK_GEQ)
 
     private val TABLE: Map<String, FilmGrainProfile> = listOf(
         silver("agfa_apx_25", 25, 7f),
@@ -246,7 +187,8 @@ internal object FilmGrainProfiles {
     private val VARIANT_SUFFIXES = listOf(
         "mmm", "mm", "m", "ppp", "pp", "p", "alt", "hc", "cool", "warm", "cold", "negative", "expired", "early"
     )
-    private val ISO_SUFFIX = Regex("(\\d{2,4})(?:uv)?$")
+    private const val FALLBACK_ISO = 400
+    private const val FALLBACK_GEQ = 7.1f
     private const val CHROMA_SLIDE = 0.35f
     private const val CHROMA_COLOR = 0.4f
     private const val CHROMA_INSTANT = 0.55f
