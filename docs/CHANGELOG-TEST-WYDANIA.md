@@ -2,7 +2,7 @@
 
 Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Data w tagu = dzień publikacji (Europe/Warsaw).
 
-**Stan bieżący (po R):** [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · workflow autokorekty: [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md) · plany: `PLAN-WYDANIE-I.md` … `PLAN-WYDANIE-R.md` (brak litery po J przed K; M dodane).
+**Stan bieżący (po S):** [USTAWIENIA-I-ZOOM.md](USTAWIENIA-I-ZOOM.md) · workflow autokorekty: [AUTO-KOREKTA-WORKFLOW.md](AUTO-KOREKTA-WORKFLOW.md) · plany: `PLAN-WYDANIE-I.md` … `PLAN-WYDANIE-R.md` (brak litery po J przed K; M dodane).
 
 | Tag | APK (asset) | Temat |
 |-----|-------------|--------|
@@ -21,8 +21,14 @@ Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Da
 | [v-test-2026-11-05-P](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-P) | RetroFilm-P-release.apk | Z ramką: zoom Compose na zdjęciu+ramce (bez ROI) |
 | [v-test-2026-11-05-Q](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-Q) | RetroFilm-Q-release.apk | Double-tap: jedno lądowanie (`awaitingRoi` / ramka 1280) |
 | [v-test-2026-11-05-R](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-05-R) | RetroFilm-R-release.apk | Live ROI pan/zoom; twarze z pełnego kadru→ROI; peak Accumulator ↓; bez okna 2560 |
+| [v-test-2026-11-06-S](https://github.com/Jack4B/Retro-Film/releases/tag/v-test-2026-11-06-S) | RetroFilm-S-release.apk | Ziarno wg kart technicznych (profil emulsji; 100% = σ z karty; film nie włącza ziarna) |
 
 ---
+
+## Stan po S (skrót dla testera)
+
+- **Ziarno:** każdy film ma profil z karty (RMS/PGI/`gEq`). Suwak nadal domyślnie 0 — wybór filmu go nie włącza. Przy 100% amplituda = karta (obwiednia Selwyna). `+`/`++` dziedziczą rodzica. Instant: duże miękkie chmury barwnika. B&W: ziarno tylko jasnościowe.
+- Pozostałe jak po R (niżej).
 
 ## Stan po R (skrót dla testera)
 
@@ -32,6 +38,9 @@ Prerelease’y na gałęzi **`test`** (nie `main`). APK: GitHub → Releases. Da
 - **Przygotuj pod film:** ekspozycja po krzywej + ochrona twarzy (M); patrz AUTO-KOREKTA-WORKFLOW.
 
 ---
+
+## S
+Ziarno per emulsja z kart technicznych (`docs/ZIARNO-PLAN.md`, decyzje Q1–Q6). Profil nie zmienia LUT/ekspozycji/krzywej/zoomu/ramki/GPU. Suwak ziarna nadal wyłącza efekt przy 0. → [PLAN-WYDANIE-S.md](PLAN-WYDANIE-S.md)
 
 ## D (2026-11-04)
 Chip HDR w edytorze, domyślne HDR w Ustawieniach, lokalny log czasów (`RetroFilmPerf`), kopia zapasowa JSON. Offline.

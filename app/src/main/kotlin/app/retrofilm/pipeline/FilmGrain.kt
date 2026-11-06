@@ -24,9 +24,9 @@ internal object FilmGrain {
     private const val TILE = 512
     private const val TILE_MASK = TILE - 1
     private const val FINE_SIGMA = 0.85f
-    private const val FINE_WEIGHT = 0.9f
-    private const val CLUMP_WEIGHT = 0.436f
-    private const val CLUMP_SCALE = 2.6f
+    internal const val FINE_WEIGHT = 0.9f
+    internal const val CLUMP_WEIGHT = 0.436f
+    internal const val CLUMP_SCALE = 2.6f
     private const val KERNEL_RADIUS = 3
     private const val SALT_FINE = 11
     private const val SALT_CLUMP = 29
@@ -37,6 +37,9 @@ internal object FilmGrain {
     private const val CLUMP_SHIFT = 301
     private const val LUMA_SHARE = 0.9165f
     private const val CHROMA_SHARE = 0.4f
+    internal const val APERTURE_UM = 48f
+    internal const val FRAME_UM = 36_000f
+    internal const val LOG2_10 = 3.321928f
     private const val STOPS_MAX = 0.5f
     private const val FLOOR = 0.25f
     private const val PEAK = 4f
@@ -44,6 +47,10 @@ internal object FilmGrain {
     private const val LN2 = 0.6931472f
     private const val HALF = 0.5f
     private const val P_MIN = 0.02f
+    private const val GRAIN_CELL_MIN = 0.7f
+    private const val GRAIN_UM_BASE = 16f
+    private const val GRAIN_UM_SLOPE = 1.6f
+    private const val RMS_SCALE = 1000f
     private const val NEUTRAL_SPREAD = 0.02f
     private const val COLOR_SPREAD = 0.3f
     private const val SMOOTH_A = 3f
@@ -70,10 +77,16 @@ internal object FilmGrain {
      * (zdjęcie czarno-białe), tym mniej szumu barwnego; wariancja zostaje jednostkowa (ubytek barwy przechodzi w
      * ziarno jasnościowe), więc ziarno szarego piksela jest szare, a nie kolorowe.
      */
-    fun mix(luma: Float, chroma: Float, colorful: Float): Float {
-        if (colorful >= 1f) return mix(luma, chroma)
-        val c = CHROMA_SHARE * colorful
-        return sqrt(1f - c * c) * luma + c * chroma
+    fun mix(luma: Float, chroma: Float, colorful: Float): Float = mix(luma, chroma, colorful, CHROMA_SHARE)
+
+    fun mix(luma: Float, chroma: Float, colorful: Float, chromaShare: Float): Float {
+        val c = chromaShare * colorful.coerceAtLeast(0f)
+        val lumaShare = when {
+            c <= 0f -> 1f
+            c == CHROMA_SHARE -> LUMA_SHARE
+            else -> sqrt(1f - c * c)
+        }
+        return lumaShare * luma + c * chroma
     }
 
     /**
@@ -87,11 +100,35 @@ internal object FilmGrain {
         return t * t * (SMOOTH_A - SMOOTH_B * t)
     }
 
-    /** Odchylenie ziarna w stopniach ekspozycji dla jasności [luma] 0..1 (kodowanej) i siły [amount] 0..1. */
-    fun stops(luma: Float, amount: Float): Float {
-        val p = luma.coerceIn(P_MIN, 1f - P_MIN)
-        return amount * STOPS_MAX * (FLOOR + (1f - FLOOR) * sqrt(PEAK * p * (1f - p)))
+    /** Komórka ziarna: [grainUm] µm na klatce 36 mm; suwak [grainSize] 0,5 = profil. */
+    fun cellPx(width: Int, height: Int, grainSize: Float, grainUm: Float): Float {
+        val sizeMul = grainSize / Adjustments.DEFAULT_GRAIN_SIZE
+        val raw = (grainUm / FRAME_UM) * maxOf(width, height).toFloat() * sizeMul
+        return maxOf(GRAIN_CELL_MIN, raw)
     }
+
+    /** Charakterystyczny rozmiar na kliszy z wewnętrznego `gEq` (plan: 16 + 1,6·gEq µm). */
+    fun grainUmFromGeq(gEq: Float): Float = GRAIN_UM_BASE + GRAIN_UM_SLOPE * gEq
+
+    /** σ w EV przy aperturze skutecznej [grainUm] dla `gEq` na skali RMS ×1000 @ 48 µm. */
+    fun sigmaEv(gEq: Float, grainUm: Float): Float {
+        val kAperture = APERTURE_UM / grainUm.coerceAtLeast(1f)
+        return (gEq / RMS_SCALE) * LOG2_10 * kAperture
+    }
+
+    /** Obwiednia Selwyna: maksimum w półtonach, podłoga w cieniach. */
+    fun envelope(luma: Float): Float {
+        val p = luma.coerceIn(P_MIN, 1f - P_MIN)
+        return FLOOR + (1f - FLOOR) * sqrt(PEAK * p * (1f - p))
+    }
+
+    /**
+     * Odchylenie ziarna w EV: [amount] · [sigmaEv] · obwiednia([luma]).
+     * Dwuargumentowe przeciążenie zostaje dla testów obwiedni (historyczne 0,5 EV).
+     */
+    fun stops(luma: Float, amount: Float): Float = stops(luma, amount, STOPS_MAX)
+
+    fun stops(luma: Float, amount: Float, sigmaEv: Float): Float = amount * sigmaEv * envelope(luma)
 
     /**
      * Mnożnik wartości kodowanej odpowiadający zmianie ekspozycji o [stops]·[g] EV w świetle liniowym
@@ -106,17 +143,19 @@ internal object FilmGrain {
      * Wspólny szum ([out]\[0]) i szum trzech warstw barwnych ([out]\[1..3]) piksela naraz – te same wartości co
      * [luma] i [chroma], ale dzielenia przez wielkość ziarna liczone raz na piksel (G: zapis 12 MP).
      */
-    fun pixel(x: Int, y: Int, cell: Float, out: FloatArray) {
+    fun pixel(x: Int, y: Int, cell: Float, out: FloatArray) = pixel(x, y, cell, out, FilmGrainProfiles.IDENTITY)
+
+    fun pixel(x: Int, y: Int, cell: Float, out: FloatArray, profile: FilmGrainProfile) {
         val fx = x.toFloat() / cell
         val fy = y.toFloat() / cell
-        val big = cell * CLUMP_SCALE
+        val big = cell * profile.clumpScale
         val cx = x.toFloat() / big
         val cy = y.toFloat() / big
         for (k in 0..LAYER_CHANNELS) {
             val sx = k * CHANNEL_SHIFT_X
             val sy = k * CHANNEL_SHIFT_Y
-            out[k] = FINE_WEIGHT * sample(fine, fx + sx, fy + sy) +
-                CLUMP_WEIGHT * sample(clump, cx + sx + CLUMP_SHIFT, cy + sy)
+            out[k] = profile.fineWeight * sample(fine, fx + sx, fy + sy) +
+                profile.clumpWeight * sample(clump, cx + sx + CLUMP_SHIFT, cy + sy)
         }
     }
 
