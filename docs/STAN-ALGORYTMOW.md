@@ -20,7 +20,7 @@ Legenda: ✅ gotowe (metoda z literatury lub standard branżowy, testy, sprawdzo
 | Odszumianie kolorów | ChromaDenoise.kt | ✅ | Cb/Cr z jasnością jako przewodnikiem |
 | Odszumianie jasności | LumaDenoise.kt | ✅ | filtr prowadzony sterowany szumem; do rozważenia NLM/wavelet dla silnego szumu |
 | Winieta | ColorGrade.kt (VignetteLut) | ✅ | cos⁴; ewentualnie środek/zaokrąglenie |
-| Ziarno | FilmGrain.kt, FilmGrainProfiles.kt | ✅ | model kryształów srebra; amplituda z karty (σ(gEq) @ 100% suwaka); rozmiar względem klatki 35 mm; B&W bez chromy; instant — duże miękkie chmury; 1.1.12 + wydanie S |
+| Ziarno | FilmGrain.kt, FilmGrainProfiles.kt | ✅ | model kryształów srebra; amplituda z karty (σ(gEq) @ 100% suwaka); rozmiar względem klatki 35 mm; B&W bez chromy; instant — duże miękkie chmury; 1.1.12 + wydanie S; zob. [ZIARNO.md](ZIARNO.md) |
 | Blaknięcie | Adjustments.kt | ✅ | podniesiona czerń, przytłumiona biel, odbarwienie |
 | Dithering 8 bit | Dither.kt | ✅ | TPDF ±0,5 |
 | Geometria: obrót, kadr, perspektywa | Geometry.kt, Perspective.kt, CropFit.kt, BicubicWarp.kt | ✅ | perspektywa pion/poziom z auto-kadrem, kadr gestem (przeciągnięcie, szczypnięcie), siatka trójpodziału |
@@ -43,7 +43,7 @@ Szczegółowa ocena jakości modułów i plan ulepszeń (ze stanem wdrożenia na
 - Maski: pędzel, maska luminancji i koloru, maska krawędzi; tonalna maska cieni/świateł także dla masek lokalnych.
 - Odszumianie silnego szumu: NLM lub falki; odszumianie z uwzględnieniem ISO z EXIF.
 - Auto-ulepszenie z rozpoznawaniem scen (twarz, niebo) i profil obiektywu (winietowanie, dystorsja).
-- Rzeczywiste kształty ziarna z profili filmów (skala, ziarno RMS z kart technicznych).
+- Ziarno z kart technicznych (profile emulsji, RMS/PGI/`gEq`) — **wdrożone w S**; opis: [ZIARNO.md](ZIARNO.md). Dalej odłożony model Boolean (Newson 2017) i osobna geometria 120.
 
 ## Raport końcowy (alpha.16, CI, 5 zdjęć testowych)
 

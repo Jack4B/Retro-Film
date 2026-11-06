@@ -14,7 +14,7 @@ Aplikację budują od zera boty zespołu (Forge, Lumen, Gauge, Critic, Python Pr
 - Eksport JPEG/PNG bez GPS.
 
 ## Dokumentacja
-- [Architektura](docs/ARCHITEKTURA.md) · [Ekrany](docs/EKRANY.md) · [Decyzje](docs/DECYZJE.md) · [Specyfikacja ramki](docs/RAMKA-SPEC.md) · [Handoff](docs/HANDOFF.md) · [LUT-y](docs/LUTS.md)
+- [Architektura](docs/ARCHITEKTURA.md) · [Ekrany](docs/EKRANY.md) · [Decyzje](docs/DECYZJE.md) · [Specyfikacja ramki](docs/RAMKA-SPEC.md) · [Handoff](docs/HANDOFF.md) · [LUT-y](docs/LUTS.md) · [Ziarno](docs/ZIARNO.md) · [Ustawienia i zoom](docs/USTAWIENIA-I-ZOOM.md) · [Changelog wydań testowych](docs/CHANGELOG-TEST-WYDANIA.md)
 - [CONTRIBUTING](CONTRIBUTING.md) · [AGENTS.md](AGENTS.md) · [THIRD_PARTY](THIRD_PARTY.md)
 
 ## Instalacja
