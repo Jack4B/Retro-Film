@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="app.retrofilm.ui.UiScreenshotTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-20T09:13:39.474Z" hostname="runnervmccnms" time="21.301">
+  <properties/>
+  <testcase name="editorTabs" classname="app.retrofilm.ui.UiScreenshotTest" time="12.877"/>
+  <testcase name="seriesAndPicker" classname="app.retrofilm.ui.UiScreenshotTest" time="0.571"/>
+  <testcase name="lightTheme" classname="app.retrofilm.ui.UiScreenshotTest" time="2.045"/>
+  <testcase name="individualEdit" classname="app.retrofilm.ui.UiScreenshotTest" time="0.485"/>
+  <testcase name="landscape" classname="app.retrofilm.ui.UiScreenshotTest" time="2.096"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

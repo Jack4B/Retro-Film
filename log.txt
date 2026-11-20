@@ -1,0 +1,200 @@
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/bef90af1bf366f28b13326ba37a6ec1a/transformed/ui-test-manifest-1.12.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/de0fd48c690a6719de05963bd3744241/transformed/ui because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/bfbb562bf0cf3da9f42cf04b8449ecb6/transformed/ui-test-junit4 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/34740b7ea5fed5fbbdc69679b092d090/transformed/junit-1.1.5 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/34818efc571b913596e3461b89775021/transformed/runner-1.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/0f4268d745375abcb16309725f1c8963/transformed/espresso-core-3.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/6bdbc550802287b9e678c56a56e56363/transformed/work-runtime-ktx-2.12.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1f928cba09933a733d9838f1960119e9/transformed/runtime-annotation because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ab0600e5b80a8078cf103966ec63e020/transformed/work-runtime-2.12.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/fa6682f8f5815c1c4abc438dbb954459/transformed/runtime-retain because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/fff1fa692d58a1e88ed545dfd55e2816/transformed/runtime-saveable because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/4f272d0a8baf589674b12470cfd8fd8d/transformed/customview-poolingcontainer-1.0.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/4bfb4179d9022ffde671cc0ae12936a9/transformed/graphics-shapes-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ed05748edad5cc670865b758376e5acf/transformed/emoji2-1.4.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/2b39e43aa01b355327ad9611284a0e25/transformed/lifecycle-process-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ac022f44b768c1a062889e869df26907/transformed/lifecycle-viewmodel because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/de3b8abc1bd1d8caf376fb29499fb099/transformed/lifecycle-runtime-ktx because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/bb953d345339f41844f90a2d98d92cbe/transformed/lifecycle-livedata-core-ktx-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/c19cbc05829d7599ae3c21d997e80759/transformed/lifecycle-viewmodel-ktx-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/da15913e6e3d62c768d93cc939e2f92a/transformed/lifecycle-service-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/85a234446ac702fee519a56a1f4959ac/transformed/lifecycle-livedata-core-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/8139bfb1047d07b9a4f63d1443cb6d36/transformed/lifecycle-runtime because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/cde1445f0c5fac06a3b6addae66b5ea5/transformed/lifecycle-livedata-2.10.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/e9863ddaa6ef79e5943b7b34b51b6f1b/transformed/lifecycle-viewmodel-savedstate because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/3c26a115b8a9f7e4d348182985552c2f/transformed/savedstate-compose because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/9d912966c178db1f8a04259839ae9247/transformed/core-ktx-1.19.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/c5ab73171b3044851b005d722d41d241/transformed/savedstate because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/3dcc04d34c80b32c0c800ff05ac5e434/transformed/savedstate-ktx-1.4.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/e63ae3b66c46153d9353354fdded4fb1/transformed/autofill-1.0.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/7422292d06c8f7a7e45ec26a01d686da/transformed/window-core because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/43fcabb91723f2dd7f7f02c85f608a81/transformed/window-1.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/967071430555dc504274cb59e19544ba/transformed/graphics-path-1.0.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/2d7a4a6c5b996a29878e0f301fedc041/transformed/core-1.19.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1e5d6a40f313dce45263bbbc0c012932/transformed/core-1.5.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/7291ce70cb3e0a278a3914de12a10108/transformed/lifecycle-runtime-compose because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/4a25a49f7d55d681d4aa0f4a60505639/transformed/runtime because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ba171997ef7e8601433a8036664974e7/transformed/room-runtime-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/9823536e98b0909f9abd3893b1a0bfb8/transformed/datastore-preferences-core-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/8b814e1e9bc3c958cc2379ea00832085/transformed/datastore-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/147196e97e31586d8c45f703d161266b/transformed/datastore-core-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/0be96df91be2e5c9afdab704fd8309fe/transformed/datastore-preferences-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1e618cf8c6f5145438354f7f215c66cd/transformed/storage-1.4.2 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/0ff596aa6d90f7e6bc892a4afca63781/transformed/annotation-1.0.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/b43f80507a127e241c15c0a19601c9ed/transformed/core-viewtree-1.0.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ec2305317e6322d19c2b87ace0935464/transformed/profileinstaller-1.4.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/9aa9b31845140a7a9e42ec6d6dc20f6f/transformed/annotation-experimental-1.4.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/d3cc6cb1e1ff2aa056140f217bf690cd/transformed/startup-runtime-1.1.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/3579ac2f35fe1cea4547cb9c7969b03d/transformed/monitor-1.8.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/1c09ba4da103f34d05dfc2d00dc81a2d/transformed/tracing-1.2.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/13648c757e2a403e7b31bdd23490e9ed/transformed/tracing-ktx-1.2.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/ea18675b139cf7b2c80b1dc120ccba7d/transformed/interpolator-1.0.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/2f52126b5012172f5b1ca82eb88773a6/transformed/versionedparcelable-1.1.1 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/776d6b02cc9bb411cc03d91fd1f24d3d/transformed/core-runtime-2.2.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/61a08ad7aaaeb4ba677802be6359b254/transformed/sqlite-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/a37c022e606a196d2f9feb1cedfc64b9/transformed/sqlite-framework-release because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for AarTransform: /home/runner/.gradle/caches/9.8.2/transforms/17a8b1a62ccf1a47651a2fa8511f93b1/transformed/espresso-idling-resource-3.7.0 because:
+  Build cache is disabled
+  Caching not enabled.
+Caching disabled for MockableJarTransform: /usr/local/lib/android/sdk/platforms/android-37.0/android.jar because:
+  Build cache is disabled
+Calling mockable JAR artifact transform to create file: /home/runner/.gradle/caches/9.8.2/transforms/3c1f3e6d4d2c74d00bc72b061772876b/transformed/android.jar with input /usr/local/lib/android/sdk/platforms/android-37.0/android.jar
+Caching disabled for task ':app:testDebugUnitTest' because:
+  Build cache is disabled
+Task ':app:testDebugUnitTest' is not up-to-date because:
+  No history is available.
+file or directory '/home/runner/work/Retro-Film/Retro-Film/app/build/intermediates/javac/debugUnitTest/compileDebugUnitTestJavaWithJavac/classes', not found
+Starting process 'Gradle Test Executor 1'. Working directory: /home/runner/work/Retro-Film/Retro-Film/app Command: /usr/lib/jvm/temurin-21-jdk-amd64/bin/java -Djava.awt.headless=true -Djava.library.path=/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib:/home/runner/work/Retro-Film/Retro-Film/app/src/testDebug/jniLibs:/home/runner/work/Retro-Film/Retro-Film/app/src/test/jniLibs -Dorg.gradle.internal.worker.tmpdir=/home/runner/work/Retro-Film/Retro-Film/app/build/tmp/testDebugUnitTest/work --add-opens=java.base/java.io=ALL-UNNAMED @/home/runner/.gradle/.tmp/gradle-worker-classpath17373663610347255201txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 1'
+Successfully started process 'Gradle Test Executor 1'
+
+Gradle Test Executor 1 started executing tests.
+Gradle Test Executor 1 finished executing tests.
+
+> Task :app:testDebugUnitTest
+Generating HTML test report...
+Finished generating test html results (0.08 secs) into: /home/runner/work/Retro-Film/Retro-Film/app/build/reports/tests/testDebugUnitTest
+Finished generating test XML results (0.003 secs) into: /home/runner/work/Retro-Film/Retro-Film/app/build/test-results/testDebugUnitTest
+AAPT2 aapt2-9.4.1-15978811-linux Daemon #0: shutdown
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1795165900916.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/Retro-Film/Retro-Film/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.8.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 29s
+207 actionable tasks: 207 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.2/userguide/configuration_cache_enabling.html
