@@ -3,7 +3,10 @@ package app.retrofilm.ui
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Shader
 import android.graphics.Typeface
 import android.net.Uri
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -14,7 +17,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import app.retrofilm.core.ui.RetroFilmTheme
 import app.retrofilm.engine.AppGraph
-import app.retrofilm.pipeline.PhotoLoader
 import java.io.File
 import org.junit.Assume.assumeNotNull
 import org.junit.Rule
@@ -27,7 +29,7 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * Zrzuty prawdziwych ekranów aplikacji do przeglądu UI/UX (workflow ui-screenshots.yml). Bez zmiennej UI_OUT test się
- * pomija, więc zwykły CI go nie uruchamia. Zdjęcie bierze z STOCK_PHOTOS/street_bus.jpg albo rysuje scenę zastępczą.
+ * pomija, więc zwykły CI go nie uruchamia. Zdjęcie to własna, narysowana scena.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -42,13 +44,57 @@ class UiScreenshotTest {
         out?.let { File(it, "trace.txt").appendText("$step\n") }
     }
 
+    /** Własna scena (bez cudzych zdjęć, więc bez kłopotów z licencją): zachód słońca nad jeziorem i górami. */
     private fun photo(): Bitmap {
-        val file = System.getenv("STOCK_PHOTOS")?.let { File(it, "street_bus.jpg") }
-        if (file != null && file.exists()) return PhotoLoader.load({ file.inputStream() })
-        val b = Bitmap.createBitmap(900, 1200, Bitmap.Config.ARGB_8888)
+        val w = 900
+        val h = 1200
+        val horizon = h * 0.62f
+        val b = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(b)
-        c.drawColor(Color.rgb(90, 120, 150))
-        c.drawRect(0f, 700f, 900f, 1200f, Paint().apply { color = Color.rgb(120, 100, 80) })
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        val sky = intArrayOf(Color.rgb(40, 70, 130), Color.rgb(220, 130, 110), Color.rgb(250, 200, 130))
+        p.shader = LinearGradient(0f, 0f, 0f, horizon, sky, null, Shader.TileMode.CLAMP)
+        c.drawRect(0f, 0f, w.toFloat(), horizon, p)
+        p.shader = null
+        p.color = Color.rgb(255, 238, 195)
+        c.drawCircle(w * 0.68f, horizon - 70f, 72f, p)
+        val ridges = listOf(
+            Color.rgb(120, 90, 110) to
+                floatArrayOf(0.0f, 0.30f, 0.18f, 0.38f, 0.34f, 0.27f, 0.55f, 0.40f, 0.78f, 0.28f, 1f, 0.36f),
+            Color.rgb(60, 50, 80) to floatArrayOf(0.0f, 0.12f, 0.22f, 0.20f, 0.45f, 0.10f, 0.70f, 0.22f, 1f, 0.14f)
+        )
+        for ((color, pts) in ridges) {
+            val path = Path().apply {
+                moveTo(0f, horizon)
+                for (i in pts.indices step 2) lineTo(pts[i] * w, horizon - pts[i + 1] * 420f)
+                lineTo(w.toFloat(), horizon)
+                close()
+            }
+            p.color = color
+            c.drawPath(path, p)
+        }
+        p.shader =
+            LinearGradient(
+                0f,
+                horizon,
+                0f,
+                h.toFloat(),
+                Color.rgb(205, 145, 125),
+                Color.rgb(25, 45, 80),
+                Shader.TileMode.CLAMP
+            )
+        c.drawRect(0f, horizon, w.toFloat(), h.toFloat(), p)
+        p.shader = null
+        p.color = Color.argb(150, 255, 235, 190)
+        for (i in 0 until 9) {
+            c.drawRect(
+                w * 0.68f - 70f + i * 8f,
+                horizon + 20f + i * 34f,
+                w * 0.68f + 70f - i * 8f,
+                horizon + 30f + i * 34f,
+                p
+            )
+        }
         return b
     }
 
